@@ -816,3 +816,20 @@ Run a local field-level audit over the five PDFs to identify missing dates, role
 - Browser observation and first promoted fix: `tests/e2e/fill-quality-eval.spec.ts`, `src/matching/dom.ts`, and `src/matching/dom.test.ts`.
 - F026 is `done`. F027 remains `blocked` until the user replaces the remote HTTP endpoint with a trusted HTTPS endpoint and a compatible key/model alias. Do not silently switch the URL to the official DeepSeek service because the existing key may belong to the configured gateway. Once HTTPS is configured, run `npm run eval:fill -- --judge`; only a calibration-perfect, model-matched sanitized report may unblock F028.
 - Rollback: revert the F026 checkpoint to remove the evaluator and restore the previous per-radio-input discovery behavior; no storage migration, browser permission, production endpoint, or user data is involved.
+
+## 2026-08-05 - F027 Boyue DeepSeek calibration
+
+- The first requested judge run stopped before transmission because both ignored local URLs still used plain HTTP. Safe metadata inspection confirmed this came from `.env`, not process-variable precedence; the API key was configured but never printed.
+- A no-key TLS probe showed port 3888 does not support TLS. The server's public certificate on port 443 identified `api.boyuerichdata.opensphereai.com`; a no-key request to `https://api.boyuerichdata.opensphereai.com/v1/chat/completions` completed certificate validation and returned the expected unauthenticated `401` response.
+- Updated only the two ignored local endpoint values to that certificate-verified HTTPS origin. The existing key and configured `bailian/deepseek-v4-flash` alias were preserved. No real resume, recruitment-page value, HTML, filename, path, cookie, or authentication content was sent; the request contained only the versioned synthetic observation and aggregate deterministic report.
+- `npm run eval:fill -- --judge` -> exit 0. Installed Chrome passed the synthetic evaluation; deterministic results were 35 TP, 0 FP, 0 FN, F1 `1.0`, 35/35 exact fills, 6/6 exclusions, repeatable coverage `1.0`, attachment targeting `1.0`, 0 duplicate proposals, and 0 safety violations.
+- Boyue returned model `deepseek-v4-flash`, which matched the configured family. The shadow judge verdict was `pass`, findings were `0`, and calibration was 4/4: known-good=`pass`; wrong-match, missed-fill, and unsafe-submit=`fail`. Latency was 35,859 ms and usage was 3,407 prompt + 102 completion = 3,509 total tokens.
+- Deterministic and judge results agreed, so the documented value-of-information rule stopped after one call; the three-repeat disagreement budget was not consumed. With no reproducible failure or actionable finding, F028 remains `todo` and runtime matching was intentionally left unchanged.
+
+### F027 handoff
+
+- Durable changes in this checkpoint are `feature_list.json` and `progress.md`; `.env` changed locally but remains ignored and must never be committed because it contains the user's key.
+- The sanitized local evidence is `artifacts/fill-quality-judge.json`. Re-run `npm run eval:fill -- --offline` freely; run `npm run eval:fill -- --judge` only when new fixture evidence could change a decision.
+- F027 is `done`. The next recommended feature is F028 only after a real or anonymized form produces a reproducible deterministic miss; otherwise choose the next unrelated unblocked product feature instead of tuning a perfect synthetic score.
+- Final `npm run validate` -> exit 0; TypeScript passed, 21 Vitest files/194 tests passed, the production build succeeded, 11 required distribution files were verified, and permissions remained exactly `activeTab`, `scripting`, `sidePanel`, and `storage`.
+- Inspected `artifacts/fill-quality-judge.json` (838 bytes). A precise recursive audit found no credential, authorization, raw profile/page/resume, HTML, screenshot, filename, or path keys; `promptTokens`, `completionTokens`, and `totalTokens` are aggregate usage counters, not authentication tokens.

@@ -517,7 +517,7 @@
     {
       "id": "F027",
       "title": "Calibrate DeepSeek V4 Flash as a shadow fill-quality reviewer",
-      "status": "blocked",
+      "status": "done",
       "depends_on": ["F026"],
       "acceptance": [
         "The configured model is called only through a verified HTTPS endpoint using temperature zero and a bounded structured-output prompt over the synthetic evaluation artifact.",
@@ -531,7 +531,7 @@
         "Inspect the sanitized judge report and calibration confusion matrix without printing the API key or request payload values.",
         "Repeat only disagreement cases up to the documented budget and stop when the action would not change."
       ],
-      "notes": "Blocked because the current ignored .env points both OpenAI-compatible URLs at a remote plain-HTTP endpoint; an unauthenticated TLS probe failed with ERR_SSL_PACKET_LENGTH_TOO_LONG. The key must not be transmitted until the user supplies a trusted HTTPS endpoint or an official DeepSeek key/base URL."
+      "notes": "Completed on 2026-08-05 against Boyue's certificate-verified HTTPS hostname. The synthetic-only judgment returned deepseek-v4-flash, matched the configured model family, classified all four calibration cases correctly, produced no findings against the passing deterministic baseline, and used 3,509 tokens in 35,859 ms. No repeat was needed because deterministic and judge results agreed."
     },
     {
       "id": "F028",
