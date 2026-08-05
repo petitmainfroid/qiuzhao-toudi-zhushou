@@ -747,3 +747,35 @@ Run a local field-level audit over the five PDFs to identify missing dates, role
 - Inspected `artifacts/resume-attachment-prototype.png` (34,249 bytes, 2026-08-05 15:16 local time). It contains only `synthetic-resume.pdf`, shows the resume accepted, the identity attachment empty, and the submit control unused.
 - Final `npm run validate` -> exit 0; TypeScript passed, 19 Vitest files/186 tests passed, production build succeeded, 11 required files were verified, and permissions remained exactly `activeTab`, `scripting`, `sidePanel`, `storage`.
 - F019 is `done`; F020 is now `in_progress`. The real recruitment-site gate remains intentionally unexecuted until the product UI displays and the user confirms the exact PDF, Origin, and matched control because the site may upload immediately on `change`.
+
+## 2026-08-05 - F020 user-confirmed resume PDF attachment completed
+
+### Product implementation
+
+- Added the complete side-panel flow for one user-selected PDF: local MIME/name/size/PDF-header validation, local SHA-256 calculation, and a confirmation card that exposes the exact filename, size, digest prefix, destination Origin, and matched control before any page file input is changed.
+- Added two page-bound content messages. Authorization first re-discovers the unique high-confidence resume control and issues a 60-second single-use token bound to the Origin, element, filename, MIME, size, and digest. Only after authorization does the bridge transfer the in-memory bytes; the token is consumed on the first attempt even when attachment fails.
+- Limited real attachment destinations to HTTPS. Plain HTTP fails closed except for `localhost`, `127.0.0.1`, and `::1`, which are reserved for synthetic local acceptance fixtures.
+- Identity, passport, photo, transcript, portfolio, recommendation, certificate, ambiguous, multiple, existing-file, non-PDF, changed-page, expired, wrong-digest, and replay cases remain unavailable. The agent protocol still exposes no upload or arbitrary filesystem-path action.
+- Added Organic side-panel states for selection, hashing, confirmation, success, failure, and unsupported controls. Success explicitly warns that the recruitment site may already have received the file and that final submission remains the user's action.
+- Updated the Chinese README, privacy notice, and repository Skill to distinguish local resume parsing from a user-confirmed recruitment-site attachment. The Skill continues to forbid generic uploads and now requires confirmation of the exact PDF digest, HTTPS Origin, and resume control.
+
+### Browser and verification evidence
+
+- `npm test -- --run src/agent src/content src/sidepanel` -> exit 0; 7 files and 31 tests passed before the final secure-Origin case was added.
+- Skill Creator `quick_validate.py` under Python UTF-8 mode -> exit 0, `Skill is valid!`; `npm run verify:skill` -> exit 0.
+- `npm run test:e2e -- --grep "resume attachment"` -> exit 0; 2/2 tests passed in installed Chrome. The instrumented page observed zero attachment requests before confirmation, exactly one after confirmation, zero identity attachments, and zero final submits. The side panel withheld its confirmation action until a synthetic PDF was selected and showed the exact synthetic metadata and loopback destination.
+- Inspected `artifacts/resume-attachment.png` (76,052 bytes) and `artifacts/resume-attachment-confirmed.png` (78,742 bytes), refreshed at 2026-08-05 15:48 local time. Both contain only synthetic profile/file data; the first proves the pre-transmission confirmation surface and the second shows the non-submitting completion message.
+- Final `npm run validate` -> exit 0; TypeScript passed, 19 Vitest files/188 tests passed, the production build succeeded, 11 required distribution files were verified, and permissions remained exactly `activeTab`, `scripting`, `sidePanel`, and `storage` with no host permission.
+- Final `npm run test:e2e` -> exit 0; 15/15 tests passed, including unpacked extension startup, local PDF/DOCX/OCR import, repeatable-row creation, field comparison/fill, both attachment gates, privacy controls, and no-submit regressions.
+
+### Real-machine acceptance boundary and handoff
+
+- Added F025 as the durable real-recruitment-site gate. Passing it requires the user's authenticated HTTPS tab, a physical extension-icon click, an exact local PDF choice, a 30-second pre-confirmation network observation, one confirmation, at most one attachment request, and zero final-submit/application-submit requests. Evidence must contain only structural results and a short digest, never the real filename, path, content, page values, Cookie, or token.
+- A read-only OpenCLI preflight found CLI 1.8.6 and Browser Bridge 1.0.22 connected; the audited Xiaomi URL is eligible and the assistant manifest remains least-privilege. The `qiuzhao` session currently resolves to `about:blank`, and profile-copy discovery cannot prove the unpacked bridge installation, so no real page was read or mutated and no live attachment was attempted.
+- F020 is `done`; F025 is intentionally `blocked` on the user's action-time choice of the exact PDF and authenticated HTTPS recruitment page. The next safe user step is to load/refresh the current `dist/`, open the desired application page, click the assistant icon, scan, and provide the exact PDF only when ready to let that named site receive it. F018 remains the next unblocked engineering feature if live acceptance is deferred.
+
+### Changed files
+
+- Attachment core and message path: `src/content/resumeAttachment.ts`, `src/content/resumeAttachment.test.ts`, `src/content/engine.ts`, `src/content/index.ts`, `src/shared/messages.ts`, and `src/sidepanel/pageBridge.ts`.
+- User flow and browser evidence: `src/sidepanel/App.tsx`, `src/sidepanel/sidepanel.css`, `src/sidepanel/SidePanel.test.tsx`, `tests/e2e/resume-attachment-flow.spec.ts`, and the local-only attachment screenshots under `artifacts/`.
+- Documentation and durable state: `README.md`, `PRIVACY.md`, `docs/resume-attachment-threat-model.md`, `skills/qiuzhao-toudi-assistant/SKILL.md`, `feature_list.json`, and `progress.md`.

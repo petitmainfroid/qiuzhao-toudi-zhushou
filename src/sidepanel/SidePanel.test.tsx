@@ -91,6 +91,16 @@ function scanResult(): ScanResult {
         comparisonStatus: "unreadable"
       }
     ],
+    resumeAttachment: {
+      status: "ready",
+      candidateCount: 1,
+      candidate: {
+        elementId: "resume-file",
+        fieldLabel: "上传简历",
+        destinationOrigin: "https://jobs.example",
+        acceptsPdf: true
+      }
+    },
     summary: {
       total: 4,
       fillable: 3,
@@ -192,5 +202,35 @@ describe("SidePanel", () => {
     }));
     expect(await screen.findByText(/已记住“姓名”/)).toBeInTheDocument();
     expect(screen.getByText("已记住")).toBeInTheDocument();
+  });
+
+  it("shows the exact file, digest, site, and control before explicit attachment", async () => {
+    const bridge: PageBridge = {
+      scan: vi.fn(async () => scanResult()),
+      fill: vi.fn(),
+      attachResume: vi.fn(async () => ({ status: "attached" as const }))
+    };
+    render(<SidePanel repository={{ load: async () => profileWithValues() }} pageBridge={bridge} />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "扫描当前页面" }));
+    const input = await screen.findByLabelText("选择要附加的 PDF 简历");
+    const bytes = new TextEncoder().encode("%PDF-1.4\nsynthetic sidepanel attachment\n%%EOF");
+    const file = new File([bytes], "synthetic-resume.pdf", { type: "application/pdf" });
+    Object.defineProperty(file, "arrayBuffer", { value: async () => bytes.buffer.slice(0) });
+    fireEvent.change(input, { target: { files: [file] } });
+
+    expect(await screen.findByText("synthetic-resume.pdf")).toBeInTheDocument();
+    expect(screen.getByText("https://jobs.example")).toBeInTheDocument();
+    expect(screen.getByText("SHA-256", { exact: false })).toBeInTheDocument();
+    expect(bridge.attachResume).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole("button", { name: "确认上传到 jobs.example" }));
+    await waitFor(() => expect(bridge.attachResume).toHaveBeenCalledWith(
+      file,
+      expect.objectContaining({ elementId: "resume-file", destinationOrigin: "https://jobs.example" }),
+      expect.stringMatching(/^[a-f0-9]{64}$/),
+      expect.any(Number)
+    ));
+    expect(await screen.findByText(/简历已附加/)).toBeInTheDocument();
   });
 });

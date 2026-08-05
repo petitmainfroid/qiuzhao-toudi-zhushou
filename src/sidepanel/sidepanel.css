@@ -180,6 +180,154 @@
   border-radius: 24px;
 }
 
+.attachment-card {
+  margin: 4px 0 14px;
+  padding: 20px;
+  color: var(--moss);
+  background: var(--clay);
+  border-radius: 24px;
+}
+
+.attachment-card .group-heading > span {
+  width: auto;
+  padding: 0 9px;
+  color: var(--sand);
+  background: var(--terracotta);
+}
+
+.attachment-warning {
+  margin: 9px 0 14px;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.55;
+}
+
+.attachment-target {
+  display: grid;
+  gap: 7px;
+  margin: 0 0 13px;
+}
+
+.attachment-target div {
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr);
+  gap: 8px;
+  padding: 9px 11px;
+  background: var(--sand);
+  border-radius: 14px;
+}
+
+.attachment-target dt,
+.attachment-target dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-size: 9px;
+  line-height: 1.45;
+}
+
+.attachment-target dt {
+  font-weight: 700;
+}
+
+.attachment-picker {
+  display: grid;
+  gap: 8px;
+  padding: 13px;
+  background: var(--oat);
+  border-radius: 16px;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.attachment-picker input {
+  width: 100%;
+  color: var(--moss);
+  font-size: 9px;
+}
+
+.attachment-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 9px;
+  margin-top: 10px;
+  padding: 12px;
+  background: var(--sand);
+  border-radius: 16px;
+}
+
+.attachment-summary strong {
+  width: 100%;
+  overflow: hidden;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.attachment-summary span {
+  font-size: 9px;
+}
+
+.attachment-digest {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-family: ui-monospace, "Cascadia Mono", monospace;
+}
+
+.attachment-confirm {
+  display: flex;
+  width: 100%;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 10px;
+  color: var(--sand);
+  background: var(--terracotta);
+  border: 0;
+  border-radius: 16px;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.attachment-confirm:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.attachment-message {
+  margin: 10px 0 0;
+  padding: 11px 12px;
+  background: var(--oat);
+  border-radius: 14px;
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 1.55;
+}
+
+.attachment-error {
+  color: var(--sand);
+  background: var(--terracotta);
+}
+
+.attachment-unavailable {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+  margin-bottom: 14px;
+  padding: 14px;
+  color: var(--moss);
+  background: var(--oat);
+  border-radius: 18px;
+}
+
+.attachment-unavailable p {
+  margin: 0;
+  font-size: 9px;
+  line-height: 1.55;
+}
+
 .repeatable-list {
   display: grid;
   gap: 10px;

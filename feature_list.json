@@ -381,7 +381,7 @@
     {
       "id": "F020",
       "title": "Implement user-confirmed resume PDF attachment",
-      "status": "in_progress",
+      "status": "done",
       "depends_on": ["F019"],
       "acceptance": [
         "The user selects one PDF for the current session and sees filename, size, digest prefix, destination site, and matched resume control before approval.",
@@ -474,6 +474,25 @@
         "Inspect both archives and run a publish-scope privacy scan before pushing."
       ],
       "notes": "User-requested distribution milestone. Generated archives remain ignored by Git and are uploaded as release assets; source skill files are committed."
+    },
+    {
+      "id": "F025",
+      "title": "Complete real-machine recruitment-site resume attachment acceptance",
+      "status": "blocked",
+      "depends_on": ["F020"],
+      "acceptance": [
+        "The unpacked extension is refreshed in the user's ordinary Chrome or Edge profile, the authenticated recruitment tab receives activeTab from a physical toolbar click, and the side panel discovers exactly one high-confidence resume PDF control on the expected HTTPS Origin.",
+        "Before confirmation, a 30-second observation proves no attachment request and the target input remains empty; the UI shows only the exact user-selected PDF filename, size, digest prefix, HTTPS Origin, and matched control.",
+        "One explicit confirmation produces at most one attachment attempt, the recruitment page visibly accepts the expected filename or reports an actionable failure, and identity, verification, other file inputs, and final submission remain untouched.",
+        "Evidence records only structural counts, status codes, timestamps, Origin, and a short file digest; it never records a real filename, path, resume contents, page values, cookies, tokens, or screenshots containing personal data."
+      ],
+      "verification": [
+        "Run npm run validate and npm run test:e2e before loading dist/.",
+        "Physically click the extension icon on the exact authenticated HTTPS recruitment page, rescan, and compare the displayed Origin and matched control.",
+        "Observe the page and browser network activity for 30 seconds before confirmation, then confirm exactly one chosen PDF and verify at most one attachment request with zero final-submit requests.",
+        "Record a privacy-redacted pass/fail handoff in progress.md; do not capture a screenshot unless the page and filename are anonymized."
+      ],
+      "notes": "Blocked on the user's action-time choice of an exact local PDF and authenticated HTTPS recruitment page. Because many ATS products upload immediately on file-input change, no live transfer may be inferred from earlier resume audits or performed without this confirmation."
     }
   ]
 }

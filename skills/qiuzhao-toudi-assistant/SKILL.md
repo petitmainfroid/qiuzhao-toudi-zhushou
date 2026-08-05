@@ -1,6 +1,6 @@
 ---
 name: qiuzhao-toudi-assistant
-description: Build, install, load, operate, and troubleshoot the local-first 秋招投递助手 Chrome/Edge extension. Use when a user asks Codex to install the extension, import a PDF/DOCX resume, authorize a recruitment tab, scan and compare form fields, create missing education/internship/project rows, selectively fill a recruitment page, diagnose activeTab access failures, or package the project without submitting an application or exposing credentials and personal data.
+description: Build, install, load, operate, and troubleshoot the local-first 秋招投递助手 Chrome/Edge extension. Use when a user asks Codex to install the extension, import a PDF/DOCX resume, authorize a recruitment tab, scan and compare form fields, create missing education/internship/project rows, selectively fill or attach a user-confirmed PDF resume to a recruitment page, diagnose activeTab access failures, or package the project without submitting an application or exposing credentials and personal data.
 ---
 
 # 秋招投递助手
@@ -41,7 +41,9 @@ Run `npm run install:skill` from the repository root. If the target already exis
 3. Scan the page before proposing mutations. Compare profile values with page structure and current values only through the extension's redacted comparison flow.
 4. Present empty, consistent, and conflicting fields separately. Keep sensitive or conflicting fields unselected until the user confirms them.
 5. If repeatable records are missing, create one bounded section-local group at a time, rescan after each structural change, and stop on count, fingerprint, or URL drift.
-6. Fill only explicitly selected fields. Return control to the user for attachments, verification, final review, and submission.
+6. Fill only explicitly selected fields.
+7. For one unique, high-confidence resume PDF control on an HTTPS site, use only the extension's guarded attachment UI. Require the user to select the PDF, review its filename, size, digest prefix, exact Origin, and matched control, then confirm once. Treat that confirmation as a possible immediate upload to the recruitment site.
+8. Stop on an ambiguous, non-resume, identity, verification, non-PDF, or insecure-HTTP file control. Never provide a filesystem path or substitute a generic upload command. Return control to the user for other attachments, verification, final review, and submission.
 
 ## Import a resume
 
@@ -65,6 +67,7 @@ For `Cannot access contents of the page` or “无法读取当前页面”:
 - Never store or request recruitment-site passwords, Cookies, authentication tokens, verification codes, or identity credentials.
 - Never bypass CAPTCHA, SMS verification, login, identity checks, or site risk controls.
 - Never expose arbitrary browser clicks, arbitrary JavaScript execution, arbitrary filesystem paths, or generic file upload through an agent command.
+- Never attach a resume without the user's action-time confirmation of the exact PDF digest, HTTPS Origin, and matched resume control; do not reuse or replay an attachment authorization.
 - Never read or fill hidden, password, CAPTCHA, verification, identity-number, banking, or final-submit controls.
 - Never click the final application submission control（最终提交）.
 - Require confirmation for sensitive identity-adjacent fields and conflicts.

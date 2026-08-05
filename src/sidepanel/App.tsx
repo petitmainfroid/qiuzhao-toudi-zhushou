@@ -5,7 +5,9 @@ import {
   Check,
   ChevronDown,
   CircleAlert,
+  FileUp,
   FileWarning,
+  Fingerprint,
   ListPlus,
   ScanSearch,
   ShieldCheck,
@@ -14,6 +16,11 @@ import {
 import { calculateProfileCompletion, getProfileValue, type CandidateProfile } from "../domain/profile";
 import type { FillProposal, FillSelection, ScanResult } from "../content/engine";
 import type { RepeatableGroupKey } from "../content/repeatableRecords";
+import {
+  MAX_RESUME_ATTACHMENT_BYTES,
+  type ResumeAttachmentCandidate,
+  type ResumeAttachmentFailureReason
+} from "../content/resumeAttachment";
 import { canonicalFields } from "../matching/catalog";
 import { MappingRepository } from "../mapping/mappingRepository";
 import type { SavedFieldMapping } from "../mapping/types";
@@ -63,6 +70,35 @@ export function App() {
 }
 
 type OperationState = "idle" | "scanning" | "creating" | "ready" | "filling" | "complete" | "error";
+type AttachmentState = "idle" | "hashing" | "ready" | "attaching" | "attached" | "error";
+
+interface PreparedResumeAttachment {
+  file: File;
+  sha256: string;
+}
+
+function formatAttachmentSize(bytes: number): string {
+  return bytes >= 1024 * 1024
+    ? `${(bytes / (1024 * 1024)).toFixed(2)} MiB`
+    : `${Math.max(1, Math.ceil(bytes / 1024))} KiB`;
+}
+
+function destinationHost(candidate: ResumeAttachmentCandidate): string {
+  try {
+    return new URL(candidate.destinationOrigin).host;
+  }
+  catch {
+    return candidate.destinationOrigin;
+  }
+}
+
+function attachmentFailureMessage(reason?: ResumeAttachmentFailureReason): string {
+  if (reason === "authorization-expired" || reason === "stale-confirmation") return "确认已经超过 60 秒，请重新扫描后再选择文件。";
+  if (reason === "digest-mismatch" || reason === "invalid-digest") return "文件摘要发生变化，已停止附件操作。";
+  if (reason === "candidate-changed" || reason === "existing-file" || reason === "invalid-destination") return "页面、目标控件或现有附件已经变化，请重新扫描。";
+  if (reason === "invalid-filename" || reason === "invalid-mime" || reason === "invalid-size" || reason === "not-pdf") return "只支持 10 MiB 以内、内容有效的单个 PDF 简历。";
+  return "附件没有添加。授权可能已使用或页面不再接受该文件，请重新扫描。";
+}
 
 function ProposalCard({
   proposal,
@@ -140,6 +176,9 @@ export function SidePanel({
   const [message, setMessage] = useState("");
   const [mappings, setMappings] = useState<SavedFieldMapping[]>([]);
   const [consentAcknowledged, setConsentAcknowledged] = useState<boolean | null>(null);
+  const [preparedAttachment, setPreparedAttachment] = useState<PreparedResumeAttachment | null>(null);
+  const [attachmentState, setAttachmentState] = useState<AttachmentState>("idle");
+  const [attachmentMessage, setAttachmentMessage] = useState("");
 
   useEffect(() => {
     let active = true;
@@ -200,7 +239,84 @@ export function SidePanel({
         )
         .map((field) => field.elementId)
     ));
+    setPreparedAttachment(null);
+    setAttachmentState("idle");
+    setAttachmentMessage("");
     setState("ready");
+  }
+
+  async function chooseResumeAttachment(file: File | undefined) {
+    setPreparedAttachment(null);
+    setAttachmentMessage("");
+    if (!file) {
+      setAttachmentState("idle");
+      return;
+    }
+    if (
+      file.type.toLowerCase() !== "application/pdf"
+      || !file.name.toLowerCase().endsWith(".pdf")
+      || file.size <= 0
+      || file.size > MAX_RESUME_ATTACHMENT_BYTES
+    ) {
+      setAttachmentState("error");
+      setAttachmentMessage("只支持 10 MiB 以内的单个 PDF 简历。");
+      return;
+    }
+
+    setAttachmentState("hashing");
+    try {
+      const bytes = new Uint8Array(await file.arrayBuffer());
+      const isPdf = bytes.length >= 5
+        && bytes[0] === 0x25
+        && bytes[1] === 0x50
+        && bytes[2] === 0x44
+        && bytes[3] === 0x46
+        && bytes[4] === 0x2d;
+      if (!isPdf) {
+        bytes.fill(0);
+        setAttachmentState("error");
+        setAttachmentMessage("文件扩展名是 PDF，但内容不是有效的 PDF 文件。");
+        return;
+      }
+      const digestBuffer = await crypto.subtle.digest("SHA-256", bytes.buffer);
+      bytes.fill(0);
+      const sha256 = Array.from(
+        new Uint8Array(digestBuffer),
+        (value) => value.toString(16).padStart(2, "0")
+      ).join("");
+      setPreparedAttachment({ file, sha256 });
+      setAttachmentState("ready");
+    }
+    catch {
+      setAttachmentState("error");
+      setAttachmentMessage("无法在本机读取这个 PDF，请重新选择。");
+    }
+  }
+
+  async function attachSelectedResume(candidate: ResumeAttachmentCandidate) {
+    if (!preparedAttachment || !bridge.attachResume) return;
+    setAttachmentState("attaching");
+    setAttachmentMessage("");
+    try {
+      const result = await bridge.attachResume(
+        preparedAttachment.file,
+        candidate,
+        preparedAttachment.sha256,
+        Date.now()
+      );
+      if (result.status === "attached") {
+        setAttachmentState("attached");
+        setAttachmentMessage("简历已附加。招聘网站可能已经接收文件；请检查页面，但仍由你本人最终提交。");
+      }
+      else {
+        setAttachmentState("error");
+        setAttachmentMessage(attachmentFailureMessage(result.reason));
+      }
+    }
+    catch {
+      setAttachmentState("error");
+      setAttachmentMessage("附件失败，页面可能已经跳转或权限已失效。请重新点击扩展图标并扫描。");
+    }
   }
 
   async function scanCurrentPage() {
@@ -316,7 +432,7 @@ export function SidePanel({
           <h1 id="consent-title">你的档案默认只留在本机。</h1>
           <ul>
             <li>只有点击扫描后，扩展才读取当前招聘页面的表单标题。</li>
-            <li>敏感字段默认不选；密码、验证码和附件不会自动填写。</li>
+            <li>敏感字段默认不选；附件只有在选择 PDF 并再次确认目标网站后才会添加。</li>
             <li>扩展只填写已选字段，不会替你提交申请。</li>
           </ul>
           <button className="scan-button" type="button" onClick={acknowledgePrivacy}>我已了解并继续</button>
@@ -344,7 +460,7 @@ export function SidePanel({
         </div>
       </section>
 
-      <button className="scan-button" type="button" onClick={scanCurrentPage} disabled={!completion.filled || state === "scanning" || state === "creating" || state === "filling"}>
+      <button className="scan-button" type="button" onClick={scanCurrentPage} disabled={!completion.filled || state === "scanning" || state === "creating" || state === "filling" || attachmentState === "hashing" || attachmentState === "attaching"}>
         <ScanSearch size={20} aria-hidden="true" />
         {state === "scanning" ? "正在扫描" : scan ? "重新扫描当前页面" : "扫描当前页面"}
       </button>
@@ -358,6 +474,64 @@ export function SidePanel({
             </div>
             <strong>{fillable.length}<span>项可填写</span></strong>
           </header>
+
+          {scan.resumeAttachment?.status === "ready" && scan.resumeAttachment.candidate ? (
+            <section className="attachment-card" aria-labelledby="resume-attachment-title">
+              <div className="group-heading">
+                <FileUp size={17} aria-hidden="true" />
+                <h3 id="resume-attachment-title">附加简历 PDF</h3>
+                <span>单独确认</span>
+              </div>
+              <p className="attachment-warning">点击确认后，招聘网站可能立即接收文件，不必等到最终提交。</p>
+              <dl className="attachment-target">
+                <div><dt>目标网站</dt><dd>{scan.resumeAttachment.candidate.destinationOrigin}</dd></div>
+                <div><dt>目标控件</dt><dd>{scan.resumeAttachment.candidate.fieldLabel}</dd></div>
+              </dl>
+              <label className="attachment-picker">
+                <span>{attachmentState === "hashing" ? "正在核对文件" : "选择要附加的 PDF 简历"}</span>
+                <input
+                  type="file"
+                  accept=".pdf,application/pdf"
+                  disabled={attachmentState === "hashing" || attachmentState === "attaching" || attachmentState === "attached"}
+                  onChange={(event) => { void chooseResumeAttachment(event.currentTarget.files?.[0]); }}
+                />
+              </label>
+              {preparedAttachment ? (
+                <div className="attachment-summary">
+                  <strong>{preparedAttachment.file.name}</strong>
+                  <span>{formatAttachmentSize(preparedAttachment.file.size)}</span>
+                  <span className="attachment-digest"><Fingerprint size={13} aria-hidden="true" />SHA-256 {preparedAttachment.sha256.slice(0, 16)}…</span>
+                </div>
+              ) : null}
+              {preparedAttachment && attachmentState !== "attached" ? (
+                <button
+                  className="attachment-confirm"
+                  type="button"
+                  disabled={!bridge.attachResume || attachmentState !== "ready"}
+                  onClick={() => { void attachSelectedResume(scan.resumeAttachment!.candidate!); }}
+                >
+                  <FileUp size={16} aria-hidden="true" />
+                  {attachmentState === "attaching"
+                    ? "正在附加"
+                    : `确认上传到 ${destinationHost(scan.resumeAttachment.candidate)}`}
+                </button>
+              ) : null}
+              {attachmentMessage ? (
+                <p className={`attachment-message ${attachmentState === "error" ? "attachment-error" : ""}`}>
+                  {attachmentMessage}
+                </p>
+              ) : null}
+            </section>
+          ) : null}
+
+          {scan.resumeAttachment && ["ambiguous", "unsupported"].includes(scan.resumeAttachment.status) ? (
+            <div className="attachment-unavailable">
+              <FileWarning size={16} aria-hidden="true" />
+              <p>{scan.resumeAttachment.status === "ambiguous"
+                ? `发现 ${scan.resumeAttachment.candidateCount} 个可能的简历控件，无法安全选择，请手动上传。`
+                : "页面存在附件控件，但没有唯一的 PDF 简历目标，请手动上传。"}</p>
+            </div>
+          ) : null}
 
           {missingRepeatableGroups.length > 0 ? (
             <div className="repeatable-plan" aria-labelledby="repeatable-plan-title">
@@ -377,7 +551,7 @@ export function SidePanel({
                     <button
                       type="button"
                       aria-label={`创建缺失的${group.label}`}
-                      disabled={!group.canCreate || !bridge.createRepeatableRecords || state === "creating" || state === "filling"}
+                      disabled={!group.canCreate || !bridge.createRepeatableRecords || state === "creating" || state === "filling" || attachmentState === "attaching"}
                       onClick={() => { void createRepeatableRecords(group.key); }}
                     >
                       {state === "creating" ? "正在检查" : "创建并重扫"}
@@ -419,7 +593,7 @@ export function SidePanel({
             </details>
           ) : null}
 
-          <button className="fill-button" type="button" disabled={selected.size === 0 || state === "filling"} onClick={fillSelected}>
+          <button className="fill-button" type="button" disabled={selected.size === 0 || state === "filling" || attachmentState === "attaching"} onClick={fillSelected}>
             <Check size={18} aria-hidden="true" />
             {state === "filling" ? "正在填写" : `填写已选 ${selected.size} 项`}
           </button>
@@ -430,7 +604,7 @@ export function SidePanel({
 
       <div className="privacy-message">
         <ShieldCheck size={20} aria-hidden="true" />
-        <p>只在你点击后读取当前页面；不会读取密码，也不会自动提交申请。</p>
+        <p>只在你点击后读取当前页面；简历附件需要单独确认，也不会自动提交申请。</p>
       </div>
     </main>
   );

@@ -51,16 +51,17 @@ export interface ResumeAttachmentPayload {
   base64: string;
 }
 
+export type ResumeAttachmentFailureReason = ResumeAttachmentRejection["reason"]
+  | "authorization-expired"
+  | "authorization-missing"
+  | "digest-mismatch"
+  | "invalid-payload"
+  | "not-pdf"
+  | "transfer-failed";
+
 export interface ResumeAttachmentResult {
   status: "attached" | "rejected";
-  reason?:
-    | "authorization-expired"
-    | "authorization-missing"
-    | "candidate-changed"
-    | "digest-mismatch"
-    | "invalid-payload"
-    | "not-pdf"
-    | "transfer-failed";
+  reason?: ResumeAttachmentFailureReason;
 }
 
 interface StoredAuthorization extends ResumeAttachmentMetadata {
@@ -71,6 +72,22 @@ const authorizations = new Map<string, StoredAuthorization>();
 
 function currentOrigin(): string {
   return typeof location !== "undefined" ? location.origin : "local";
+}
+
+export function isResumeAttachmentOriginAllowed(origin: string): boolean {
+  try {
+    const url = new URL(origin);
+    if (url.protocol === "https:") return true;
+    return url.protocol === "http:"
+      && ["127.0.0.1", "localhost", "[::1]"].includes(url.hostname);
+  }
+  catch {
+    return false;
+  }
+}
+
+function isAllowedAttachmentOrigin(): boolean {
+  return isResumeAttachmentOriginAllowed(currentOrigin());
 }
 
 function isResumeSignal(value: string): boolean {
@@ -99,6 +116,7 @@ function inputAcceptsPdf(input: HTMLInputElement): boolean {
 }
 
 function attachmentCandidates(root: ParentNode): ResumeAttachmentCandidate[] {
+  if (!isAllowedAttachmentOrigin()) return [];
   return discoverFields(root).flatMap((descriptor) => {
     if (descriptor.kind !== "file" || descriptor.disabled || descriptor.readOnly) return [];
     const control = findControlByElementId(descriptor.elementId);
@@ -161,7 +179,9 @@ export function authorizeResumeAttachment(
 ): ResumeAttachmentAuthorization | ResumeAttachmentRejection {
   const now = Date.now();
   purgeExpiredAuthorizations(now);
-  if (metadata.destinationOrigin !== currentOrigin()) return { ok: false, reason: "invalid-destination" };
+  if (!isAllowedAttachmentOrigin() || metadata.destinationOrigin !== currentOrigin()) {
+    return { ok: false, reason: "invalid-destination" };
+  }
   if (!validFilename(metadata.filename)) return { ok: false, reason: "invalid-filename" };
   if (metadata.mimeType.toLowerCase() !== "application/pdf") return { ok: false, reason: "invalid-mime" };
   if (!Number.isSafeInteger(metadata.size) || metadata.size <= 0 || metadata.size > MAX_RESUME_ATTACHMENT_BYTES) {

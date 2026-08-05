@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   authorizeResumeAttachment,
+  isResumeAttachmentOriginAllowed,
   MAX_RESUME_ATTACHMENT_BYTES,
   scanResumeAttachment
 } from "./resumeAttachment";
@@ -41,6 +42,14 @@ describe("resume attachment architecture", () => {
       candidate: null,
       candidateCount: 2
     });
+  });
+
+  it("allows HTTPS destinations and loopback fixtures but rejects remote HTTP", () => {
+    expect(isResumeAttachmentOriginAllowed("https://jobs.example")).toBe(true);
+    expect(isResumeAttachmentOriginAllowed("http://127.0.0.1:4173")).toBe(true);
+    expect(isResumeAttachmentOriginAllowed("http://localhost:4173")).toBe(true);
+    expect(isResumeAttachmentOriginAllowed("http://jobs.example")).toBe(false);
+    expect(isResumeAttachmentOriginAllowed("file:///tmp/form.html")).toBe(false);
   });
 
   it("rejects stale, oversized, non-PDF, and wrong-origin authorization metadata", () => {
