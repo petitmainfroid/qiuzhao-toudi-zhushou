@@ -724,3 +724,26 @@ Run a local field-level audit over the five PDFs to identify missing dates, role
 - Install/package automation: `scripts/install-skill.mjs`, `scripts/verify-skill.mjs`, `scripts/test-skill-install.mjs`, `scripts/package-skill.mjs`, `scripts/package-release.mjs`.
 - F023 parser/corpus changes and their evidence are included in the same published branch; generated archives and screenshots remain local-only/Release-only and are not committed.
 - F024 is `done`. The prerelease is publicly downloadable and PR #1 remains a draft for owner review before merging to `main`. Next recommended product feature remains F018; F014 remains blocked on a physical real-page `activeTab` gesture.
+
+## 2026-08-05 - F019 resume attachment architecture kickoff
+
+- The user explicitly prioritized safe resume attachment after observing that the current product never places the resume into recruitment-site file controls.
+- F019 is now `in_progress`. Its obsolete F018 dependency was removed: date ranges, cascading selects, radios, multi-selects, and rich-text adapters are independent of discovering one high-confidence resume file input and transferring one user-selected PDF.
+- The acceptance order is intentionally strict: prove the pre-transmission confirmation boundary and immediate-upload behavior on an instrumented local fixture first; implement the product flow only if bytes remain session-only and destination-bound; perform a real recruitment-page transfer only after the user confirms the exact file and HTTPS origin because selection may immediately transmit personal data.
+- Baseline `init.ps1 -SkipInstall` -> exit 0; 18 Vitest files/183 tests passed, production build succeeded, 11 required distribution files were verified, and permissions remained exactly `activeTab`, `scripting`, `sidePanel`, `storage`.
+
+### F019 completion evidence
+
+- Added `docs/resume-attachment-threat-model.md`. It selects the extension-memory `File` path and defines three distinct gates: instrumented local Chrome, unpacked-extension machine acceptance, and a real authenticated recruitment-page transfer that requires explicit confirmation of the exact PDF and HTTPS Origin.
+- Added `src/content/resumeAttachment.ts`. It recognizes only one high-confidence PDF resume input, excludes identity/photo/transcript/portfolio/recommendation/certificate controls, validates filename/MIME/size/SHA-256/PDF signature, binds a 60-second single-use authorization to Origin and element, consumes it on the first attempt, and never stores a path or bytes.
+- The instrumented fixture proves the critical network boundary: selecting/preparing a synthetic PDF leaves `files.length`, upload requests, and submit count at zero; setting the file after confirmation fires exactly one `change` and one immediate attachment request, while the identity attachment stays empty and final-submit count stays zero.
+- Wrong digest and replay attempts were rejected without a second request. Unit coverage also rejects wrong Origin, non-PDF names/MIME, oversized files, stale confirmation, and ambiguous resume controls.
+
+### F019 verification
+
+- `npm test -- --run src/content/resumeAttachment.test.ts src/content/engine.test.ts` -> exit 0; 2 files/11 tests passed.
+- `npm run typecheck` -> exit 0 after explicitly narrowing decoded bytes to an ordinary `ArrayBuffer` for Web Crypto and `File` compatibility.
+- `npm run test:e2e -- --grep "resume attachment prototype"` -> exit 0; 1/1 passed in installed Chrome. Network observation recorded zero requests before authorization and exactly one after attachment; submit count remained zero.
+- Inspected `artifacts/resume-attachment-prototype.png` (34,249 bytes, 2026-08-05 15:16 local time). It contains only `synthetic-resume.pdf`, shows the resume accepted, the identity attachment empty, and the submit control unused.
+- Final `npm run validate` -> exit 0; TypeScript passed, 19 Vitest files/186 tests passed, production build succeeded, 11 required files were verified, and permissions remained exactly `activeTab`, `scripting`, `sidePanel`, `storage`.
+- F019 is `done`; F020 is now `in_progress`. The real recruitment-site gate remains intentionally unexecuted until the product UI displays and the user confirms the exact PDF, Origin, and matched control because the site may upload immediately on `change`.

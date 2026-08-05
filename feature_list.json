@@ -363,8 +363,8 @@
     {
       "id": "F019",
       "title": "Prove a safe architecture for resume PDF attachment",
-      "status": "todo",
-      "depends_on": ["F015", "F018"],
+      "status": "done",
+      "depends_on": ["F015"],
       "acceptance": [
         "A threat model and executable prototype compare an extension-memory File flow with a narrowly scoped OpenCLI/DevTools attachment token without adding broad permissions to the assistant.",
         "The chosen path requires a user-selected PDF, validates MIME type, size, and digest, retains no arbitrary filesystem path, and keeps bytes out of logs and persistent extension storage.",
@@ -376,12 +376,12 @@
         "npm run validate",
         "Review docs/resume-attachment-threat-model.md."
       ],
-      "notes": "Do not add a generic upload command. If the in-page File flow is rejected by Chrome or the ATS, use an opaque, single-use, page-bound OpenCLI token rather than an agent-supplied path."
+      "notes": "User-prioritized on 2026-08-05. F018 is not a technical dependency because attachment discovery and File transfer are isolated from complex value-control adapters. Do not add a generic upload command. If the in-page File flow is rejected by Chrome or the ATS, use an opaque, single-use, page-bound OpenCLI token rather than an agent-supplied path."
     },
     {
       "id": "F020",
       "title": "Implement user-confirmed resume PDF attachment",
-      "status": "todo",
+      "status": "in_progress",
       "depends_on": ["F019"],
       "acceptance": [
         "The user selects one PDF for the current session and sees filename, size, digest prefix, destination site, and matched resume control before approval.",

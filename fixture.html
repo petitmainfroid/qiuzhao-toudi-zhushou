@@ -28,7 +28,9 @@
       <div class="form-item"><span>项目描述</span><div id="project-description" contenteditable="true"></div></div>
       <label for="captcha">短信验证码</label><input id="captcha" />
       <label for="password">账户密码</label><input id="password" type="password" />
-      <label for="resume">上传简历</label><input id="resume" type="file" />
+      <label for="resume">上传简历</label><input id="resume" type="file" accept=".pdf,application/pdf" />
+      <p id="resume-upload-status" aria-live="polite">尚未选择简历</p>
+      <label for="identity-attachment">身份证附件</label><input id="identity-attachment" type="file" accept="image/*,.pdf" />
       <button id="add-dynamic" type="button">添加补充字段</button>
       <div id="dynamic-fields" hidden>
         <label for="emergency-contact">紧急联系人姓名</label><input id="emergency-contact" />
