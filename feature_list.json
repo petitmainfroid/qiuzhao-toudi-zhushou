@@ -552,6 +552,109 @@
         "npm run test:e2e"
       ],
       "notes": "Do not change runtime behavior when the judge only proposes stylistic improvements or cannot identify a deterministic counterexample. One evaluated candidate per iteration keeps rollback cheap."
+    },
+    {
+      "id": "F029",
+      "title": "Audit resume extraction completeness and correctness with DeepSeek",
+      "status": "done",
+      "depends_on": ["F023", "F027"],
+      "acceptance": [
+        "A development-only browser audit reads the current local PDF/DOCX resume corpus, identifies samples only by short digest, and compares numbered redacted source lines with the deterministic parsed profile without changing the extension runtime.",
+        "Direct identifiers including names, phone numbers, email addresses, identity numbers, URLs, street addresses, filenames, and filesystem paths are removed before any HTTPS request; the API key, cookies, authentication data, raw files, and unredacted resume text are never persisted or logged.",
+        "DeepSeek classifies schema-supported facts as correct, missing, incorrect, ambiguous, or source-absent using allowed canonical path patterns and source line ids; schema gaps and parser gaps are reported separately, and model output remains advisory.",
+        "Known complete, missed-field, wrong-field, and unsupported-field calibration cases are scored independently; a model mismatch, incomplete calibration, malformed output, redirect, HTTP endpoint, or privacy audit fails closed.",
+        "The ignored report records per-section candidate coverage and bounded sanitized findings so the highest-value reproducible parser gap can become one anonymous regression instead of an untraceable model-driven rewrite."
+      ],
+      "verification": [
+        "npm run eval:resume -- --offline",
+        "npm run eval:resume -- --judge",
+        "npm test -- --run src/evaluation/resumeCompletenessPolicy.test.ts",
+        "npm run validate",
+        "Inspect ignored resume-completeness artifacts for digest-only sample identity, redacted source evidence, bounded output, and absence of direct identifiers or credentials."
+      ],
+      "notes": "Completed on 2026-08-05. The 11-sample digest allowlist produced 668 redacted source lines and 370 web-fillable parsed facts with no parser warnings. Boyue matched deepseek-v4-flash and scored every calibration 4/4, but real-corpus finding counts changed materially after privacy/prompt clarification (105 to 126 supported defects), proving that model estimates are candidate discovery rather than ground truth. Per-sample checkpoints and targeted reruns make later iterations resumable and bounded."
+    },
+    {
+      "id": "F030",
+      "title": "Promote one evidence-backed maximum-coverage resume extraction improvement",
+      "status": "done",
+      "depends_on": ["F029"],
+      "acceptance": [
+        "The highest-impact DeepSeek candidate is verified against local source structure and reduced to one synthetic fixture containing no personal values.",
+        "A narrowly scoped deterministic parser or schema change increases supported-field recall on the fixture and affected digest while preserving no-fabrication, conflict-preserving merge behavior, and neighboring-section isolation.",
+        "Before-versus-after evidence reports populated paths, record counts, supported missing fields, incorrect fields, schema gaps, and webpage-fill coverage without treating a larger raw field count as correctness by itself.",
+        "The candidate is accepted only when targeted tests, the full resume suite, fill-quality gates, validation, and browser E2E pass; otherwise it is rejected with a recorded reason and rollback path."
+      ],
+      "verification": [
+        "npm test -- --run src/resume src/evaluation",
+        "npm run eval:resume -- --offline",
+        "npm run eval:resume -- --judge",
+        "npm run eval:fill -- --offline",
+        "npm run validate",
+        "npm run test:e2e"
+      ],
+      "notes": "Completed on 2026-08-05. A real date-first current education row had `至今` prefixed to the school and repeated the school inside the major. The current-marker-aware school extractor plus an anonymous regression corrected both values while preserving an empty end date, all 370 corpus facts, perfect fill-quality gates, 198 unit tests, and 17 browser E2E tests. Targeted DeepSeek findings for the affected digest dropped from 9 to 4 and the two corrected paths disappeared, but remaining policy-violating model findings were not promoted."
+    },
+    {
+      "id": "F031",
+      "title": "Prevent contact headers and activities from leaking into structured records",
+      "status": "todo",
+      "depends_on": ["F030"],
+      "acceptance": [
+        "A contact header containing email, phone, portfolio URL, and social account may create an evidenced link but never becomes a work-sample description or another narrative field.",
+        "A dated team, club, or extracurricular role outside an award section does not become an award or education record, while explicit competition results remain extractable as awards.",
+        "Anonymous fixtures reproduce each accepted source-boundary defect and affected real digests show fewer incorrect paths without losing valid links, awards, education, or projects.",
+        "DeepSeek is used only for targeted candidate review; exact parser outputs and section evidence determine acceptance."
+      ],
+      "verification": [
+        "npm test -- --run src/resume src/evaluation",
+        "npm run eval:resume -- --offline",
+        "npm run eval:resume -- --judge --skip-browser --sample=E5A6ADD6",
+        "npm run eval:fill -- --offline",
+        "npm run validate",
+        "npm run test:e2e"
+      ],
+      "notes": "Next recommended feature. Start with the contact-header-to-workSamples.description leak because it is source-visible, privacy-relevant, and has a narrow rollback surface."
+    },
+    {
+      "id": "F032",
+      "title": "Recover substantive project titles and wrapped project content",
+      "status": "todo",
+      "depends_on": ["F030"],
+      "acceptance": [
+        "Generic labels such as paper/project ordinals are replaced by an explicitly evidenced substantive title when present on the same source record.",
+        "Wrapped title, description, outcome, role, and date lines stay on the correct project without creating body-text projects or crossing section boundaries.",
+        "Anonymous fixtures cover bullet-only projects, English wrapped titles, labelled paper titles, and page-number noise; no publication year is invented as a project duration.",
+        "Affected digest comparisons improve exact record fields without reducing project count or neighboring-section isolation."
+      ],
+      "verification": [
+        "npm test -- --run src/resume",
+        "npm run eval:resume -- --offline",
+        "Run targeted DeepSeek review only for affected digests.",
+        "npm run validate",
+        "npm run test:e2e"
+      ],
+      "notes": "Prioritize only after F031 or when project correctness is the next user-visible blocker; model findings must be reduced to exact source structures first."
+    },
+    {
+      "id": "F033",
+      "title": "Associate education metrics and records without award leakage",
+      "status": "todo",
+      "depends_on": ["F030"],
+      "acceptance": [
+        "GPA and ranking lines attach to the evidenced education record rather than a later admission or award line.",
+        "Award prose mentioning a university, GPA, or rank cannot create a new education record without a school-and-date education header.",
+        "Current and future education rows retain explicit degree, major, dates, GPA, and ranking without borrowing unsupported values across records.",
+        "Affected digest and anonymous fixture comparisons show no record-count regression or fabricated end date."
+      ],
+      "verification": [
+        "npm test -- --run src/resume",
+        "npm run eval:resume -- --offline",
+        "Run targeted DeepSeek review only for affected digests.",
+        "npm run validate",
+        "npm run test:e2e"
+      ],
+      "notes": "Use the visibly evidenced GPA/ranking candidates from the digest corpus, but do not infer a degree from `推免` or move metrics without record-local evidence."
     }
   ]
 }

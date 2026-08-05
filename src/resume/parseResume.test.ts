@@ -242,6 +242,22 @@ WCUA 2025（三作，在投）
     });
   });
 
+  it("keeps a current-date marker out of date-first education school and major values", () => {
+    const parsed = parseResumeText(`
+教育经历
+2023.09 - 至今 厦门大学 博士 健康医疗大数据
+`);
+
+    expect(parsed.profile.education).toHaveLength(1);
+    expect(parsed.profile.education[0]).toMatchObject({
+      school: "厦门大学",
+      degree: "博士",
+      major: "健康医疗大数据",
+      startDate: "2023-09",
+      endDate: ""
+    });
+  });
+
   it("keeps evidence-backed project roles and outcomes when metadata is wrapped", () => {
     const parsed = parseResumeText(`
 科研经历

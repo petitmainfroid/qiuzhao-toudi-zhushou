@@ -121,6 +121,8 @@ npm run install:skill
 
 开发者可以选择运行 `npm run eval:fill -- --judge`，让 `.env` 中配置的 OpenAI-compatible 模型对合成评测结果做 shadow review。该命令不属于扩展运行时，只接受 HTTPS、拒绝重定向，并且不会发送真实简历、档案值、网页值、截图或文件路径；模型意见不能替代确定性回归和人工晋升。
 
+需要审计真实本地简历的提取完整性时，先运行 `npm run eval:resume -- --offline` 生成摘要白名单、去标识观测；明确允许 Boyue 读取去标识证据后，再运行 `npm run eval:resume -- --judge --skip-browser`。全量基线完成后应使用 `--sample=<8位摘要>` 定向复评。详细隐私边界、模型误报规则和晋升门槛见 `docs/resume-completeness-evolution-plan.md`。
+
 完整说明见 [PRIVACY.md](./PRIVACY.md)。
 
 ## 常见问题

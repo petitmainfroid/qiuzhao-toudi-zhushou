@@ -14,6 +14,7 @@
     "audit:agent-bridge": "node scripts/audit-agent-bridge.mjs",
     "audit:repeatable-page": "node scripts/audit-live-repeatable-page.mjs",
     "eval:fill": "node scripts/run-fill-quality-eval.mjs",
+    "eval:resume": "node scripts/run-resume-completeness-eval.mjs",
     "verify:dist": "node scripts/verify-dist.mjs",
     "verify:package": "node scripts/verify-package.mjs",
     "verify:skill": "node scripts/verify-skill.mjs",
