@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "suiteVersion": "2026-08-05.1",
+  "syntheticOnly": true,
+  "cases": {
+    "generic": [
+      { "fieldKey": "full-name", "expectedPath": "basic.fullName", "expectedAction": "fill" },
+      { "fieldKey": "email", "expectedPath": "basic.email", "expectedAction": "fill" },
+      { "fieldKey": "degree", "expectedPath": "education.0.degree", "expectedAction": "fill" },
+      { "fieldKey": "radio:gender", "expectedPath": "basic.gender", "expectedAction": "fill" },
+      { "fieldKey": "project-description", "expectedPath": "projects.0.description", "expectedAction": "fill" },
+      { "fieldKey": "captcha", "expectedPath": null, "expectedAction": "exclude" },
+      { "fieldKey": "password", "expectedPath": null, "expectedAction": "exclude" },
+      { "fieldKey": "resume", "expectedPath": null, "expectedAction": "exclude" },
+      { "fieldKey": "identity-attachment", "expectedPath": null, "expectedAction": "exclude" }
+    ],
+    "xiaomi": [
+      { "fieldKey": "basic_info.name", "expectedPath": "basic.fullName", "expectedAction": "fill" },
+      { "fieldKey": "basic_info.mobile", "expectedPath": "basic.phone", "expectedAction": "fill" },
+      { "fieldKey": "basic_info.email", "expectedPath": "basic.email", "expectedAction": "fill" },
+      { "fieldKey": "basic_info.age", "expectedPath": "derived.age", "expectedAction": "fill" },
+      { "fieldKey": "basic_info.gender", "expectedPath": "basic.gender", "expectedAction": "fill" },
+      { "fieldKey": "basic_info.nationality", "expectedPath": "basic.nationality", "expectedAction": "fill" },
+      { "fieldKey": "basic_info.hometown_city", "expectedPath": "basic.hometown", "expectedAction": "fill" },
+      { "fieldKey": "basic_info.identification", "expectedPath": null, "expectedAction": "exclude" },
+      { "fieldKey": "basic_info.preferred_city_list", "expectedPath": "jobPreference.preferredCities", "expectedAction": "fill" },
+      { "fieldKey": "education_list[0].school", "expectedPath": "education.0.school", "expectedAction": "fill" },
+      { "fieldKey": "education_list[0].degree", "expectedPath": "education.0.degree", "expectedAction": "fill" },
+      { "fieldKey": "education_list[0].field_of_study", "expectedPath": "education.0.major", "expectedAction": "fill" },
+      { "fieldKey": "education_list[0].start_end_time.start", "expectedPath": "education.0.startDate", "expectedAction": "fill" },
+      { "fieldKey": "education_list[0].start_end_time.end", "expectedPath": "education.0.endDate", "expectedAction": "fill" },
+      { "fieldKey": "education_list[0].education_type", "expectedPath": "education.0.educationType", "expectedAction": "fill" },
+      { "fieldKey": "education_list[1].school", "expectedPath": "education.1.school", "expectedAction": "fill" },
+      { "fieldKey": "internship_list[0].company", "expectedPath": "workExperiences.0.company", "expectedAction": "fill" },
+      { "fieldKey": "internship_list[0].title", "expectedPath": "workExperiences.0.role", "expectedAction": "fill" },
+      { "fieldKey": "internship_list[0].desc", "expectedPath": "workExperiences.0.description", "expectedAction": "fill" },
+      { "fieldKey": "works_list[0].link", "expectedPath": "workSamples.0.link", "expectedAction": "fill" },
+      { "fieldKey": "works_list[0].attachment", "expectedPath": null, "expectedAction": "exclude" },
+      { "fieldKey": "works_list[0].desc", "expectedPath": "workSamples.0.description", "expectedAction": "fill" },
+      { "fieldKey": "project_list[0].name", "expectedPath": "projects.0.name", "expectedAction": "fill" },
+      { "fieldKey": "project_list[0].role", "expectedPath": "projects.0.role", "expectedAction": "fill" },
+      { "fieldKey": "project_list[0].link", "expectedPath": "projects.0.link", "expectedAction": "fill" },
+      { "fieldKey": "project_list[0].desc", "expectedPath": "projects.0.description", "expectedAction": "fill" },
+      { "fieldKey": "award_list[0].name", "expectedPath": "awards.0.name", "expectedAction": "fill" },
+      { "fieldKey": "award_list[0].date", "expectedPath": "awards.0.date", "expectedAction": "fill" },
+      { "fieldKey": "award_list[0].desc", "expectedPath": "awards.0.description", "expectedAction": "fill" },
+      { "fieldKey": "language_list[0].language", "expectedPath": "languages.0.language", "expectedAction": "fill" },
+      { "fieldKey": "language_list[0].proficiency", "expectedPath": "languages.0.proficiency", "expectedAction": "fill" },
+      { "fieldKey": "self_evaluation.self_evaluation", "expectedPath": "answers.selfEvaluation", "expectedAction": "fill" }
+    ]
+  },
+  "repeatable": {
+    "expectedMissingBefore": 8,
+    "expectedMissingAfter": 0,
+    "expectedCreated": 8,
+    "expectedDeleteClicks": 0,
+    "expectedSubmitClicks": 0
+  },
+  "attachment": {
+    "expectedStatus": "ready",
+    "expectedCandidateCount": 1,
+    "expectedOtherAttachmentMutations": 0
+  }
+}

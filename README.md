@@ -84,12 +84,14 @@ cd qiuzhao-toudi-zhushou
 ```powershell
 npm run validate
 npm run test:e2e
+npm run eval:fill -- --offline
 npm run package:release
 npm run install:skill
 ```
 
 - `npm run validate`：类型检查、全部单元/组件测试、生产构建和权限审计。
 - `npm run test:e2e`：验证档案、简历导入、页面比较、动态记录创建、用户确认的简历附件、隐私控制和禁止最终提交。
+- `npm run eval:fill -- --offline`：在真实 Chrome 中用纯合成 ground truth 计算匹配、填写、排除、建行、附件和安全指标，不调用外部模型。
 - `npm run package`：生成并审计浏览器扩展 ZIP。
 - `npm run package:skill`：验证并生成 Codex Skill ZIP。
 - `npm run package:release`：生成扩展包、Skill 包和完整发行包。
@@ -116,6 +118,8 @@ npm run install:skill
 - 不点击最终申请提交按钮。
 - 出生日期、性别、籍贯、政治面貌等敏感字段默认要求确认。
 - 不使用遥测、广告、云端账号或远程运行时代码。
+
+开发者可以选择运行 `npm run eval:fill -- --judge`，让 `.env` 中配置的 OpenAI-compatible 模型对合成评测结果做 shadow review。该命令不属于扩展运行时，只接受 HTTPS、拒绝重定向，并且不会发送真实简历、档案值、网页值、截图或文件路径；模型意见不能替代确定性回归和人工晋升。
 
 完整说明见 [PRIVACY.md](./PRIVACY.md)。
 

@@ -493,6 +493,65 @@
         "Record a privacy-redacted pass/fail handoff in progress.md; do not capture a screenshot unless the page and filename are anonymized."
       ],
       "notes": "Blocked on the user's action-time choice of an exact local PDF and authenticated HTTPS recruitment page. Because many ATS products upload immediately on file-input change, no live transfer may be inferred from earlier resume audits or performed without this confirmation."
+    },
+    {
+      "id": "F026",
+      "title": "Build a privacy-safe fill-quality evaluation harness",
+      "status": "done",
+      "depends_on": ["F015", "F017", "F020"],
+      "acceptance": [
+        "A versioned synthetic browser suite measures field-match precision and recall, selected-fill exactness, repeatable-record coverage, attachment targeting, and critical safety invariants against explicit ground truth rather than an LLM opinion.",
+        "The evaluation artifact contains only synthetic labels, canonical profile paths, confidence/reason codes, boolean outcomes, aggregate metrics, and safety counters; it contains no resume text, personal value, raw page value, HTML, screenshot, path, cookie, token, or authentication data.",
+        "A development-only judge adapter reads credentials from ignored local environment files, refuses non-HTTPS endpoints and redirects, never exposes the API key, sends only the sanitized artifact, requires structured JSON, and records a sanitized advisory result separately from product code.",
+        "Promotion gates keep deterministic rules as the source of truth: critical-safety pass rate must remain 100%, precision cannot regress, recall gains require fixture evidence, and model suggestions remain candidates until a regression test and rollback path exist."
+      ],
+      "verification": [
+        "npm run eval:fill -- --offline",
+        "npm test -- --run src/evaluation",
+        "npm run test:e2e -- --grep \"fill quality evaluation\"",
+        "npm run validate",
+        "Inspect artifacts/fill-quality-observation.json and artifacts/fill-quality-report.json for synthetic-only content."
+      ],
+      "notes": "User-prioritized on 2026-08-05. DeepSeek is a shadow reviewer, never the scoring oracle or runtime matcher. The extension remains network-free; only an explicit development command may call the configured evaluator."
+    },
+    {
+      "id": "F027",
+      "title": "Calibrate DeepSeek V4 Flash as a shadow fill-quality reviewer",
+      "status": "blocked",
+      "depends_on": ["F026"],
+      "acceptance": [
+        "The configured model is called only through a verified HTTPS endpoint using temperature zero and a bounded structured-output prompt over the synthetic evaluation artifact.",
+        "Calibration examples include known-good behavior, an incorrect field match, a missed fill, and a critical unsafe mutation; judge detection is scored independently from product accuracy.",
+        "At least three repeated judgments are compared when results disagree, and the report separates deterministic failures, judge-only hypotheses, latency, token usage, and malformed-response failures.",
+        "No program mutation is promoted directly from one judge response, and a failed or unavailable judge leaves the deterministic baseline usable."
+      ],
+      "verification": [
+        "npm run eval:fill -- --judge",
+        "Verify the endpoint is HTTPS and the returned model identifier matches the expected configured model family.",
+        "Inspect the sanitized judge report and calibration confusion matrix without printing the API key or request payload values.",
+        "Repeat only disagreement cases up to the documented budget and stop when the action would not change."
+      ],
+      "notes": "Blocked because the current ignored .env points both OpenAI-compatible URLs at a remote plain-HTTP endpoint; an unauthenticated TLS probe failed with ERR_SSL_PACKET_LENGTH_TOO_LONG. The key must not be transmitted until the user supplies a trusted HTTPS endpoint or an official DeepSeek key/base URL."
+    },
+    {
+      "id": "F028",
+      "title": "Promote one evidence-backed fill-quality improvement",
+      "status": "todo",
+      "depends_on": ["F026", "F027"],
+      "acceptance": [
+        "The highest-impact reproducible failure is reduced to one anonymized fixture and one narrowly scoped deterministic matcher, parser, control-adapter, or workflow candidate change.",
+        "Baseline-versus-candidate evaluation shows the target failure fixed, no precision or critical-safety regression, and an explicit rollback commit or patch.",
+        "DeepSeek feedback is cited only as diagnostic evidence; exact expected paths, values, DOM outcomes, and safety counters decide promotion.",
+        "The accepted or rejected candidate is versioned in progress.md with evidence, cost, risk, Human Gate status, and the next evaluation question."
+      ],
+      "verification": [
+        "npm run eval:fill -- --offline",
+        "npm run eval:fill -- --judge",
+        "Run the targeted regression for the changed subsystem.",
+        "npm run validate",
+        "npm run test:e2e"
+      ],
+      "notes": "Do not change runtime behavior when the judge only proposes stylistic improvements or cannot identify a deterministic counterexample. One evaluated candidate per iteration keeps rollback cheap."
     }
   ]
 }

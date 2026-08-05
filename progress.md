@@ -779,3 +779,40 @@ Run a local field-level audit over the five PDFs to identify missing dates, role
 - Attachment core and message path: `src/content/resumeAttachment.ts`, `src/content/resumeAttachment.test.ts`, `src/content/engine.ts`, `src/content/index.ts`, `src/shared/messages.ts`, and `src/sidepanel/pageBridge.ts`.
 - User flow and browser evidence: `src/sidepanel/App.tsx`, `src/sidepanel/sidepanel.css`, `src/sidepanel/SidePanel.test.tsx`, `tests/e2e/resume-attachment-flow.spec.ts`, and the local-only attachment screenshots under `artifacts/`.
 - Documentation and durable state: `README.md`, `PRIVACY.md`, `docs/resume-attachment-threat-model.md`, `skills/qiuzhao-toudi-assistant/SKILL.md`, `feature_list.json`, and `progress.md`.
+
+## 2026-08-05 - F026 fill-quality evolution harness kickoff
+
+- Applied the user-requested `long-running-agent-harness` and the controlled AI-system evolution workflow. The reality to change is not “produce more model commentary”; it is to make recruitment-page filling measurably more accurate while preserving local-first behavior, zero final submission, and deterministic safety boundaries.
+- Decision object: choose whether a concrete matcher/control/workflow change should be promoted. The default action without new evidence is to keep the current deterministic implementation. The owner of runtime promotion is the user; AI may build reversible evaluation tooling, collect synthetic evidence, and draft one candidate fix, but cannot promote a rule from one model response.
+- Evaluation order is fixed: explicit synthetic ground truth -> actual installed-Chrome observation -> deterministic metrics -> optional DeepSeek shadow diagnosis -> anonymized regression -> candidate comparison -> Human Gate -> promotion or rollback. Critical safety failures override aggregate accuracy.
+- The ignored `.env` contains all four expected OpenAI-compatible variables and a configured `bailian/deepseek-v4-flash` model. Neither key nor value was printed. Both configured endpoints use remote plain HTTP; a no-key HTTPS probe failed with `ERR_SSL_PACKET_LENGTH_TOO_LONG`, so sending the API key or any evaluation payload is blocked.
+- Official DeepSeek documentation confirms that the current official OpenAI-compatible base URL is HTTPS and that `deepseek-v4-flash` supports JSON output. The configured gateway/model alias is therefore treated as a separate provider and is not silently rewritten because its key may not work against the official service.
+- Baseline `./init.ps1 -SkipInstall` -> exit 0; 19 Vitest files/188 tests passed, production build succeeded, 11 required distribution files were verified, and permissions remained exactly `activeTab`, `scripting`, `sidePanel`, `storage`.
+- Added F026-F028 for the evaluation harness, HTTPS model calibration, and one evidence-backed product iteration. F026 is `in_progress`; F027 is blocked on a trusted HTTPS endpoint; F028 remains dependent on reproducible feedback.
+
+### F026 completion and first feedback loop
+
+- Added `evals/fill-quality-suite.json` version `2026-08-05.1` with explicit synthetic ground truth for the generic and Xiaomi-derived forms, repeatable-record counts, attachment targeting, and zero-tolerance safety counters.
+- Added a real-Chrome observation test plus deterministic scorer. Artifacts contain only field keys, canonical paths, confidence/exclusion/status codes, booleans, counts, timestamps, and aggregate metrics. A recursive forbidden-key audit found no raw/profile/page value, resume text, HTML, screenshot, file path, Cookie, authorization, API key, or token field.
+- The first baseline produced perfect path/value metrics but failed the gate with `duplicateProposalCount: 1`: the two inputs in one `name=gender` radio group became two side-panel suggestions. Changed DOM discovery to emit one logical control per `(form, radio name)` while retaining the full option list and existing group fill behavior.
+- The post-fix baseline passed: 35 true-positive mappings, 0 false positives, 0 false negatives, precision/recall/F1 `1.0`; 35/35 exact fills; 6/6 correct exclusions; 8/8 repeatable records created; repeatable coverage `1.0`; attachment targeting `1.0`; duplicate proposals `0`; critical safety violations `0`.
+- Added a development-only DeepSeek/OpenAI-compatible adapter with an HTTPS-only endpoint gate, no redirects, bounded timeout/output, JSON mode, disabled thinking, temperature zero, four known calibration cases, sanitized persisted findings, independent model-id/calibration checks, and no extension runtime import. `.env.example` documents the official secure shape without a key.
+- The first fail-closed probe exposed an overly verbose data-URL stack containing bundled evaluator source but no key or request payload. The runner now catches configuration errors at its boundary. The final `npm run eval:fill -- --judge --skip-browser` -> expected exit 1 before network transmission with only `Refusing to send the judge key or payload over non-HTTPS transport.` No paid model request was made.
+
+### Verification evidence
+
+- `npm test -- --run src/evaluation` -> exit 0; 2 files/6 tests passed for deterministic metrics, privacy-key rejection, HTTPS configuration, bounded JSON request construction, response sanitization, and judge calibration scoring.
+- `npm test -- --run src/matching/dom.test.ts src/content/engine.test.ts src/evaluation` -> exit 0; 4 files/17 tests passed after the radio-group correction.
+- `npm run eval:fill -- --offline` -> exit 0; installed Chrome generated the synthetic artifacts and every deterministic quality/safety gate passed with the metrics above.
+- Final `npm run validate` -> exit 0; TypeScript passed, 21 Vitest files/194 tests passed, production build succeeded, 11 required distribution files were verified, and permissions stayed exactly `activeTab`, `scripting`, `sidePanel`, and `storage`.
+- Final `npm run test:e2e` -> exit 0; 16/16 installed-Chrome tests passed, including the new fill-quality evaluation and all prior profile, resume, repeatable, attachment, privacy, Xiaomi, and zero-submit regressions.
+- Inspected ignored `artifacts/fill-quality-observation.json` (16,960 bytes) and `artifacts/fill-quality-report.json` (629 bytes); both are synthetic-only and the forbidden-key scan returned an empty list.
+
+### Changed files and handoff
+
+- Harness and documentation: `feature_list.json`, `progress.md`, `docs/fill-quality-evolution-plan.md`, `.env.example`, `README.md`, and `package.json`.
+- Ground truth and scoring: `evals/fill-quality-suite.json`, `src/evaluation/fillQuality.ts`, and `src/evaluation/fillQuality.test.ts`.
+- Shadow judge: `src/evaluation/judgePolicy.ts`, `src/evaluation/judgePolicy.test.ts`, and `scripts/run-fill-quality-eval.mjs`.
+- Browser observation and first promoted fix: `tests/e2e/fill-quality-eval.spec.ts`, `src/matching/dom.ts`, and `src/matching/dom.test.ts`.
+- F026 is `done`. F027 remains `blocked` until the user replaces the remote HTTP endpoint with a trusted HTTPS endpoint and a compatible key/model alias. Do not silently switch the URL to the official DeepSeek service because the existing key may belong to the configured gateway. Once HTTPS is configured, run `npm run eval:fill -- --judge`; only a calibration-perfect, model-matched sanitized report may unblock F028.
+- Rollback: revert the F026 checkpoint to remove the evaluator and restore the previous per-radio-input discovery behavior; no storage migration, browser permission, production endpoint, or user data is involved.
