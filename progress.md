@@ -652,3 +652,43 @@ Run a local field-level audit over the five PDFs to identify missing dates, role
 - GitHub normalizes the requested pure-Chinese repository identifier to `-`; because that historical empty repository already exists on the account, the shareable repository slug is `qiuzhao-toudi-zhushou`. The README and product UI retain the requested Chinese name.
 - Published source excludes `.chrome-autofill-profile/`, `.chromium-autofill-profile/`, `node_modules/`, `dist/`, `artifacts/`, test reports, environment files, and ZIP archives.
 - No product feature state changed: F016 and F017 remain `done`, F018 remains the next recommended feature.
+
+## 2026-08-05 - F023 current local resume corpus (in progress)
+
+### Inventory baseline
+
+- The user prioritized resume-extraction coverage, so F023 was added as an independent unblocked feature after F013/F017; F018 remains `todo` and unchanged.
+- A read-only filename and local text-structure scan covered the 84 PDF/DOCX/DOC files currently in Downloads. It identified 11 resume-like files: 10 PDFs and 1 DOCX. Desktop contained no candidate office documents; the broad Documents scan was stopped after its time bound and was not needed because every confirmed candidate is in Downloads.
+- The previously audited PDF digests remain `4FFDB2FC`, `5A12C901`, `E5A6ADD6`, `BC238C94`, and `06B46FDE`. Newly discovered layout digests are `317CA5B2`, `74F1E5AC`, `79636754`, `EA62283F`, `2EA7842E`, and DOCX `6EA82132`.
+- Repository evidence contains only short content digests, format/count metadata, and structural coverage. Source files, filenames, raw text, rendered pages, and personal values remain local and must not enter Git, screenshots, fixtures, or logs.
+
+### Baseline verification
+
+- `powershell -NoProfile -ExecutionPolicy Bypass -File .\init.ps1 -SkipInstall` -> exit 0; TypeScript passed, 18 Vitest files/179 tests passed, production build succeeded, 11 required distribution files were verified, and permissions remained exactly `activeTab`, `scripting`, `sidePanel`, `storage`.
+- The next action is to visually inventory the six newly discovered layouts, run the real browser extraction/parser locally, compare supported-field coverage by digest, and convert only confirmed deterministic failures into anonymized fixtures before changing product code.
+
+### F023 completion
+
+- Visually reviewed all nine pages of the five new PDFs. The DOCX was reviewed through its complete OOXML paragraph/list order and the actual browser DOCX extraction path; Word, LibreOffice, and the packaged visual renderer were unavailable, so original DOCX pagination/layout was not claimed.
+- The digest-only browser audit covered all six new layouts without outputting filenames, raw text, or personal values. Non-empty mapped paths increased from 131 to 184 (+53): `2EA7842E` 23->28, `317CA5B2` 40->45, `6EA82132` 20->23, `74F1E5AC` 5->28, `79636754` 14->26, and `EA62283F` 29->34.
+- Final record counts matched the source section inventory: `2EA7842E` education 2/work 2/projects 3; `317CA5B2` education 3/projects 5/awards 4/languages 2; `6EA82132` education 2/work 1/projects 1/languages 2; `74F1E5AC` education 3/work 4/awards 5; `79636754` education 2/projects 5; `EA62283F` education 2/work 1/projects 4/languages 1.
+- Added deterministic handling for new section boundaries, year-only education/work, expected-admission months, split degree/major lines, undated project boundaries, international phones, inline job preferences, multiple explicit languages/proficiency levels, cross-line award lists, and role/company separation. Year-only dates remain blank rather than receiving fabricated months.
+- Added only anonymous synthetic unit/E2E fixtures. The permanent corpus flow parses 3 education, 2 work, 3 project, and 2 language records, creates missing rows, fills 23 recruitment-form controls, and leaves delete/final-submit counters at zero.
+- The temporary audit specs and `tmp/pdfs` renders were deleted after use. The original Downloads files were not copied, renamed, edited, or removed; `tmp/` is now ignored to prevent future local review artifacts from entering Git.
+
+### Verification evidence
+
+- Digest-only six-layout browser audit -> exit 0 after final parser changes; aggregate mapped paths 184 and the record counts above matched the visual/structural inventory.
+- Focused real award-list audit for `74F1E5AC` -> exit 0; five distinct awards were recovered from a cross-line semicolon/comma/acronym list. The audit-only spec was then deleted.
+- `npm test -- --run src/resume/parseResume.test.ts` -> exit 0; 14 tests passed, including three corpus-derived parsing cases and the cross-line award regression.
+- `npm run test:e2e -- --grep "resume corpus"` -> exit 0; 1 test passed and generated `artifacts/resume-corpus.png`.
+- Inspected `artifacts/resume-corpus.png`; it contains only anonymous synthetic values, shows education/work/project/language rows at missing 0, keeps the final-submit control visible but unused, and contains no real resume data.
+- Final `npm run validate` -> exit 0; TypeScript passed, 18 Vitest files/183 tests passed, production build succeeded, 11 required distribution files were verified, and permissions remained exactly `activeTab`, `scripting`, `sidePanel`, `storage`.
+- Final `npm run test:e2e` -> exit 0; 13/13 tests passed, including extension PDF import, DOCX/PDF/OCR import, the new resume-to-webpage corpus flow, repeatable-row creation, page comparison, privacy controls, and no-submit regressions.
+
+### Changed files and handoff
+
+- Parser/profile UI: `src/resume/parseResume.ts`, `src/resume/parseResume.test.ts`, `src/options/App.tsx`.
+- End-to-end evidence: `tests/e2e/resume-corpus-flow.spec.ts`, local-only `artifacts/resume-corpus.png`.
+- Durable evidence/state: `docs/resume-field-coverage-audit.md`, `feature_list.json`, `progress.md`, `.gitignore`.
+- F023 is `done` with no known product blocker. F018 remains the next recommended unblocked feature: verified date ranges, cascading/searchable selects, multi-selects, radios, and rich text on recruitment pages. F014 remains separately blocked on the user's physical real-page `activeTab` gesture.

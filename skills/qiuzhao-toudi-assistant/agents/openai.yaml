@@ -1,0 +1,4 @@
+interface:
+  display_name: "秋招投递助手"
+  short_description: "安全加载浏览器扩展、导入本地简历并辅助填写招聘网页表单"
+  default_prompt: "Use $qiuzhao-toudi-assistant to install and safely use the extension on a recruitment form."

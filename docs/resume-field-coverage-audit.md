@@ -56,3 +56,31 @@ The current `artifacts/resume-import.png` was captured from this multi-record br
 - Extracted project author/participant roles and `论文成果`/`研究成果` outcome labels.
 - Kept right-aligned award results on their visual row and grouped narrative competition descriptions into one record instead of one record per text line.
 - Stabilized accessible control names so repeatable values can be verified against the exact destination labels.
+
+## F023 corpus expansion
+
+The 2026-08-05 refresh found six additional layouts, bringing the current Downloads corpus to ten PDFs and one DOCX. The five new PDFs were visually reviewed across all nine pages. The DOCX was checked through its complete OOXML paragraph/list order and the real browser DOCX extraction path; Word, LibreOffice, and the packaged visual renderer were unavailable on this machine, so original DOCX pagination/layout was not claimed as visual evidence.
+
+The table below reports non-empty schema paths rather than personal values. “Before” is the released F013 parser; “After” is the F023 parser. Record counts were checked against the visible/structural source sections. Real filenames, raw text, values, and rendered pages remain outside the repository.
+
+| Digest | Format/pages | Before paths | After paths | Education | Work | Projects | Awards | Languages |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| `2EA7842E` | PDF / 2 | 23 | 28 | 2 | 2 | 3 | 0 | 0 |
+| `317CA5B2` | PDF / 2 | 40 | 45 | 3 | 0 | 5 | 4 | 2 |
+| `6EA82132` | DOCX | 20 | 23 | 2 | 1 | 1 | 0 | 2 |
+| `74F1E5AC` | PDF / 2 | 5 | 28 | 3 | 4 | 0 | 5 | 0 |
+| `79636754` | PDF / 1 | 14 | 26 | 2 | 0 | 5 | 0 | 0 |
+| `EA62283F` | PDF / 2 | 29 | 34 | 2 | 1 | 4 | 0 | 1 |
+
+Aggregate mapped-path coverage for the six newly discovered layouts increased from 131 to 184 (+53). The audit-only digest scripts were deleted after use. The permanent synthetic E2E regression parses 3 education records, 2 internships, 3 projects, and 2 languages, creates the missing recruitment-form rows, fills 23 matched controls, and proves zero delete and zero final-submit clicks.
+
+### Defects corrected by F023
+
+- Added section boundaries for in-school research, project results, open-source contributions, technical skills, personal/research summaries, publications, conferences, extracurricular activities, and other terminal sections.
+- Preserved year-only education and internships without fabricating a month; recognized explicitly evidenced expected-admission months.
+- Read degree/major details split onto the next line, including direct-PhD wording, without borrowing degree words from awards or prose.
+- Split undated Chinese research/project entries after completed descriptions and stopped publications, conferences, and extracurricular activities from leaking into projects.
+- Parsed labelled or `+`-prefixed international phone numbers and inline job preferences.
+- Parsed multiple languages on one line, including explicit `母语`, `熟练`, and `流利` evidence, while retaining the existing no-inference rule for bare CET scores.
+- Reassembled cross-line semicolon/comma/acronym award lists into distinct records only inside an evidenced award section.
+- Removed role text from company values in year-only internships before those values reach webpage controls.

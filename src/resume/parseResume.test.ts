@@ -314,4 +314,132 @@ Kaggle Anonymous Reasoning Challenge 银牌
       "全国匿名设计大赛 优胜奖"
     ]);
   });
+
+  it("splits semicolon-separated award lists into distinct evidenced records", () => {
+    const parsed = parseResumeText(`
+获奖经历
+匿名夏令营一等奖（2021）；匿名程序设计竞赛金奖（2020）；匿名区域赛
+铜奖（2020）；匿名南京站二等奖、匿名秦皇岛站银奖（2019）
+`);
+
+    expect(parsed.profile.awards.map((award) => award.name)).toEqual([
+      "匿名夏令营一等奖(2021)",
+      "匿名程序设计竞赛金奖(2020)",
+      "匿名区域赛铜奖(2020)",
+      "匿名南京站二等奖",
+      "匿名秦皇岛站银奖(2019)"
+    ]);
+  });
+
+  it("keeps year-only education and internships without inventing months", () => {
+    const parsed = parseResumeText(`
+Anonymous Candidate
+Phone: +971 58 535 9738 | candidate@example.test
+教育经历
+Example University 2024 - 预计 2028
+机器学习博士；导师：匿名教授
+Example University 2022 - 2024
+机器学习硕士
+南岭大学 2018 - 2022
+计算机科学学士
+代表论文
+Anonymous Paper Title
+实习经历
+研究实习生 2023
+匿名科技公司
+研究实习生 2022
+匿名算法中台
+软件工程实习生 2021
+匿名研究院
+软件工程实习生 2020
+匿名云平台
+`);
+
+    expect(parsed.profile.basic.phone).toBe("+971585359738");
+    expect(parsed.profile.education).toHaveLength(3);
+    expect(parsed.profile.education.map((record) => record.degree)).toEqual(["博士", "硕士", "本科"]);
+    expect(parsed.profile.education.map((record) => record.major)).toEqual(["机器学习", "机器学习", "计算机科学"]);
+    expect(parsed.profile.education.every((record) => !record.startDate && !record.endDate)).toBe(true);
+    expect(parsed.profile.workExperiences).toHaveLength(4);
+    expect(parsed.profile.workExperiences.every((record) => record.company && record.role)).toBe(true);
+    expect(parsed.profile.workExperiences.map((record) => record.company)).toEqual([
+      "匿名科技公司",
+      "匿名算法中台",
+      "匿名研究院",
+      "匿名云平台"
+    ]);
+    expect(parsed.profile.workExperiences.every((record) => !record.startDate && !record.endDate)).toBe(true);
+
+    const future = parseResumeText(`
+教育背景
+匿名科技大学 预期入学：2028年9月
+人工智能博士
+`);
+    expect(future.profile.education[0]).toMatchObject({
+      school: "匿名科技大学",
+      degree: "博士",
+      major: "人工智能",
+      startDate: "2028-09",
+      endDate: ""
+    });
+  });
+
+  it("splits completed undated project entries and stops at publication boundaries", () => {
+    const parsed = parseResumeText(`
+在校科研
+匿名研究甲
+• 方法：构建匿名分析流程。
+• 结果：完成稳定性验证。
+匿名研究乙
+• 方法：实现匿名数据管线。
+• 结果：形成复现实验。
+技能/目标
+Python、TypeScript、可复核测试
+项目经历
+匿名系统甲：实现本地解析。
+• 完成字段映射。
+匿名系统乙
+• 构建结构化输出。
+项目成果
+匿名成果甲。
+匿名成果乙 2025.01 - 2025.03
+• 完成匿名评测。
+论文发表
+Anonymous Publication That Must Not Become A Project
+学术会议
+Anonymous Conference 2026
+`);
+
+    expect(parsed.profile.projects).toHaveLength(6);
+    expect(parsed.profile.projects.map((record) => record.name)).toEqual(expect.arrayContaining([
+      "匿名研究甲",
+      "匿名研究乙",
+      "匿名系统甲",
+      "匿名系统乙",
+      "匿名成果甲。",
+      "匿名成果乙"
+    ]));
+    expect(parsed.profile.projects.some((record) => /Publication|Conference/.test(record.name))).toBe(false);
+    expect(parsed.profile.answers.strengths).toContain("TypeScript");
+  });
+
+  it("reads degree details, inline preferences, and multiple explicit language levels", () => {
+    const parsed = parseResumeText(`
+匿名同学
+电话/微信：(+86) 193-7057-3269 | 邮箱：candidate@example.test | 求职意向：实习生
+教育背景
+匿名航天大学 2025.09 - 至今
+直博 计算机学院 软件工程
+其他
+语言：中文（母语）、英文（流利）
+`);
+
+    expect(parsed.profile.basic.phone).toBe("+8619370573269");
+    expect(parsed.profile.jobPreference.targetRoles).toBe("实习生");
+    expect(parsed.profile.education[0]).toMatchObject({ degree: "博士", major: "软件工程" });
+    expect(parsed.profile.languages).toEqual(expect.arrayContaining([
+      expect.objectContaining({ language: "普通话", proficiency: "母语" }),
+      expect.objectContaining({ language: "英语", proficiency: "流利" })
+    ]));
+  });
 });

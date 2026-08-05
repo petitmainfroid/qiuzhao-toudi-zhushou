@@ -433,6 +433,47 @@
         "Inspect current redacted screenshots and verify the archive contains no personal or authentication data."
       ],
       "notes": "Real-site evidence requires the user's logged-in browser and action-time confirmations. Never weaken the no-submit boundary to complete acceptance."
+    },
+    {
+      "id": "F023",
+      "title": "Expand resume extraction with the current local resume corpus",
+      "status": "done",
+      "depends_on": ["F013", "F017"],
+      "acceptance": [
+        "A privacy-safe inventory covers every resume-like PDF/DOCX currently found in the user's Downloads folder, identifies real samples only by short content digest in repository evidence, and never commits filenames, source files, raw text, or personal values.",
+        "Every newly discovered layout is visually reviewed and audited field by field against the supported profile schema, including basic information, education, work/internships, projects, awards, languages, skills, and descriptions.",
+        "Each deterministic extraction or parsing failure is reproduced with an anonymized synthetic fixture before the scoped fix; existing non-empty profile values remain protected and missing facts are never fabricated.",
+        "A local end-to-end regression proves that imported structured records can create required repeatable rows and fill the corresponding recruitment-form controls without file attachment or final submission."
+      ],
+      "verification": [
+        "Run a local digest-only resume audit and record expected versus parsed supported-field coverage for every newly discovered layout.",
+        "npm test -- --run src/resume src/options src/content src/matching",
+        "npm run test:e2e -- --grep \"resume corpus\"",
+        "npm run validate",
+        "Inspect a current screenshot in artifacts/ and confirm it contains only synthetic data and no submit action."
+      ],
+      "notes": "User-prioritized after F017. Real resume names, text, personal values, and files stay outside Git; only anonymized structural regressions and aggregate digest evidence may be committed."
+    },
+    {
+      "id": "F024",
+      "title": "Publish a Chinese operator guide and installable Codex skill",
+      "status": "in_progress",
+      "depends_on": ["F009", "F023"],
+      "acceptance": [
+        "The public README gives Chinese end users a release-download path, unpacked Chrome/Edge loading steps, first-use workflow, activeTab recovery, privacy boundaries, and contributor commands.",
+        "A repository-local Codex skill can guide safe installation, build, page authorization, resume import, preview, selective filling, and troubleshooting without exposing a final-submit, verification-bypass, credential, cookie, or arbitrary-file action.",
+        "One documented command installs the skill into the user's Codex skills directory, and deterministic validation proves the packaged skill metadata and copied contents are valid.",
+        "The extension archive and skill archive are freshly generated, audited for personal/authentication data, and published with the source changes on GitHub."
+      ],
+      "verification": [
+        "Run the skill creator quick validator against the repository skill.",
+        "Run the skill installer in an isolated destination and compare required files.",
+        "npm run validate",
+        "npm run test:e2e",
+        "npm run package:release",
+        "Inspect both archives and run a publish-scope privacy scan before pushing."
+      ],
+      "notes": "User-requested distribution milestone. Generated archives remain ignored by Git and are uploaded as release assets; source skill files are committed."
     }
   ]
 }

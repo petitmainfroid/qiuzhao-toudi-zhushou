@@ -3,6 +3,7 @@ dist/
 artifacts/
 playwright-report/
 test-results/
+tmp/
 .chrome-autofill-profile/
 .chromium-autofill-profile/
 .env
