@@ -56,7 +56,7 @@ const LANGUAGE_OPTIONS = [
   "泰卢固语", "土耳其语", "意大利语", "爪哇语", "泰米尔语", "马拉地语", "越南语",
   "普通话", "粤语", "印尼语", "马来语", "泰语", "塞尔维亚语"
 ];
-const PROFICIENCY_OPTIONS = ["入门", "日常会话", "商务会话", "无障碍沟通", "母语"];
+const PROFICIENCY_OPTIONS = ["入门", "日常会话", "商务会话", "熟练", "流利", "无障碍沟通", "母语"];
 
 interface ResumeImportFeedback {
   status: "idle" | "parsing" | "success" | "error";

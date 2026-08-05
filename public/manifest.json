@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "秋招填表助手",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "在本地维护一份求职档案，预览并填写招聘网页中的重复信息。",
   "content_security_policy": {
     "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self';"

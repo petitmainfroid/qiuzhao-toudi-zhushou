@@ -1,6 +1,6 @@
 {
   "name": "qiuzhao-profile-assistant",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "description": "Local-first recruitment form assistant for Chrome and Edge.",
@@ -15,8 +15,13 @@
     "audit:repeatable-page": "node scripts/audit-live-repeatable-page.mjs",
     "verify:dist": "node scripts/verify-dist.mjs",
     "verify:package": "node scripts/verify-package.mjs",
+    "verify:skill": "node scripts/verify-skill.mjs",
+    "test:skill-install": "node scripts/test-skill-install.mjs",
     "validate": "node scripts/validate.mjs",
-    "package": "node scripts/package.mjs"
+    "package": "node scripts/package.mjs",
+    "package:skill": "node scripts/package-skill.mjs",
+    "package:release": "node scripts/package-release.mjs",
+    "install:skill": "node scripts/install-skill.mjs"
   },
   "engines": {
     "node": ">=22"

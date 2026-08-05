@@ -19,6 +19,7 @@ type SectionKey =
   | "languages"
   | "skills"
   | "activities"
+  | "other"
   | "selfIntroduction"
   | "selfEvaluation"
   | "careerPlan";
@@ -55,24 +56,26 @@ const SECTION_BREAK = "\u001e";
 const SECTION_ALIASES: Array<[SectionKey, string[]]> = [
   ["education", ["教育经历", "教育背景", "教育程度", "Education Background", "Educational Background"]],
   ["work", ["研究与实习经历", "研究及实习经历", "科研与实习经历", "实习与工作经历", "工作与实习经历", "实习经历", "工作经历", "实践经历", "职业经历", "工作经验", "实习经验", "Work Experience", "Internship Experience"]],
-  ["projects", ["论文与科研成果", "科研与项目经历", "科研项目经历", "科研经历", "科研项目", "研究经历", "研究项目", "项目经历", "项目经验", "科研成果", "Project Experience", "Research Experience", "Projects"]],
+  ["projects", ["论文与科研成果", "科研与项目经历", "科研项目经历", "在校科研", "科研经历", "科研项目", "研究经历", "研究项目", "开源项目贡献", "开源贡献", "项目成果", "项目经历", "项目经验", "科研成果", "Project Experience", "Research Experience", "Projects"]],
   ["works", ["个人作品", "作品集", "作品", "Portfolio", "Work Samples"]],
   ["awards", ["竞赛经历", "比赛经历", "竞赛获奖", "获奖经历", "奖项证书", "奖项荣誉", "荣誉奖项", "荣誉与奖励", "Awards and Honors", "Awards"]],
   ["languages", ["语言能力", "外语能力", "语言技能", "Languages", "Language"]],
-  ["skills", ["专业技能", "技能特长", "个人优势", "核心技能", "Skills"]],
-  ["activities", ["校园经历", "校内活动", "学生活动", "社团经历", "社会实践", "志愿服务", "Campus Activities", "Activities"]],
-  ["selfIntroduction", ["个人简介", "自我介绍", "Profile", "Summary"]],
+  ["skills", ["技能/目标", "技术能力", "专业技能", "技能特长", "个人优势", "核心技能", "技能", "Skills"]],
+  ["activities", ["课外活动", "校园经历", "校内活动", "学生活动", "社团经历", "社会实践", "志愿服务", "Campus Activities", "Activities"]],
+  ["other", ["论文发表", "代表论文", "学术会议", "学术服务", "其他"]],
+  ["selfIntroduction", ["个人总结", "研究简介", "个人简介", "自我介绍", "Profile", "Summary"]],
   ["selfEvaluation", ["自我评价", "个人评价", "Self Evaluation"]],
   ["careerPlan", ["职业规划", "发展规划", "Career Plan"]]
 ];
 
-const DEGREE_VALUES = ["博士", "MBA", "硕士", "本科", "学士", "大专", "专科", "高中", "PhD", "Master", "Bachelor"];
+const DEGREE_VALUES = ["直博", "博士", "MBA", "硕士", "本科", "学士", "大专", "专科", "高中", "PhD", "Master", "Bachelor"];
 const EDUCATION_TYPE_VALUES = ["海外及港澳台", "统招全日制", "统招非全日制", "自考", "全日制", "非全日制"];
 const LANGUAGE_VALUES = [
-  "英语", "法语", "日语", "韩语", "德语", "俄语", "西班牙语", "葡萄牙语", "阿拉伯语", "普通话", "粤语",
+  "英语", "英文", "法语", "日语", "韩语", "德语", "俄语", "西班牙语", "葡萄牙语", "阿拉伯语", "普通话", "中文", "粤语",
   "English", "French", "Japanese", "Korean", "German", "Russian", "Spanish", "Portuguese", "Mandarin", "Cantonese"
 ];
-const PROFICIENCY_VALUES = ["入门", "日常会话", "商务会话", "无障碍沟通", "母语"];
+const PROFICIENCY_VALUES = ["入门", "日常会话", "商务会话", "熟练", "流利", "无障碍沟通", "母语"];
+const EXACT_SECTION_ALIASES = new Set(["项目成果", "其他"]);
 
 function cleanLine(line: string): string {
   const normalized = line.normalize("NFKC");
@@ -115,6 +118,10 @@ function sectionMatches(line: string): SectionMatch[] {
       const pattern = phrasePattern(alias);
       for (const match of line.matchAll(pattern)) {
         if (match.index === undefined) continue;
+        if (EXACT_SECTION_ALIASES.has(alias)) {
+          const suffix = line.slice(match.index + match[0].length).replace(/[：:|｜·•—_\-\s]/g, "");
+          if (suffix) continue;
+        }
         const prefix = line.slice(0, match.index)
           .replace(/[一二三四五六七八九十]/g, "")
           .replace(/[^\p{L}\p{N}]/gu, "");
@@ -143,7 +150,7 @@ function sectionForHeading(line: string): SectionKey | null {
 
 function partitionSections(lines: string[]): Record<SectionKey, string[]> {
   const sections: Record<SectionKey, string[]> = {
-    header: [], education: [], work: [], projects: [], works: [], awards: [], languages: [], skills: [], activities: [],
+    header: [], education: [], work: [], projects: [], works: [], awards: [], languages: [], skills: [], activities: [], other: [],
     selfIntroduction: [], selfEvaluation: [], careerPlan: []
   };
   let current: SectionKey = "header";
@@ -164,7 +171,7 @@ function partitionSections(lines: string[]): Record<SectionKey, string[]> {
       cursor = match.end;
     }
     const after = cleanLine(line.slice(cursor));
-    if (after) sections[current].push(after);
+    if (after && after.replace(/[：:|｜·•—_\-\s]/g, "")) sections[current].push(after);
   }
   return sections;
 }
@@ -194,8 +201,21 @@ function labelledValueAnywhere(lines: string[], labels: string[]): string {
 }
 
 function normalizePhone(value: string): string {
-  const compact = value.replace(/[\s()-]/g, "");
+  const compact = value.replace(/[^\d+]/g, "");
   return compact.startsWith("+86") ? compact : compact.replace(/^86(?=1[3-9]\d{9}$)/, "+86");
+}
+
+function extractPhone(lines: string[]): string {
+  const labelled = /(?:手机(?:号码)?|联系电话|电话(?:\s*\/\s*微信)?|Phone|Mobile|Tel)\s*[：:]?\s*((?:\(\+?\d{1,3}\)|\+?\d{1,3})?(?:[\s-]?\d){7,14})/i;
+  for (const line of lines) {
+    const value = labelled.exec(line)?.[1];
+    if (value) return normalizePhone(value);
+  }
+  const allText = lines.join("\n");
+  const chineseMobile = /(?<!\d)(?:(?:\+?86)[\s-]?)?1[3-9](?:[\s-]?\d){9}(?!\d)/.exec(allText)?.[0];
+  if (chineseMobile) return normalizePhone(chineseMobile);
+  const international = /(?<!\d)\+\d{1,3}(?:[\s-]?\d){7,14}(?!\d)/.exec(allText)?.[0];
+  return international ? normalizePhone(international) : "";
 }
 
 function normalizeMonth(year: string, month: string): string {
@@ -210,6 +230,26 @@ function findDateRange(value: string): DateRange | null {
   const start = normalizeMonth(match[1], match[2]);
   const end = match[3] && match[4] ? normalizeMonth(match[3], match[4]) : "";
   return start ? { raw: match[0], start, end } : null;
+}
+
+function findYearEvidence(value: string): DateRange | null {
+  const range = /(?<!\d)((?:19|20)\d{2})\s*(?:[-–—~～至到]+\s*(?:预计\s*)?((?:19|20)\d{2})|年)(?!\d)/.exec(value);
+  if (range) return { raw: range[0], start: "", end: "" };
+  const point = /(?<!\d)((?:19|20)\d{2})(?![\d.\/-])/.exec(value);
+  return point ? { raw: point[0], start: "", end: "" } : null;
+}
+
+function findEducationRange(value: string): DateRange | null {
+  const range = findDateRange(value);
+  if (range) return range;
+  if (/(?:预计入学|预期入学|计划入学|expected\s+(?:enrolment|enrollment|admission))/i.test(value)) {
+    const month = /((?:19|20)\d{2})\s*(?:[./-]\s*|年\s*)(\d{1,2})\s*(?:月)?/.exec(value);
+    if (month) {
+      const start = normalizeMonth(month[1], month[2]);
+      if (start) return { raw: month[0], start, end: "" };
+    }
+  }
+  return findYearEvidence(value);
 }
 
 function findMonth(value: string): string {
@@ -229,7 +269,10 @@ function findFullDate(value: string): string {
 function extractSchool(value: string): string {
   const compactChinese = value.replace(/(?<=\p{Script=Han})\s+(?=\p{Script=Han})/gu, "");
   const chinese = /([\p{Script=Han}·]{2,}?(?:大学|学院|学校|中学))/u.exec(compactChinese)?.[1];
-  if (chinese) return chinese;
+  const degreeLedDepartment = /^(?:直博|博士|MBA|硕士|本科|学士|大专|专科|高中|PhD|Master|Bachelor)\s+/i.test(value)
+    && chinese?.endsWith("学院")
+    && !/(?:大学|学校|中学)/.test(chinese);
+  if (chinese && !degreeLedDepartment) return chinese;
   return /([A-Za-z][A-Za-z .&'-]{2,}?(?:University|College|Institute|School))/i.exec(value)?.[1]?.trim() ?? "";
 }
 
@@ -252,7 +295,7 @@ function withoutKnownParts(value: string, parts: string[]): string {
 function canonicalDegree(value: string): string {
   const found = rawDegree(value);
   if (!found) return "";
-  const mapping: Record<string, string> = { 学士: "本科", PhD: "博士", Master: "硕士", Bachelor: "本科", 专科: "大专" };
+  const mapping: Record<string, string> = { 直博: "博士", 学士: "本科", PhD: "博士", Master: "硕士", Bachelor: "本科", 专科: "大专" };
   return mapping[found] ?? found;
 }
 
@@ -271,19 +314,20 @@ function canonicalEducationType(value: string): string {
 
 function findCandidates(
   lines: string[],
-  identity: (value: string) => string
+  identity: (value: string) => string,
+  rangeFinder: (value: string) => DateRange | null = findDateRange
 ): RecordCandidate[] {
   const candidates: RecordCandidate[] = [];
   for (let index = 0; index < lines.length; index += 1) {
     let endIndex = index;
     let text = lines[index];
-    let range = findDateRange(text);
+    let range = rangeFinder(text);
     let identityValue = identity(text);
 
-    if (!range || !identityValue) {
+    if ((!range || !identityValue) && (range || identityValue)) {
       for (let offset = 1; offset <= 2 && index + offset < lines.length; offset += 1) {
         const combined = `${text}  ${lines[index + offset]}`;
-        const combinedRange = findDateRange(combined);
+        const combinedRange = rangeFinder(combined);
         const combinedIdentity = identity(combined);
         if (combinedRange && combinedIdentity) {
           text = combined;
@@ -340,12 +384,26 @@ function meaningfulLines(lines: string[]): string[] {
 
 function cleanEducationMajor(value: string): string {
   return value
-    .replace(/[（(]\s*(?:在读|预计|推免|保研)\s*[）)]/g, " ")
-    .replace(/(?:211|985|双一流|在读|预计|推免|保研)/g, " ")
+    .replace(/[（(]\s*(?:在读|预计|推免|保研|预计入学|预期入学|计划入学)\s*[）)]/g, " ")
+    .replace(/(?:211|985|双一流|在读|预计入学|预期入学|计划入学|预计|推免|保研)/g, " ")
+    .replace(/^(?:直博|博士|MBA|硕士|本科|学士|大专|专科|高中|PhD|Master|Bachelor)\s*/i, "")
+    .replace(/^[\p{Script=Han}A-Za-z& .'-]{2,30}(?:学院|学部|系)\s*/u, "")
     .replace(/^[,，、;；:：|｜·\s]+|[,，、;；:：|｜·\s]+$/g, "")
     .replace(/[（()]\s*[）)]/g, " ")
     .replace(/\s{2,}/g, " ")
     .trim();
+}
+
+function majorFromDegreeLine(lines: string[]): string {
+  for (const source of lines.slice(0, 4)) {
+    const value = stripBullet(source).trim();
+    if (!value || value.length > 80) continue;
+    const beforeDegree = /^(.{2,36}?)(?:直博|博士|硕士|学士|PhD|Master|Bachelor)(?:\s|[；;，,（(]|$)/i.exec(value)?.[1]?.trim();
+    if (beforeDegree && !extractSchool(beforeDegree)) return cleanEducationMajor(beforeDegree);
+    const afterDegree = /^(?:直博|博士|MBA|硕士|本科|学士|大专|专科|高中|PhD|Master|Bachelor)\s+(.{2,50})$/i.exec(value)?.[1]?.trim();
+    if (afterDegree) return cleanEducationMajor(afterDegree);
+  }
+  return "";
 }
 
 function educationMajor(
@@ -359,6 +417,9 @@ function educationMajor(
   if (labelled) {
     return cleanEducationMajor(withoutKnownParts(labelled, [candidate.range.raw, sourceDegree]));
   }
+
+  const degreeLineMajor = majorFromDegreeLine(details);
+  if (degreeLineMajor) return degreeLineMajor;
 
   const inline = cleanEducationMajor(withoutKnownParts(candidate.text, [
     candidate.range.raw,
@@ -380,14 +441,20 @@ function educationMajor(
 
 function parseEducation(lines: string[]): CandidateProfile["education"] {
   const plainLines = lines.filter((line) => line !== SECTION_BREAK);
-  const candidates = findCandidates(plainLines, extractSchool);
+  const candidates = findCandidates(plainLines, extractSchool, findEducationRange);
   const records = candidates.map((candidate, index) => {
     const record = createEducationRecord();
     const details = candidateDetails(plainLines, candidates, index);
     const degreeDetails = details.slice(0, 3).filter((line) =>
       /^(?:(?:学历|学位)\s*[：:]\s*)?(?:博士|MBA|硕士|本科|学士|大专|专科|高中|PhD|Master|Bachelor)(?:\s*(?:在读|研究生))?$/i.test(stripBullet(line))
     );
-    const educationEvidence = `${candidate.text} ${degreeDetails.join(" ")}`;
+    const richDegreeDetails = details.slice(0, 3).filter((line) => {
+      const value = stripBullet(line);
+      return Boolean(rawDegree(value))
+        && value.length <= 80
+        && !/(?:获奖|荣誉|奖学金|支持|本科生|课程)/.test(value);
+    });
+    const educationEvidence = `${candidate.text} ${degreeDetails.join(" ")} ${richDegreeDetails.join(" ")}`;
     record.school = extractSchool(candidate.text);
     const sourceDegree = rawDegree(educationEvidence);
     record.degree = canonicalDegree(educationEvidence);
@@ -427,16 +494,18 @@ function parseEducation(lines: string[]): CandidateProfile["education"] {
 }
 
 function parseWork(lines: string[]): CandidateProfile["workExperiences"] {
-  const rolePattern = /(?:实习生|实习|研究助理|科研助理|助理研究员|研究员|工程师|分析师|设计师|产品经理|项目经理|顾问|负责人|经理|助理|Intern|Engineer|Researcher|Analyst|Designer|Manager|Consultant)/i;
+  const rolePattern = /(?:(?:[\p{Script=Han}A-Za-z]{1,16})?实习生|实习|研究助理|科研助理|助理研究员|研究员|工程师|分析师|设计师|产品经理|项目经理|顾问|负责人|经理|助理|Intern|Engineer|Researcher|Analyst|Designer|Manager|Consultant)/iu;
+  const temporalEvidence = (line: string) => findDateRange(line)
+    ?? (rolePattern.test(line) ? findYearEvidence(line) : null);
   const records: CandidateProfile["workExperiences"] = [];
 
   for (const block of sectionBlocks(lines)) {
-    const starts = block.flatMap((line, index) => findDateRange(line) ? [index] : []);
+    const starts = block.flatMap((line, index) => temporalEvidence(line) ? [index] : []);
     for (let candidateIndex = 0; candidateIndex < starts.length; candidateIndex += 1) {
       const start = starts[candidateIndex];
       const end = starts[candidateIndex + 1] ?? block.length;
       const entry = block.slice(start, end);
-      const range = findDateRange(entry[0]);
+      const range = temporalEvidence(entry[0]);
       if (!range) continue;
 
       const record = createWorkExperienceRecord();
@@ -496,6 +565,25 @@ function parseWork(lines: string[]): CandidateProfile["workExperiences"] {
             record.company = roleLine.slice(0, roleStart).replace(/[|｜·\s]+$/, "").trim();
           }
         }
+      }
+
+      if (record.company && record.role && record.company.includes(record.role)) {
+        const companyWithoutRole = record.company
+          .replace(record.role, " ")
+          .replace(/^[|｜·\s]+|[|｜·\s]+$/g, "")
+          .trim();
+        if (companyWithoutRole) record.company = companyWithoutRole;
+      }
+
+      if (!record.company) {
+        record.company = headerLines.find((line) => {
+          const value = line.replace(record.role, "").replace(/^[|｜·\s]+|[|｜·\s]+$/g, "").trim();
+          return value
+            && value.length <= 50
+            && !rolePattern.test(value)
+            && !/[。；;]$/.test(value)
+            && !/^(?:负责|参与|使用|采用|基于|通过|完成|协助|实现|构建|设计|开发)/.test(value);
+        })?.replace(record.role, "").replace(/^[|｜·\s]+|[|｜·\s]+$/g, "").trim() ?? "";
       }
 
       const metadata = new Set([
@@ -592,6 +680,17 @@ function looksLikeLatinPaperTitle(line: string): boolean {
   return /^[A-Z]/.test(value) && words.length >= 5 && !/[。；]$/.test(value);
 }
 
+function looksLikeProjectTitleAfterCompletedEntry(line: string): boolean {
+  const value = stripBullet(line);
+  if (looksLikeStandaloneProjectTitle(line)) {
+    return value.length <= 40 || /[：:]/.test(value) || looksLikeLatinPaperTitle(value);
+  }
+  return value.length <= 90
+    && !/[。；;]$/.test(value)
+    && /^(?:基于|面向)/.test(value)
+    && /(?:系统|平台|框架|模型|方法|研究|设计|作品|Agent|LLM)/i.test(value);
+}
+
 function projectCandidates(block: string[]): ProjectCandidate[] {
   const candidates: ProjectCandidate[] = [];
   const bulletListMode = isBulletLine(block[0] ?? "");
@@ -604,9 +703,13 @@ function projectCandidates(block: string[]): ProjectCandidate[] {
     const explicit = explicitProjectStart(line);
     const bulletEntry = bulletListMode && bulletStartsProject(line);
     const standaloneAfterBullets = !isBulletLine(line) && hasBullets && looksLikeLatinPaperTitle(line);
+    const standaloneAfterCompletedEntry = !isBulletLine(line)
+      && Boolean(current)
+      && /[。；;]$/.test(stripBullet(current?.lines.at(-1) ?? ""))
+      && looksLikeProjectTitleAfterCompletedEntry(line);
     const datedStart = hasRange && Boolean(current) && (hasBullets || currentHasRange || !looksLikeStandaloneProjectTitle(current?.lines[0] ?? ""));
 
-    if (!current || explicit || (bulletEntry && current.bulletEntry) || standaloneAfterBullets || datedStart) {
+    if (!current || explicit || (bulletEntry && current.bulletEntry) || standaloneAfterBullets || standaloneAfterCompletedEntry || datedStart) {
       candidates.push({ lines: [line], bulletEntry });
     }
     else {
@@ -636,12 +739,13 @@ function parseProjects(lines: string[]): CandidateProfile["projects"] {
       let titleSource = range ? titleLine.replace(range.raw, "").trim() : titleLine;
       titleSource = titleSource.replace(/(?:19|20)\d{2}\s*(?:[./-]\s*|年\s*)\d{1,2}\s*(?:月)?\s*(?:[-–—~～至到]+\s*)?$/, "").trim();
       let inlineDescription = "";
-      if (candidate.bulletEntry) {
-        const colon = titleSource.search(/[：:]/);
-        if (colon >= 0) {
+      const colon = titleSource.search(/[：:]/);
+      const colonPrefix = colon >= 0 ? titleSource.slice(0, colon).trim() : "";
+      const colonSuffix = colon >= 0 ? titleSource.slice(colon + 1).trim() : "";
+      const descriptiveSuffix = /^(?:负责|参与|使用|采用|基于|通过|完成|协助|实现|研究|构建|设计|提出|开发|搭建|主导)/.test(colonSuffix);
+      if (colon >= 2 && colon <= 48 && (candidate.bulletEntry || (colonPrefix.length <= 30 && descriptiveSuffix))) {
           inlineDescription = titleSource.slice(colon + 1).trim();
           titleSource = titleSource.slice(0, colon).trim();
-        }
       }
       titleSource = titleSource.replace(/^(?:论文|项目|课题)(?:\s*(?:\d+|[一二三四五六七八九十]+)?\s*[：:、.]|\s+(?=[A-Z]))\s*/, "");
       const titleAndRole = splitTitleAndRole(withoutKnownParts(titleSource, []));
@@ -659,7 +763,9 @@ function parseProjects(lines: string[]): CandidateProfile["projects"] {
         .filter((line) => line && !/^https?:\/\//i.test(line) && !isProjectMetadata(line)
           && !isDateFragmentLine(line) && !standaloneProjectRole(line));
       record.description = [inlineDescription, ...descriptionLines].filter(Boolean).join("\n").trim();
-      if (record.name) records.push(record);
+      const actionSentence = /^(?:负责|参与|使用|采用|基于|通过|完成|协助|实现|研究|构建|设计|提出|开发|搭建|主导)/.test(record.name)
+        && /[。；;]$/.test(record.name);
+      if (record.name && !actionSentence) records.push(record);
     }
   }
   return records;
@@ -689,10 +795,42 @@ function createAwardFromLine(line: string, description = ""): CandidateProfile["
   return record.name ? record : null;
 }
 
+function expandAwardListLines(lines: string[]): string[] {
+  const values = lines.map(stripBullet).filter(Boolean);
+  const joined = values.join(" ");
+  const awardMarker = /(?:一等奖|二等奖|三等奖|特等奖|金奖|银奖|铜奖|优胜奖|奖学金|荣誉称号)/;
+  const markerCount = joined.match(new RegExp(awardMarker.source, "g"))?.length ?? 0;
+  if (!/[；;]/.test(joined) || markerCount < 2) return lines;
+
+  const pieces = values.flatMap((line) => line.split(/[；;]/).map((part) => part.trim()).filter(Boolean));
+  const expanded: string[] = [];
+  let pending = "";
+  for (const piece of pieces) {
+    const joiner = pending && /\p{Script=Han}$/u.test(pending) && /^\p{Script=Han}/u.test(piece) ? "" : " ";
+    const combined = pending ? `${pending}${joiner}${piece}`.trim() : piece;
+    if (!awardMarker.test(combined)) {
+      pending = combined;
+      continue;
+    }
+    pending = "";
+    let enumerated = combined.split(/[、，,]/).map((part) => part.trim()).filter(Boolean);
+    if (enumerated.length === 1) {
+      const acronymSeparated = combined.split(/\s+(?=[A-Z]{2,}\b)/).map((part) => part.trim()).filter(Boolean);
+      if (acronymSeparated.length > 1 && acronymSeparated.every((part) => awardMarker.test(part))) enumerated = acronymSeparated;
+    }
+    if (enumerated.length > 1 && enumerated.every((part) => awardMarker.test(part))) expanded.push(...enumerated);
+    else expanded.push(combined);
+  }
+  if (pending && expanded.length > 0) expanded[expanded.length - 1] = `${expanded.at(-1)}\n${pending}`;
+  return expanded.length > 1 ? expanded : lines;
+}
+
 function parseAwards(lines: string[], allLines: string[] = []): CandidateProfile["awards"] {
   const records: CandidateProfile["awards"] = [];
   for (const block of sectionBlocks(lines)) {
-    const meaningful = block.filter((line) => !/(?:大学英语|CET[-\s]?\d|TOEFL|IELTS)/i.test(line));
+    const meaningful = expandAwardListLines(
+      block.filter((line) => !/(?:大学英语|CET[-\s]?\d|TOEFL|IELTS)/i.test(line))
+    );
     if (meaningful.length === 0) continue;
     const narrativeCompetition = meaningful.length > 1
       && (Boolean(findDateRange(meaningful[0])) || /(?:Challenge|Kaggle)/i.test(meaningful[0]));
@@ -705,7 +843,7 @@ function parseAwards(lines: string[], allLines: string[] = []): CandidateProfile
     for (const line of meaningful) {
       const value = stripBullet(line);
       const startsRecord = entries.length === 0
-        || (value.length <= 100 && /(?:奖学金|竞赛|比赛|大赛|Challenge|Kaggle|训练计划|优秀学生|优秀营员|荣誉称号)/i.test(value));
+        || (value.length <= 100 && /(?:奖|荣誉|竞赛|比赛|大赛|Challenge|Kaggle|训练计划|优秀学生|优秀营员)/i.test(value));
       if (startsRecord) entries.push([line]);
       else entries.at(-1)?.push(line);
     }
@@ -730,24 +868,47 @@ function parseAwards(lines: string[], allLines: string[] = []): CandidateProfile
 }
 
 function canonicalLanguage(value: string): string {
-  const found = LANGUAGE_VALUES.find((language) => new RegExp(escapeRegExp(language), "i").test(value));
   const mapping: Record<string, string> = {
+    英文: "英语", 中文: "普通话",
     English: "英语", French: "法语", Japanese: "日语", Korean: "韩语", German: "德语", Russian: "俄语",
     Spanish: "西班牙语", Portuguese: "葡萄牙语", Mandarin: "普通话", Cantonese: "粤语"
   };
-  return found ? (mapping[found] ?? found) : "";
+  return mapping[value] ?? value;
+}
+
+function languageMatches(value: string): Array<{ language: string; index: number; length: number }> {
+  const matches = LANGUAGE_VALUES.flatMap((alias) => {
+    const match = new RegExp(escapeRegExp(alias), "i").exec(value);
+    return match ? [{ language: canonicalLanguage(alias), index: match.index, length: match[0].length }] : [];
+  }).sort((left, right) => left.index - right.index || right.length - left.length);
+  const seen = new Set<string>();
+  return matches.filter((match) => {
+    if (seen.has(match.language)) return false;
+    seen.add(match.language);
+    return true;
+  });
 }
 
 function parseLanguages(lines: string[]): CandidateProfile["languages"] {
   const records: CandidateProfile["languages"] = [];
   for (const line of lines) {
     if (line === SECTION_BREAK) continue;
-    const language = canonicalLanguage(line);
-    if (!language || records.some((record) => record.language === language)) continue;
-    const record = createLanguageRecord();
-    record.language = language;
-    record.proficiency = PROFICIENCY_VALUES.find((value) => line.includes(value)) ?? "";
-    records.push(record);
+    const matches = languageMatches(line);
+    matches.forEach((match, index) => {
+      const following = line.slice(match.index, matches[index + 1]?.index ?? line.length);
+      const delimiter = following.search(/[、，,；;|｜]/);
+      const evidence = delimiter >= 0 ? following.slice(0, delimiter) : following;
+      const proficiency = PROFICIENCY_VALUES.find((value) => evidence.includes(value)) ?? "";
+      const existing = records.find((record) => record.language === match.language);
+      if (existing) {
+        if (!existing.proficiency && proficiency) existing.proficiency = proficiency;
+        return;
+      }
+      const record = createLanguageRecord();
+      record.language = match.language;
+      record.proficiency = proficiency;
+      records.push(record);
+    });
   }
   return records;
 }
@@ -803,8 +964,7 @@ export function parseResumeText(text: string): ParsedResume {
       .find(Boolean) ?? "";
   }
   profile.basic.preferredName = labelledValue(header, ["英文名", "常用英文名", "Preferred name"]);
-  const phone = /(?<!\d)(?:(?:\+?86)[\s-]?)?1[3-9](?:[\s-]?\d){9}(?!\d)/.exec(allText)?.[0] ?? "";
-  profile.basic.phone = normalizePhone(phone);
+  profile.basic.phone = extractPhone(lines);
   profile.basic.email = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i.exec(allText)?.[0] ?? "";
   profile.basic.gender = labelledValue(lines, ["性别", "Gender"]).match(/男|女|保密/)?.[0]
     ?? /(?:^|[|｜·•，,\s])(男|女|保密)(?=$|[|｜·•，,\s])/m.exec(header.join("\n"))?.[1]
@@ -821,9 +981,9 @@ export function parseResumeText(text: string): ParsedResume {
     profile.basic.politicalStatus = /中共预备党员|中共党员|共青团员|群众|民主党派/.exec(header.join("\n"))?.[0] ?? "";
   }
 
-  profile.jobPreference.targetRoles = labelledValue(lines, ["求职意向", "求职岗位", "目标岗位", "应聘岗位", "Target role"]);
-  profile.jobPreference.preferredCities = labelledValue(lines, ["意向城市", "期望工作地点", "期望城市", "Preferred cities"]);
-  profile.jobPreference.availableDate = findFullDate(labelledValue(lines, ["可到岗日期", "到岗日期", "Available date"]));
+  profile.jobPreference.targetRoles = labelledValueAnywhere(lines, ["求职意向", "求职岗位", "目标岗位", "应聘岗位", "Target role"]);
+  profile.jobPreference.preferredCities = labelledValueAnywhere(lines, ["意向城市", "期望工作地点", "期望城市", "Preferred cities"]);
+  profile.jobPreference.availableDate = findFullDate(labelledValueAnywhere(lines, ["可到岗日期", "到岗日期", "Available date"]));
 
   const education = parseEducation(sections.education);
   profile.education = education.length > 0 ? education : [createEducationRecord()];
