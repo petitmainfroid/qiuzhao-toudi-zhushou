@@ -628,3 +628,27 @@ Run a local field-level audit over the five PDFs to identify missing dates, role
 - E2E/evidence: `repeatable-fixture.html`, `src/fixture/repeatable-main.ts`, `tests/e2e/repeatable-records.spec.ts`, `artifacts/repeatable-records.png`.
 - Harness/docs: `feature_list.json`, `progress.md`, `docs/field-coverage-matrix.md`.
 - F017 is `done`; no real recruitment page value or structure was changed. The built extension must be reloaded before manual acceptance. Next recommended feature is F018: support and verify audited date ranges, cascading/searchable selects, multi-selects, radios, and rich text without adding arbitrary execution or final submission.
+
+## 2026-08-05 - Public GitHub publication
+
+### Release preparation
+
+- Renamed the public-facing project title to “秋招投递助手” and added an MIT license.
+- Added repository ignores for local Chrome/Chromium profiles, dependencies, build and test artifacts, archives, logs, and environment files. The local profile directories were preserved on disk and were not committed.
+- Removed the audited page query token and the developer-specific Windows path from publishable source and documentation. The retained Xiaomi job identifier is a public fixture/audit identifier, not account data.
+- A publish-scope privacy scan found no developer username, removed query token, common access-token pattern, or private-key marker in the files selected for Git.
+
+### Verification evidence
+
+- `git diff --cached --check` -> exit 0 before the initial commit.
+- `npm run audit:xiaomi` -> exit 0; 9 groups and 34 visible fields verified, with no application submission.
+- Final pre-publication `npm run validate` -> exit 0; TypeScript passed, 18 Vitest files and 179 tests passed, production build succeeded, 11 required distribution files were verified, and permissions remained exactly `activeTab`, `scripting`, `sidePanel`, `storage`.
+- The latest full `npm run test:e2e` milestone remains exit 0 with 12/12 tests passed and a current repeatable-record screenshot in `artifacts/`; that local evidence directory is intentionally excluded from the public repository.
+
+### Publication and handoff
+
+- Created the public repository at `https://github.com/petitmainfroid/qiuzhao-toudi-zhushou` and pushed `main`.
+- Initial source commit: `5059de0` (`Initial release of 秋招投递助手`).
+- GitHub normalizes the requested pure-Chinese repository identifier to `-`; because that historical empty repository already exists on the account, the shareable repository slug is `qiuzhao-toudi-zhushou`. The README and product UI retain the requested Chinese name.
+- Published source excludes `.chrome-autofill-profile/`, `.chromium-autofill-profile/`, `node_modules/`, `dist/`, `artifacts/`, test reports, environment files, and ZIP archives.
+- No product feature state changed: F016 and F017 remain `done`, F018 remains the next recommended feature.
