@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>招聘表单验证页</title>
+    <style>
+      body { max-width: 760px; margin: 40px auto; font-family: sans-serif; }
+      form { display: grid; gap: 16px; }
+      label, fieldset, .form-item { display: grid; gap: 6px; }
+      input, select, textarea, [contenteditable] { min-height: 38px; padding: 8px; }
+      .custom-select { appearance: none; border: 2px solid #606c38; border-radius: 14px; background: #e8dcc7; }
+      [contenteditable] { border: 1px solid #777; }
+      #dynamic-fields[hidden] { display: none; }
+    </style>
+  </head>
+  <body>
+    <h1>招聘表单验证页</h1>
+    <form id="application-form">
+      <label for="full-name">姓名</label><input id="full-name" autocomplete="name" />
+      <label for="email">邮箱</label><input id="email" type="email" autocomplete="email" />
+      <label for="degree">最高学历</label>
+      <select id="degree" class="custom-select"><option value="">请选择</option><option>本科</option><option>硕士</option></select>
+      <fieldset><legend>性别</legend>
+        <label><input type="radio" name="gender" value="男" />男</label>
+        <label><input type="radio" name="gender" value="女" />女</label>
+      </fieldset>
+      <div class="form-item"><span>项目描述</span><div id="project-description" contenteditable="true"></div></div>
+      <label for="captcha">短信验证码</label><input id="captcha" />
+      <label for="password">账户密码</label><input id="password" type="password" />
+      <label for="resume">上传简历</label><input id="resume" type="file" />
+      <button id="add-dynamic" type="button">添加补充字段</button>
+      <div id="dynamic-fields" hidden>
+        <label for="emergency-contact">紧急联系人姓名</label><input id="emergency-contact" />
+        <label for="ambiguous-location">所在地</label><input id="ambiguous-location" />
+      </div>
+      <button id="submit" type="submit">提交申请</button>
+    </form>
+    <script type="module" src="/src/fixture/main.ts"></script>
+  </body>
+</html>

@@ -1,0 +1,438 @@
+{
+  "project_goal": "Build a local-first Chrome/Edge extension where a job seeker maintains one structured profile and can safely preview and fill matching fields on recruitment websites without automatic submission.",
+  "features": [
+    {
+      "id": "F000",
+      "title": "Create resumable engineering harness",
+      "status": "done",
+      "depends_on": [],
+      "acceptance": [
+        "A future agent can recover the product goal, current status, constraints, verification commands, and next action without chat history.",
+        "The environment baseline identifies an available Node.js toolchain and installed Chromium browser."
+      ],
+      "verification": [
+        "Parse feature_list.json as JSON.",
+        "Confirm AGENTS.md, progress.md, and init.ps1 exist.",
+        "Record node, npm, Git, Chrome, and Edge availability in progress.md."
+      ],
+      "notes": "Initialized on 2026-08-03 from an empty, non-Git directory. Evidence is recorded in progress.md."
+    },
+    {
+      "id": "F001",
+      "title": "Establish Manifest V3 build and test foundation",
+      "status": "done",
+      "depends_on": ["F000"],
+      "acceptance": [
+        "npm run build produces a loadable dist/ with manifest.json, options.html, sidepanel.html, background.js, and content.js.",
+        "The manifest requests only storage, activeTab, scripting, and sidePanel permissions.",
+        "Type checking and a smoke unit test pass."
+      ],
+      "verification": [
+        "npm run typecheck",
+        "npm test -- --run",
+        "npm run build",
+        "npm run verify:dist"
+      ],
+      "notes": "Use Vite for React pages and esbuild for isolated background/content bundles. Keep the extension free of remote runtime code."
+    },
+    {
+      "id": "F002",
+      "title": "Define profile schema and local repository",
+      "status": "done",
+      "depends_on": ["F001"],
+      "acceptance": [
+        "The profile schema covers basic information, education, work experience, projects, job preferences, and reusable self-introduction.",
+        "Users can add multiple education, work, and project records.",
+        "Profile data persists through chrome.storage.local with a browser-preview fallback and supports schema-version migration.",
+        "Completion percentage is deterministic and excludes optional empty records."
+      ],
+      "verification": [
+        "npm test -- --run src/domain/profile.test.ts src/storage/profileRepository.test.ts",
+        "npm run typecheck"
+      ],
+      "notes": "Store blanks rather than fabricated example identities. Attachments are metadata-only in the MVP."
+    },
+    {
+      "id": "F003",
+      "title": "Build structured profile editor",
+      "status": "done",
+      "depends_on": ["F002"],
+      "acceptance": [
+        "The options page edits all MVP profile sections and supports adding/removing repeatable records.",
+        "Saving, unsaved state, validation errors, and last-saved feedback are visible.",
+        "A completion indicator explains which required fields remain empty.",
+        "Keyboard navigation and field labels are usable without a mouse."
+      ],
+      "verification": [
+        "npm test -- --run src/options/ProfileEditor.test.tsx",
+        "npm run test:e2e -- --grep \"profile editor\"",
+        "Screenshot artifacts/profile-editor.png"
+      ],
+      "notes": "Organic visual direction; no fake user data in the UI."
+    },
+    {
+      "id": "F004",
+      "title": "Implement deterministic field discovery and matching",
+      "status": "done",
+      "depends_on": ["F002"],
+      "acceptance": [
+        "The matcher handles input, textarea, select, radio, and contenteditable controls using labels, ARIA text, placeholder, name, id, and nearby context.",
+        "Aliases map common Chinese and English recruitment-field names to canonical profile paths.",
+        "Every suggestion returns a score, high/medium/low confidence, reasons, and whether confirmation is required.",
+        "Ambiguous and sensitive fields are never classified as safe high-confidence fills."
+      ],
+      "verification": [
+        "npm test -- --run src/matching",
+        "npm run typecheck",
+        "Fixture test covers at least 30 representative field labels."
+      ],
+      "notes": "Rule-first matching is the MVP. AI semantic fallback remains out of scope until deterministic accuracy is measured."
+    },
+    {
+      "id": "F005",
+      "title": "Implement safe page scanning and filling",
+      "status": "done",
+      "depends_on": ["F004"],
+      "acceptance": [
+        "A content script scans the active page only after a user action and returns a preview without changing the form.",
+        "Filling supports native controls and dispatches input/change/blur events compatible with controlled web forms.",
+        "Only user-selected high/medium-confidence matches are filled.",
+        "File inputs, passwords, hidden inputs, CAPTCHAs, and submission controls are excluded."
+      ],
+      "verification": [
+        "npm test -- --run src/content",
+        "npm run test:e2e -- --grep \"fill fixture\"",
+        "Fixture assertions confirm no submit click and no excluded-field mutation."
+      ],
+      "notes": "Use a stable per-scan element identifier rather than brittle CSS selectors."
+    },
+    {
+      "id": "F006",
+      "title": "Build side-panel preview and fill workflow",
+      "status": "done",
+      "depends_on": ["F003", "F005"],
+      "acceptance": [
+        "The side panel shows profile readiness, page scan status, matched/unmatched counts, and confidence groups.",
+        "Users can inspect and deselect each proposed fill before applying changes.",
+        "Sensitive and medium-confidence suggestions require explicit selection.",
+        "The panel links to profile editing and never exposes a final-submit action."
+      ],
+      "verification": [
+        "npm test -- --run src/sidepanel",
+        "npm run test:e2e -- --grep \"side panel\"",
+        "Screenshot artifacts/sidepanel-preview.png"
+      ],
+      "notes": "Use a user-triggered injection path with activeTab rather than broad all-sites access."
+    },
+    {
+      "id": "F007",
+      "title": "Add correction memory and privacy controls",
+      "status": "done",
+      "depends_on": ["F006"],
+      "acceptance": [
+        "A user can override a suggested canonical field and reuse that mapping for the same site and field fingerprint.",
+        "Users can export, import, and permanently delete locally stored profile and mapping data.",
+        "The product explains local storage, requested permissions, and sensitive-field behavior before first use."
+      ],
+      "verification": [
+        "npm test -- --run src/storage src/mapping",
+        "npm run test:e2e -- --grep \"privacy controls\"",
+        "Manual check of first-run disclosure and delete confirmation."
+      ],
+      "notes": "Do not add telemetry or cloud sync in the MVP."
+    },
+    {
+      "id": "F008",
+      "title": "Create representative recruitment-form fixture and end-to-end evidence",
+      "status": "done",
+      "depends_on": ["F005", "F006", "F007"],
+      "acceptance": [
+        "A local fixture includes ordinary inputs, custom-looking selects, radio choices, dynamic fields, ambiguous labels, a file input, a password trap, and a submit button.",
+        "End-to-end tests exercise profile save, preview, selective fill, correction memory, and deletion.",
+        "Screenshots show the options page and side panel at desktop extension dimensions."
+      ],
+      "verification": [
+        "npm run test:e2e",
+        "npm run validate",
+        "Inspect artifacts/profile-editor.png and artifacts/sidepanel-preview.png."
+      ],
+      "notes": "Use installed Chrome/Edge when possible; do not require downloading a second browser."
+    },
+    {
+      "id": "F009",
+      "title": "Package MVP and write operator documentation",
+      "status": "done",
+      "depends_on": ["F008"],
+      "acceptance": [
+        "README documents setup, development, unpacked installation, use, privacy boundaries, limitations, and troubleshooting.",
+        "npm run package creates a distributable zip from a freshly verified build.",
+        "All feature statuses and latest verification evidence are current."
+      ],
+      "verification": [
+        "npm run validate",
+        "npm run package",
+        "Inspect archive contents and confirm no source maps, test fixtures, or personal profile data are included."
+      ],
+      "notes": "Chrome Web Store publication is outside the MVP because it requires the user's developer account and privacy-policy decisions."
+    },
+    {
+      "id": "F010",
+      "title": "Harden field coverage against the Xiaomi internship application form",
+      "status": "done",
+      "depends_on": ["F009"],
+      "acceptance": [
+        "A traceable inventory records the Xiaomi form labels, control types, required state, dynamic sections, and login boundary observed from the supplied real URL.",
+        "The profile schema and deterministic matcher cover the reusable Xiaomi fields that are safe and technically fillable, while files, verification, identity-sensitive, and final-submit controls remain confirmation-required or excluded.",
+        "An automated non-submitting regression fixture derived from the observed Xiaomi structure verifies scanning, preview, selective fill, custom controls, and no-submit behavior.",
+        "A real-page smoke test reaches the supplied URL and records either verified scan/fill evidence or the exact authentication blocker without weakening privacy or browser permissions."
+      ],
+      "verification": [
+        "npm test -- --run src/domain src/matching src/content",
+        "npm run validate",
+        "npm run test:e2e",
+        "Inspect a current Xiaomi-specific screenshot in artifacts/."
+      ],
+      "notes": "Never submit the application. Do not persist site authentication, bypass login, CAPTCHA, SMS, or identity checks."
+    },
+    {
+      "id": "F011",
+      "title": "Parse an uploaded resume into the existing profile form",
+      "status": "done",
+      "depends_on": ["F003", "F010"],
+      "acceptance": [
+        "The existing profile editor has one clearly labelled resume-upload control that accepts PDF and DOCX files, rejects unsupported or oversized files, and parses only after the user's file-selection gesture.",
+        "PDF and DOCX text extraction runs entirely in the extension page without network calls; the resume file, raw extracted text, site passwords, and authentication cookies are never persisted.",
+        "Deterministic parsing maps evidence-backed basic information, education, internship/work, project, award, language, job-preference, and self-evaluation values directly into the corresponding fields of the existing profile form; it does not create a separate result-confirmation page and does not fabricate missing values.",
+        "Import fills empty scalar fields and merges non-duplicate repeatable records while preserving existing non-empty values; the user can review and edit every imported value in the normal profile form before explicitly saving.",
+        "The parser covers the reusable fields proven by the current Xiaomi internship application page audit, while identity documents, verification codes, passwords, file controls, privacy consent, CAPTCHA, and final submission remain excluded.",
+        "A realistic Chinese campus-recruitment resume fixture proves multi-section extraction and direct form population, and browser evidence shows the populated existing form plus a concise import summary."
+      ],
+      "verification": [
+        "npm test -- --run src/resume src/options/ProfileEditor.test.tsx",
+        "npm run audit:xiaomi",
+        "npm run validate",
+        "npm run test:e2e -- --grep \"resume import\"",
+        "Inspect artifacts/resume-import.png and confirm values appear in the existing profile sections without a separate confirmation page."
+      ],
+      "notes": "Local deterministic parsing only. PDF/DOCX are the initial supported formats; scanned/image-only resumes must return an actionable error rather than invent data. Existing profile values are protected from silent overwrite."
+    },
+    {
+      "id": "F012",
+      "title": "Harden internship and project parsing against real local resumes",
+      "status": "done",
+      "depends_on": ["F011"],
+      "acceptance": [
+        "A privacy-safe audit covers all five resume-like PDF files currently present in the user's Downloads folder, identifying samples only by short content digest and never copying source files, filenames, raw text, or personal values into the repository.",
+        "For every audited sample whose extracted text visibly contains internship/work or project section evidence, the parser returns the manually verified number of corresponding records instead of silently returning an empty array.",
+        "Section recognition tolerates PDF layout artifacts observed in the real samples, including spaced headings, combined work/internship headings, headings with inline content, organization/title/date split across lines, and entries without a date range on their first line.",
+        "Work and project records retain evidence-backed organization/name, role, date, and description values without leaking neighboring education, skill, award, or self-evaluation text across section boundaries.",
+        "Anonymized structural fixtures derived from each distinct failing layout reproduce the defect and pass after the fix; no real personal information is committed to tests or artifacts.",
+        "The existing local-only, no-fabrication, conflict-preserving, no-submit, and explicit-save safety boundaries remain unchanged."
+      ],
+      "verification": [
+        "Run the privacy-safe local resume audit against the five digest-identified Downloads samples and record expected versus actual work/project counts.",
+        "npm test -- --run src/resume",
+        "npm run validate",
+        "npm run test:e2e -- --grep \"resume import\"",
+        "npm run package"
+      ],
+      "notes": "Do not add or copy the user's resumes into the repository. Convert only layout patterns into synthetic fixtures. Keep deterministic parsing as the source of truth."
+    },
+    {
+      "id": "F013",
+      "title": "Verify field-level resume completeness and profile-form placement",
+        "status": "done",
+      "depends_on": ["F012"],
+      "acceptance": [
+        "A visual field inventory is defined for all five digest-identified local resumes, covering every clearly present field supported by the profile schema rather than only counting work and project records.",
+        "Every expected work and project record is checked field by field for evidence-backed organization/name, role when present, start/end dates when present at month precision, and non-empty description without neighboring-section leakage.",
+        "Basic, education, award, language, skill, work, and project values that are both visibly present and supported by the current schema are measured for coverage; unsupported or genuinely absent values are not fabricated.",
+        "The actual resume-upload UI places parsed values into the corresponding labelled controls for every repeatable work and project record, preserves record order, remains unsaved until explicit save, and persists no source file or raw text.",
+        "Anonymized structural tests reproduce every field-level omission or contamination found by the real audit, including wrapped date ranges and standalone role lines.",
+        "Privacy and automation constraints remain unchanged: local processing by default, no identity-number persistence, no recruitment-site password/Cookie storage, no verification bypass, and no final submission."
+      ],
+      "verification": [
+        "Run a privacy-safe five-PDF field coverage audit and record expected, parsed, merged, and UI-placed field coverage by digest.",
+        "npm test -- --run src/resume src/options/ProfileEditor.test.tsx",
+        "npm run validate",
+        "npm run test:e2e",
+        "Inspect a current artifacts/resume-import.png that shows repeatable work/project fields populated in the existing editor.",
+        "npm run package"
+      ],
+      "notes": "Counts alone are insufficient. Do not mark done until field values and their destination controls are verified. Keep real resume text and personal values out of committed tests and audit artifacts."
+    },
+    {
+      "id": "F014",
+      "title": "Establish real-page acceptance for Agent Reach and OpenCLI control",
+      "status": "blocked",
+      "depends_on": ["F010", "F013"],
+      "acceptance": [
+        "A source-bound validation document separates evidence from the live Xiaomi public schema, an authenticated real-tab read-only scan, a user-confirmed real-tab selective fill, and the Xiaomi-derived local regression; local fixtures never count as proof that the live page worked.",
+        "An executable preflight reports the installed OpenCLI version, daemon availability, Browser Bridge connection, exact target URL eligibility, and this extension's permission boundary without starting a daemon, installing software, reading cookies, reading page values, or mutating a browser profile.",
+        "The agent command contract exposes only status, scan, preview, and selective fill; it exposes no submit, file-upload, password, verification-code, CAPTCHA, cookie, identity-number, or arbitrary-selector/value command.",
+        "Every agent session is created by an explicit side-panel user gesture, is bound to one tab and HTTPS origin, expires automatically, and rejects missing, stale, wrong-tab, wrong-origin, replayed, or malformed capabilities.",
+        "Scan and preview never mutate the page or return existing webpage values. Fill accepts only opaque suggestion IDs from the latest scan, revalidates the live field mapping, requires action-time user confirmation, and keeps sensitive or medium-confidence suggestions unselected until separately approved.",
+        "Live Xiaomi completion evidence includes the exact URL and timestamp, Bridge-connected and bound-tab proof, scan/preview counts, user-confirmed selected-fill outcomes, and proof that no final-submit control or application-submission request was invoked; no personal values, cookies, or authentication artifacts are committed.",
+        "The extension remains local-first and retains its existing required permissions; any localhost access needed by an optional companion must use runtime-requested optional permission and must not add cookies, debugger, broad host access, or automatic submission capability."
+      ],
+      "verification": [
+        "npm run audit:xiaomi",
+        "npm run audit:agent-bridge",
+        "npm test -- --run src/agent",
+        "npm run validate",
+        "npm run test:e2e -- --grep \"agent bridge\"",
+        "Run the documented OpenCLI bound-tab real-page smoke on the authenticated Xiaomi URL and record non-submitting evidence in progress.md.",
+        "Inspect artifacts/xiaomi-agent-bridge.png and confirm it shows preview/fill results without a final-submit action."
+      ],
+      "notes": "OpenCLI is an optional companion and must stay separate from the least-privilege extension. The activeTab repair is implemented and validated locally; completion is blocked only on a post-reload physical toolbar click, authenticated real-page scan, and separately confirmed selective fill. Do not mark done from a public schema or local fixture."
+    },
+    {
+      "id": "F015",
+      "title": "Compare the local profile with current page values without leaking them",
+      "status": "done",
+      "depends_on": ["F005", "F006", "F013"],
+      "acceptance": [
+        "A user-triggered scan classifies every mapped readable control as empty, equal, conflicting, or unreadable using deterministic field-aware normalization.",
+        "The scan result, agent protocol, logs, tests, and screenshots expose the comparison class but never return, persist, or record the current webpage value.",
+        "Only empty, high-confidence, non-sensitive controls are selected by default; equal controls are skipped and conflicting controls remain unselected until explicit confirmation.",
+        "Filling rechecks the live control immediately before writing and refuses a stale or newly conflicting value unless the exact conflict was explicitly approved for that scan.",
+        "Password, verification, CAPTCHA, identity-number, privacy-consent, file, and submit controls remain excluded."
+      ],
+      "verification": [
+        "npm test -- --run src/content src/sidepanel src/agent",
+        "npm run validate",
+        "npm run test:e2e -- --grep \"page comparison\"",
+        "Inspect artifacts/page-comparison.png and confirm it shows statuses and counts without raw current webpage values or a submit action."
+      ],
+      "notes": "Completed 2026-08-05. Comparison is derived inside the content script; only status and an opaque, scan-bound conflict token cross the boundary. Targeted tests, full validation, full E2E, and artifacts/page-comparison.png passed."
+    },
+    {
+      "id": "F016",
+      "title": "Build a traceable all-source field coverage matrix",
+      "status": "done",
+      "depends_on": ["F015"],
+      "acceptance": [
+        "A durable matrix records the union of evidence-backed fields from the structured profile, resume parser, and audited recruitment pages, with source, sensitivity, control kind, normalization, and support state.",
+        "The profile schema and editor add only fields proven by a resume or audited page; missing facts are never fabricated and migrations preserve existing local data.",
+        "Every supported field has aliases, a destination profile path, comparison normalization, and deterministic tests; unsupported fields have an explicit reason."
+      ],
+      "verification": [
+        "npm test -- --run src/domain src/matching src/options src/resume",
+        "npm run audit:xiaomi",
+        "npm run validate",
+        "Review docs/field-coverage-matrix.md for source and safety completeness."
+      ],
+      "notes": "In progress 2026-08-05. All means all evidence-backed and permitted fields, not credentials, verification, identity numbers, privacy consent, or final submission. The matrix must include real-page structural evidence for repeatable groups before F017 may click any add control."
+    },
+    {
+      "id": "F017",
+      "title": "Create missing repeatable form records before filling",
+      "status": "done",
+      "depends_on": ["F016"],
+      "acceptance": [
+        "The assistant compares profile record counts with visible education, work, project, award, language, and work-sample groups.",
+        "It can invoke only section-local, high-confidence add controls to create missing rows, with a strict count bound and a rescan after each structural change.",
+        "It never deletes, reorders, or silently overwrites existing webpage records, and it stops when the page structure or add-control identity changes."
+      ],
+      "verification": [
+        "npm test -- --run src/content src/matching",
+        "npm run test:e2e -- --grep \"repeatable records\"",
+        "npm run validate",
+        "Inspect artifacts/repeatable-records.png and confirm no submit or delete control was used."
+      ],
+      "notes": "Implement one section type per verified increment; do not use arbitrary text-based button clicking."
+    },
+    {
+      "id": "F018",
+      "title": "Harden complex recruitment controls and verified writes",
+      "status": "todo",
+      "depends_on": ["F016", "F017"],
+      "acceptance": [
+        "Deterministic adapters cover audited date ranges, searchable and cascading selects, radio groups, multi-selects, and rich-text fields.",
+        "Every write dispatches framework-compatible events and is verified by rereading the control state without exposing its raw value outside the page context.",
+        "Unsupported or ambiguous controls fail closed with a reason and never fall back to arbitrary selector/value execution."
+      ],
+      "verification": [
+        "npm test -- --run src/content src/matching",
+        "npm run test:e2e -- --grep \"complex controls\"",
+        "npm run validate",
+        "Inspect current complex-control screenshots in artifacts/."
+      ],
+      "notes": "Keep site-specific behavior behind structural adapters and convert every real defect into an anonymized fixture."
+    },
+    {
+      "id": "F019",
+      "title": "Prove a safe architecture for resume PDF attachment",
+      "status": "todo",
+      "depends_on": ["F015", "F018"],
+      "acceptance": [
+        "A threat model and executable prototype compare an extension-memory File flow with a narrowly scoped OpenCLI/DevTools attachment token without adding broad permissions to the assistant.",
+        "The chosen path requires a user-selected PDF, validates MIME type, size, and digest, retains no arbitrary filesystem path, and keeps bytes out of logs and persistent extension storage.",
+        "The prototype proves whether the target site uploads immediately on file selection so the confirmation point is placed before any network transmission."
+      ],
+      "verification": [
+        "Run a local file-input fixture with network observation and no final submission.",
+        "npm run test:e2e -- --grep \"resume attachment prototype\"",
+        "npm run validate",
+        "Review docs/resume-attachment-threat-model.md."
+      ],
+      "notes": "Do not add a generic upload command. If the in-page File flow is rejected by Chrome or the ATS, use an opaque, single-use, page-bound OpenCLI token rather than an agent-supplied path."
+    },
+    {
+      "id": "F020",
+      "title": "Implement user-confirmed resume PDF attachment",
+      "status": "todo",
+      "depends_on": ["F019"],
+      "acceptance": [
+        "The user selects one PDF for the current session and sees filename, size, digest prefix, destination site, and matched resume control before approval.",
+        "One action-time confirmation authorizes one page-bound attachment attempt for one exact file digest and expires within one minute.",
+        "Only a high-confidence resume attachment control can receive the file; identity, verification, arbitrary file inputs, privacy consent, and submit controls remain unavailable.",
+        "Success and failure are verified without persisting the file, raw path, bytes, authentication data, or personal values."
+      ],
+      "verification": [
+        "npm test -- --run src/agent src/content src/sidepanel",
+        "npm run test:e2e -- --grep \"resume attachment\"",
+        "npm run validate",
+        "Inspect artifacts/resume-attachment.png and confirm it contains no path, resume contents, identity data, or submit action."
+      ],
+      "notes": "Attaching may transmit the PDF immediately; it is always confirmation-required and never part of default-safe fill."
+    },
+    {
+      "id": "F021",
+      "title": "Turn real-page failures into privacy-safe regression improvements",
+      "status": "todo",
+      "depends_on": ["F015", "F017", "F018", "F020"],
+      "acceptance": [
+        "Each run emits only structural counters and failure codes for matching, comparison, add-row, control, permission, attachment, and navigation failures.",
+        "A documented workflow converts a real failure into an anonymized local fixture, one scoped repair, targeted tests, full validation, and a progress handoff.",
+        "No raw webpage value, profile value, resume text, file path, cookie, token, or authentication artifact enters fixtures, logs, screenshots, or commits."
+      ],
+      "verification": [
+        "Exercise at least one anonymized regression for every supported failure class.",
+        "npm run validate",
+        "npm run test:e2e",
+        "Review progress.md handoffs for exact evidence and next actions."
+      ],
+      "notes": "Deterministic corrections and site fingerprints remain the source of truth; semantic matching stays a separately evaluated fallback."
+    },
+    {
+      "id": "F022",
+      "title": "Complete multi-site non-submitting acceptance and package the workflow",
+      "status": "todo",
+      "depends_on": ["F014", "F021"],
+      "acceptance": [
+        "At least three structurally different recruitment systems complete scan, redacted comparison, selected fill, repeatable-row, and supported attachment gates with exact evidence.",
+        "Every real-site run proves zero final-submit clicks and zero application-submission requests, with sensitive and conflicting fields left unchanged unless individually approved.",
+        "README, privacy documentation, operator recovery steps, screenshots, feature statuses, and the distributable package reflect the final behavior."
+      ],
+      "verification": [
+        "npm run validate",
+        "npm run test:e2e",
+        "Run documented non-submitting real-page gates for each accepted site.",
+        "npm run package",
+        "Inspect current redacted screenshots and verify the archive contains no personal or authentication data."
+      ],
+      "notes": "Real-site evidence requires the user's logged-in browser and action-time confirmations. Never weaken the no-submit boundary to complete acceptance."
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+node_modules/
+dist/
+artifacts/
+playwright-report/
+test-results/
+.chrome-autofill-profile/
+.chromium-autofill-profile/
+.env
+.env.*
+!.env.example
+*.zip
+*.log
+.DS_Store
+Thumbs.db

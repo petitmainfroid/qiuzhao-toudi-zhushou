@@ -1,0 +1,127 @@
+@import "@fontsource/epilogue/400.css";
+@import "@fontsource/epilogue/500.css";
+@import "@fontsource/epilogue/600.css";
+@import "@fontsource/epilogue/700.css";
+
+:root {
+  font-family: "Epilogue", sans-serif;
+  color: #606c38;
+  background: #e8dcc7;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  --sand: #e8dcc7;
+  --oat: #d4b895;
+  --sage: #8b9d83;
+  --clay: #b08b6e;
+  --terracotta: #c66b3d;
+  --ochre: #c08e3a;
+  --moss: #606c38;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--sand);
+}
+
+body::before {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  pointer-events: none;
+  content: "";
+  background: url("/noise.svg") repeat;
+  opacity: 0.5;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid var(--ochre);
+  outline-offset: 3px;
+}
+
+.app-shell {
+  min-height: 100vh;
+  padding: 32px;
+}
+
+.brand-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand-mark {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  color: var(--sand);
+  background: var(--moss);
+  border-radius: 16px 16px 16px 4px;
+}
+
+.brand-name {
+  margin: 0;
+  color: var(--moss);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  color: var(--terracotta);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.primary-button,
+.secondary-button {
+  min-height: 46px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 18px;
+  font-weight: 700;
+  transition: transform 360ms ease, background-color 360ms ease;
+}
+
+.primary-button {
+  color: var(--sand);
+  background: var(--moss);
+}
+
+.secondary-button {
+  color: var(--moss);
+  background: var(--oat);
+}
+
+.primary-button:hover,
+.secondary-button:hover {
+  transform: translateY(-2px);
+}
