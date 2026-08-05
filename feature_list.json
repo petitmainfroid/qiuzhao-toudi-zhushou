@@ -457,7 +457,7 @@
     {
       "id": "F024",
       "title": "Publish a Chinese operator guide and installable Codex skill",
-      "status": "in_progress",
+      "status": "done",
       "depends_on": ["F009", "F023"],
       "acceptance": [
         "The public README gives Chinese end users a release-download path, unpacked Chrome/Edge loading steps, first-use workflow, activeTab recovery, privacy boundaries, and contributor commands.",
