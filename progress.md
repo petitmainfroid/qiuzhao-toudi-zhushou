@@ -1150,3 +1150,10 @@ Run a local field-level audit over the five PDFs to identify missing dates, role
 - UI and evaluator: `src/sidepanel/powerSessionBridge.ts`, `src/sidepanel/PowerSessionCard.tsx`, `src/sidepanel/PowerSessionCard.test.tsx`, `src/sidepanel/sidepanel.css`, `tests/fixtures/kernel-actions-ground-truth.ts`, `tests/e2e/kernel-actions.spec.ts`, and `tests/e2e/embedded-bridge.spec.ts`.
 - Harness and documentation: `package.json`, `README.md`, `PRIVACY.md`, `docs/browser-kernel-acceptance.md`, `docs/browser-kernel-delivery-plan.md`, `feature_list.json`, and this handoff.
 - F039 is `done` with no implementation blocker. The next dependency-unblocked feature is F040 on `agent/browser-kernel-k3-workflows`: bounded waits, same-Origin workflow transitions and request idempotency. Do not start F040 on the K2 branch. F043 real-site L2/L3 evidence remains future user-authorized work, so K2 completion is not a claim that every real recruitment site is already supported.
+
+### F039 publication
+
+- Committed the verified implementation on `agent/browser-kernel-k2-actions` as `8b6985fa68f91fbf887d5ed3d094f4b02370b80a` (`完成 K2 可验证浏览器动作`) and pushed it to `origin/agent/browser-kernel-k2-actions`.
+- Updated existing Draft PR #4 against `agent/browser-kernel-k1-baseline`: `https://github.com/petitmainfroid/qiuzhao-toudi-zhushou/pull/4`. It remains Draft for review and was not merged or marked ready.
+- The isolated K2 worktree contained exactly the 24 intended implementation/test/documentation paths at the implementation commit. Staged whitespace check passed; suspicious staged paths and secret-pattern matches were zero. Anonymous fixture literals were test-only, and no `.env`, real resume, local PDF, credential, Cookie, HAR, trace or real filled-page screenshot was committed.
+- The original `C:\Users\jiangbingjian\qiuzhaozhushou` worktree and its separate F044/ATS-observation edits were not staged, rewritten or included in the K2 branch.
