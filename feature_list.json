@@ -757,25 +757,57 @@
     {
       "id": "F039",
       "title": "Implement verified browser action primitives",
-      "status": "in_progress",
+      "status": "done",
       "depends_on": ["F038"],
       "branch": "agent/browser-kernel-k2-actions",
       "pr_base": "agent/browser-kernel-k1-baseline",
       "acceptance": [
         "Typed click, type, select, check, and fill primitives act only on an opaque reference and snapshot from the current pinned session; callers cannot supply CSS/XPath, CDP IDs, arbitrary JavaScript, or an arbitrary page value.",
+        "The action schema rejects unknown properties and binds every request to a user-created authorization, the active session, the current snapshot membership, the original opaque reference, an internal semantic fingerprint, a locally recorded profile revision, and an explicitly proven same-Origin boundary.",
         "Profile-backed writes resolve an allowlisted profile path locally after the safety check. Fixed strategies cover text inputs, textarea, native select, radio, checkbox, date/month inputs, and contenteditable while dispatching browser/framework-compatible input, change, keyboard, and blur events.",
         "Every supported write is reread inside the page and returns only typed success/failure, strategy, and attempt count. The old value, requested value, current value, and resume content never enter responses or logs.",
         "A primary strategy may use at most one bounded non-clipboard fallback. A stale reference, changed semantic fingerprint, disabled/read-only control, failed verification, or framework rejection fails closed instead of moving to another control.",
-        "Password, CAPTCHA, verification, identity, file, destructive, and final-submit controls are blocked in 100% of ground-truth safety cases."
+        "Password, CAPTCHA, verification, identity, file, consent, destructive, and final-submit controls are blocked in 100% of ground-truth safety cases.",
+        "The fixed anonymous HTTPS/real-Chrome denominator contains 24 supported actions, 8 restricted controls, 8 integrity failures, and 2 typed rejections. Primary verified success is at least 23/24, final verified success is 24/24, both negative sets are 100% fail-closed, and wrong-control writes, third attempts, clipboard calls, cross-Origin actions, final submissions, and forbidden evidence leaks are all zero."
       ],
       "verification": [
-        "npm test -- --run src/bridge src/content/pageDriver.test.ts",
+        "npm test -- --run src/bridge src/background src/content/pageDriver.test.ts",
         "npm run eval:kernel-actions",
         "npm run validate",
         "npm run test:e2e",
         "Inspect artifacts/kernel-actions.png and its aggregate privacy-safe report."
       ],
-      "notes": "K2. The planning checkpoint is complete and implementation is next. Reuse the deterministic page-driver behavior through a fixed internal action registry; do not expose raw Runtime evaluation or copy a second divergent driver. Clipboard access is excluded. Mark done only after branch, commit, draft PR, and exact evidence are recorded in progress.md."
+      "parallel_workstreams": [
+        {
+          "id": "A",
+          "owner": "protocol-registry-safety",
+          "files": [
+            "src/bridge/protocol.ts",
+            "src/bridge/protocol.test.ts",
+            "src/bridge/pageState.ts",
+            "src/bridge/pageState.test.ts"
+          ]
+        },
+        {
+          "id": "B",
+          "owner": "fixed-action-executor",
+          "files": [
+            "src/content/pageDriver.ts",
+            "src/content/pageDriver.test.ts",
+            "src/bridge/pageActions.ts",
+            "src/bridge/pageActions.test.ts"
+          ]
+        },
+        {
+          "id": "C",
+          "owner": "anonymous-browser-evaluator",
+          "files": [
+            "tests/fixtures/kernel-actions-ground-truth.ts",
+            "tests/e2e/kernel-actions.spec.ts"
+          ]
+        }
+      ],
+      "notes": "Completed serially on 2026-08-06 after the user chose one-Agent execution. The anonymous HTTPS/real-Chrome evaluator achieved 23/24 primary and 24/24 final verified actions, 8/8 restricted blocks, 8/8 integrity fail-closed cases and 2/2 typed rejections. Wrong-control writes, third attempts, clipboard calls, cross-Origin actions, final submissions and forbidden evidence leaks were all zero. Full validation passed 31 files/255 tests and the serialized full browser suite passed 22/22. Draft PR #4 remains stacked on the K1 baseline; final commit/push evidence is recorded in progress.md."
     },
     {
       "id": "F040",

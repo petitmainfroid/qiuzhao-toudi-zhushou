@@ -58,6 +58,7 @@ export interface CdpDomNode {
   localName?: string;
   nodeValue?: string;
   frameId?: string;
+  documentURL?: string;
   attributes?: string[];
   children?: CdpDomNode[];
   shadowRoots?: CdpDomNode[];
@@ -66,9 +67,23 @@ export interface CdpDomNode {
   templateContent?: CdpDomNode;
 }
 
-interface ReferenceTarget {
+export interface ReferenceTarget {
   frameKey: string;
   backendNodeId: number;
+  fingerprint: string;
+  role: PageControlRole;
+  tag: PrivacySafeControl["tag"];
+  inputType?: string;
+  safety: PageControlSafety;
+  boundary: PageControlBoundary;
+  disabled: boolean;
+  readOnly: boolean;
+  origin: string;
+  path: string;
+}
+
+interface ReferenceRegistration extends Omit<ReferenceTarget, "origin" | "path"> {
+  ref: string;
 }
 
 interface FlatNode {
@@ -94,7 +109,11 @@ export class OpaqueReferenceRegistry {
   private sessionId = "";
   private readonly nonce: string;
   private readonly byTarget = new Map<string, string>();
-  private readonly byReference = new Map<string, ReferenceTarget>();
+  private currentSnapshot: {
+    id: string;
+    sessionId: string;
+    references: Map<string, ReferenceTarget>;
+  } | null = null;
   private referenceCounter = 0;
   private snapshotCounter = 0;
 
@@ -110,26 +129,47 @@ export class OpaqueReferenceRegistry {
     this.referenceCounter += 1;
     const ref = `node_${this.nonce}_${this.referenceCounter.toString(36).padStart(4, "0")}`;
     this.byTarget.set(targetKey, ref);
-    this.byReference.set(ref, { frameKey, backendNodeId });
     return ref;
   }
 
-  snapshot(sessionId: string): string {
+  snapshot(
+    sessionId: string,
+    origin: string,
+    path: string,
+    registrations: ReferenceRegistration[]
+  ): string {
     this.useSession(sessionId);
     this.snapshotCounter += 1;
-    return `state_${this.nonce}_${this.snapshotCounter.toString(36).padStart(4, "0")}`;
+    const id = `state_${this.nonce}_${this.snapshotCounter.toString(36).padStart(4, "0")}`;
+    this.currentSnapshot = {
+      id,
+      sessionId,
+      references: new Map(registrations.map(({ ref, ...target }) => [
+        ref,
+        { ...target, origin, path }
+      ]))
+    };
+    return id;
   }
 
-  resolve(sessionId: string, reference: string): ReferenceTarget | null {
-    if (sessionId !== this.sessionId) return null;
-    return this.byReference.get(reference) ?? null;
+  resolve(sessionId: string, snapshotId: string, reference: string): ReferenceTarget | null {
+    if (
+      sessionId !== this.sessionId
+      || this.currentSnapshot?.sessionId !== sessionId
+      || this.currentSnapshot.id !== snapshotId
+    ) return null;
+    return this.currentSnapshot.references.get(reference) ?? null;
+  }
+
+  invalidate(): void {
+    this.currentSnapshot = null;
   }
 
   private useSession(sessionId: string): void {
     if (this.sessionId === sessionId) return;
     this.sessionId = sessionId;
     this.byTarget.clear();
-    this.byReference.clear();
+    this.currentSnapshot = null;
     this.referenceCounter = 0;
     this.snapshotCounter = 0;
   }
@@ -168,7 +208,35 @@ function safeInputType(node: CdpDomNode): string | undefined {
   return SAFE_INPUT_TYPES.has(rawType) ? rawType : "text";
 }
 
-function flattenDocument(root: CdpDomNode): FlattenedDocument {
+function hasAncestor(record: FlatNode, name: string): boolean {
+  let ancestor = record.parent;
+  while (ancestor) {
+    if (nodeName(ancestor.node) === name) return true;
+    ancestor = ancestor.parent;
+  }
+  return false;
+}
+
+function controlInputType(record: FlatNode): string | undefined {
+  const inputType = safeInputType(record.node);
+  if (inputType) return inputType;
+  if (nodeName(record.node) !== "button") return undefined;
+  const rawType = attribute(record.node, "type")?.toLowerCase();
+  if (rawType === "button" || rawType === "reset" || rawType === "submit") return rawType;
+  return hasAncestor(record, "form") ? "submit" : "button";
+}
+
+function documentOrigin(rawUrl: string | undefined): string | null {
+  try {
+    const url = new URL(rawUrl ?? "");
+    return url.protocol === "https:" && !url.username && !url.password ? url.origin : null;
+  }
+  catch {
+    return null;
+  }
+}
+
+function flattenDocument(root: CdpDomNode, topOrigin: string): FlattenedDocument {
   const nodes: FlatNode[] = [];
   const frameKeys = new Set<string>();
   let openShadowRootCount = 0;
@@ -196,7 +264,10 @@ function flattenDocument(root: CdpDomNode): FlattenedDocument {
       visit(shadowRoot, current, frameKey, "open-shadow");
     }
     if (node.contentDocument) {
-      visit(node.contentDocument, current, node.contentDocument.frameId || frameKey, "same-origin-frame");
+      const childOrigin = documentOrigin(node.contentDocument.documentURL);
+      if (childOrigin === topOrigin) {
+        visit(node.contentDocument, current, node.contentDocument.frameId || frameKey, "same-origin-frame");
+      }
     }
     if (node.templateContent) visit(node.templateContent, current, frameKey, boundary);
   }
@@ -230,7 +301,7 @@ function implicitRole(node: CdpDomNode): PageControlRole | null {
   if (name === "select") return hasAttribute(node, "multiple") ? "listbox" : "combobox";
   if (name === "button") return "button";
   if (name === "a" && attribute(node, "href") !== undefined) return "link";
-  if (attribute(node, "contenteditable")?.toLowerCase() === "true") return "textbox";
+  if (isContentEditableNode(node)) return "textbox";
   if (name !== "input") return null;
   const type = (attribute(node, "type") || "text").toLowerCase();
   if (type === "hidden") return null;
@@ -240,12 +311,38 @@ function implicitRole(node: CdpDomNode): PageControlRole | null {
   return "textbox";
 }
 
+function isContentEditableNode(node: CdpDomNode): boolean {
+  const value = attribute(node, "contenteditable");
+  if (value === undefined) return false;
+  return value === "" || value.toLowerCase() === "true" || value.toLowerCase() === "plaintext-only";
+}
+
+function labelText(node: CdpDomNode, maxLength = MAX_TEXT_LENGTH): string {
+  const chunks: string[] = [];
+  let length = 0;
+  function collect(current: CdpDomNode, isRoot: boolean): void {
+    if (length >= maxLength) return;
+    const name = nodeName(current);
+    if (["script", "style", "noscript"].includes(name)) return;
+    // A wrapping label may contain a textarea/select whose text nodes are user
+    // data or option captions. Neither is part of the field label.
+    if (!isRoot && implicitRole(current)) return;
+    if (current.nodeType === 3 && current.nodeValue) {
+      chunks.push(current.nodeValue);
+      length += current.nodeValue.length;
+    }
+    for (const child of current.children ?? []) collect(child, false);
+  }
+  collect(node, true);
+  return sanitizeSemanticText(chunks.join(" "), maxLength);
+}
+
 function publicTag(node: CdpDomNode): PrivacySafeControl["tag"] {
   const name = nodeName(node);
   if (name === "input" || name === "textarea" || name === "select" || name === "button" || name === "a") {
     return name;
   }
-  if (attribute(node, "contenteditable")?.toLowerCase() === "true") return "contenteditable";
+  if (isContentEditableNode(node)) return "contenteditable";
   return "custom";
 }
 
@@ -268,21 +365,39 @@ function previousSemanticText(record: FlatNode, recordByNode: Map<CdpDomNode, Fl
   return sanitizeSemanticText(candidates.join(" "));
 }
 
-function classifySafety(control: Omit<PrivacySafeControl, "ref" | "safety">): PageControlSafety {
+function classifySafety(
+  control: Omit<PrivacySafeControl, "ref" | "safety">,
+  internalSignals = ""
+): PageControlSafety {
   const corpus = sanitizeSemanticText([
     control.semantics.label,
     control.semantics.ariaLabel,
     control.semantics.placeholder,
     control.semantics.name,
-    control.semantics.nearbyText
+    control.semantics.nearbyText,
+    internalSignals
   ].filter(Boolean).join(" ")).toLowerCase();
-  if (control.inputType === "password" || /密码|password|passcode/.test(corpus)) return "credential";
-  if (/验证码|短信码|校验码|captcha|verification\s*code|sms\s*code|otp/.test(corpus)) return "verification";
-  if (/身份证|护照|银行卡|社会信用|id\s*card|passport|bank\s*card/.test(corpus)) return "identity";
+  if (control.inputType === "password" || /current-password|new-password/.test(corpus)) return "credential";
+  if (
+    /验证码|短信码|校验码|动态码|动态口令|图形码|captcha|verification\s*code|sms\s*code|one-time-code|otp/.test(corpus)
+  ) return "verification";
+  if (/密码|口令|password|passcode/.test(corpus)) return "credential";
+  if (
+    /身份证|证件号|护照|银行卡|社会信用|驾驶证|税号|id\s*card|identity|passport|bank\s*card|ssn|tax\s*id/.test(corpus)
+  ) return "identity";
   if (control.inputType === "file") return "file";
   if (
+    control.inputType === "reset"
+    || /删除|清空|重置|撤回|取消申请|注销|delete|remove|clear\s*all|reset|withdraw|cancel\s*application/.test(corpus)
+  ) return "destructive";
+  if (
+    (control.role === "checkbox" || control.role === "switch")
+    && /隐私|条款|协议|授权|同意|privacy|terms|agreement|consent|authorize/.test(corpus)
+  ) return "consent";
+  if (
     control.inputType === "submit"
-    || /提交申请|最终提交|确认投递|立即申请|submit\s*application|final\s*submit|apply\s*now/.test(corpus)
+    || control.inputType === "image"
+    || /提交申请|最终提交|确认投递|立即申请|发送申请|submit\s*application|final\s*submit|apply\s*now|send\s*application/.test(corpus)
   ) return "final-submit";
   return "ordinary";
 }
@@ -301,11 +416,30 @@ function optionCaptions(node: CdpDomNode): string[] {
   return options;
 }
 
-function buildControls(
-  flattened: FlattenedDocument,
-  sessionId: string,
-  registry: OpaqueReferenceRegistry
-): PrivacySafeControl[] {
+export interface InspectedControlTarget {
+  frameKey: string;
+  backendNodeId: number;
+  fingerprint: string;
+  control: Omit<PrivacySafeControl, "ref">;
+}
+
+function fingerprintControl(control: Omit<PrivacySafeControl, "ref">): string {
+  return JSON.stringify({
+    role: control.role,
+    tag: control.tag,
+    inputType: control.inputType ?? "",
+    semantics: control.semantics,
+    options: control.options ?? [],
+    disabled: control.disabled,
+    readOnly: control.readOnly,
+    required: control.required,
+    multiple: control.multiple,
+    boundary: control.boundary,
+    safety: control.safety
+  });
+}
+
+function inspectControls(flattened: FlattenedDocument): InspectedControlTarget[] {
   const recordByNode = new Map(flattened.nodes.map((record) => [record.node, record]));
   const nodesById = new Map<string, CdpDomNode>();
   const labelByFor = new Map<string, string>();
@@ -314,12 +448,12 @@ function buildControls(
     if (id) nodesById.set(id, record.node);
     if (nodeName(record.node) === "label") {
       const target = attribute(record.node, "for");
-      const text = textContent(record.node);
+      const text = labelText(record.node);
       if (target && text) labelByFor.set(target, text);
     }
   }
 
-  const controls: PrivacySafeControl[] = [];
+  const controls: InspectedControlTarget[] = [];
   for (const record of flattened.nodes) {
     if (controls.length >= MAX_CONTROLS) break;
     const role = implicitRole(record.node);
@@ -340,7 +474,7 @@ function buildControls(
     let ancestor = record.parent;
     for (let depth = 0; ancestor && depth < 5; depth += 1, ancestor = ancestor.parent) {
       if (nodeName(ancestor.node) === "label") {
-        wrappingLabel = textContent(ancestor.node);
+        wrappingLabel = labelText(ancestor.node);
         break;
       }
     }
@@ -356,7 +490,7 @@ function buildControls(
         || attribute(record.node, "title") || technicalName,
       100
     );
-    const inputType = safeInputType(record.node);
+    const inputType = controlInputType(record);
     const base: Omit<PrivacySafeControl, "ref" | "safety"> = {
       role,
       tag: publicTag(record.node),
@@ -375,13 +509,62 @@ function buildControls(
       multiple: hasAttribute(record.node, "multiple") || attribute(record.node, "aria-multiselectable") === "true",
       boundary: record.boundary
     };
-    controls.push({
-      ref: registry.reference(sessionId, record.frameKey, backendNodeId),
+    const safety = classifySafety(base, [
+      attribute(record.node, "autocomplete"),
+      attribute(record.node, "data-purpose"),
+      attribute(record.node, "data-action")
+    ].filter(Boolean).join(" "));
+    const control = {
       ...base,
-      safety: classifySafety(base)
+      safety
+    };
+    controls.push({
+      frameKey: record.frameKey,
+      backendNodeId,
+      fingerprint: fingerprintControl(control),
+      control
     });
   }
   return controls;
+}
+
+function buildControls(
+  flattened: FlattenedDocument,
+  sessionId: string,
+  registry: OpaqueReferenceRegistry
+): { controls: PrivacySafeControl[]; registrations: ReferenceRegistration[] } {
+  const inspected = inspectControls(flattened);
+  const registrations: ReferenceRegistration[] = [];
+  const controls = inspected.map((target) => {
+    const ref = registry.reference(sessionId, target.frameKey, target.backendNodeId);
+    registrations.push({
+      ref,
+      frameKey: target.frameKey,
+      backendNodeId: target.backendNodeId,
+      fingerprint: target.fingerprint,
+      role: target.control.role,
+      tag: target.control.tag,
+      ...(target.control.inputType ? { inputType: target.control.inputType } : {}),
+      safety: target.control.safety,
+      boundary: target.control.boundary,
+      disabled: target.control.disabled,
+      readOnly: target.control.readOnly
+    });
+    return { ref, ...target.control };
+  });
+  return { controls, registrations };
+}
+
+export function inspectControlTarget(
+  root: CdpDomNode,
+  origin: string,
+  frameKey: string,
+  backendNodeId: number
+): InspectedControlTarget | null {
+  const flattened = flattenDocument(root, origin);
+  return inspectControls(flattened).find((target) =>
+    target.frameKey === frameKey && target.backendNodeId === backendNodeId
+  ) ?? null;
 }
 
 export function buildPrivacySafePageState(
@@ -392,10 +575,10 @@ export function buildPrivacySafePageState(
   if (!session.sessionId || !session.origin || !session.path) {
     throw new EmbeddedCdpError("session-inactive", "请先连接当前 HTTPS 招聘页面。");
   }
-  const flattened = flattenDocument(root);
-  const controls = buildControls(flattened, session.sessionId, registry);
+  const flattened = flattenDocument(root, session.origin);
+  const { controls, registrations } = buildControls(flattened, session.sessionId, registry);
   return {
-    snapshotId: registry.snapshot(session.sessionId),
+    snapshotId: registry.snapshot(session.sessionId, session.origin, session.path, registrations),
     origin: session.origin,
     path: session.path,
     controls,
@@ -477,7 +660,7 @@ function secureLocation(rawUrl: string | undefined): { origin: string; path: str
 }
 
 export class PrivacySafePageStateService {
-  constructor(private readonly registry = new OpaqueReferenceRegistry()) {}
+  constructor(public readonly registry = new OpaqueReferenceRegistry()) {}
 
   async read(session: PowerSessionView): Promise<PrivacySafePageState> {
     if (

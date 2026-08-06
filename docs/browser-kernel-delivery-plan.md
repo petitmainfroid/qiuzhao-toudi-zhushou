@@ -1,5 +1,7 @@
 # 浏览器写入内核 K2–K5 交付计划与真实网页验收标准
 
+F039 的多 Agent 文件所有权、固定 24/8/8/2 分母、RED gate 和串行集成命令见 [`browser-kernel-k2-multi-agent-plan.md`](browser-kernel-k2-multi-agent-plan.md)。并行只发生在一个节点内部；K2–K5 仍按依赖顺序晋升。
+
 ## 目标与完成定义
 
 目标是把现有 `src/content/pageDriver.ts` 的可靠写入、事件触发和回读验证能力收敛到 K1 会话内核，使所有招聘流程最终只依赖一套类型化 `state/find/action/wait/upload` API。
@@ -56,6 +58,8 @@
 | N3 K4 文件与证据 | F041 | `agent/browser-kernel-k4-evidence` | `agent/browser-kernel-k3-workflows` | 单 PDF 确认、重复上传、截图/日志隐私和错误类型通过 |
 | N4 K5 Adapter 收敛 | F042 | `agent/browser-kernel-k5-adapters` | `agent/browser-kernel-k4-evidence` | 旧路径退出；三种匿名 ATS 家族端到端通过 |
 | N5 真实网页验收 | F043 | `agent/browser-kernel-real-site-acceptance` | `agent/browser-kernel-k5-adapters` | 三个不同 ATS 家族 L2/L3、每站主策略 >90%、零误写/零提交 |
+
+截至 2026-08-06，N1 / F039 已在对应分支完成 L0 与 L1：主策略 23/24、一次降级后 24/24，8/8 受限控件与 8/8 完整性场景全部关闭失败，2/2 类型化拒绝正确，所有 RED gate 为 0。尚未声明真实招聘站点 L2/L3 或 K3–K5 能力。
 
 每个节点完成时必须按顺序执行：
 

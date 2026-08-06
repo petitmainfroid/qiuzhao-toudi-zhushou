@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { PowerSessionManager } from "../bridge/powerSession";
 import type { PrivacySafePageStateService } from "../bridge/pageState";
+import type { PageActionService } from "../bridge/pageActions";
 import {
   handleEmbeddedBridgeRequest,
   isTrustedExtensionSender
@@ -121,5 +122,66 @@ describe("embedded bridge background authorization", () => {
       expect.objectContaining({ sessionId: "power_test" }),
       { text: "姓名", limit: 5 }
     );
+  });
+
+  it("requires a trusted extension request to authorize and route a profile-backed page action", async () => {
+    const manager = managerMock();
+    const activeSession = {
+      status: "active" as const,
+      sessionId: "power_test_session",
+      tabId: 42,
+      origin: "https://jobs.example",
+      path: "/apply"
+    };
+    vi.mocked(manager.status).mockResolvedValue(activeSession);
+    const pageActionService = {
+      authorize: vi.fn(async () => ({ authorizationId: "action_auth_12345", expiresAt: 60_000 })),
+      act: vi.fn(async (request) => ({
+        requestId: request.requestId,
+        ref: request.ref,
+        action: request.intent.kind,
+        status: "verified" as const,
+        strategy: "native-setter" as const,
+        attempts: 1 as const,
+        durationBucket: "lt-100ms" as const
+      })),
+      invalidate: vi.fn()
+    } as unknown as PageActionService;
+    const pageStateService = {
+      registry: { invalidate: vi.fn() }
+    } as unknown as PrivacySafePageStateService;
+    const sender = { id: "assistant-id", url: "chrome-extension://assistant-id/sidepanel.html" };
+
+    expect(await handleEmbeddedBridgeRequest({
+      type: "POWER_PAGE_ACTION_AUTHORIZE",
+      requestId: "authorize_request_123"
+    }, sender, manager, pageStateService, pageActionService)).toEqual({
+      ok: true,
+      authorization: { authorizationId: "action_auth_12345", expiresAt: 60_000 }
+    });
+    expect(pageActionService.authorize).toHaveBeenCalledWith(activeSession, true);
+
+    const actionRequest = {
+      type: "POWER_PAGE_ACTION" as const,
+      requestId: "action_request_1234",
+      authorizationId: "action_auth_12345",
+      sessionId: "power_test_session",
+      snapshotId: "state_snapshot_123",
+      ref: "node_reference_123",
+      intent: { kind: "fill" as const, source: { kind: "profile" as const, path: "basic.fullName" } }
+    };
+    const response = await handleEmbeddedBridgeRequest(
+      actionRequest,
+      sender,
+      manager,
+      pageStateService,
+      pageActionService
+    );
+    expect(pageActionService.act).toHaveBeenCalledWith(actionRequest, activeSession);
+    expect(response).toEqual({
+      ok: true,
+      action: expect.objectContaining({ status: "verified", attempts: 1 })
+    });
+    expect(JSON.stringify(response)).not.toMatch(/basic\.fullName|profile|value/i);
   });
 });

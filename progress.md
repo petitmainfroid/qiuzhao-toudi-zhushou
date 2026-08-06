@@ -1077,3 +1077,83 @@ Run a local field-level audit over the five PDFs to identify missing dates, role
 - Opened draft PR #3, `建立浏览器内核 K1 基线与 K2–K5 交付计划`, against `agent/resume-attachment-acceptance`: `https://github.com/petitmainfroid/qiuzhao-toudi-zhushou/pull/3`.
 - The staged scope contained 66 repository files. Pre-push audits found zero suspicious staged paths and zero potential embedded-secret files; `git diff --cached --check` reported no whitespace errors.
 - N0 is a published baseline/checkpoint, not a claim that F039 is complete. F039 remains `in_progress`; its implementation and completion evidence belong on `agent/browser-kernel-k2-actions`, stacked on this branch.
+
+## 2026-08-06 - F039 multi-Agent harness and acceptance freeze
+
+### Session baseline and branch
+
+- Applied the user-requested `long-running-agent-harness` to F039. Read `AGENTS.md`, `feature_list.json`, `progress.md`, the K2–K5 delivery plan and the skill instructions before changing the harness.
+- Main-agent `./init.ps1 -SkipInstall` -> exit 0: TypeScript passed, 30 Vitest files / 239 tests passed, production build succeeded, 13 distribution files were verified, the exact eight browser-kernel permissions plus `<all_urls>` matched, and forbidden permissions were absent.
+- Created the required feature branch `agent/browser-kernel-k2-actions` from `agent/browser-kernel-k1-baseline`. F039 remains `in_progress`; no K2 implementation or completion claim was made in this checkpoint.
+
+### Parallel read-only audits
+
+- Three child Agents inspected the repository without editing files: protocol/reference/action architecture; anonymous HTTPS real-Chrome ground truth; and safety/integration boundaries. The root Agent remains the only integrator and Git owner.
+- All audits identified the same K2 prerequisite: the current registry resolves `sessionId + ref` but does not bind the ref to the current `snapshotId` and an internal semantic fingerprint. K2 must add current-snapshot membership and fail closed after navigation, DOM replacement, semantic drift, detach, expiry or worker restart.
+- The current frame traversal marks a `contentDocument` as same-origin without a separate action-time Origin proof. K2 must prove the frame Origin before writing; unknown, OOPIF and cross-Origin frames are blocked.
+- Safety classification must add consent/destructive cases and cover default submit buttons, reset/delete/withdraw actions, OTP/password autocomplete, identity synonyms and fake upload buttons. Generic button/link click is outside K2; fixed click intent may only open an ordinary compatible control.
+- The old `complex-controls` E2E remains a useful legacy-driver regression but cannot be K2 evidence because it bypasses the extension action protocol, HTTPS debugger session, snapshot and opaque reference. The K2 authority will be a new real-Chrome evaluator using the installed extension path.
+- One independent Agent initializer overlapped another shared build and temporarily observed a missing `dist/background.js`, while the main baseline and another serial initializer passed. This is recorded as shared-artifact contention, not a product regression: child Agents may run targeted Vitest only; build, validate, Chrome E2E, screenshots and package commands are serialized by the root integrator.
+
+### Frozen workstreams and evidence
+
+- Added `docs/browser-kernel-k2-multi-agent-plan.md`. Agent A owns protocol/registry/safety files; Agent B owns the fixed page driver/action executor; Agent C owns anonymous fixture/E2E files. Runtime wiring, CDP wrapper, UI, package scripts, harness/status files, artifacts and Git remain integrator-only.
+- Added the same ownership boundary to `AGENTS.md` and the machine-readable `parallel_workstreams` field on F039. Child Agents may not run Git, global formatters, `init.ps1`, full build/validate/E2E/package or edit across their lane.
+- Fixed the positive denominator at 24 actions: 12 main/native, 4 React/Vue-style, 4 explicitly same-origin iframe and 4 open-shadow cases. Primary verified success must be at least 23/24; after at most one non-clipboard fallback it must be 24/24, with correct-target, event and readback coverage all 24/24.
+- Fixed negative denominators at 8 restricted controls, 8 integrity fail-closed cases and 2 typed rejections. Wrong-control writes, sensitive/destructive/final actions, cross-Origin actions, third attempts, clipboard calls, final submissions and evidence leaks must all be zero. Any nonzero result is a RED gate that stops integration and keeps F039 incomplete.
+- `artifacts/kernel-actions-report.json` and `artifacts/kernel-actions.png` are specified as anonymous aggregate evidence only. They must not contain refs, snapshots, authorization capabilities, profile paths/revisions, requested/old/current values, real semantics, selectors, DOM/CDP ids, query strings, cookies, headers, bodies, files, HAR, trace or video.
+
+### Handoff
+
+- Harness files changed in this checkpoint: `AGENTS.md`, `feature_list.json`, `docs/browser-kernel-k2-multi-agent-plan.md`, and `progress.md`.
+- Harness consistency check -> exit 0: `feature_list.json` parsed; F039 remained `in_progress` on the exact K2 branch; three workstreams contained ten unique, non-overlapping owned paths; all fixed thresholds, RED gates and serial commands were present; `git diff --check` reported no whitespace error.
+- Final serialized `npm run validate` -> exit 0 after all child Agents had stopped: TypeScript passed, 30 Vitest files / 239 tests passed, production build succeeded, 13 distribution files passed, exact permissions remained unchanged and forbidden permissions were absent.
+- Next action: publish this validated in-progress K2 checkpoint to the feature branch/Draft PR, then freeze the concrete TypeScript action types and launch Agents A/B/C on their mutually exclusive implementation files. Do not mark F039 done until the full targeted, evaluator, validate, E2E, privacy review and GitHub evidence gates pass.
+
+### F039 harness publication
+
+- Published the in-progress harness checkpoint on `agent/browser-kernel-k2-actions` at commit `bbd47a6c807951171a7fdf6c6ae162c7259e65c5`.
+- Opened Draft PR #4, `F039：建立 K2 多 Agent 验收与并行开发门`, against `agent/browser-kernel-k1-baseline`: `https://github.com/petitmainfroid/qiuzhao-toudi-zhushou/pull/4`.
+- The staged checkpoint contained exactly five harness/documentation files. Pre-push audits found zero suspicious staged paths, zero potential embedded-secret files and no whitespace error.
+- The PR explicitly remains Draft and F039 remains `in_progress`; it will receive the A/B/C implementation and final K2 evidence before any completion decision.
+
+## 2026-08-06 - F039 K2 verified browser actions complete
+
+### Serial execution and implementation
+
+- The user chose serial execution after the multi-Agent harness checkpoint. No child Agent edited or verified this implementation slice; one root operator performed protocol, executor, runtime, UI, evaluator, integration and Git work in order. The frozen 24/8/8/2 denominator and RED gates were unchanged.
+- Added an exact-property action protocol for `fill`, `type`, `select`, `check` and restricted `click`. Every request binds a recent user-created authorization, active session, current snapshot membership, opaque reference, internal semantic fingerprint and local profile revision. Public callers cannot supply selectors, DOM/CDP IDs, JavaScript or an arbitrary value.
+- The reference registry now retains only current-snapshot membership and invalidates on stop, navigation, tab removal, expiry and debugger detach. Action-time inspection rechecks backend-node identity, fingerprint, disabled/read-only state, frame boundary, path and exact Origin before mutation.
+- Added a fixed internal action executor for input/textarea/contenteditable, native select including multiple selection, exact radio/checkbox, date/month and compatible combobox/listbox opening. It uses native setters and browser-compatible events, rereads inside the page and returns only typed status/strategy/attempt metadata. Text controls alone may use one `Input.insertText` fallback; clipboard and third attempts are absent.
+- Added destructive and consent safety classes and strengthened credential, OTP/CAPTCHA, identity, file and default/final-submit classification. The real-Chrome run also exposed a privacy defect where a wrapping label could include a textarea's old text; label extraction now skips descendant interactive controls and has a regression proving textarea values and select captions do not contaminate the label.
+- Added a 60-second Organic side-panel authorization control. It warns that a recruitment site may autosave a draft and clears on inactive sessions. K2 does not yet expose a field-planning/orchestration UI; F040–F042 will compose these verified primitives into waits and recruitment workflows.
+
+### Fixed anonymous HTTPS / real-Chrome evidence
+
+- `npm run eval:kernel-actions` -> exit 0; 1/1 unpacked-extension test passed in real Chromium over anonymous HTTPS. The positive denominator was 24: 12 main/native, 4 React/Vue-style, 4 proven same-Origin frame and 4 open-shadow controls.
+- Primary verified writes were 23/24 (95.83%). The single intentional first-strategy rejection used one keyboard fallback, producing 24/24 final verified writes. Readback, precondition and event-contract checks were 24/24.
+- Restricted controls were 8/8 blocked with zero mutation: credential, OTP/CAPTCHA, identity, file, final submit, destructive action and consent. Integrity cases were 8/8 fail-closed: disabled, read-only, hidden-after-scan, stale snapshot, replaced node, forged reference, prior session and incompatible button. Typed rejections were 2/2: persistent framework rejection after two attempts and missing select option after one attempt.
+- RED-gate counts were all zero: wrong-control mutation, final submission, third attempt, clipboard call, cross-Origin action and forbidden evidence leak.
+- `artifacts/kernel-actions-report.json` contains only anonymous aggregate/case metadata. `artifacts/kernel-actions.png` was visually inspected and shows the Organic 24/24, 23/24, 8/8, 8/8, 2/2 and zero-count summary plus anonymous Origin/path; it shows no page value, profile value, authorization, ref, query string, credential, Cookie or submission action.
+
+### Verification and deterministic E2E operation
+
+- Final targeted command `npm test -- --run src/bridge src/background src/content/pageDriver.test.ts src/sidepanel/PowerSessionCard.test.tsx` -> exit 0; 9 files / 44 tests passed.
+- Final `npm run validate` -> exit 0; TypeScript passed, 31 Vitest files / 255 tests passed, the production build succeeded, 13 distribution files passed, exact browser-kernel permissions remained unchanged and forbidden permissions were absent.
+- The first full E2E run exposed an existing extension-install race: `embedded-bridge` created a recruitment tab before the asynchronous first-install options page completed. It now waits for that one-time page, matching the K1/K2 evaluators; the isolated test passed.
+- Two CDP-heavy evaluator files proved nondeterministic only when four independent Chrome debugger profiles competed concurrently: both passed alone. The release `test:e2e` command now uses one Playwright worker so debugger-backed extension evidence is reproducible. Final post-review `npm run test:e2e` -> exit 0; 22/22 Chrome tests passed in 1.9 minutes, including K0, K1, K2 and every existing resume, PDF, repeatable-record, privacy and fill regression.
+
+### Files and handoff
+
+- Protocol, registry and safety: `src/bridge/protocol.ts`, `src/bridge/protocol.test.ts`, `src/bridge/pageState.ts`, and `src/bridge/pageState.test.ts`.
+- Executor and integration: `src/bridge/pageActions.ts`, `src/bridge/pageActions.test.ts`, `src/content/pageDriver.ts`, `src/content/pageDriver.test.ts`, `src/background/bridgeRuntime.ts`, and `src/background/bridgeRuntime.test.ts`.
+- UI and evaluator: `src/sidepanel/powerSessionBridge.ts`, `src/sidepanel/PowerSessionCard.tsx`, `src/sidepanel/PowerSessionCard.test.tsx`, `src/sidepanel/sidepanel.css`, `tests/fixtures/kernel-actions-ground-truth.ts`, `tests/e2e/kernel-actions.spec.ts`, and `tests/e2e/embedded-bridge.spec.ts`.
+- Harness and documentation: `package.json`, `README.md`, `PRIVACY.md`, `docs/browser-kernel-acceptance.md`, `docs/browser-kernel-delivery-plan.md`, `feature_list.json`, and this handoff.
+- F039 is `done` with no implementation blocker. The next dependency-unblocked feature is F040 on `agent/browser-kernel-k3-workflows`: bounded waits, same-Origin workflow transitions and request idempotency. Do not start F040 on the K2 branch. F043 real-site L2/L3 evidence remains future user-authorized work, so K2 completion is not a claim that every real recruitment site is already supported.
+
+### F039 publication
+
+- Committed the verified implementation on `agent/browser-kernel-k2-actions` as `8b6985fa68f91fbf887d5ed3d094f4b02370b80a` (`完成 K2 可验证浏览器动作`) and pushed it to `origin/agent/browser-kernel-k2-actions`.
+- Updated existing Draft PR #4 against `agent/browser-kernel-k1-baseline`: `https://github.com/petitmainfroid/qiuzhao-toudi-zhushou/pull/4`. It remains Draft for review and was not merged or marked ready.
+- The isolated K2 worktree contained exactly the 24 intended implementation/test/documentation paths at the implementation commit. Staged whitespace check passed; suspicious staged paths and secret-pattern matches were zero. Anonymous fixture literals were test-only, and no `.env`, real resume, local PDF, credential, Cookie, HAR, trace or real filled-page screenshot was committed.
+- The original `C:\Users\jiangbingjian\qiuzhaozhushou` worktree and its separate F044/ATS-observation edits were not staged, rewritten or included in the K2 branch.

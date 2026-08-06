@@ -82,6 +82,31 @@ K2–K5 的节点拆分、堆叠分支、动作策略和三类真实 ATS 验收�
 - fixture 中的输入值、勾选状态、DOM 标识、查询参数和节点 ID 均未进入公开状态；禁泄漏计数为 0，最终提交计数为 0。
 - `artifacts/page-state-find-report.json` 只保存聚合指标和匿名标签；`artifacts/page-state-find.png` 展示只读结构与查找结果。
 
+## K2（F039）详细验收用例
+
+### 正向能力
+
+1. `fill`、`type`、`select`、`check` 和受限 `click` 只接受活动会话的当前 snapshot 与不透明引用，不接受选择器、DOM/CDP ID、脚本或调用方提供的页面值。
+2. 用户在侧栏单独授权后，后台从当前本地档案版本的白名单路径解析值；授权最长 60 秒，并在会话停止、跨 Origin、到期或 debugger detach 时失效。
+3. 固定动作覆盖文本、email、textarea、原生单选/多选 select、radio、checkbox、date、month、contenteditable，以及只打开兼容 combobox/listbox 的 click。
+4. 文本路径触发 `beforeinput`、原生 setter、`input`、`change`、`blur/focusout` 等兼容事件；每次动作在页面内回读验证，只返回状态、策略、尝试次数、耗时档位和失败类别。
+5. 主策略失败时只有文本类动作可使用一次固定键盘输入降级；不使用剪贴板，不进行第三次尝试，也不换到相邻控件。
+
+### 安全反例
+
+1. 密码、OTP/CAPTCHA、身份、文件、同意条款、破坏性动作和最终提交全部阻止且零页面修改。
+2. disabled、readonly、动作前隐藏、过期 snapshot、节点替换、伪造 ref、旧 session 和不兼容按钮全部关闭失败。
+3. 动作前后语义指纹、frame 与同 Origin 证明必须一致；未知或跨 Origin frame 不进入可写集合。
+4. 标签提取必须跳过包裹 label 内的 textarea 值与 select 控件正文，避免旧页面值混入语义状态。
+5. 证据不得包含授权 ID、session/snapshot/ref、档案路径/版本、请求值、旧值、当前值、选择器、节点 ID、查询串、Cookie、请求正文或真实个人信息。
+
+### 自动化证据
+
+- `npm run eval:kernel-actions` 在真实 Chrome 中加载本扩展和匿名 HTTPS ground truth：主策略 23/24，单次降级后 24/24，正确回读与事件契约 24/24。
+- 8/8 受限控件阻止、8/8 完整性场景关闭失败、2/2 类型化拒绝符合预期。
+- 误写、提交、第三次尝试、剪贴板、跨 Origin 动作和证据泄露计数全部为 0。
+- `artifacts/kernel-actions-report.json` 只保存匿名聚合与 case ID；`artifacts/kernel-actions.png` 展示无值的 Organic 验收摘要。
+
 ## 真实网页验收梯度
 
 - L0：单元测试；无浏览器。

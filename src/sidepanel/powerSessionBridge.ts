@@ -3,6 +3,7 @@ import type {
   EmbeddedBridgeResponse,
   PageFindQuery,
   PageFindResult,
+  PageActionAuthorizationView,
   PrivacySafePageState,
   PowerSessionView
 } from "../bridge/protocol";
@@ -13,6 +14,7 @@ export interface PowerSessionBridge {
   refresh(): Promise<PowerSessionView>;
   pageState(): Promise<PrivacySafePageState>;
   find(query: PageFindQuery): Promise<PageFindResult>;
+  authorizeActions(): Promise<PageActionAuthorizationView>;
   stop(): Promise<PowerSessionView>;
 }
 
@@ -43,6 +45,12 @@ function findResultFrom(response: EmbeddedBridgeResponse): PageFindResult {
   if (!response.ok) throw new Error(response.error);
   if (!("result" in response)) throw new Error("浏览器会话没有返回查找结果。");
   return response.result;
+}
+
+function authorizationFrom(response: EmbeddedBridgeResponse): PageActionAuthorizationView {
+  if (!response.ok) throw new Error(response.error);
+  if (!("authorization" in response)) throw new Error("浏览器会话没有返回动作授权。");
+  return response.authorization;
 }
 
 async function targetTabId(): Promise<number> {
@@ -80,6 +88,10 @@ export class ChromePowerSessionBridge implements PowerSessionBridge {
     return findResultFrom(await send({ type: "POWER_PAGE_FIND", requestId: requestId(), query }));
   }
 
+  async authorizeActions(): Promise<PageActionAuthorizationView> {
+    return authorizationFrom(await send({ type: "POWER_PAGE_ACTION_AUTHORIZE", requestId: requestId() }));
+  }
+
   async stop(): Promise<PowerSessionView> {
     return sessionFrom(await send({ type: "POWER_SESSION_STOP", requestId: requestId() }));
   }
@@ -104,6 +116,10 @@ export class PreviewPowerSessionBridge implements PowerSessionBridge {
 
   async find(_query: PageFindQuery): Promise<PageFindResult> {
     throw new Error("语义查找只在安装扩展并连接 HTTPS 页面后可用。");
+  }
+
+  async authorizeActions(): Promise<PageActionAuthorizationView> {
+    throw new Error("动作授权只在安装扩展并连接 HTTPS 页面后可用。");
   }
 
   async stop(): Promise<PowerSessionView> {

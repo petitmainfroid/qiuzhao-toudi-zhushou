@@ -1,5 +1,142 @@
 import { describe, expect, it, vi } from "vitest";
-import { writeControlVerified } from "./pageDriver";
+import { runFixedPageAction, writeControlVerified } from "./pageDriver";
+
+describe("fixed K2 page action registry", () => {
+  it("uses the native setter, dispatches framework events, and returns no values", () => {
+    document.body.innerHTML = `<input id="target" />`;
+    const input = document.getElementById("target") as HTMLInputElement;
+    const events: string[] = [];
+    for (const name of ["beforeinput", "input", "change", "blur", "focusout"]) {
+      input.addEventListener(name, () => events.push(name));
+    }
+
+    const result = runFixedPageAction.call(input, {
+      action: "fill",
+      strategy: "primary",
+      expected: "anonymous expected"
+    });
+
+    expect(result).toEqual({ performed: true, verified: true, strategy: "native-setter" });
+    expect(events).toEqual(["beforeinput", "input", "change", "blur", "focusout"]);
+    expect(JSON.stringify(result)).not.toContain("anonymous expected");
+  });
+
+  it("respects a cancelled beforeinput and does not mutate the control", () => {
+    document.body.innerHTML = `<textarea id="target">initial</textarea>`;
+    const textarea = document.getElementById("target") as HTMLTextAreaElement;
+    textarea.addEventListener("beforeinput", (event) => event.preventDefault());
+
+    expect(runFixedPageAction.call(textarea, {
+      action: "type",
+      strategy: "primary",
+      expected: "rejected"
+    })).toEqual({
+      performed: false,
+      verified: false,
+      strategy: "native-setter",
+      reason: "framework-rejected"
+    });
+    expect(textarea.value).toBe("initial");
+  });
+
+  it("checks and unchecks only the referenced ordinary checkbox", () => {
+    document.body.innerHTML = `<input id="target" type="checkbox"><input id="neighbor" type="checkbox">`;
+    const input = document.getElementById("target") as HTMLInputElement;
+    const neighbor = document.getElementById("neighbor") as HTMLInputElement;
+
+    expect(runFixedPageAction.call(input, {
+      action: "check",
+      strategy: "primary",
+      desired: "checked"
+    })).toEqual({ performed: true, verified: true, strategy: "exact-check" });
+    expect(input.checked).toBe(true);
+    expect(neighbor.checked).toBe(false);
+    expect(runFixedPageAction.call(input, {
+      action: "check",
+      strategy: "primary",
+      desired: "unchecked"
+    })).toEqual({ performed: true, verified: true, strategy: "exact-check" });
+    expect(input.checked).toBe(false);
+  });
+
+  it("fails on ambiguous native options and never changes the existing selection", () => {
+    document.body.innerHTML = `
+      <select id="target">
+        <option selected>初始项</option>
+        <option value="same">目标项</option>
+        <option value="other">目标项</option>
+      </select>
+    `;
+    const select = document.getElementById("target") as HTMLSelectElement;
+    expect(runFixedPageAction.call(select, {
+      action: "select",
+      strategy: "primary",
+      expected: "目标项"
+    })).toEqual({
+      performed: false,
+      verified: false,
+      strategy: "native-select",
+      reason: "option-ambiguous"
+    });
+    expect(select.selectedOptions[0]?.textContent).toBe("初始项");
+  });
+
+  it("never moves a radio action to a neighboring option", () => {
+    document.body.innerHTML = `
+      <label><input id="first" type="radio" name="degree" value="本科">本科</label>
+      <label><input id="second" type="radio" name="degree" value="硕士">硕士</label>
+    `;
+    const first = document.getElementById("first") as HTMLInputElement;
+    const second = document.getElementById("second") as HTMLInputElement;
+    expect(runFixedPageAction.call(first, {
+      action: "select",
+      strategy: "primary",
+      expected: "硕士"
+    })).toEqual({
+      performed: false,
+      verified: false,
+      strategy: "exact-radio",
+      reason: "option-not-found"
+    });
+    expect(first.checked).toBe(false);
+    expect(second.checked).toBe(false);
+  });
+
+  it("opens only a non-button combobox and rejects a generic submit-capable button", () => {
+    document.body.innerHTML = `
+      <div id="combo" role="combobox" aria-expanded="false"></div>
+      <button id="button">继续</button>
+    `;
+    const combo = document.getElementById("combo")!;
+    combo.addEventListener("click", () => combo.setAttribute("aria-expanded", "true"));
+    expect(runFixedPageAction.call(combo, {
+      action: "click",
+      strategy: "primary"
+    })).toEqual({ performed: true, verified: true, strategy: "open-control" });
+
+    const button = document.getElementById("button")!;
+    expect(runFixedPageAction.call(button, {
+      action: "click",
+      strategy: "primary"
+    })).toEqual({
+      performed: false,
+      verified: false,
+      strategy: "open-control",
+      reason: "incompatible-action"
+    });
+  });
+
+  it("supports the standard empty contenteditable attribute", () => {
+    document.body.innerHTML = `<div id="editor" contenteditable></div>`;
+    const editor = document.getElementById("editor")!;
+    expect(runFixedPageAction.call(editor, {
+      action: "fill",
+      strategy: "primary",
+      expected: "anonymous rich text"
+    })).toEqual({ performed: true, verified: true, strategy: "contenteditable-text" });
+    expect(editor.textContent).toBe("anonymous rich text");
+  });
+});
 
 describe("verified page driver", () => {
   it("retries one idempotent text write and returns no raw rejected page value", async () => {

@@ -23,5 +23,58 @@ describe("embedded bridge protocol validation", () => {
         query
       })).toBe(false);
     }
+    expect(isEmbeddedBridgeRequest({
+      type: "POWER_PAGE_FIND",
+      requestId: "request_12345678",
+      query: { text: "姓名", selector: "#private" }
+    })).toBe(false);
+  });
+
+  it("accepts strict profile-backed actions and rejects arbitrary values or browser primitives", () => {
+    const valid = {
+      type: "POWER_PAGE_ACTION",
+      requestId: "request_action_123",
+      authorizationId: "action_auth_12345",
+      sessionId: "power_session_12345",
+      snapshotId: "state_snapshot_123",
+      ref: "node_reference_123",
+      intent: { kind: "fill", source: { kind: "profile", path: "education.2.school" } }
+    };
+    expect(isEmbeddedBridgeRequest(valid)).toBe(true);
+    expect(isEmbeddedBridgeRequest({ ...valid, value: "private" })).toBe(false);
+    expect(isEmbeddedBridgeRequest({ ...valid, selector: "#target" })).toBe(false);
+    expect(isEmbeddedBridgeRequest({ ...valid, method: "Runtime.evaluate" })).toBe(false);
+    expect(isEmbeddedBridgeRequest({
+      ...valid,
+      intent: { kind: "fill", source: { kind: "profile", path: "basic.__proto__.secret" } }
+    })).toBe(false);
+    expect(isEmbeddedBridgeRequest({
+      ...valid,
+      intent: { kind: "fill", source: { kind: "profile", path: "unknown.value" } }
+    })).toBe(false);
+  });
+
+  it("accepts only bounded check/click intents and strict authorization requests", () => {
+    expect(isEmbeddedBridgeRequest({
+      type: "POWER_PAGE_ACTION_AUTHORIZE",
+      requestId: "authorize_123456"
+    })).toBe(true);
+    expect(isEmbeddedBridgeRequest({
+      type: "POWER_PAGE_ACTION_AUTHORIZE",
+      requestId: "authorize_123456",
+      expiresAt: 123
+    })).toBe(false);
+
+    const base = {
+      type: "POWER_PAGE_ACTION",
+      requestId: "request_action_456",
+      authorizationId: "action_auth_67890",
+      sessionId: "power_session_67890",
+      snapshotId: "state_snapshot_456",
+      ref: "node_reference_456"
+    };
+    expect(isEmbeddedBridgeRequest({ ...base, intent: { kind: "check", desired: "unchecked" } })).toBe(true);
+    expect(isEmbeddedBridgeRequest({ ...base, intent: { kind: "click", purpose: "open-control" } })).toBe(true);
+    expect(isEmbeddedBridgeRequest({ ...base, intent: { kind: "click", purpose: "submit" } })).toBe(false);
   });
 });
