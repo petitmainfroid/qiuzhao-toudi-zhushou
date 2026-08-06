@@ -88,6 +88,13 @@ test("embedded bridge pins one HTTPS tab and pauses on Origin change without sub
       || "";
     const extensionId = new URL(extensionUrl).host;
 
+    // A fresh extension install opens options asynchronously. Wait for that
+    // one-time navigation so it cannot take over the recruitment tab.
+    await expect.poll(
+      () => context.pages().some((page) => page.url() === `chrome-extension://${extensionId}/options.html`),
+      { timeout: 20_000 }
+    ).toBe(true);
+
     const target = await context.newPage();
     await target.goto("https://jobs.example.test/apply/1?private=query-is-not-status");
     await expect(target.getByRole("heading", { name: "Anonymous application /apply/1" })).toBeVisible();

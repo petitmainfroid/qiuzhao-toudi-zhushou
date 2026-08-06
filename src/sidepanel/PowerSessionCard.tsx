@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
-import { CircleStop, Link2, RefreshCw, Search, ShieldAlert } from "lucide-react";
-import type { PageFindResult, PrivacySafePageState, PowerSessionView } from "../bridge/protocol";
+import { CircleStop, Link2, RefreshCw, Search, ShieldAlert, ShieldCheck } from "lucide-react";
+import type {
+  PageActionAuthorizationView,
+  PageFindResult,
+  PrivacySafePageState,
+  PowerSessionView
+} from "../bridge/protocol";
 import type { PowerSessionBridge } from "./powerSessionBridge";
 
 function reasonText(reason: PowerSessionView["reason"]): string {
@@ -22,6 +27,7 @@ export function PowerSessionCard({ bridge }: { bridge: PowerSessionBridge }) {
   const [pageState, setPageState] = useState<PrivacySafePageState | null>(null);
   const [findText, setFindText] = useState("");
   const [findResult, setFindResult] = useState<PageFindResult | null>(null);
+  const [actionAuthorization, setActionAuthorization] = useState<PageActionAuthorizationView | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -40,10 +46,25 @@ export function PowerSessionCard({ bridge }: { bridge: PowerSessionBridge }) {
       if (next.status !== "active") {
         setPageState(null);
         setFindResult(null);
+        setActionAuthorization(null);
       }
     }
     catch (cause) {
       setError(cause instanceof Error ? cause.message : "浏览器会话操作失败。");
+    }
+    finally {
+      setBusy(false);
+    }
+  }
+
+  async function authorizeActions() {
+    setBusy(true);
+    setError("");
+    try {
+      setActionAuthorization(await bridge.authorizeActions());
+    }
+    catch (cause) {
+      setError(cause instanceof Error ? cause.message : "动作授权失败。");
     }
     finally {
       setBusy(false);
@@ -102,6 +123,20 @@ export function PowerSessionCard({ bridge }: { bridge: PowerSessionBridge }) {
       ) : <p className="power-session-copy">{reasonText(session.reason)}</p>}
 
       <p className="power-session-boundary">只读取结构摘要；不读取 Cookie、密码或输入框值，也不会提交申请。</p>
+      {active ? (
+        <div className="action-authorization-panel">
+          <div>
+            <ShieldCheck size={16} aria-hidden="true" />
+            <p>
+              <strong>K2 限时填写批次</strong>
+              <span>{actionAuthorization ? "已授权 60 秒；仅允许本地档案和当前快照。" : "填写前需要再次点击；页面可能自动保存草稿。"}</span>
+            </p>
+          </div>
+          <button type="button" onClick={() => void authorizeActions()} disabled={busy}>
+            {actionAuthorization ? "重新授权" : "允许本次内核填写"}
+          </button>
+        </div>
+      ) : null}
       {error ? <p className="power-session-error" role="alert">{error}</p> : null}
 
       <div className="power-session-actions">

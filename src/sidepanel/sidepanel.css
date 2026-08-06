@@ -149,6 +149,48 @@
   border-radius: 12px;
 }
 
+.action-authorization-panel {
+  display: grid;
+  gap: 9px;
+  margin-top: 12px;
+  padding: 11px;
+  background: color-mix(in srgb, var(--sage) 26%, var(--sand));
+  border-radius: 16px;
+}
+
+.action-authorization-panel > div {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  color: var(--moss);
+}
+
+.action-authorization-panel p {
+  display: grid;
+  gap: 3px;
+  margin: 0;
+  font-size: 9px;
+  line-height: 1.45;
+}
+
+.action-authorization-panel span {
+  font-size: 8px;
+}
+
+.action-authorization-panel button {
+  min-height: 34px;
+  color: var(--sand);
+  background: var(--clay);
+  border: 0;
+  border-radius: 13px;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.action-authorization-panel button:disabled {
+  opacity: 0.55;
+}
+
 .power-session-actions {
   display: flex;
   gap: 8px;

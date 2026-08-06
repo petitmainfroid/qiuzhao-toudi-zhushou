@@ -757,7 +757,7 @@
     {
       "id": "F039",
       "title": "Implement verified browser action primitives",
-      "status": "in_progress",
+      "status": "done",
       "depends_on": ["F038"],
       "branch": "agent/browser-kernel-k2-actions",
       "pr_base": "agent/browser-kernel-k1-baseline",
@@ -807,7 +807,7 @@
           ]
         }
       ],
-      "notes": "K2. Follow docs/browser-kernel-k2-multi-agent-plan.md. The root integrator owns runtime wiring, package/UI/harness files, artifacts, Git and every shared build/E2E command. Reuse the deterministic page-driver behavior through one fixed internal action registry; do not expose raw Runtime evaluation or keep a second divergent driver. Clipboard access is excluded. Mark done only after branch, commit, draft PR, exact denominators and RED-gate evidence are recorded in progress.md."
+      "notes": "Completed serially on 2026-08-06 after the user chose one-Agent execution. The anonymous HTTPS/real-Chrome evaluator achieved 23/24 primary and 24/24 final verified actions, 8/8 restricted blocks, 8/8 integrity fail-closed cases and 2/2 typed rejections. Wrong-control writes, third attempts, clipboard calls, cross-Origin actions, final submissions and forbidden evidence leaks were all zero. Full validation passed 31 files/255 tests and the serialized full browser suite passed 22/22. Draft PR #4 remains stacked on the K1 baseline; final commit/push evidence is recorded in progress.md."
     },
     {
       "id": "F040",

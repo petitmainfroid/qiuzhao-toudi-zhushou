@@ -14,8 +14,15 @@ import {
   type PowerSessionManager
 } from "../bridge/powerSession";
 import { PrivacySafePageStateService } from "../bridge/pageState";
+import { OpaqueReferenceRegistry } from "../bridge/pageState";
+import {
+  createChromePageActionService,
+  type PageActionService
+} from "../bridge/pageActions";
 
-const defaultPageStateService = new PrivacySafePageStateService();
+const defaultReferenceRegistry = new OpaqueReferenceRegistry();
+const defaultPageStateService = new PrivacySafePageStateService(defaultReferenceRegistry);
+const defaultPageActionService = createChromePageActionService(defaultReferenceRegistry);
 
 function failure(error: unknown): EmbeddedBridgeResponse {
   const code: PowerSessionReason = error instanceof EmbeddedCdpError
@@ -38,7 +45,8 @@ export async function handleEmbeddedBridgeRequest(
   request: EmbeddedBridgeRequest,
   sender: chrome.runtime.MessageSender,
   manager: PowerSessionManager,
-  pageStateService: PrivacySafePageStateService = defaultPageStateService
+  pageStateService: PrivacySafePageStateService = defaultPageStateService,
+  pageActionService: PageActionService = defaultPageActionService
 ): Promise<EmbeddedBridgeResponse> {
   if (!isTrustedExtensionSender(sender)) {
     return { ok: false, code: "bridge-failed", error: "只有扩展界面中的用户操作可以启动浏览器会话。" };
@@ -62,6 +70,14 @@ export async function handleEmbeddedBridgeRequest(
     if (request.type === "POWER_PAGE_FIND") {
       return { ok: true, result: await pageStateService.find(await manager.status(), request.query) };
     }
+    if (request.type === "POWER_PAGE_ACTION_AUTHORIZE") {
+      return { ok: true, authorization: await pageActionService.authorize(await manager.status(), true) };
+    }
+    if (request.type === "POWER_PAGE_ACTION") {
+      return { ok: true, action: await pageActionService.act(request, await manager.status()) };
+    }
+    pageActionService.invalidate();
+    pageStateService.registry.invalidate();
     return { ok: true, session: await manager.stop() };
   }
   catch (error) {
@@ -71,28 +87,39 @@ export async function handleEmbeddedBridgeRequest(
 
 export function registerPowerSessionRuntime(
   manager: PowerSessionManager = createChromePowerSessionManager(),
-  pageStateService: PrivacySafePageStateService = defaultPageStateService
+  pageStateService: PrivacySafePageStateService = defaultPageStateService,
+  pageActionService: PageActionService = defaultPageActionService
 ): void {
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (!isEmbeddedBridgeRequest(message)) return undefined;
-    void handleEmbeddedBridgeRequest(message, sender, manager, pageStateService).then(sendResponse);
+    void handleEmbeddedBridgeRequest(message, sender, manager, pageStateService, pageActionService).then(sendResponse);
     return true;
   });
 
   chrome.webNavigation.onCommitted.addListener((details) => {
     if (details.frameId !== 0) return;
+    pageActionService.invalidate();
+    pageStateService.registry.invalidate();
     void manager.handleNavigation(details.tabId, details.url);
   });
 
   chrome.tabs.onRemoved.addListener((tabId) => {
+    pageActionService.invalidate();
+    pageStateService.registry.invalidate();
     void manager.handleTabClosed(tabId);
   });
 
   chrome.alarms.onAlarm.addListener((alarm) => {
-    if (alarm.name === POWER_SESSION_EXPIRY_ALARM) void manager.handleExpiryAlarm();
+    if (alarm.name === POWER_SESSION_EXPIRY_ALARM) {
+      pageActionService.invalidate();
+      pageStateService.registry.invalidate();
+      void manager.handleExpiryAlarm();
+    }
   });
 
   registerEmbeddedCdpListeners((tabId) => {
+    pageActionService.invalidate();
+    pageStateService.registry.invalidate();
     void manager.handleDebuggerDetached(tabId);
   });
 }

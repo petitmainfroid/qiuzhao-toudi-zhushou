@@ -1,4 +1,5 @@
 import { normalizeFieldText } from "../matching/normalize";
+import type { PageActionFailureReason, PageActionStrategy } from "../bridge/protocol";
 
 export type PageControl = HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | HTMLElement;
 
@@ -22,6 +23,212 @@ export interface PageWriteOptions {
   maxAttempts?: number;
   optionTimeoutMs?: number;
   verificationTimeoutMs?: number;
+}
+
+export interface FixedPageActionPayload {
+  action: "fill" | "type" | "select" | "check" | "click";
+  strategy: "primary" | "prepare-keyboard" | "verify-keyboard";
+  expected?: string;
+  desired?: "checked" | "unchecked";
+}
+
+export interface FixedPageActionOutcome {
+  performed: boolean;
+  verified: boolean;
+  strategy: PageActionStrategy;
+  reason?: PageActionFailureReason;
+}
+
+/**
+ * Self-contained page-world action registry. It is deliberately written with
+ * only local helpers so the exact function body can be used with the fixed
+ * Runtime.callFunctionOn bridge. Callers never provide script or selectors.
+ */
+export function runFixedPageAction(this: Element, payload: FixedPageActionPayload): FixedPageActionOutcome {
+  const element = this;
+  const ownerWindow = element.ownerDocument?.defaultView;
+  const normalize = (value: string): string => value.toLowerCase().replace(/[\s\p{P}\p{S}_]+/gu, "");
+  const split = (value: string): string[] => [...new Set(
+    value.split(/[\n,，、；;]+/).map((item) => item.trim()).filter(Boolean)
+  )];
+  const fail = (reason: PageActionFailureReason, strategy: PageActionStrategy = "none"): FixedPageActionOutcome => ({
+    performed: false,
+    verified: false,
+    strategy,
+    reason
+  });
+  const contentEditable = element.getAttribute("contenteditable")?.toLowerCase();
+  const isContentEditable = (element as HTMLElement).isContentEditable === true
+    || contentEditable === ""
+    || contentEditable === "true"
+    || contentEditable === "plaintext-only";
+  const strategyName: PageActionStrategy = payload.strategy === "primary"
+    ? payload.action === "select" ? "native-select"
+      : payload.action === "check" ? "exact-check"
+        : payload.action === "click" ? "open-control"
+          : isContentEditable ? "contenteditable-text" : "native-setter"
+    : "keyboard-insert";
+
+  if (!ownerWindow || !element.isConnected) return fail("stale-reference", strategyName);
+  if (element.closest("[hidden], [aria-hidden='true'], [inert]")) return fail("hidden-control", strategyName);
+  const style = ownerWindow.getComputedStyle?.(element);
+  if (style && (style.display === "none" || style.visibility === "hidden")) {
+    return fail("hidden-control", strategyName);
+  }
+  const disabled = element.matches(":disabled")
+    || element.getAttribute("aria-disabled") === "true"
+    || Boolean(element.closest("fieldset:disabled"));
+  const readOnly = element.matches("[readonly]") || element.getAttribute("aria-readonly") === "true";
+  if (disabled || readOnly) return fail("disabled-or-readonly", strategyName);
+
+  const isInput = element instanceof ownerWindow.HTMLInputElement;
+  const isTextarea = element instanceof ownerWindow.HTMLTextAreaElement;
+  const isSelect = element instanceof ownerWindow.HTMLSelectElement;
+  const inputType = isInput ? element.type.toLowerCase() : "";
+  if (isInput && ["file", "password", "hidden", "submit", "reset", "image", "button"].includes(inputType)) {
+    return fail("unsafe-control", strategyName);
+  }
+
+  const expected = payload.expected ?? "";
+  const dispatchBeforeInput = (): boolean => {
+    const InputEventConstructor = ownerWindow.InputEvent;
+    if (typeof InputEventConstructor !== "function") return true;
+    return element.dispatchEvent(new InputEventConstructor("beforeinput", {
+      bubbles: true,
+      cancelable: true,
+      data: expected,
+      inputType: "insertText"
+    }));
+  };
+  const dispatchCommittedEvents = (): void => {
+    const InputEventConstructor = ownerWindow.InputEvent;
+    if (typeof InputEventConstructor === "function") {
+      element.dispatchEvent(new InputEventConstructor("input", {
+        bubbles: true,
+        data: expected,
+        inputType: "insertText"
+      }));
+    }
+    else element.dispatchEvent(new ownerWindow.Event("input", { bubbles: true }));
+    element.dispatchEvent(new ownerWindow.Event("change", { bubbles: true }));
+    element.dispatchEvent(new ownerWindow.FocusEvent("blur", { bubbles: false }));
+    element.dispatchEvent(new ownerWindow.FocusEvent("focusout", { bubbles: true }));
+  };
+  const setTextValue = (): void => {
+    const prototype = isTextarea
+      ? ownerWindow.HTMLTextAreaElement.prototype
+      : ownerWindow.HTMLInputElement.prototype;
+    const setter = Object.getOwnPropertyDescriptor(prototype, "value")?.set;
+    if (setter) setter.call(element, expected);
+    else (element as HTMLInputElement | HTMLTextAreaElement).value = expected;
+  };
+  const textVerified = (): boolean => {
+    if (isInput || isTextarea) return normalize(element.value) === normalize(expected) && Boolean(normalize(expected));
+    if (isContentEditable) return normalize(element.textContent ?? "") === normalize(expected) && Boolean(normalize(expected));
+    return false;
+  };
+
+  if (payload.strategy === "prepare-keyboard") {
+    if (!(isInput || isTextarea || isContentEditable) || isSelect || inputType === "radio" || inputType === "checkbox") {
+      return fail("unsupported-control", "keyboard-insert");
+    }
+    (element as HTMLElement).focus({ preventScroll: true });
+    if (isInput || isTextarea) element.select();
+    else {
+      const selection = ownerWindow.getSelection();
+      const range = element.ownerDocument.createRange();
+      range.selectNodeContents(element);
+      selection?.removeAllRanges();
+      selection?.addRange(range);
+    }
+    return { performed: true, verified: false, strategy: "keyboard-insert" };
+  }
+
+  if (payload.strategy === "verify-keyboard") {
+    if (!(isInput || isTextarea || isContentEditable)) return fail("unsupported-control", "keyboard-insert");
+    dispatchCommittedEvents();
+    return textVerified()
+      ? { performed: true, verified: true, strategy: "keyboard-insert" }
+      : { performed: true, verified: false, strategy: "keyboard-insert", reason: "verification-failed" };
+  }
+
+  (element as HTMLElement).scrollIntoView?.({ block: "center", inline: "nearest" });
+  (element as HTMLElement).focus?.({ preventScroll: true });
+
+  if (payload.action === "check") {
+    const wanted = payload.desired === "checked";
+    if (isInput && inputType === "checkbox") {
+      if (element.checked !== wanted) element.click();
+      return element.checked === wanted
+        ? { performed: true, verified: true, strategy: "exact-check" }
+        : { performed: true, verified: false, strategy: "exact-check", reason: "verification-failed" };
+    }
+    const role = element.getAttribute("role");
+    if (role !== "checkbox" && role !== "switch") return fail("incompatible-action", "exact-check");
+    if ((element.getAttribute("aria-checked") === "true") !== wanted) (element as HTMLElement).click();
+    return (element.getAttribute("aria-checked") === "true") === wanted
+      ? { performed: true, verified: true, strategy: "exact-check" }
+      : { performed: true, verified: false, strategy: "exact-check", reason: "verification-failed" };
+  }
+
+  if (payload.action === "click") {
+    const role = element.getAttribute("role");
+    if ((role !== "combobox" && role !== "listbox") || element.matches("button, a[href]")) {
+      return fail("incompatible-action", "open-control");
+    }
+    (element as HTMLElement).click();
+    return element.getAttribute("aria-expanded") === "true"
+      ? { performed: true, verified: true, strategy: "open-control" }
+      : { performed: true, verified: false, strategy: "open-control", reason: "verification-failed" };
+  }
+
+  if ((payload.action === "select" || payload.action === "fill") && isSelect) {
+    const requested = element.multiple ? split(expected) : [expected];
+    if (!requested.length) return fail("option-not-found", "native-select");
+    const chosen: HTMLOptionElement[] = [];
+    for (const item of requested) {
+      const target = normalize(item);
+      const matches = Array.from(element.options).filter((option) =>
+        [option.value, option.textContent ?? ""].some((candidate) => normalize(candidate) === target)
+      );
+      if (matches.length === 0) return fail("option-not-found", "native-select");
+      if (matches.length > 1) return fail("option-ambiguous", "native-select");
+      chosen.push(matches[0]!);
+    }
+    const selectedSet = new Set(chosen);
+    for (const option of Array.from(element.options)) option.selected = selectedSet.has(option);
+    dispatchCommittedEvents();
+    const actual = Array.from(element.selectedOptions).map((option) => normalize(option.textContent || option.value)).sort();
+    const wanted = requested.map(normalize).sort();
+    const verified = actual.length === wanted.length && wanted.every((item, index) => item === actual[index]);
+    return verified
+      ? { performed: true, verified: true, strategy: "native-select" }
+      : { performed: true, verified: false, strategy: "native-select", reason: "verification-failed" };
+  }
+
+  if ((payload.action === "select" || payload.action === "fill") && isInput && inputType === "radio") {
+    const ownCandidates = new Set([element.value, element.labels?.[0]?.textContent ?? ""].map(normalize).filter(Boolean));
+    if (!ownCandidates.has(normalize(expected))) return fail("option-not-found", "exact-radio");
+    if (!element.checked) element.click();
+    return element.checked
+      ? { performed: true, verified: true, strategy: "exact-radio" }
+      : { performed: true, verified: false, strategy: "exact-radio", reason: "verification-failed" };
+  }
+
+  if (payload.action !== "fill" && payload.action !== "type") {
+    return fail("incompatible-action", strategyName);
+  }
+  if (!expected.trim()) return fail("empty-profile-value", strategyName);
+  if (!(isInput || isTextarea || isContentEditable) || inputType === "radio" || inputType === "checkbox") {
+    return fail("unsupported-control", strategyName);
+  }
+  if (!dispatchBeforeInput()) return fail("framework-rejected", strategyName);
+  if (isInput || isTextarea) setTextValue();
+  else element.textContent = expected;
+  dispatchCommittedEvents();
+  return textVerified()
+    ? { performed: true, verified: true, strategy: strategyName }
+    : { performed: true, verified: false, strategy: strategyName, reason: "verification-failed" };
 }
 
 const BLOCKED_INPUT_TYPES = new Set([

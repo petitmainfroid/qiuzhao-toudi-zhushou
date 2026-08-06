@@ -43,6 +43,10 @@ describe("PowerSessionCard", () => {
           safety: "ordinary" as const
         }]
       })),
+      authorizeActions: vi.fn(async () => ({
+        authorizationId: "action_auth_12345",
+        expiresAt: Date.now() + 60_000
+      })),
       stop: vi.fn()
     };
     render(<PowerSessionCard bridge={bridge} />);
@@ -55,6 +59,9 @@ describe("PowerSessionCard", () => {
     expect(screen.getByText("https://jobs.example")).toBeInTheDocument();
     expect(screen.getByText("9 个控件 · 2 个 frame")).toBeInTheDocument();
     expect(screen.queryByText(/cookie-value|password-value/)).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "允许本次内核填写" }));
+    expect(await screen.findByText("已授权 60 秒；仅允许本地档案和当前快照。")).toBeInTheDocument();
+    expect(bridge.authorizeActions).toHaveBeenCalledTimes(1);
 
     fireEvent.click(screen.getByRole("button", { name: "读取结构" }));
     expect(await screen.findByText("已识别 9 个控件 · 2 个 frame · 1 个开放 shadow")).toBeInTheDocument();
@@ -76,6 +83,7 @@ describe("PowerSessionCard", () => {
       refresh: vi.fn(),
       pageState: vi.fn(),
       find: vi.fn(),
+      authorizeActions: vi.fn(),
       stop: vi.fn()
     };
     render(<PowerSessionCard bridge={bridge} />);

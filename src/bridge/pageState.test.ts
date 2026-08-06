@@ -67,6 +67,7 @@ function fixtureRoot(): CdpDomNode {
           nodeType: 9,
           nodeName: "#document",
           frameId: "child-frame",
+          documentURL: "https://jobs.example/embedded/apply",
           children: [element("input", { "aria-label": "推荐人姓名", value: "隐私姓名" })]
         }
       }
@@ -84,6 +85,30 @@ const session: PowerSessionView = {
 };
 
 describe("privacy-safe page state", () => {
+  it("does not treat wrapped textarea values or select options as label text", () => {
+    backendNodeId = 1;
+    const root: CdpDomNode = {
+      backendNodeId: backendNodeId++,
+      nodeType: 9,
+      nodeName: "#document",
+      frameId: "main-frame",
+      children: [element("html", {}, [element("body", {}, [
+        element("label", {}, [text("自我介绍"), element("textarea", {}, [text("绝不能进入标签的旧内容")])]),
+        element("label", {}, [text("最高学历"), element("select", {}, [
+          element("option", {}, [text("本科")]),
+          element("option", {}, [text("硕士")])
+        ])]),
+        element("div", { contenteditable: "", "aria-label": "个人优势" })
+      ])])]
+    };
+
+    const state = buildPrivacySafePageState(root, session, new OpaqueReferenceRegistry(() => "labelnonce"));
+    expect(state.controls.map((control) => control.semantics.label)).toEqual(["自我介绍", "最高学历", "个人优势"]);
+    expect(JSON.stringify(state)).not.toContain("绝不能进入标签的旧内容");
+    expect(state.controls[1]?.options).toEqual(["本科", "硕士"]);
+    expect(state.controls[2]?.tag).toBe("contenteditable");
+  });
+
   it("extracts allowlisted semantics across main, open-shadow, and frame boundaries", () => {
     const state = buildPrivacySafePageState(
       fixtureRoot(),
@@ -134,6 +159,64 @@ describe("privacy-safe page state", () => {
     expect([...firstRefs.values()]).toEqual(expect.arrayContaining([
       expect.stringMatching(/^node_stable123_[a-z0-9]{4}$/)
     ]));
+
+    const firstRef = first.controls[0]!.ref;
+    expect(registry.resolve(session.sessionId!, first.snapshotId, firstRef)).toBeNull();
+    expect(registry.resolve(session.sessionId!, second.snapshotId, firstRef)).toEqual(expect.objectContaining({
+      backendNodeId: expect.any(Number),
+      fingerprint: expect.any(String),
+      origin: session.origin,
+      path: session.path
+    }));
+    expect(registry.resolve("other-session", second.snapshotId, firstRef)).toBeNull();
+  });
+
+  it("excludes unproven or cross-origin frames and classifies destructive, consent, and default submit controls", () => {
+    backendNodeId = 1;
+    const root: CdpDomNode = {
+      backendNodeId: backendNodeId++,
+      nodeType: 9,
+      nodeName: "#document",
+      frameId: "main-frame",
+      children: [element("html", {}, [element("body", {}, [
+        element("form", {}, [
+          element("button", {}, [text("继续")]),
+          element("button", { type: "reset" }, [text("清空")]),
+          element("label", {}, [text("同意隐私条款"), element("input", { type: "checkbox" })]),
+          element("input", { autocomplete: "one-time-code", "aria-label": "动态口令" })
+        ]),
+        {
+          ...element("iframe"),
+          contentDocument: {
+            backendNodeId: backendNodeId++,
+            nodeType: 9,
+            nodeName: "#document",
+            frameId: "unknown-frame",
+            children: [element("input", { "aria-label": "未知来源" })]
+          }
+        },
+        {
+          ...element("iframe"),
+          contentDocument: {
+            backendNodeId: backendNodeId++,
+            nodeType: 9,
+            nodeName: "#document",
+            frameId: "cross-frame",
+            documentURL: "https://other.example/apply",
+            children: [element("input", { "aria-label": "跨域字段" })]
+          }
+        }
+      ])])]
+    };
+
+    const state = buildPrivacySafePageState(root, session, new OpaqueReferenceRegistry(() => "safetynonce"));
+    const byLabel = new Map(state.controls.map((control) => [control.semantics.label, control.safety]));
+    expect(byLabel.get("继续")).toBe("final-submit");
+    expect(byLabel.get("清空")).toBe("destructive");
+    expect(byLabel.get("同意隐私条款")).toBe("consent");
+    expect(byLabel.get("动态口令")).toBe("verification");
+    expect(state.controls.some((control) => control.semantics.label === "未知来源")).toBe(false);
+    expect(state.controls.some((control) => control.semantics.label === "跨域字段")).toBe(false);
   });
 
   it("finds controls semantically without accepting a selector", () => {
