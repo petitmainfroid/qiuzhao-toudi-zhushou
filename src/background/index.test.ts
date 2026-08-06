@@ -20,10 +20,35 @@ describe("background action handling", () => {
         open: openPanel
       },
       runtime: {
+        id: "assistant-id",
+        getURL: (path: string) => `chrome-extension://assistant-id/${path}`,
         onInstalled: { addListener: vi.fn() },
         onStartup: { addListener: vi.fn() },
         onMessage: { addListener: vi.fn() },
         openOptionsPage: vi.fn()
+      },
+      webNavigation: { onCommitted: { addListener: vi.fn() } },
+      tabs: {
+        get: vi.fn(),
+        onRemoved: { addListener: vi.fn() }
+      },
+      alarms: {
+        onAlarm: { addListener: vi.fn() },
+        create: vi.fn(),
+        clear: vi.fn()
+      },
+      debugger: {
+        onDetach: { addListener: vi.fn() },
+        attach: vi.fn(),
+        detach: vi.fn(),
+        sendCommand: vi.fn()
+      },
+      storage: {
+        session: {
+          get: vi.fn(),
+          set: vi.fn(),
+          remove: vi.fn()
+        }
       }
     });
 

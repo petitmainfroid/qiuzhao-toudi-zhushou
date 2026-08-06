@@ -33,6 +33,7 @@ export interface FieldDescriptor {
   options: string[];
   disabled: boolean;
   readOnly: boolean;
+  dateRangePaths?: readonly [string, string];
 }
 
 export type MatchConfidence = "high" | "medium" | "low" | "none";
@@ -53,5 +54,6 @@ export interface MatchResult {
   confidence: MatchConfidence;
   reasons: string[];
   requiresConfirmation: boolean;
+  companionProfilePath?: string;
   excludedReason?: ExclusionReason;
 }

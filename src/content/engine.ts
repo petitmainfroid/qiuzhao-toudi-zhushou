@@ -6,6 +6,7 @@ import { normalizeFieldText } from "../matching/normalize";
 import type { MatchResult } from "../matching/types";
 import { createFieldFingerprint } from "../mapping/fingerprint";
 import type { SavedFieldMapping } from "../mapping/types";
+import { readControlCandidates, writeControlVerified } from "./pageDriver";
 import { scanRepeatableRecords, type RepeatableRecordsScan } from "./repeatableRecords";
 import { scanResumeAttachment, type ResumeAttachmentScan } from "./resumeAttachment";
 
@@ -63,6 +64,23 @@ function previewValue(value: string): string {
   return collapsed.length > 72 ? `${collapsed.slice(0, 69)}…` : collapsed;
 }
 
+function profileWriteValue(profile: CandidateProfile, match: MatchResult): string {
+  if (!match.profilePath) return "";
+  const primary = getProfileValue(profile, match.profilePath).trim();
+  if (!match.companionProfilePath) return primary;
+  const companion = getProfileValue(profile, match.companionProfilePath).trim();
+  if (!primary || !companion) return "";
+  return JSON.stringify({ start: primary, end: companion });
+}
+
+function profileValuePreview(profile: CandidateProfile, match: MatchResult): string {
+  if (!match.profilePath) return "";
+  const primary = getProfileValue(profile, match.profilePath).trim();
+  if (!match.companionProfilePath) return primary;
+  const companion = getProfileValue(profile, match.companionProfilePath).trim();
+  return primary && companion ? `${primary} → ${companion}` : "";
+}
+
 function currentSite(): string {
   return typeof location !== "undefined" ? location.origin : "local";
 }
@@ -85,48 +103,14 @@ export function normalizeComparableValue(profilePath: string, value: string): st
   const trimmed = value.normalize("NFKC").trim();
   if (/email/i.test(profilePath)) return trimmed.toLowerCase();
   if (/phone|mobile|tel/i.test(profilePath)) return trimmed.replace(/\D/g, "");
-  if (/date|startDate|endDate|age/i.test(profilePath)) return trimmed.replace(/\D/g, "");
+  if (/(?:^|\.)(?:date|birthDate|startDate|endDate|availableDate|age)(?:\.|$)/i.test(profilePath)) {
+    return trimmed.replace(/\D/g, "");
+  }
   return normalizeFieldText(trimmed);
 }
 
-function selectedCustomValue(element: HTMLInputElement): string[] {
-  const root = element.closest<HTMLElement>(".atsx-select, .ud-select, [role='combobox']");
-  const selected = root?.querySelector<HTMLElement>(
-    ".selected-value, .ant-select-selection-item, [class*='selection-item'], [data-selected='true']"
-  );
-  return [element.value, selected?.textContent ?? ""].filter((value) => value.trim());
-}
-
 function currentControlCandidates(element: HTMLElement): string[] | null {
-  if (element instanceof HTMLInputElement) {
-    if (["file", "password", "hidden", "submit", "reset", "button", "image", "checkbox"].includes(element.type)) {
-      return null;
-    }
-    if (element.closest(".atsx-date-picker-period, [class*='date-picker-period']")) return null;
-    if (element.type === "radio") {
-      if (!element.name) return null;
-      const formRoot: ParentNode = element.form ?? document;
-      const checked = Array.from(formRoot.querySelectorAll<HTMLInputElement>("input[type='radio']"))
-        .find((radio) => radio.name === element.name && radio.checked);
-      if (!checked) return [];
-      return [checked.value, checked.labels?.[0]?.textContent ?? ""].filter((value) => value.trim());
-    }
-    if (element.closest(".atsx-select, .ud-select, [role='combobox']")) {
-      return selectedCustomValue(element);
-    }
-    return element.value.trim() ? [element.value] : [];
-  }
-  if (element instanceof HTMLTextAreaElement) return element.value.trim() ? [element.value] : [];
-  if (element instanceof HTMLSelectElement) {
-    if (!element.value.trim()) return [];
-    const option = element.selectedOptions[0];
-    return [element.value, option?.textContent ?? ""].filter((value) => value.trim());
-  }
-  if (element.isContentEditable || element.getAttribute("contenteditable") === "true") {
-    const value = element.textContent ?? "";
-    return value.trim() ? [value] : [];
-  }
-  return null;
+  return readControlCandidates(element);
 }
 
 function compareControlValue(
@@ -166,6 +150,9 @@ function applySavedMapping(
     (mapping) => mapping.site === site && mapping.fingerprint === fingerprint
   );
   const hardExcluded = match.excludedReason && match.excludedReason !== "unmatched";
+  if (match.companionProfilePath) {
+    return { match, mappingSource: "rule", fingerprint };
+  }
   const canonical = saved
     ? canonicalFields.find((field) => field.path === saved.profilePath)
     : undefined;
@@ -196,7 +183,7 @@ export function scanPage(profile: CandidateProfile, mappings: SavedFieldMapping[
   const fields = ruleMatches.map<FillProposal>((ruleMatch, index) => {
     const applied = applySavedMapping(descriptors[index], ruleMatch, mappings, site);
     const match = applied.match;
-    const value = match.profilePath ? getProfileValue(profile, match.profilePath) : "";
+    const value = profileWriteValue(profile, match);
     const comparison = compareControlValue(
       findControlByElementId(match.elementId),
       match.elementId,
@@ -209,7 +196,7 @@ export function scanPage(profile: CandidateProfile, mappings: SavedFieldMapping[
       fingerprint: applied.fingerprint,
       mappingSource: applied.mappingSource,
       hasValue: value.trim().length > 0,
-      valuePreview: previewValue(value),
+      valuePreview: previewValue(profileValuePreview(profile, match)),
       comparisonStatus: comparison.status,
       ...(comparison.token ? { comparisonToken: comparison.token } : {})
     };
@@ -240,131 +227,9 @@ export function scanPage(profile: CandidateProfile, mappings: SavedFieldMapping[
   };
 }
 
-function dispatchEvents(element: HTMLElement): void {
-  element.dispatchEvent(new Event("input", { bubbles: true }));
-  element.dispatchEvent(new Event("change", { bubbles: true }));
-  element.dispatchEvent(new Event("blur", { bubbles: false }));
-}
-
-function setNativeValue(element: HTMLInputElement | HTMLTextAreaElement, value: string): void {
-  const prototype = element instanceof HTMLTextAreaElement
-    ? HTMLTextAreaElement.prototype
-    : HTMLInputElement.prototype;
-  const setter = Object.getOwnPropertyDescriptor(prototype, "value")?.set;
-  if (setter) setter.call(element, value);
-  else element.value = value;
-}
-
-function fillRadio(element: HTMLInputElement, value: string): boolean {
-  if (!element.name) return false;
-  const formRoot: ParentNode = element.form ?? document;
-  const radios = Array.from(formRoot.querySelectorAll<HTMLInputElement>("input[type='radio']"))
-    .filter((radio) => radio.name === element.name && !radio.disabled);
-  const normalizedTarget = normalizeFieldText(value);
-  const target = radios.find((radio) => {
-    const label = radio.labels?.[0]?.textContent ?? "";
-    return [radio.value, label].some((candidate) => normalizeFieldText(candidate) === normalizedTarget);
-  });
-  if (!target) return false;
-  const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "checked")?.set;
-  if (setter) setter.call(target, true);
-  else target.checked = true;
-  dispatchEvents(target);
-  return true;
-}
-
-function fillSelect(element: HTMLSelectElement, value: string): boolean {
-  const target = normalizeFieldText(value);
-  const option = Array.from(element.options).find((candidate) =>
-    [candidate.value, candidate.textContent ?? ""].some(
-      (optionValue) => normalizeFieldText(optionValue) === target
-    )
-  );
-  if (!option) return false;
-  const setter = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, "value")?.set;
-  if (setter) setter.call(element, option.value);
-  else element.value = option.value;
-  dispatchEvents(element);
-  return true;
-}
-
-function isVisibleOption(element: Element): element is HTMLElement {
-  if (!(element instanceof HTMLElement)) return false;
-  if (element.closest("[hidden], [aria-hidden='true']")) return false;
-  const style = getComputedStyle(element);
-  return style.display !== "none" && style.visibility !== "hidden";
-}
-
-function waitForDropdown(delay = 50): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, delay));
-}
-
-function findVisibleExactOption(value: string): HTMLElement | undefined {
-  const target = normalizeFieldText(value);
-  return Array.from(document.querySelectorAll(
-    "[role='option'], .atsx-select-dropdown-menu-item, .ud-select-option"
-  )).filter(isVisibleOption).find((candidate) =>
-    normalizeFieldText(candidate.textContent ?? "") === target
-  );
-}
-
-async function fillCustomSelect(element: HTMLInputElement, value: string): Promise<boolean> {
-  const selectRoot = element.closest<HTMLElement>(".atsx-select, .ud-select")
-    ?? element.closest<HTMLElement>("[role='combobox']");
-  const trigger = selectRoot?.querySelector<HTMLElement>("[role='combobox']") ?? selectRoot;
-  if (!trigger) return false;
-
-  trigger.click();
-  await waitForDropdown();
-
-  const target = normalizeFieldText(value);
-  let option = findVisibleExactOption(value);
-  if (!option) {
-    setNativeValue(element, value);
-    element.dispatchEvent(new Event("input", { bubbles: true }));
-    await waitForDropdown(300);
-    option = findVisibleExactOption(value);
-  }
-  if (!option) {
-    setNativeValue(element, "");
-    element.dispatchEvent(new Event("input", { bubbles: true }));
-    element.blur();
-    document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
-    return false;
-  }
-
-  option.click();
-  await waitForDropdown();
-  const selectedText = normalizeFieldText(selectRoot?.textContent ?? "");
-  return selectedText.includes(target);
-}
-
 export async function fillControl(element: HTMLElement, value: string): Promise<boolean> {
-  if (element instanceof HTMLInputElement) {
-    if (["file", "password", "hidden", "submit", "reset", "button", "image", "checkbox"].includes(element.type)) {
-      return false;
-    }
-    if (element.type === "radio") return fillRadio(element, value);
-    if (element.closest(".atsx-date-picker-period, [class*='date-picker-period']")) return false;
-    if (element.closest(".atsx-select, .ud-select, [role='combobox']")) {
-      return fillCustomSelect(element, value);
-    }
-    setNativeValue(element, value);
-    dispatchEvents(element);
-    return true;
-  }
-  if (element instanceof HTMLTextAreaElement) {
-    setNativeValue(element, value);
-    dispatchEvents(element);
-    return true;
-  }
-  if (element instanceof HTMLSelectElement) return fillSelect(element, value);
-  if (element.isContentEditable || element.getAttribute("contenteditable") === "true") {
-    element.textContent = value;
-    dispatchEvents(element);
-    return true;
-  }
-  return false;
+  const result = await writeControlVerified(element, value);
+  return result.status === "verified";
 }
 
 export async function fillPage(
@@ -394,7 +259,7 @@ export async function fillPage(
       outcomes.push({ ...selection, status: "skipped", reason: "mapping-changed" });
       continue;
     }
-    const value = getProfileValue(profile, selection.profilePath).trim();
+    const value = profileWriteValue(profile, verifiedMatch);
     if (!value) {
       outcomes.push({ ...selection, status: "skipped", reason: "empty-profile-value" });
       continue;
@@ -429,8 +294,17 @@ export async function fillPage(
         continue;
       }
     }
-    if (!await fillControl(element, value)) {
-      outcomes.push({ ...selection, status: "skipped", reason: "unsupported-value-or-control" });
+    const write = await writeControlVerified(element, value, {
+      normalize: (candidate) => normalizeComparableValue(selection.profilePath, candidate)
+    });
+    if (write.status !== "verified") {
+      outcomes.push({
+        ...selection,
+        status: "skipped",
+        reason: write.reason === "verification-failed"
+          ? "write-verification-failed"
+          : "unsupported-value-or-control"
+      });
       continue;
     }
     outcomes.push({ ...selection, status: "filled" });

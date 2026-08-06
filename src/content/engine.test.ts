@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { createEmptyProfile } from "../domain/profile";
-import { fillPage, scanPage, type FillSelection } from "./engine";
+import { fillPage, normalizeComparableValue, scanPage, type FillSelection } from "./engine";
 
 function completeTestProfile() {
   const profile = createEmptyProfile();
@@ -22,6 +22,13 @@ function completeTestProfile() {
 }
 
 describe("content fill engine", () => {
+  it("normalizes only complete date and age path segments as digits", () => {
+    expect(normalizeComparableValue("languages.0.language", "English")).toBe("english");
+    expect(normalizeComparableValue("languages.0.proficiency", "Business fluent")).toBe("businessfluent");
+    expect(normalizeComparableValue("education.0.startDate", "2024-09")).toBe("202409");
+    expect(normalizeComparableValue("basic.age", "Age 22")).toBe("22");
+  });
+
   it("scans without changing values and fills only explicit safe selections", async () => {
     document.body.innerHTML = `
       <form>
@@ -131,6 +138,26 @@ describe("content fill engine", () => {
     expect(scan.summary.fillable).toBe(0);
   });
 
+  it("compares an already selected native multi-select as one exact set", () => {
+    document.body.innerHTML = `
+      <label for="roles">目标岗位</label>
+      <select id="roles" multiple>
+        <option selected>产品经理</option>
+        <option selected>产品运营</option>
+        <option>研发工程师</option>
+      </select>
+    `;
+    const profile = completeTestProfile();
+    profile.jobPreference.targetRoles = "产品经理、产品运营";
+
+    const scan = scanPage(profile);
+
+    expect(scan.fields[0]).toMatchObject({
+      profilePath: "jobPreference.targetRoles",
+      comparisonStatus: "equal"
+    });
+  });
+
   it("revalidates mappings before filling", async () => {
     document.body.innerHTML = `<label for="target">姓名</label><input id="target" />`;
     const profile = completeTestProfile();
@@ -213,7 +240,7 @@ describe("content fill engine", () => {
     expect(document.querySelector(".selected-value")?.textContent).toBe(profile.education[0].degree);
   });
 
-  it("excludes Feishu ATS date-range hidden inputs instead of reporting a false fill", () => {
+  it("keeps an unpaired ATS date-range input out of automatic filling", () => {
     document.body.innerHTML = `
       <div class="atsx-form-item">
         <div class="atsx-form-item-label"><label>起止时间</label></div>
@@ -225,7 +252,47 @@ describe("content fill engine", () => {
 
     const profile = completeTestProfile();
     const scan = scanPage(profile);
-    expect(scan.fields[0].excludedReason).toBe("unsupported-control");
+    expect(scan.fields[0].requiresConfirmation).toBe(true);
+  });
+
+  it("maps, fills, and verifies both sides of a structural ATS date period", async () => {
+    document.body.innerHTML = `
+      <div class="atsx-form-item" data-form-field-name="education_list[0].start_end_time" data-form-field-i18n-name="起止时间">
+        <div class="atsx-date-picker atsx-date-picker-period atsx-date-picker-period-month" data-date-range>
+          <input class="atsx-date-picker-period-hidden-input" type="text" />
+          <span class="visible-date visible-date-start"></span>
+          <span class="visible-date visible-date-end"></span>
+        </div>
+      </div>
+    `;
+    const rangeInput = document.querySelector<HTMLInputElement>("input")!;
+    rangeInput.addEventListener("input", () => {
+      const range = JSON.parse(rangeInput.value) as { start: string; end: string };
+      document.querySelector<HTMLElement>(".visible-date-start")!.textContent = range.start;
+      document.querySelector<HTMLElement>(".visible-date-end")!.textContent = range.end;
+    });
+    const profile = completeTestProfile();
+    profile.education[0].startDate = "2024-09";
+    profile.education[0].endDate = "2027-06";
+
+    const scan = scanPage(profile);
+    expect(scan.fields).toHaveLength(1);
+    expect(scan.fields[0]).toMatchObject({
+      profilePath: "education.0.startDate",
+      companionProfilePath: "education.0.endDate",
+      valuePreview: "2024-09 → 2027-06"
+    });
+    const result = await fillPage(profile, scan.fields.map((field) => ({
+      elementId: field.elementId,
+      profilePath: field.profilePath!
+    })));
+
+    expect(result).toMatchObject({ filledCount: 1, skippedCount: 0 });
+    expect(JSON.parse(rangeInput.value)).toEqual({ start: "2024-09", end: "2027-06" });
+    expect(Array.from(document.querySelectorAll<HTMLElement>(".visible-date")).map((item) => item.textContent)).toEqual([
+      "2024-09",
+      "2027-06"
+    ]);
   });
 
   it("searches a Feishu ATS custom select before choosing an exact remote option", async () => {

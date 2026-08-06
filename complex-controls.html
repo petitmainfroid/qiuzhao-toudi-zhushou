@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="zh-CN" data-qiuzhao-fixture="complex-controls">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>复杂招聘控件验证</title>
+    <style>
+      :root { color: #39402a; background: #e8dcc7; font-family: Epilogue, system-ui, sans-serif; }
+      body { margin: 0; padding: 32px; background: #e8dcc7; }
+      main { max-width: 900px; margin: 0 auto; padding: 28px; border-radius: 28px; background: #d9c9ad; box-shadow: 0 18px 50px rgba(96, 108, 56, .16); }
+      h1, h2, p { margin-top: 0; }
+      .status { margin: 18px 0 24px; padding: 14px 18px; border-radius: 18px; background: #8b9d83; color: #27301d; }
+      .atsx-form-item, .form-item, fieldset { margin: 18px 0; padding: 18px; border: 1px solid #b08b6e; border-radius: 20px; background: #dfd1ba; }
+      .atsx-form-item-label, label, legend { display: block; margin-bottom: 8px; font-weight: 700; }
+      input, select, [contenteditable="true"], [role="combobox"] { box-sizing: border-box; width: 100%; min-height: 42px; border: 1px solid #b08b6e; border-radius: 16px; padding: 10px 12px; background: #f1e5d1; color: #39402a; }
+      select[multiple] { min-height: 110px; }
+      .atsx-select-selection-selected-value, .visible-date { display: block; margin-top: 7px; color: #606c38; font-weight: 600; }
+      [role="listbox"] { margin: 8px 0 0; padding: 7px; border-radius: 16px; background: #c9b492; list-style: none; }
+      [role="option"] { padding: 9px 11px; border-radius: 12px; cursor: pointer; }
+      [role="option"]:hover { background: #c08e3a; }
+      .atsx-date-picker-period-hidden-input { position: absolute; width: 1px; height: 1px; opacity: .01; }
+      .date-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+      button[type="submit"] { border: 0; border-radius: 18px; padding: 12px 20px; background: #c66b3d; color: #2d261f; font-weight: 700; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>复杂招聘控件验证</h1>
+      <p>所有内容都是匿名测试数据；驱动必须逐项复核，并停在最终提交之前。</p>
+      <div id="driver-status" class="status">等待本地规则驱动。</div>
+      <form id="complex-application-form">
+        <section class="resumeEditForm-item resumeEditForm-education">
+          <h2>教育经历</h2>
+
+          <div class="atsx-form-item" data-form-field-name="education_list[0].school" data-form-field-i18n-name="学校名称">
+            <div class="atsx-form-item-label"><label>学校名称</label></div>
+            <div class="atsx-select" id="school-select">
+              <div role="combobox"><input id="education[0].school" /></div>
+              <span class="atsx-select-selection-selected-value"></span>
+            </div>
+            <ul id="school-options" role="listbox" hidden><li role="option">第一测试大学</li></ul>
+          </div>
+
+          <div class="atsx-form-item" data-form-field-name="education_list[0].degree" data-form-field-i18n-name="学历">
+            <div class="atsx-form-item-label"><label>学历</label></div>
+            <div class="atsx-select" id="degree-select">
+              <div role="combobox"><input id="education[0].degree" /></div>
+              <span class="atsx-select-selection-selected-value"></span>
+            </div>
+            <ul id="degree-options" role="listbox" hidden><li role="option">本科</li><li role="option">硕士</li></ul>
+          </div>
+
+          <div class="atsx-form-item" data-form-field-name="education_list[0].major" data-form-field-i18n-name="专业">
+            <div class="atsx-form-item-label"><label>专业</label></div>
+            <div class="atsx-select" id="major-select">
+              <div role="combobox"><input id="education[0].major" /></div>
+              <span class="atsx-select-selection-selected-value"></span>
+            </div>
+            <ul id="major-options" role="listbox" hidden></ul>
+          </div>
+
+          <div class="atsx-form-item customResumeForm-fieldName-with-desc-item">
+            <div class="atsx-form-item-label"><label>起止时间</label></div>
+            <div class="date-grid atsx-date-picker atsx-date-picker-period atsx-date-picker-period-month" data-date-range>
+              <input class="atsx-date-picker-period-hidden-input" type="text" />
+              <span class="visible-date" data-date-display="start">开始月份未填写</span>
+              <span class="visible-date" data-date-display="end">结束月份未填写</span>
+            </div>
+          </div>
+        </section>
+
+        <div class="form-item">
+          <label for="target-roles">目标岗位</label>
+          <select id="target-roles" multiple>
+            <option>产品经理</option>
+            <option>产品运营</option>
+            <option>研发工程师</option>
+          </select>
+        </div>
+
+        <fieldset>
+          <legend>性别</legend>
+          <label><input type="radio" name="gender" value="女" />女</label>
+          <label><input type="radio" name="gender" value="男" />男</label>
+        </fieldset>
+
+        <div class="form-item">
+          <label id="evaluation-label">自我评价</label>
+          <div id="self-evaluation" contenteditable="true" aria-labelledby="evaluation-label"></div>
+        </div>
+
+        <div class="form-item">
+          <label id="career-label">职业规划</label>
+          <div id="career-plan" contenteditable="true" aria-labelledby="career-label"></div>
+        </div>
+
+        <button id="final-submit" type="submit">提交申请</button>
+      </form>
+    </main>
+    <script type="module" src="/src/fixture/complex-controls-main.ts"></script>
+  </body>
+</html>

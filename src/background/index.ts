@@ -1,8 +1,11 @@
+import { registerPowerSessionRuntime } from "./bridgeRuntime";
+
 async function disableAutomaticPanelOpening(): Promise<void> {
   await chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: false });
 }
 
 void disableAutomaticPanelOpening();
+registerPowerSessionRuntime();
 
 chrome.action.onClicked.addListener((tab) => {
   if (typeof tab.id !== "number") return;

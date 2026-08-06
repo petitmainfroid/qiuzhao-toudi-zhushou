@@ -14,6 +14,16 @@ At the beginning of every coding session:
 
 Before stopping, make sure `feature_list.json` reflects reality and append a handoff section to `progress.md` with changed files, commands, results, blockers, and the next recommended feature.
 
+## Browser-kernel branch checkpoints
+
+For F039–F043, use the exact `branch` and `pr_base` recorded in `feature_list.json`.
+
+1. Start the feature branch from its recorded `pr_base`; do not continue multiple kernel nodes on one branch.
+2. Do not mark a node `done` until its listed checks pass and `progress.md` records the exact denominators, results, changed files, branch, commit, and draft PR URL.
+3. Stage only files belonging to the node. Run a secret/personal-data scan and `git diff --check` before committing.
+4. Push the completed branch to `origin` and open a draft stacked PR against `pr_base`. Never merge, close, or mark a draft ready without the user's request.
+5. If real-page evidence is required, follow `docs/browser-kernel-delivery-plan.md`; user authorization and non-submit evidence cannot be replaced by a fixture.
+
 ## Product constraints
 
 - Keep personal information local by default.

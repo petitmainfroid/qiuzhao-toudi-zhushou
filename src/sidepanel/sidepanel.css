@@ -56,6 +56,239 @@
   color: var(--sand);
 }
 
+.power-session-card {
+  margin-top: 16px;
+  padding: 18px;
+  color: var(--moss);
+  background: var(--oat);
+  border-radius: 24px;
+}
+
+.power-session-card.session-active {
+  background: var(--clay);
+}
+
+.power-session-heading {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.power-session-heading > span {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  color: var(--sand);
+  background: var(--moss);
+  border-radius: 12px;
+}
+
+.power-session-heading .eyebrow {
+  margin-bottom: 3px;
+  font-size: 8px;
+}
+
+.power-session-heading h2 {
+  margin: 0;
+  font-size: 13px;
+}
+
+.power-session-heading strong {
+  padding: 5px 8px;
+  color: var(--sand);
+  background: var(--terracotta);
+  border-radius: 10px;
+  font-size: 8px;
+}
+
+.power-session-state {
+  display: grid;
+  gap: 6px;
+  margin: 14px 0 0;
+}
+
+.power-session-state div {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--sand);
+  border-radius: 12px;
+}
+
+.power-session-state dt,
+.power-session-state dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-size: 8px;
+  line-height: 1.45;
+}
+
+.power-session-state dt {
+  font-weight: 700;
+}
+
+.power-session-copy,
+.power-session-boundary,
+.power-session-error {
+  margin: 12px 0 0;
+  font-size: 9px;
+  line-height: 1.55;
+}
+
+.power-session-boundary {
+  font-weight: 600;
+}
+
+.power-session-error {
+  padding: 9px 10px;
+  color: var(--sand);
+  background: var(--terracotta);
+  border-radius: 12px;
+}
+
+.power-session-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.power-session-actions button {
+  display: flex;
+  min-height: 36px;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: var(--sand);
+  background: var(--moss);
+  border: 0;
+  border-radius: 14px;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.power-session-actions button:disabled {
+  opacity: 0.55;
+}
+
+.page-state-panel {
+  margin-top: 14px;
+  padding: 14px;
+  background: var(--sand);
+  border-radius: 18px;
+}
+
+.page-state-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.page-state-title-row .eyebrow {
+  margin-bottom: 3px;
+  font-size: 8px;
+}
+
+.page-state-title-row h3 {
+  margin: 0;
+  font-size: 12px;
+}
+
+.page-state-title-row button,
+.page-find-form button {
+  display: inline-flex;
+  min-height: 30px;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 6px 10px;
+  color: var(--sand);
+  background: var(--moss);
+  border: 0;
+  border-radius: 11px;
+  font-size: 8px;
+  font-weight: 700;
+}
+
+.page-state-copy,
+.page-state-summary {
+  margin: 10px 0 0;
+  font-size: 8px;
+  line-height: 1.5;
+}
+
+.page-state-summary {
+  font-weight: 700;
+}
+
+.page-find-form {
+  display: grid;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.page-find-form > label {
+  font-size: 8px;
+  font-weight: 700;
+}
+
+.page-find-form > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 6px;
+}
+
+.page-find-form input {
+  min-width: 0;
+  min-height: 34px;
+  padding: 7px 9px;
+  color: var(--moss);
+  background: var(--oat);
+  border: 0;
+  border-radius: 11px;
+  font-size: 9px;
+}
+
+.page-find-results {
+  display: grid;
+  gap: 6px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.page-find-results li {
+  display: grid;
+  gap: 5px;
+  padding: 9px;
+  background: var(--oat);
+  border-radius: 12px;
+}
+
+.page-find-results li > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.page-find-results strong,
+.page-find-results span,
+.page-find-results code,
+.page-find-results em {
+  overflow-wrap: anywhere;
+  font-size: 8px;
+}
+
+.page-find-results em {
+  color: var(--terracotta);
+  font-style: normal;
+  font-weight: 700;
+}
+
 .readiness-card h1 {
   margin: 0;
   font-size: 29px;
@@ -266,6 +499,14 @@
 
 .attachment-summary span {
   font-size: 9px;
+}
+
+.attachment-summary .attachment-local {
+  padding: 3px 7px;
+  color: var(--sand);
+  background: var(--sage);
+  border-radius: 9px;
+  font-weight: 700;
 }
 
 .attachment-digest {

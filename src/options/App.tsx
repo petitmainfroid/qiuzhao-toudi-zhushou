@@ -44,6 +44,11 @@ import { parseLocalData, serializeLocalData } from "../privacy/localData";
 import { extractResumeText } from "../resume/extractResumeText";
 import { mergeResumeIntoProfile, parseResumeText } from "../resume/parseResume";
 import { ProfileRepository } from "../storage/profileRepository";
+import {
+  SavedResumeRepository,
+  type SavedResumeMetadata,
+  type SavedResumeRepositoryLike
+} from "../storage/savedResumeRepository";
 import "../styles/theme.css";
 import "./options.css";
 
@@ -62,6 +67,12 @@ interface ResumeImportFeedback {
   status: "idle" | "parsing" | "success" | "error";
   message: string;
   detail: string;
+}
+
+function formatSavedResumeSize(bytes: number): string {
+  return bytes >= 1024 * 1024
+    ? `${(bytes / (1024 * 1024)).toFixed(2)} MiB`
+    : `${Math.max(1, Math.ceil(bytes / 1024))} KiB`;
 }
 
 export interface ProfileRepositoryLike {
@@ -191,6 +202,7 @@ function SectionHeader({ icon, index, title, description }: SectionHeaderProps) 
 const repository = new ProfileRepository();
 const mappingRepository = new MappingRepository();
 const consentRepository = new PrivacyConsentRepository();
+const savedResumeRepository = new SavedResumeRepository();
 
 export function App() {
   return (
@@ -198,6 +210,7 @@ export function App() {
       repository={repository}
       mappingRepository={mappingRepository}
       consentRepository={consentRepository}
+      savedResumeRepository={savedResumeRepository}
     />
   );
 }
@@ -205,11 +218,13 @@ export function App() {
 export function ProfileEditor({
   repository: profileRepository,
   mappingRepository: fieldMappingRepository,
-  consentRepository: privacyConsentRepository
+  consentRepository: privacyConsentRepository,
+  savedResumeRepository: localResumeRepository
 }: {
   repository: ProfileRepositoryLike;
   mappingRepository?: OptionsMappingRepositoryLike;
   consentRepository?: OptionsConsentRepositoryLike;
+  savedResumeRepository?: SavedResumeRepositoryLike;
 }) {
   const [profile, setProfile] = useState<CandidateProfile | null>(null);
   const profileRef = useRef<CandidateProfile | null>(null);
@@ -220,6 +235,7 @@ export function ProfileEditor({
   const [consentAcknowledged, setConsentAcknowledged] = useState<boolean | null>(null);
   const [privacyMessage, setPrivacyMessage] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [savedResume, setSavedResume] = useState<SavedResumeMetadata | null>(null);
   const [resumeImport, setResumeImport] = useState<ResumeImportFeedback>({
     status: "idle",
     message: "",
@@ -231,18 +247,20 @@ export function ProfileEditor({
     void Promise.all([
       profileRepository.load(),
       fieldMappingRepository?.load() ?? Promise.resolve([]),
-      privacyConsentRepository?.hasAcknowledged() ?? Promise.resolve(true)
-    ]).then(([loadedProfile, loadedMappings, acknowledged]) => {
+      privacyConsentRepository?.hasAcknowledged() ?? Promise.resolve(true),
+      localResumeRepository?.load().catch(() => null) ?? Promise.resolve(null)
+    ]).then(([loadedProfile, loadedMappings, acknowledged, loadedResume]) => {
       if (!active) return;
       profileRef.current = loadedProfile;
       setProfile(loadedProfile);
       setMappings(loadedMappings);
       setConsentAcknowledged(acknowledged);
+      setSavedResume(loadedResume);
     });
     return () => {
       active = false;
     };
-  }, [profileRepository, fieldMappingRepository, privacyConsentRepository]);
+  }, [profileRepository, fieldMappingRepository, privacyConsentRepository, localResumeRepository]);
 
   const completion = useMemo(
     () => (profile ? calculateProfileCompletion(profile) : null),
@@ -326,6 +344,17 @@ export function ProfileEditor({
   async function importResume(file: File | undefined) {
     if (!file) return;
     setResumeImport({ status: "parsing", message: "正在本机解析简历…", detail: "解析期间不会发送网络请求。" });
+    let locallySavedPdf: SavedResumeMetadata | null = null;
+    let saveWarning = "";
+    if (file.type.toLowerCase() === "application/pdf" && localResumeRepository) {
+      try {
+        locallySavedPdf = await localResumeRepository.save(file);
+        setSavedResume(locallySavedPdf);
+      }
+      catch (error) {
+        saveWarning = error instanceof Error ? error.message : "PDF 无法保存到本机。";
+      }
+    }
     try {
       const extracted = await extractResumeText(file);
       const parsed = parseResumeText(extracted.text);
@@ -357,28 +386,41 @@ export function ProfileEditor({
       setResumeImport({
         status: "success",
         message: resultMessage,
-        detail: `${formatLabel}${pageLabel}${ocrLabel} 已在本机完成解析。请直接在下方表格检查，确认后点击“保存档案”。${parsed.warnings[0] ? ` ${parsed.warnings[0]}` : ""}`
+        detail: `${formatLabel}${pageLabel}${ocrLabel} 已在本机完成解析。${locallySavedPdf ? "PDF 原件已保存为常用简历，之后可直接用于招聘网站。" : saveWarning ? `PDF 原件未保存：${saveWarning}` : "DOCX 只用于提取信息，不会保存为网站附件。"} 请直接在下方表格检查，确认后点击“保存档案”。${parsed.warnings[0] ? ` ${parsed.warnings[0]}` : ""}`
       });
     }
     catch (error) {
       setResumeImport({
         status: "error",
         message: error instanceof Error ? error.message : "简历解析失败，请换一个文件重试。",
-        detail: "原文件和提取出的全文均未保存。"
+        detail: locallySavedPdf
+          ? "PDF 原件已经安全保存于本机，可继续在招聘网站复用；只是在这次解析中没有提取出档案内容。"
+          : saveWarning
+            ? `原文件未保存：${saveWarning}`
+            : "原文件和提取出的全文均未保存。"
       });
     }
+  }
+
+  async function deleteSavedResume() {
+    if (!localResumeRepository) return;
+    await localResumeRepository.clear();
+    setSavedResume(null);
+    setPrivacyMessage("已从本机删除保存的 PDF 简历；结构化档案不受影响。")
   }
 
   async function deleteLocalData() {
     if (!profileRepository.clear) return;
     const empty = await profileRepository.clear();
     await fieldMappingRepository?.clear();
+    await localResumeRepository?.clear();
     profileRef.current = empty;
     setProfile(empty);
     setMappings([]);
+    setSavedResume(null);
     setDirty(false);
     setConfirmDelete(false);
-    setPrivacyMessage("个人档案和网站字段对应关系已从本机删除。")
+    setPrivacyMessage("个人档案、网站字段对应关系和保存的 PDF 简历已从本机删除。")
   }
 
   if (!profile || !completion || consentAcknowledged === null) {
@@ -403,8 +445,8 @@ export function ProfileEditor({
           <h1 id="privacy-title">先确认数据如何被使用。</h1>
           <div className="onboarding-points">
             <article><strong>保存在本机</strong><p>档案和纠错映射默认使用浏览器扩展存储，不发送到我们的服务器。</p></article>
-            <article><strong>点击后才读取</strong><p>只有你主动扫描时，扩展才读取当前页面的表单标题和控件类型。</p></article>
-            <article><strong>不会替你提交</strong><p>密码、验证码和附件保持手动；敏感字段默认不选择。</p></article>
+            <article><strong>点击后才读取</strong><p>浏览器会提示较强的网页与调试权限；只有你主动连接或扫描时，扩展才处理目标 HTTPS 页，跨站后会暂停。</p></article>
+            <article><strong>不会替你提交</strong><p>密码、验证码和其他附件保持手动；常用 PDF 每次附加仍需确认，敏感字段默认不选择。</p></article>
           </div>
           <button className="primary-button onboarding-button" type="button" onClick={acknowledgePrivacy}>我已了解，开始建立档案</button>
         </section>
@@ -512,17 +554,27 @@ export function ProfileEditor({
         <div className="resume-import-copy">
           <p className="eyebrow">从现有简历开始</p>
           <h2 id="resume-import-title">上传简历，填入这张信息表</h2>
-          <p id="resume-import-description">支持文字版 PDF 和 DOCX，最大 10 MB。文件只在当前页面解析，不上传，也不会自动保存。</p>
+          <p id="resume-import-description">支持文字版 PDF 和 DOCX，最大 10 MB。PDF 会保存到这台设备，之后可直接复用；DOCX 只用于提取信息。所有处理均在本机完成。</p>
           {resumeImport.status !== "idle" ? (
             <div className={`resume-import-feedback ${resumeImport.status}`} role={resumeImport.status === "error" ? "alert" : "status"} aria-live="polite">
               <strong>{resumeImport.message}</strong>
               <span>{resumeImport.detail}</span>
             </div>
           ) : null}
+          {savedResume ? (
+            <div className="saved-resume-status" aria-label="已保存的常用简历">
+              <div>
+                <strong>已保存常用 PDF</strong>
+                <span>{savedResume.name} · {formatSavedResumeSize(savedResume.size)}</span>
+                <span>SHA-256 {savedResume.sha256.slice(0, 12)}… · 仅保存在本机</span>
+              </div>
+              <button type="button" onClick={() => { void deleteSavedResume(); }}>删除 PDF</button>
+            </div>
+          ) : null}
         </div>
         <label className={`resume-upload-button ${resumeImport.status === "parsing" ? "disabled" : ""}`}>
           <Upload size={18} aria-hidden="true" />
-          {resumeImport.status === "parsing" ? "正在解析" : "选择简历"}
+          {resumeImport.status === "parsing" ? "正在解析" : savedResume ? "替换简历" : "选择简历"}
           <input
             type="file"
             accept="application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,.pdf,.docx"
@@ -723,8 +775,8 @@ export function ProfileEditor({
           <section className="attachment-note" aria-labelledby="attachment-title">
             <FileText size={22} aria-hidden="true" />
             <div>
-              <h2 id="attachment-title">招聘网站附件仍需手动上传</h2>
-              <p>上方上传只用于整理本地信息表。小米等招聘页中的简历、获奖证明和个人证件仍由你手动选择与确认；扩展不会保存文件路径、证件号码或验证码。</p>
+              <h2 id="attachment-title">常用 PDF 可复用，目标网站仍需确认</h2>
+              <p>上方选择的 PDF 原件会保存在扩展的本地数据库中，不保存文件路径，也不会上传到云端。招聘网页发现唯一简历控件后可直接复用，但每个网站仍要由你确认一次；获奖证明、个人证件、验证码和最终提交不自动处理。</p>
             </div>
           </section>
 
@@ -733,6 +785,7 @@ export function ProfileEditor({
             <div className="privacy-stats">
               <div><strong>1</strong><span>份求职档案</span></div>
               <div><strong>{mappings.length}</strong><span>条网站字段对应关系</span></div>
+              <div><strong>{savedResume ? 1 : 0}</strong><span>份本机 PDF 简历</span></div>
             </div>
             <div className="privacy-actions">
               <button className="secondary-button action-with-icon" type="button" onClick={exportData}><Download size={17} />导出本地数据</button>
@@ -744,7 +797,7 @@ export function ProfileEditor({
             </div>
             {confirmDelete ? (
               <div className="delete-confirmation" role="alert">
-                <div><strong>确认永久删除？</strong><p>求职档案和所有网站字段对应关系都会从这台设备移除。此操作无法撤销。</p></div>
+                <div><strong>确认永久删除？</strong><p>求职档案、所有网站字段对应关系和保存的 PDF 简历都会从这台设备移除。此操作无法撤销。</p></div>
                 <div><button className="secondary-button" type="button" onClick={() => setConfirmDelete(false)}>取消</button><button className="delete-confirm-button" type="button" onClick={() => { void deleteLocalData(); }}>确认永久删除</button></div>
               </div>
             ) : null}

@@ -132,6 +132,7 @@ async function observePage(
         actualOutcome: actual
           ? spec.expectedAction === "exclude" && actual.excludedReason ? "excluded" : "skipped"
           : "missing",
+        fillReason: null,
         valueExact: null,
         elementId: actual?.elementId ?? null
       };
@@ -148,6 +149,7 @@ async function observePage(
         confidence: actual.confidence,
         excludedReason: actual.excludedReason ?? null,
         actualOutcome: actual.excludedReason ? "excluded" : "unprotected",
+        fillReason: null,
         valueExact: null,
         elementId: actual.elementId
       });
@@ -161,6 +163,7 @@ async function observePage(
       return {
         ...entry,
         actualOutcome: outcome?.status === "filled" ? "filled" : outcome?.status === "skipped" ? "skipped" : "missing",
+        fillReason: outcome?.reason ?? null,
         valueExact: outcome?.status === "filled"
       };
     });

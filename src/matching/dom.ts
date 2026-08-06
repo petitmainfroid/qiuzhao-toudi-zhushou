@@ -29,6 +29,36 @@ function closestFormItem(element: SupportedControl): Element | null {
     ?? element.closest(".atsx-form-item, .ud-form-item, .form-item, .form-group");
 }
 
+function closestUploadContainer(element: SupportedControl): Element | null {
+  if (!(element instanceof HTMLInputElement) || element.type !== "file") return null;
+  return element.closest(".atsx-upload-btn, .atsx-upload-drag, .ud-upload, .ant-upload, .el-upload");
+}
+
+function dateRangeProfilePaths(element: SupportedControl, formItem: Element | null): readonly [string, string] | undefined {
+  if (!(element instanceof HTMLInputElement) || kindFor(element) !== "date-range") return undefined;
+  const record = element.closest<HTMLElement>(".resumeEditForm-item");
+  const structuralIds = record
+    ? Array.from(record.querySelectorAll<HTMLElement>("input[id], textarea[id], select[id]"))
+      .map((control) => control.id)
+      .filter(Boolean)
+    : [];
+  const formName = cleanText(formItem?.getAttribute("data-form-field-name"));
+  const structuralText = [...structuralIds, formName].join(" ");
+  const definitions = [
+    { pattern: /education(?:_list)?\[(\d+)\]/i, prefix: "education" },
+    { pattern: /(?:internship|career)(?:_list)?\[(\d+)\]/i, prefix: "workExperiences" },
+    { pattern: /project(?:_list)?\[(\d+)\]/i, prefix: "projects" }
+  ];
+  for (const definition of definitions) {
+    const match = definition.pattern.exec(structuralText);
+    if (!match) continue;
+    const index = Number(match[1]);
+    if (!Number.isInteger(index) || index < 0) continue;
+    return [`${definition.prefix}.${index}.startDate`, `${definition.prefix}.${index}.endDate`];
+  }
+  return undefined;
+}
+
 function kindFor(element: SupportedControl): ControlKind {
   if (element instanceof HTMLTextAreaElement) return "textarea";
   if (element instanceof HTMLSelectElement) return "select";
@@ -77,7 +107,9 @@ function nearbyText(element: SupportedControl): string {
   const fieldset = element.closest("fieldset");
   const legend = fieldset?.querySelector(":scope > legend");
   const formItem = closestFormItem(element);
-  const container = formItem ?? element.closest("[role='group'], .form-item, .form-group, .field, td, li");
+  const container = formItem
+    ?? closestUploadContainer(element)
+    ?? element.closest("[role='group'], .form-item, .form-group, .field, td, li");
   const section = element.closest(
     "[class*='resumeEditForm-'], [class*='applyFormModuleWrapper'], section, fieldset"
   );
@@ -121,6 +153,7 @@ export function describeControl(element: SupportedControl, index: number): Field
   const input = element instanceof HTMLInputElement ? element : null;
   const select = element instanceof HTMLSelectElement ? element : null;
   const formItem = closestFormItem(element);
+  const dateRangePaths = dateRangeProfilePaths(element, formItem);
   return {
     elementId,
     tagName: element.tagName.toLowerCase(),
@@ -142,7 +175,8 @@ export function describeControl(element: SupportedControl, index: number): Field
         ? radioGroupOptions(input)
         : [],
     disabled: "disabled" in element ? Boolean(element.disabled) : false,
-    readOnly: "readOnly" in element ? Boolean(element.readOnly) : false
+    readOnly: "readOnly" in element ? Boolean(element.readOnly) : false,
+    ...(dateRangePaths ? { dateRangePaths } : {})
   };
 }
 

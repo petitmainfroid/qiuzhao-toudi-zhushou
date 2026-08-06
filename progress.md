@@ -4,8 +4,8 @@
 
 - Product: local-first recruitment form assistant for Chrome/Edge.
 - Repository state at start: empty directory, not initialized as a Git repository.
-- Current feature: `F017` is complete; `F018` is the next unblocked feature; `F014` remains blocked on real-page non-submitting acceptance.
-- Current slice: no feature is left in progress. The next recommended slice is deterministic date-range and complex-control adapters under F018; real-page writes still require an explicit current-page user action.
+- Current feature: `F018` is complete; `F021` is the next unblocked feature; `F014`, `F025`, and `F036` remain blocked on explicit real-page user actions.
+- Current slice: no feature is left in progress. The next recommended slice is converting additional privacy-safe real-page failures into deterministic regressions under F021; real-page writes and PDF attachment still require an explicit current-page user action.
 
 ## Product and architecture decisions
 
@@ -880,3 +880,193 @@ Run a local field-level audit over the five PDFs to identify missing dates, role
 - Documentation/state: `README.md`, `docs/resume-completeness-evolution-plan.md`, `feature_list.json`, and `progress.md`.
 - F029 and F030 are `done`. F031 is the next recommended feature: prevent a redacted contact header from becoming `workSamples.0.description`, then address activity/award leakage. F032 and F033 retain the project-title and education-metric candidate clusters for later one-change iterations.
 - Rollback: revert the F030 checkpoint to restore the previous school extraction; no schema migration, browser permission, storage data, external deployment, or final-submission behavior is involved. Ignored observations, checkpoints, judge reports, screenshots, and `.env` remain local and must not be committed.
+## 2026-08-06 - F034 reusable local PDF kickoff
+
+- User-visible defect: a selected PDF currently lives only in side-panel React state, so closing the panel forces the user to open the operating-system file picker again. The options-page copy also promises that the source file is never saved.
+- F034 is scoped to one replaceable primary PDF stored in extension-local IndexedDB. The record contains the exact PDF bytes plus filename, MIME type, size, SHA-256 digest, and save time; no filesystem path, extracted text, website credential, cookie, or network synchronization is involved.
+- Safety boundary remains unchanged: restoring a local PDF prepares it only as a source. Attaching it to a recruitment page still requires the existing user-triggered scan, a unique PDF resume control, visible destination origin/control, and a fresh single-use 60-second confirmation. The extension still never clicks final submission.
+- Baseline `./init.ps1 -SkipInstall` -> exit 0; 22 Vitest files / 198 tests passed, the production build succeeded, distribution files were verified, and permissions remained exactly `activeTab`, `scripting`, `sidePanel`, and `storage`.
+
+### F034 implementation and verification
+
+- Added `SavedResumeRepository`, backed by extension-Origin IndexedDB. It stores only one `primary` record and validates filename, exact `application/pdf` MIME, 1 byte–10 MiB size, `%PDF-` signature, exact byte length, and SHA-256 before saving. Every load revalidates signature, length, and digest; an invalid record is deleted and never offered to the page.
+- Selecting a PDF in the profile editor now both parses it and saves the original as the reusable PDF. Selecting a PDF from the side panel replaces the same local record. DOCX remains extraction-only. Both surfaces show local-only status, filename, size, and digest; the options page supports individual PDF deletion.
+- The side panel restores the saved PDF across reload without reopening the operating-system picker. Restoration does not attach automatically: a user-triggered page scan must still identify one safe resume control, and the existing visible Origin/control plus single-use 60-second confirmation remains mandatory.
+- “Delete all local data” now clears the profile, field mappings, and IndexedDB PDF. The JSON backup schema was intentionally left unchanged, so it cannot contain PDF bytes; README, privacy disclosure, onboarding copy, and the attachment threat model now state the persistence and deletion behavior.
+- Targeted `npm test -- --run src/storage/savedResumeRepository.test.ts src/options/ProfileEditor.test.tsx src/sidepanel/SidePanel.test.tsx` -> exit 0; 3 files / 14 tests passed. `npm run typecheck` -> exit 0.
+- `npm run test:e2e -- --grep "saved resume"` -> exit 0; the Chrome flow saved a synthetic PDF, reloaded the side panel, attached it without another file selection, then verified delete-all removed it.
+- Final `npm run validate` -> exit 0; TypeScript passed, 23 Vitest files / 204 tests passed, production build and 11-file distribution verification succeeded, and permissions remained exactly `activeTab`, `scripting`, `sidePanel`, and `storage`.
+- Final `npm run test:e2e` -> exit 0; 18/18 Chrome tests passed, including existing attachment authorization, privacy deletion, local OCR, real local corpus audit, Xiaomi fixtures, and zero-submit regressions.
+- Inspected `artifacts/saved-resume-reuse.png` (77,521 bytes). It visibly shows the restored synthetic filename, local persistence badge, exact local destination, unique resume control, digest prefix, and explicit confirmation button; it contains no real resume or personal data.
+
+### F034 changed files and handoff
+
+- Storage and tests: `src/storage/savedResumeRepository.ts`, `src/storage/savedResumeRepository.test.ts`.
+- Product UI and component tests: `src/options/App.tsx`, `src/options/options.css`, `src/options/ProfileEditor.test.tsx`, `src/sidepanel/App.tsx`, `src/sidepanel/sidepanel.css`, `src/sidepanel/SidePanel.test.tsx`.
+- Browser acceptance and documentation: `tests/e2e/resume-attachment-flow.spec.ts`, `README.md`, `PRIVACY.md`, `docs/resume-attachment-threat-model.md`, `feature_list.json`, and `progress.md`.
+- F034 is `done`; there are no implementation blockers. The next recommended unblocked feature remains F031, the privacy-relevant contact-header/activity parsing boundary. A future multi-resume library should be a separate feature with explicit selection semantics rather than silently expanding this single-primary record.
+- Rollback: revert the F034 changes. Existing profiles and mappings are unaffected; an already stored `qiuzhao-resume-vault` IndexedDB record becomes orphaned unless the rollback also includes a one-time database deletion path, so rollback should preserve the current delete control until local cleanup is complete.
+
+## 2026-08-06 - F035 real-page saved-resume acceptance kickoff
+
+- Applied the user-requested `long-running-agent-harness`; the durable goal is not merely to prove that a local fixture accepts a file, but to distinguish a real ATS structural observation, installed-extension preflight, explicit real attachment, and stable synthetic regression without letting a lower evidence level stand in for a higher one.
+- `computer-use` could not initialize because its Windows native pipe was unavailable. OpenCLI 1.8.6 remained available with daemon PID 3268, Browser Bridge v1.0.22 connected, and a user Chrome profile present. The existing agent-bridge preflight reported only `opencli-browser-bridge-not-installed` because it found zero standard-profile copies despite the live connection; it did not read cookies/values or mutate the browser.
+- Bound the existing active tab as `qiuzhao-live`. Exact live evidence: HTTPS Xiaomi internship application path, authenticated page title, one enabled non-multiple file input, accept tokens `.pdf,.doc,.docx,.ppt,.pptx,.png,.jpg,.jpeg,.html,.htm`, one submit-like control, and no `attachment_resume`/label/name/id/ARIA metadata on the input. Only boolean structural inspection showed a resume signal in the nearest `.atsx-upload-btn`/`.atsx-upload-drag` ancestor and no identity/photo/portfolio/transcript signal.
+- Reproducing the current `nearbyText` algorithm against that live DOM returned `formItemFound=false`, `containerFound=false`, `contextLength=0`, `resumeSignal=false`, and `forbiddenSignal=false`. This is a deterministic real-page defect: the saved PDF cannot be offered because the actual target is not discovered. No page values, filename, PDF data, cookies, authentication data, upload action, control mutation, or submission was read or attempted.
+- Baseline `./init.ps1 -SkipInstall` -> exit 0; TypeScript passed, 23 Vitest files / 204 tests passed, production build and distribution verification succeeded, and permissions remained exactly `activeTab`, `scripting`, `sidePanel`, and `storage`.
+- F035 is `in_progress` for the narrow wrapper-context fix and durable read-only audit. F036 is reserved for the separately confirmed live attachment; OpenCLI `browser upload` must not be used because it bypasses the extension and would produce invalid evidence.
+
+### F035 implementation and live evidence
+
+- Added `npm run audit:resume-attachment-live`. It requires a pre-bound OpenCLI session plus exact expected HTTPS Origin/path prefix and fails closed on a wrong destination. Output is limited to a numeric-ID-redacted path, query key names, file-control/candidate/submit counts, accept tokens, non-personal metadata presence, normalized wrapper class categories, signal booleans, blockers, and explicit zero-action safety flags.
+- The bound `qiuzhao-live` session passed: path `/internship/resume/:id/apply`, query key `spread`, one file control, one safe resume candidate, PDF accepted, `multiple=false`, `disabled=false`, one submit-like control, wrapper resume signal true, forbidden signal false, and no blocker. Every read-value/read-filename/Cookie/mutation/upload/submit safety flag remained false. A deliberately wrong Origin failed before page evaluation as expected.
+- Changed `nearbyText` only for file inputs with recognized ATS upload wrappers (`.atsx-upload-btn`, `.atsx-upload-drag`, `.ud-upload`, `.ant-upload`, `.el-upload`). The nearest wrapper is considered only after a normal form item and before a generic group. The existing resume/forbidden/PDF/multiple/disabled/ambiguity gates remain the source of truth.
+- Added anonymous unit regressions for the exact live Xiaomi shape and a same-family identity wrapper. The real shape now yields one `上传简历` candidate; the identity attachment remains unsupported. Added the exact wrapper to the Xiaomi-derived browser fixture; scan reports one candidate, neither the resume nor work attachment receives a file, and submit count stays zero.
+- `npm test -- --run src/matching/dom.test.ts src/content/resumeAttachment.test.ts` -> exit 0; 2 files / 10 tests passed. `npm run audit:xiaomi` -> exit 0; the live public contract retained 9 groups and 34 visible fields with no submission.
+- Final `npm run validate` -> exit 0; TypeScript passed, 23 Vitest files / 207 tests passed, the production build and 11-file distribution audit succeeded, and permissions remained exactly `activeTab`, `scripting`, `sidePanel`, and `storage`.
+- Final `npm run test:e2e` -> exit 0; 18/18 Chrome tests passed. A post-copy `npm run test:e2e -- --grep "Xiaomi-derived fixture"` also passed and refreshed `artifacts/xiaomi-form-regression.png`; visual inspection confirmed the upload wrapper, empty resume/other attachment controls, manual-confirmation notice, and untouched final button.
+
+### F035 changed files and F036 handoff
+
+- Live harness: `scripts/audit-live-resume-attachment.mjs`, `docs/saved-resume-real-page-acceptance.md`, `package.json`, `README.md`, `feature_list.json`, and `progress.md`.
+- Product fix and regressions: `src/matching/dom.ts`, `src/matching/dom.test.ts`, `src/content/resumeAttachment.test.ts`, `xiaomi-fixture.html`, and `tests/e2e/xiaomi-fixture.spec.ts`.
+- Supporting documentation: `docs/field-coverage-matrix.md` and `docs/xiaomi-internship-field-audit.md`.
+- F035 is `done`. F036 is `blocked` only on a browser-enforced user gesture. The installed unpacked extension was found at the current repository `dist` under Chrome Default profile, but the freshly built code must be reloaded from `chrome://extensions/`; then the user must return to the exact Xiaomi tab, click the 秋招助手 toolbar icon, scan, and report that the private saved-PDF confirmation card is visible without clicking it yet.
+- `computer-use` could not connect to its native Windows pipe. OpenCLI remained bound to the Xiaomi tab for sanitized before/after observation but cannot click Chrome toolbar or side-panel controls. Do not use `opencli browser upload`: it would bypass IndexedDB restoration, activeTab, candidate discovery, digest authorization, and the user's confirmation, so it cannot unblock F036.
+- Once the user reports the L2 card is visible, start sanitized network/state observation, obtain explicit confirmation for the exact real PDF and Xiaomi Origin, let the user click the extension's attachment confirmation, and record only result/status shapes plus zero-submit counters. Never persist the real filename, digest, page values, Cookie, request authorization, body, or response content.
+
+## 2026-08-06 - F018 verified page-driver kickoff
+
+- The user requested finding the OpenCLI open-source project, decomposing its page-view/page-operation module, and rewriting the relevant behavior into the assistant. The installed package is `@jackwener/opencli@1.8.6`; its package metadata and GitHub release both identify `jackwener/OpenCLI` v1.8.6 under Apache-2.0.
+- Source audit at upstream commit `399c0de2a76eb979aee3a3836cf2d24fd247780f` showed a CLI-to-local-daemon-to-WebSocket-to-Bridge-extension-to-CDP architecture. The Bridge requests `debugger`, `tabs`, `cookies`, `activeTab`, `alarms`, `storage`, `tabGroups`, `downloads`, and `<all_urls>`, so its transport and permission model are explicitly out of scope for the store extension.
+- The clean-room rewrite is limited to observable behavior patterns: opaque DOM references, action-time re-resolution, structural safety checks, scroll/focus preparation, framework-compatible events, exact option selection, DOM-settle waits, bounded retry, and boolean write verification. It must never expose page values outside the content script or add arbitrary selector/value, JavaScript evaluation, navigation, cookie, network-capture, local-path upload, CAPTCHA, credential, identity, or final-submit actions.
+- A read-only structural query on the already-bound authenticated Xiaomi tab reported 29 custom selects, 44 date-related containers, zero native multiple selects, zero ARIA multi-selects, zero contenteditable controls, and two iframes. It read no values or page text, touched no cookies, and made no page mutation. The real date-period input has no name, placeholder, or ARIA label and is distinguished only by its position inside the parent form item, reproducing the current `date-range` exclusion gap.
+- Baseline `./init.ps1 -SkipInstall` -> exit 0; TypeScript passed, 23 Vitest files / 207 tests passed, production build and 11-file distribution verification succeeded, and permissions remained exactly `activeTab`, `scripting`, `sidePanel`, and `storage`.
+- F018 is now `in_progress`. F036 remains separately blocked on the user-confirmed real PDF attachment and is not weakened or bypassed by this driver work.
+
+### F018 OpenCLI decomposition and clean-room implementation
+
+- Audited `jackwener/OpenCLI` v1.8.6 at commit `399c0de2a76eb979aee3a3836cf2d24fd247780f`. Its page-control path is CLI -> localhost daemon -> WebSocket Browser Bridge -> `chrome.debugger`/CDP. The useful behavior patterns were stable references, scroll/focus, native framework events, exact option resolution, DOM-settle waits, bounded retry, and read-after-write verification. The daemon, CDP transport, raw evaluation, navigation, tabs, cookies, network capture, screenshots, downloads, filesystem-path upload, and broad permissions were not copied.
+- Added `src/content/pageDriver.ts` as a typed, recruitment-scoped driver. It refuses detached, hidden, disabled, read-only, file, password, hidden, submit, reset, button, image, and checkbox controls; supports native text/select/multi-select, radio, contenteditable, ATS searchable/multi-select structures, and composite month ranges; retries no more than twice; and returns only status, attempts, and reason rather than the page value.
+- Refactored the fill engine to use the same safe reader for comparisons and verification. A field is now reported as filled only after its in-page state matches the expected profile value. Framework rejection, missing exact options, ambiguous structures, and controls whose visible date state does not update fail closed. Saved mappings cannot override a structurally identified two-path date range.
+- Added structural date-range pairing for education, internship/career, and project records. The real Xiaomi control is one hidden JSON range input rather than two normal inputs, so one proposal now carries both `startDate` and `endDate`; verification requires both the hidden `{start,end}` state and visible start/end year-month labels in order.
+- The stricter verification exposed an older normalization defect: the substring `age` inside `languages` made language values normalize as dates/ages. The rule now recognizes only complete path segments, with a regression proving language/proficiency text remains textual while real date and age segments remain digit-normalized.
+- Added privacy-safe `fillReason` evidence to the synthetic fill-quality artifact so future regressions identify a driver failure category without recording the current or attempted page value.
+
+### F018 real structure and acceptance evidence
+
+- The authenticated, already-bound Xiaomi application tab was inspected read-only: four exact top-level `.atsx-date-picker.atsx-date-picker-period-month` controls were found, each with one hidden text input and no name, placeholder, or ARIA label. Nearest-record sibling IDs deterministically identified two education and two project ranges. No form value, personal text, cookie, filename, PDF byte, request, mutation, upload, or submit action was read or performed.
+- Anonymous browser coverage exercises a remote school -> major cascade, exact custom degree selection, one composite education range, native multiple roles, radio gender, accepted rich text, framework-rejected rich text, and an untouched submit control. The current `artifacts/complex-controls.png` shows seven verified writes, one safe skip, and zero final submissions; visual inspection confirmed the visible start/end range, selected options/radio, unchanged rejected field, and untouched submit button.
+- Targeted Vitest -> exit 0, 5 files / 90 tests. Targeted Playwright -> exit 0, 3/3 complex-control, fill-quality, and resume-corpus tests. The final fill-quality report returned matching precision 1, recall 1, fill exactness 1, exclusion correctness 1, repeatable coverage 1, attachment targeting 1, and a passing safety gate.
+- Final `npm run validate` -> exit 0: TypeScript passed, 24 Vitest files / 218 tests passed, production build succeeded, 11 required distribution files passed, and permissions remained exactly `activeTab`, `scripting`, `sidePanel`, and `storage`.
+- Final `npm run test:e2e` -> exit 0: 19/19 Chrome tests passed. `npm run audit:xiaomi` -> exit 0: 9 groups, 34 visible fields, and no application submission.
+
+### F018 changed files and handoff
+
+- Driver and engine: `src/content/pageDriver.ts`, `src/content/pageDriver.test.ts`, `src/content/engine.ts`, `src/content/engine.test.ts`.
+- Structural matching: `src/matching/dom.ts`, `src/matching/dom.test.ts`, `src/matching/catalog.ts`, `src/matching/matcher.ts`, `src/matching/types.ts`, and `src/mapping/fingerprint.ts`.
+- Browser acceptance: `complex-controls.html`, `src/fixture/complex-controls-main.ts`, `tests/e2e/complex-controls.spec.ts`, `tests/e2e/fill-quality-eval.spec.ts`, `tests/e2e/resume-corpus-flow.spec.ts`, `src/evaluation/fillQuality.ts`, and `artifacts/complex-controls.png`.
+- Documentation: `docs/opencli-page-driver-rewrite.md`, `docs/xiaomi-internship-field-audit.md`, `docs/field-coverage-matrix.md`, `README.md`, `feature_list.json`, and `progress.md`.
+- F018 is `done` with no code blocker. F021 is the next recommended unblocked feature. F036 remains separately blocked on reloading the built unpacked extension, clicking its toolbar icon on the exact authenticated page, scanning, and explicitly confirming the saved PDF destination; this driver work does not authorize or bypass that action.
+
+## 2026-08-06 - F037 embedded OpenCLI bridge kickoff
+
+- The user explicitly rejected a separate OpenCLI installation and requested that the corresponding browser-control module live inside the autumn-recruitment assistant. F037 therefore targets one installable extension with an embedded, debugger-backed session; it does not package the Node CLI, localhost daemon, or a second Browser Bridge extension.
+- Baseline `./init.ps1 -SkipInstall` -> exit 0: TypeScript passed, 24 Vitest files / 218 tests passed, the production build and 11-file distribution audit succeeded, and the pre-change permissions remained `activeTab`, `scripting`, `sidePanel`, and `storage`.
+- The local upstream is `@jackwener/opencli@1.8.6`, Apache-2.0. Portable source is concentrated in `extension/src/cdp.ts`, `identity.ts`, and `journal.ts`; `extension/src/background.ts` is coupled to the daemon, WebSocket reconnect, broad raw command protocol, cookies, network capture, downloads, and tab containers and will not be copied wholesale.
+- The embedded design will directly adapt the bounded `chrome.debugger.sendCommand`, attach/detach recovery, structural CDP state, and exactly-once request journal patterns. It will exclude raw `Runtime.evaluate`, Cookie commands, arbitrary filesystem paths, network bodies/headers, password/CAPTCHA/identity automation, and final submission.
+- F037 is `in_progress`. Existing dirty work for F034-F036 and F018 is preserved; this slice is limited to the embedded bridge, exact permission/test/documentation updates, and its visible session control.
+
+### F037 harness split and acceptance contract
+
+- Applied the user-requested `long-running-agent-harness`. The broad “build an OpenCLI-like foundation” goal is now split into K0–K5 in `docs/browser-kernel-acceptance.md`: F037 session kernel, F038 privacy-safe `state/find`, F039 verified actions, F040 waits/navigation/idempotency, F041 upload/screenshots/logs/errors, and F042 the recruitment-adapter contract. This prevents fixture-level evidence or one working command from being mistaken for a complete browser platform.
+- Each layer has positive capability checks, mandatory safety counterexamples, anonymous ground-truth metrics, and an L0–L3 evidence ladder. Real recruitment pages remain user-authorized, non-submitting evidence; lower-level fixtures cannot claim real-page acceptance.
+- The initial `./init.ps1 -SkipInstall` in this resumed F037 session exited 1 because the previously isolated `src/bridge/opencliCdp.ts` skeleton had an unfinished recursive frame-tree type. No prior completed test regressed; the K0 implementation closed that type error before feature verification.
+
+### F037 K0 implementation
+
+- Added an embedded CDP transport adapted from `jackwener/OpenCLI` 1.8.6 at commit `399c0de2a76eb979aee3a3836cf2d24fd247780f`. It supports only bounded attach/detach, `DOM.getDocument`, `DOM.querySelectorAll`, and `Page.getFrameTree`. It does not expose raw `Runtime.evaluate`, Cookie, network, download, arbitrary filesystem-path upload, tab-container, daemon, WebSocket, or second-extension behavior.
+- Added a 10-minute session manager stored in `chrome.storage.session`. A user-interface request pins one credential-free HTTPS tab and one Origin; same-Origin navigation retains the session and clears stale structure, while cross-Origin navigation, expiry, tab close, and debugger detach stop or pause safely. A second start for the same live target is idempotent.
+- Added a background-only typed protocol and sender check. Lifecycle requests are accepted only from this extension's own pages. Background listeners cover top-frame navigation, tab removal, alarm expiry, and debugger detach.
+- Added the Organic side-panel K0 card. The user clicks `连接当前招聘页`, sees only Origin, path, interactive-control count and frame count, and can refresh or detach. The UI explicitly states that it does not read Cookie, passwords or input values and does not submit applications.
+- Expanded the exact Manifest surface to `activeTab`, `alarms`, `debugger`, `scripting`, `sidePanel`, `storage`, `tabs`, and `webNavigation`, plus `<all_urls>`. Unit and distribution checks prohibit `cookies`, `downloads`, `nativeMessaging`, `tabGroups`, `webRequest`, and `webRequestBlocking`. README, onboarding copy, privacy notice, and troubleshooting now disclose the stronger browser warning and the user-gesture/HTTPS/Origin/TTL boundary.
+- Added Apache-2.0 compliance files `THIRD_PARTY_NOTICES.md` and `third_party/opencli/LICENSE`; production builds and extension ZIPs include both. The root project license remains unchanged.
+
+### F037 verification evidence
+
+- Targeted K0 unit/component run -> exit 0; 5 files / 14 tests passed. A later CDP-specific run -> exit 0; 3 debugger-conflict, privacy-safe state, and unsupported-URL tests passed.
+- Anonymous HTTPS extension E2E -> exit 0. A real unpacked Chrome extension attached through `chrome.debugger`, reported five interactive controls and one frame, kept the same session across `/apply/1` to `/apply/2`, omitted query strings from status, paused after an Origin change, and left the synthetic final-submit counter at zero before and after every navigation.
+- Final `npm run validate` -> exit 0: TypeScript passed, 28 Vitest files / 233 tests passed, production build succeeded, and 13 required distribution files were verified. Permissions matched the exact eight-item allowlist plus `<all_urls>`; all forbidden permissions were absent.
+- Final `npm run test:e2e` -> exit 0; 20/20 Chrome tests passed, including the embedded bridge plus all existing profile, resume, comparison, repeatable-record, attachment, OCR, fill-safety, and Xiaomi-derived regressions.
+- `npm run package` -> exit 0; generated `qiuzhao-profile-assistant.zip`, verified 229 archive entries, included the third-party notice/license, and found no test fixture, source map, or persisted personal-data file.
+- Visually inspected `artifacts/embedded-bridge.png`: it shows the connected anonymous Origin, path, five-control/one-frame counts and detach controls; no query parameter, field value, credential, Cookie, resume data, or final-submit action is visible.
+- Static forbidden-capability scan of `src/bridge`, `src/background`, and the Manifest found no executable `Runtime.evaluate`, Network, Cookie, Authorization, WebSocket/daemon, filesystem upload, download, native messaging, tab group, or webRequest path. The only match was explanatory text documenting omitted upstream abilities.
+
+### F037 changed files and handoff
+
+- Harness and documentation: `docs/browser-kernel-acceptance.md`, `feature_list.json`, `progress.md`, `README.md`, `PRIVACY.md`, `docs/opencli-page-driver-rewrite.md`, `THIRD_PARTY_NOTICES.md`, and `third_party/opencli/LICENSE`.
+- Kernel: `src/bridge/protocol.ts`, `src/bridge/opencliCdp.ts`, `src/bridge/opencliCdp.test.ts`, `src/bridge/powerSession.ts`, and `src/bridge/powerSession.test.ts`.
+- Background and permissions: `src/background/bridgeRuntime.ts`, `src/background/bridgeRuntime.test.ts`, `src/background/index.ts`, `src/background/index.test.ts`, `public/manifest.json`, `src/foundation.test.ts`, `scripts/build.mjs`, `scripts/verify-dist.mjs`, and `scripts/verify-package.mjs`.
+- UI and browser evidence: `src/sidepanel/powerSessionBridge.ts`, `src/sidepanel/PowerSessionCard.tsx`, `src/sidepanel/PowerSessionCard.test.tsx`, `src/sidepanel/App.tsx`, `src/sidepanel/sidepanel.css`, `src/options/App.tsx`, `tests/e2e/embedded-bridge.spec.ts`, and `artifacts/embedded-bridge.png`.
+- F037 is `done` with no K0 code blocker. F038 is the next recommended feature: implement privacy-safe structural `state/find` with opaque stable references and an anonymous ground-truth recall/stability evaluator. Do not begin site-specific recruitment adapters until F042. F036 remains separately blocked on the user's real-page PDF confirmation; K0 does not authorize that upload.
+
+## 2026-08-06 - F038 privacy-safe state/find kickoff
+
+- Baseline `./init.ps1 -SkipInstall` -> exit 0: TypeScript passed, 28 Vitest files / 233 tests passed, production build succeeded, 13 distribution files passed, and the exact K0 permission audit remained unchanged.
+- F038 is `in_progress`. Scope is read-only K1: a filtered control structure, session-scoped opaque stable references, semantic find, same-origin frame/open-shadow discovery, and an anonymous ground-truth evaluator. It does not add click, type, select, file upload, navigation, arbitrary selector/XPath, raw CDP passthrough, `Runtime.evaluate`, cookies, network capture, page mutation, or final submission.
+- Privacy contract: input `value`, checked/selected state, DOM id/class/style, CSS selectors, CDP node IDs, query strings, cookies, credentials, and resume bytes must never appear in the public state/find response or visible evidence. Only allowlisted semantic metadata such as role, label, placeholder, technical name, bounded nearby label text, option captions, boolean capabilities, boundary kind, and typed safety classification may leave the bridge.
+
+### F038 K1 implementation
+
+- Added `POWER_PAGE_STATE` and `POWER_PAGE_FIND` to the extension-internal typed protocol. Find requests accept only 1–120 characters, an allowlisted control role set, and a result limit from 1–20; arbitrary selectors, XPath, CDP IDs, methods and script are not accepted.
+- Added a background-only page-state service over the bounded K0 debugger transport. It reads `DOM.getDocument` with finite 50,000-node/1,000-control caps, traverses the main document, same-origin content documents and open Shadow DOM, and rejects inactive, non-HTTPS, credential-bearing or changed-Origin sessions.
+- Added session-scoped opaque control references. Backend node IDs stay inside the registry; unchanged controls retain the same opaque reference across repeated snapshots, while a new snapshot ID is issued for each read. The reverse registry is private groundwork for K2 and is not exposed to the UI or caller.
+- Public controls contain only role/tag, allowlisted input type, bounded sanitized label/ARIA/placeholder/technical-name/nearby text, option captions, boolean capabilities, boundary kind and a safety classification. Input values, checked/selected state, DOM id/class/style, selectors, query strings and CDP IDs are never emitted. Unknown input types normalize to `text` so an attribute cannot become an exfiltration channel.
+- Deterministic find scores label, ARIA label, placeholder, nearby text, technical name and option captions, with optional role filtering. Password, verification, identity, file and final-submit controls are classified as restricted metadata; K1 performs no click, type, select, upload, navigation or page mutation.
+- Added an Organic `State / Find` section to the connected side-panel card. A user can explicitly read the structure and search by semantic field text; the UI displays counts, labels, roles, scores, restrictions and opaque references only.
+
+### F038 verification evidence
+
+- `npm test -- --run src/bridge` -> exit 0; 4 files / 15 tests passed. Coverage includes allowlisted extraction, main/frame/open-shadow boundaries, stable references, option matching, malicious input-type normalization, protocol validation and K0 regressions.
+- `npm run eval:kernel-state` -> exit 0 after the final startup-race fix; 1/1 real-Chrome test passed. The anonymous HTTPS fixture returned 24/24 expected labels (100% recall), 100% repeated-reference stability, three CDP frame keys, one open Shadow root, five first-ranked find results, zero forbidden leaks and zero final submissions.
+- The first full E2E run passed 20/21 and exposed a test-only race where the extension's asynchronous first-install options page interrupted the newly created fixture tab. The evaluator now waits for that documented one-time navigation before creating its target; its targeted rerun passed.
+- Final `npm run test:e2e` -> exit 0; 21/21 Chrome tests passed, including all existing profile, resume import/OCR, comparison, repeatable-record, attachment, fill-safety, Xiaomi-derived and K0 bridge regressions plus K1 state/find.
+- Final `npm run validate` -> exit 0; TypeScript passed, 30 Vitest files / 239 tests passed, production build succeeded, 13 required distribution files passed, and permissions remained exactly `activeTab`, `alarms`, `debugger`, `scripting`, `sidePanel`, `storage`, `tabs`, `webNavigation` plus `<all_urls>` with forbidden permissions absent.
+- `artifacts/page-state-find-report.json` contains only aggregate anonymous metrics and field labels. `artifacts/page-state-find.png` was visually inspected: it shows the anonymous Origin/path, 24-control/3-frame/1-open-shadow summary and a `毕业院校` result with an opaque reference; no field value, query parameter, credential, Cookie, resume data or submission action is visible.
+- Static forbidden-capability inspection found no executable raw Runtime evaluation, network/Cookie/Authorization capture, WebSocket/daemon, arbitrary upload, navigation or expanded Manifest path in K1. Matches were limited to explanatory text documenting excluded behavior.
+
+### F038 changed files and handoff
+
+- Kernel and tests: `src/bridge/pageState.ts`, `src/bridge/pageState.test.ts`, `src/bridge/protocol.ts`, and `src/bridge/protocol.test.ts`.
+- Background and UI: `src/background/bridgeRuntime.ts`, `src/background/bridgeRuntime.test.ts`, `src/sidepanel/powerSessionBridge.ts`, `src/sidepanel/PowerSessionCard.tsx`, `src/sidepanel/PowerSessionCard.test.tsx`, and `src/sidepanel/sidepanel.css`.
+- Evaluator and evidence: `tests/e2e/page-state-find.spec.ts`, `package.json`, `artifacts/page-state-find-report.json`, and `artifacts/page-state-find.png`.
+- Documentation: `README.md`, `docs/browser-kernel-acceptance.md`, `feature_list.json`, and `progress.md`.
+- F038 is complete with no code blocker. F039 is the next recommended unblocked feature: verified click/type/select/check/fill primitives that accept only current opaque references, reread after writes, never log values, and block passwords, verification, identity, destructive and final-submit controls. Do not add AI matching or site-specific adapters at K2. F036's separate real saved-PDF user-confirmation requirement is unchanged.
+
+## 2026-08-06 - K2–K5 long-running harness and GitHub checkpoint plan
+
+### Scope and architecture decisions
+
+- The user explicitly requested `long-running-agent-harness`, real-page operation standards, and a separate GitHub branch for every completed node. The work is now split into F039 K2 actions, F040 K3 waits/workflow, F041 K4 file/evidence, F042 K5 adapter convergence, and F043 three-family live acceptance. F039 is `in_progress`; later nodes remain dependency-ordered `todo`.
+- Added `branch` and `pr_base` to F039–F043. The stacked sequence is `agent/browser-kernel-k1-baseline` -> `agent/browser-kernel-k2-actions` -> `agent/browser-kernel-k3-workflows` -> `agent/browser-kernel-k4-evidence` -> `agent/browser-kernel-k5-adapters` -> `agent/browser-kernel-real-site-acceptance`. Each completed branch must open a draft PR against the previous node and record branch/commit/PR evidence before the next node begins.
+- K2 commands bind session + snapshot + opaque ref + allowlisted profile path/answer intent. Public callers cannot supply arbitrary values, selectors, script, or CDP methods. The fixed action registry must dispatch framework-compatible browser events, verify in-page with a boolean result, and return only typed status/strategy/attempt evidence.
+- Automatic clipboard fallback is explicitly rejected because it would expose personal data outside the page, overwrite the user's clipboard, and require a broader permission. A primary strategy may have one bounded keyboard/fixed-setter fallback; failed verification must not move to a nearby control.
+- K5 must retire the old direct mutation path after parity rather than retain two write engines. AI semantic mapping and job discovery remain outside K2–K5; deterministic actions and safety gates must be complete first.
+
+### Real-page acceptance design
+
+- Added `docs/browser-kernel-delivery-plan.md` with L0 unit, L1 anonymous HTTPS/real Chrome, L2 live read-only, and L3 user-authorized live non-submit gates. Fixtures remain the reproducible percentage source; real sites provide separate user-authorized evidence.
+- F043 requires at least three live application pages from three different ATS families. Three companies sharing one ATS count as one. 牛客、实习僧 and an enterprise-owned portal are candidates only; they are not pre-authorized or guaranteed and may be replaced if terms, login, CAPTCHA, identity, or control coverage makes safe L3 impossible.
+- L3 explicitly warns that a recruitment site may autosave a server-side draft before final submission. Only the user's confirmed real profile may be written; the agent will not insert fake data, erase an existing draft, clear fields for test cleanup, bypass login/verification, or click final submission.
+- The per-site denominator is every reachable, user-approved, supported ordinary field with profile ground truth. Primary-strategy verified success must be `>90%` on each site; aggregate success after at most one fallback must be `>=98%`; mapping precision must be `>=98%`; verification coverage and safety blocking must be 100%; wrong-control writes, third attempts, sensitive actions, final submissions, and public evidence leaks must be zero.
+- GitHub evidence is allowlisted to site/ATS identity, credential-free Origin/path pattern, versions, branch/commit, aggregate counts/rates, typed failures, blockers, and zero-action flags. Real page values, profile values, resume data, filenames/digests, cookies, headers, bodies, query strings, traces/HAR, and screenshots containing filled values are prohibited. Real screenshots remain private; committed screenshots come from anonymous fixtures or a value-free extension summary.
+- Every reproducible real-site defect must first become an anonymous failing fixture, then receive a fix and anonymous regression, and only then may the user authorize a live recheck.
+
+### Planning checkpoint verification and handoff
+
+- `./init.ps1 -SkipInstall` -> exit 0 before edits: TypeScript passed, 30 Vitest files / 239 tests passed, production build succeeded, 13 distribution files passed, exact browser-kernel permissions remained unchanged, and forbidden permissions were absent.
+- Feature-plan check -> exit 0: `feature_list.json` parsed; F039–F043 each had a status, exact branch, and exact `pr_base`; delivery-plan branch rows, success-rate formulas, GitHub evidence denylist, and AGENTS checkpoint protocol were present. `git diff --check` reported no whitespace error (only existing Windows LF/CRLF notices).
+- Final `npm run validate` -> exit 0: TypeScript passed, 30 Vitest files / 239 tests passed, production build and 13-file distribution verification succeeded, and the exact permission/forbidden-permission audit passed.
+- Final `npm run test:e2e` -> exit 0: 21/21 real-Chrome tests passed, including K0 session, K1 state/find, profile, parsing/OCR, comparison, complex writes, repeatable records, saved PDF gates, privacy controls, fill-quality and Xiaomi-derived regressions; no application submission occurred.
+- Planning files: `AGENTS.md`, `feature_list.json`, `docs/browser-kernel-acceptance.md`, `docs/browser-kernel-delivery-plan.md`, and this handoff. The baseline branch also consolidates the already completed, validated F018/F034–F038 work that was still uncommitted on `agent/resume-attachment-acceptance`; no unrelated external file is intentionally included.
+- No live recruitment mutation was performed in this planning node. F043 remains blocked in practice on future per-site user login/authorization but stays `todo` until K2–K5 dependencies are complete. The next implementation action is to create `agent/browser-kernel-k2-actions` from the published K1 baseline and implement only F039.

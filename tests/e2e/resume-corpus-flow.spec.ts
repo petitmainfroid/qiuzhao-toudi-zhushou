@@ -77,7 +77,8 @@ Python、TypeScript、可复核测试
   expect(result.creationResults.some(({ createdCount }) => createdCount > 0)).toBe(true);
   expect(result.remaining.filter(({ key }) => ["education", "workExperiences", "projects", "languages"].includes(key))
     .every(({ missingCount }) => missingCount === 0)).toBe(true);
-  expect(result.fill.filledCount).toBeGreaterThanOrEqual(20);
+  const skippedSummary = JSON.stringify(result.fill.outcomes.filter(({ status }) => status === "skipped"));
+  expect(result.fill.filledCount, skippedSummary).toBeGreaterThanOrEqual(20);
   expect(result.deleteClickCount).toBe(0);
   expect(result.submitCount).toBe(0);
 

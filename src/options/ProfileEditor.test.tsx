@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { createEmptyProfile, type CandidateProfile } from "../domain/profile";
+import type { SavedResumeRepositoryLike } from "../storage/savedResumeRepository";
 import { ProfileEditor, type ProfileRepositoryLike } from "./App";
 
 vi.mock("../resume/extractResumeText", () => ({
@@ -39,6 +40,30 @@ function createRepository(profile: CandidateProfile = createEmptyProfile()) {
 }
 
 describe("ProfileEditor", () => {
+  it("saves a selected PDF as the reusable local resume", async () => {
+    const bytes = new TextEncoder().encode("%PDF-1.4\nreusable unit resume\n%%EOF");
+    const file = new File([bytes], "reusable-resume.pdf", { type: "application/pdf" });
+    const savedResumeRepository: SavedResumeRepositoryLike = {
+      load: vi.fn(async () => null),
+      save: vi.fn(async (selected) => ({
+        file: selected,
+        name: selected.name,
+        mimeType: "application/pdf" as const,
+        size: selected.size,
+        sha256: "a".repeat(64),
+        savedAt: "2026-08-06T08:00:00.000Z"
+      })),
+      clear: vi.fn(async () => undefined)
+    };
+    render(<ProfileEditor repository={createRepository()} savedResumeRepository={savedResumeRepository} />);
+
+    fireEvent.change(await screen.findByLabelText("上传简历并解析"), { target: { files: [file] } });
+
+    await waitFor(() => expect(savedResumeRepository.save).toHaveBeenCalledWith(file));
+    expect(await screen.findByText("reusable-resume.pdf", { exact: false })).toBeInTheDocument();
+    expect(screen.getByText("已保存常用 PDF")).toBeInTheDocument();
+  });
+
   it("edits and saves basic profile data", async () => {
     const repository = createRepository();
     render(<ProfileEditor repository={repository} />);

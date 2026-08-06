@@ -63,4 +63,69 @@ describe("DOM field discovery", () => {
     });
     expect(matchFields([field])[0].profilePath).toBe("education.1.major");
   });
+
+  it("reads semantics from the real ATS upload wrapper without reading a selected filename", () => {
+    document.body.innerHTML = `
+      <section class="resumeEditForm-wrapper">
+        <div class="uploadResume uploadResume__synthetic">
+          <div class="atsx-upload atsx-upload-drag">
+            <span class="atsx-upload atsx-upload-btn">
+              点击或拖拽上传简历，支持 PDF
+              <input type="file" data-cy="inputUpload" accept=".pdf,.doc,.docx,.png" />
+            </span>
+          </div>
+        </div>
+      </section>
+    `;
+
+    const [field] = discoverFields();
+
+    expect(field).toMatchObject({
+      kind: "file",
+      label: "",
+      name: "",
+      domId: "",
+      contextText: expect.stringContaining("上传简历")
+    });
+    expect(JSON.stringify(field)).not.toContain("C:\\");
+  });
+
+  it("binds one anonymous ATS date period to both dates in its record", () => {
+    document.body.innerHTML = `
+      <div class="atsx-form-item" data-form-field-name="education_list[0].start_end_time" data-form-field-i18n-name="起止时间">
+        <div class="atsx-date-picker atsx-date-picker-period atsx-date-picker-period-month">
+          <input class="atsx-date-picker-period-hidden-input" type="text" />
+        </div>
+      </div>
+    `;
+
+    const fields = discoverFields();
+
+    expect(fields).toHaveLength(1);
+    expect(fields[0]).toMatchObject({
+      kind: "date-range",
+      name: "education_list[0].start_end_time",
+      dateRangePaths: ["education.0.startDate", "education.0.endDate"]
+    });
+  });
+
+  it("derives the real ATS date period record from sibling field ids", () => {
+    document.body.innerHTML = `
+      <section class="resumeEditForm-item resumeEditForm-project">
+        <input id="project[2].name" />
+        <div class="atsx-form-item customResumeForm-fieldName-with-desc-item">
+          <div class="atsx-form-item-label"><label>项目时间</label></div>
+          <div class="atsx-date-picker atsx-date-picker-period atsx-date-picker-period-month">
+            <input class="atsx-date-picker-period-hidden-input" type="text" />
+          </div>
+        </div>
+      </section>
+    `;
+
+    const dateField = discoverFields().find((field) => field.kind === "date-range");
+
+    expect(dateField).toMatchObject({
+      dateRangePaths: ["projects.2.startDate", "projects.2.endDate"]
+    });
+  });
 });

@@ -68,7 +68,7 @@
 
 | 来源字段 | 控件 | 状态 | 原因 |
 |---|---|---|---|
-| 小米 `attachment_resume` | file | 暂不支持 | 文件控件不会猜测本地路径；后续只能在用户明确选择 PDF 后上传，且不得自动提交 |
+| 小米简历上传包装层 | file | 用户确认附件 | 2026-08-06 真实页证明 input 无 label/name/id，简历语义只在 `.atsx-upload-btn`；确定性包装层适配后可复用本机 PDF，但每次站点传输仍需确认且不得自动提交 |
 | 小米作品附件 | file | 暂不支持 | 档案当前只保存链接和描述；二进制附件需用户明确选择 |
 | 小米获奖证明附件 | file | 暂不支持 | 证明材料可能包含额外敏感信息，必须由用户明确选择 |
 | 小米 `identification` | text | 永久排除 | 身份证件属于高敏身份核验信息，不存储、不自动填写 |
@@ -80,6 +80,8 @@
 ## 真实页面的重复区块证据
 
 2026-08-05 通过已绑定的 OpenCLI 会话，对 `https://xiaomi.jobs.f.mioffice.cn/internship/resume/:id/apply` 做了只读结构审计。脚本只读取 URL 形状、`data-cy`/`data-form-field-name`、section class、控件 tag/class/disabled 状态；未读取 input/textarea 的当前值，未点击、未填写、未删除、未上传、未提交。
+
+2026-08-06 进一步只读核对复杂控件：页面包含 29 个自定义下拉和 4 个顶层复合日期控件。日期 input 本身没有 name/placeholder/ARIA，但同一 `.resumeEditForm-item` 内的普通字段 ID 能确定 education/project 集合与记录序号。F018 使用这一结构生成单个起止时间动作，并要求隐藏 `{start,end}` 状态和可见年月同时通过写后验证；真实页写入仍待用户单独确认。
 
 | 档案集合 | 静态 schema 前缀 | 线上路径别名 | 线上现有序号 | 行数 | section-local 添加目标 |
 |---|---|---|---|---:|---|
