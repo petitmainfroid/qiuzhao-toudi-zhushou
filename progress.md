@@ -1109,3 +1109,10 @@ Run a local field-level audit over the five PDFs to identify missing dates, role
 - Harness consistency check -> exit 0: `feature_list.json` parsed; F039 remained `in_progress` on the exact K2 branch; three workstreams contained ten unique, non-overlapping owned paths; all fixed thresholds, RED gates and serial commands were present; `git diff --check` reported no whitespace error.
 - Final serialized `npm run validate` -> exit 0 after all child Agents had stopped: TypeScript passed, 30 Vitest files / 239 tests passed, production build succeeded, 13 distribution files passed, exact permissions remained unchanged and forbidden permissions were absent.
 - Next action: publish this validated in-progress K2 checkpoint to the feature branch/Draft PR, then freeze the concrete TypeScript action types and launch Agents A/B/C on their mutually exclusive implementation files. Do not mark F039 done until the full targeted, evaluator, validate, E2E, privacy review and GitHub evidence gates pass.
+
+### F039 harness publication
+
+- Published the in-progress harness checkpoint on `agent/browser-kernel-k2-actions` at commit `bbd47a6c807951171a7fdf6c6ae162c7259e65c5`.
+- Opened Draft PR #4, `F039：建立 K2 多 Agent 验收与并行开发门`, against `agent/browser-kernel-k1-baseline`: `https://github.com/petitmainfroid/qiuzhao-toudi-zhushou/pull/4`.
+- The staged checkpoint contained exactly five harness/documentation files. Pre-push audits found zero suspicious staged paths, zero potential embedded-secret files and no whitespace error.
+- The PR explicitly remains Draft and F039 remains `in_progress`; it will receive the A/B/C implementation and final K2 evidence before any completion decision.
