@@ -24,6 +24,16 @@ For F039–F043, use the exact `branch` and `pr_base` recorded in `feature_list.
 4. Push the completed branch to `origin` and open a draft stacked PR against `pr_base`. Never merge, close, or mark a draft ready without the user's request.
 5. If real-page evidence is required, follow `docs/browser-kernel-delivery-plan.md`; user authorization and non-submit evidence cannot be replaced by a fixture.
 
+## Multi-agent browser-kernel work
+
+For F039, follow `docs/browser-kernel-k2-multi-agent-plan.md`. Parallel work is allowed only inside the current feature and only with explicit, non-overlapping file ownership.
+
+- The root/integrator exclusively owns shared runtime wiring, package scripts, UI, harness/status files, artifacts, Git, push, and PR operations.
+- Child agents must not run Git, global formatters, `init.ps1`, build, validate, full E2E, package, or screenshot commands in the shared workspace. They may run only their assigned targeted checks.
+- Build, real-Chrome E2E, screenshots, staging scans, commits, and pushes are serialized by the integrator because they share `dist/`, Chrome state, and artifacts.
+- A child agent needing a file outside its lane must request the owner or integrator to make the change. It must not edit across ownership boundaries.
+- Any wrong-control write, restricted/destructive/final action, cross-Origin action, third attempt, final submission, or evidence leak is a RED gate: stop integration and keep the feature incomplete.
+
 ## Product constraints
 
 - Keep personal information local by default.

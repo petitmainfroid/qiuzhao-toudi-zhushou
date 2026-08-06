@@ -1,5 +1,7 @@
 # 浏览器写入内核 K2–K5 交付计划与真实网页验收标准
 
+F039 的多 Agent 文件所有权、固定 24/8/8/2 分母、RED gate 和串行集成命令见 [`browser-kernel-k2-multi-agent-plan.md`](browser-kernel-k2-multi-agent-plan.md)。并行只发生在一个节点内部；K2–K5 仍按依赖顺序晋升。
+
 ## 目标与完成定义
 
 目标是把现有 `src/content/pageDriver.ts` 的可靠写入、事件触发和回读验证能力收敛到 K1 会话内核，使所有招聘流程最终只依赖一套类型化 `state/find/action/wait/upload` API。
