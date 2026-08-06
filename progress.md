@@ -1070,3 +1070,10 @@ Run a local field-level audit over the five PDFs to identify missing dates, role
 - Final `npm run test:e2e` -> exit 0: 21/21 real-Chrome tests passed, including K0 session, K1 state/find, profile, parsing/OCR, comparison, complex writes, repeatable records, saved PDF gates, privacy controls, fill-quality and Xiaomi-derived regressions; no application submission occurred.
 - Planning files: `AGENTS.md`, `feature_list.json`, `docs/browser-kernel-acceptance.md`, `docs/browser-kernel-delivery-plan.md`, and this handoff. The baseline branch also consolidates the already completed, validated F018/F034–F038 work that was still uncommitted on `agent/resume-attachment-acceptance`; no unrelated external file is intentionally included.
 - No live recruitment mutation was performed in this planning node. F043 remains blocked in practice on future per-site user login/authorization but stays `todo` until K2–K5 dependencies are complete. The next implementation action is to create `agent/browser-kernel-k2-actions` from the published K1 baseline and implement only F039.
+
+### N0 GitHub publication
+
+- Published branch `agent/browser-kernel-k1-baseline` at baseline commit `99b0d454e9ffa12fedbb0eb64e6b96ff11c154b6`.
+- Opened draft PR #3, `建立浏览器内核 K1 基线与 K2–K5 交付计划`, against `agent/resume-attachment-acceptance`: `https://github.com/petitmainfroid/qiuzhao-toudi-zhushou/pull/3`.
+- The staged scope contained 66 repository files. Pre-push audits found zero suspicious staged paths and zero potential embedded-secret files; `git diff --cached --check` reported no whitespace errors.
+- N0 is a published baseline/checkpoint, not a claim that F039 is complete. F039 remains `in_progress`; its implementation and completion evidence belong on `agent/browser-kernel-k2-actions`, stacked on this branch.
