@@ -152,7 +152,17 @@ export function discoverFields(root: ParentNode = document): FieldDescriptor[] {
       "input, textarea, select, [contenteditable='true']"
     )
   ).filter((element) => !element.closest("[hidden], [aria-hidden='true']"));
-  return controls.map(describeControl);
+  const radioGroups = new Map<ParentNode, Set<string>>();
+  const logicalControls = controls.filter((element) => {
+    if (!(element instanceof HTMLInputElement) || element.type !== "radio" || !element.name) return true;
+    const owner: ParentNode = element.form ?? root;
+    const names = radioGroups.get(owner) ?? new Set<string>();
+    if (names.has(element.name)) return false;
+    names.add(element.name);
+    radioGroups.set(owner, names);
+    return true;
+  });
+  return logicalControls.map(describeControl);
 }
 
 export function findControlByElementId(elementId: string): SupportedControl | null {

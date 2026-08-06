@@ -13,10 +13,22 @@ import {
   type RepeatableCreateResult,
   type RepeatableGroupKey
 } from "../content/repeatableRecords";
+import type {
+  ResumeAttachmentAuthorization,
+  ResumeAttachmentCandidate,
+  ResumeAttachmentRejection,
+  ResumeAttachmentResult
+} from "../content/resumeAttachment";
 
 export interface PageBridge {
   scan(profile: CandidateProfile, mappings?: SavedFieldMapping[]): Promise<ScanResult>;
   createRepeatableRecords?(profile: CandidateProfile, group: RepeatableGroupKey): Promise<RepeatableCreateResult>;
+  attachResume?(
+    file: File,
+    candidate: ResumeAttachmentCandidate,
+    sha256: string,
+    approvedAt: number
+  ): Promise<ResumeAttachmentResult>;
   fill(profile: CandidateProfile, selections: FillSelection[], mappings?: SavedFieldMapping[]): Promise<FillResult>;
 }
 
@@ -40,6 +52,16 @@ async function prepareContentScript(tabId: number): Promise<void> {
 
 async function sendToTab(tabId: number, request: ContentRequest): Promise<ContentResponse> {
   return chrome.tabs.sendMessage(tabId, request) as Promise<ContentResponse>;
+}
+
+async function fileToBase64(file: File): Promise<string> {
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  const chunks: string[] = [];
+  for (let offset = 0; offset < bytes.length; offset += 0x8000) {
+    chunks.push(String.fromCharCode(...bytes.subarray(offset, offset + 0x8000)));
+  }
+  bytes.fill(0);
+  return btoa(chunks.join(""));
 }
 
 export class ChromePageBridge implements PageBridge {
@@ -71,6 +93,42 @@ export class ChromePageBridge implements PageBridge {
       throw new Error("error" in response ? response.error : "创建招聘经历记录失败。");
     }
     return response.result;
+  }
+
+  async attachResume(
+    file: File,
+    candidate: ResumeAttachmentCandidate,
+    sha256: string,
+    approvedAt: number
+  ): Promise<ResumeAttachmentResult> {
+    const tabId = await activeTabId();
+    await prepareContentScript(tabId);
+    const authorizationResponse = await sendToTab(tabId, {
+      type: "AUTHORIZE_RESUME_ATTACHMENT",
+      metadata: {
+        elementId: candidate.elementId,
+        destinationOrigin: candidate.destinationOrigin,
+        filename: file.name,
+        size: file.size,
+        mimeType: file.type,
+        sha256,
+        approvedAt
+      }
+    });
+    if (!("ok" in authorizationResponse) || !authorizationResponse.ok) {
+      throw new Error("error" in authorizationResponse ? authorizationResponse.error : "简历附件授权失败。");
+    }
+    const authorization = authorizationResponse.result as ResumeAttachmentAuthorization | ResumeAttachmentRejection;
+    if (!authorization.ok) return { status: "rejected", reason: authorization.reason };
+
+    const response = await sendToTab(tabId, {
+      type: "ATTACH_RESUME_FILE",
+      payload: { token: authorization.token, base64: await fileToBase64(file) }
+    });
+    if (!("ok" in response) || !response.ok || !("status" in response.result)) {
+      throw new Error("error" in response ? response.error : "简历附件传输失败。");
+    }
+    return response.result as ResumeAttachmentResult;
   }
 }
 
@@ -158,6 +216,16 @@ export class PreviewPageBridge implements PageBridge {
       title: "招聘表单验证页",
       site: "http://127.0.0.1:4173",
       fields: remappedFields,
+      resumeAttachment: {
+        status: "ready",
+        candidateCount: 1,
+        candidate: {
+          elementId: "preview-file",
+          fieldLabel: "上传简历",
+          destinationOrigin: "http://127.0.0.1:4173",
+          acceptsPdf: true
+        }
+      },
       summary: {
         total: fields.length,
         fillable: fillable.length,
@@ -186,6 +254,23 @@ export class PreviewPageBridge implements PageBridge {
 
   async createRepeatableRecords(profile: CandidateProfile, group: RepeatableGroupKey): Promise<RepeatableCreateResult> {
     return createMissingRepeatableRecords(profile, group);
+  }
+
+  async attachResume(
+    file: File,
+    candidate: ResumeAttachmentCandidate,
+    _sha256: string,
+    _approvedAt: number
+  ): Promise<ResumeAttachmentResult> {
+    if (
+      candidate.elementId !== "preview-file"
+      || candidate.destinationOrigin !== "http://127.0.0.1:4173"
+      || file.type !== "application/pdf"
+      || !file.name.toLowerCase().endsWith(".pdf")
+    ) {
+      return { status: "rejected", reason: "candidate-changed" };
+    }
+    return { status: "attached" };
   }
 }
 

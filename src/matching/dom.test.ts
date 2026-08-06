@@ -10,7 +10,10 @@ describe("DOM field discovery", () => {
         <input id="candidate-name" autocomplete="name" />
         <input aria-label="Email Address" type="email" />
         <label>最高学历<select name="degree"><option>本科</option><option>硕士</option></select></label>
-        <fieldset><legend>性别</legend><label><input type="radio" name="gender" />男</label></fieldset>
+        <fieldset><legend>性别</legend>
+          <label><input type="radio" name="gender" value="男" />男</label>
+          <label><input type="radio" name="gender" value="女" />女</label>
+        </fieldset>
         <div role="group"><span>项目描述</span><div contenteditable="true"></div></div>
       </form>
     `;
@@ -19,7 +22,11 @@ describe("DOM field discovery", () => {
     expect(fields).toHaveLength(5);
     expect(fields[0]).toMatchObject({ label: "姓名", autocomplete: "name", kind: "text" });
     expect(fields[2]).toMatchObject({ label: "最高学历", kind: "select", options: ["本科", "硕士"] });
-    expect(fields[3]).toMatchObject({ kind: "radio", contextText: expect.stringContaining("性别") });
+    expect(fields[3]).toMatchObject({
+      kind: "radio",
+      contextText: expect.stringContaining("性别"),
+      options: ["男", "女"]
+    });
     expect(fields[4]).toMatchObject({ kind: "contenteditable", contextText: expect.stringContaining("项目描述") });
     expect(fields.every((field) => field.elementId.length > 0)).toBe(true);
   });

@@ -7,6 +7,7 @@ import type { MatchResult } from "../matching/types";
 import { createFieldFingerprint } from "../mapping/fingerprint";
 import type { SavedFieldMapping } from "../mapping/types";
 import { scanRepeatableRecords, type RepeatableRecordsScan } from "./repeatableRecords";
+import { scanResumeAttachment, type ResumeAttachmentScan } from "./resumeAttachment";
 
 export interface FillProposal extends MatchResult {
   fingerprint: string;
@@ -24,6 +25,7 @@ export interface ScanResult {
   site: string;
   fields: FillProposal[];
   repeatableRecords?: RepeatableRecordsScan;
+  resumeAttachment?: ResumeAttachmentScan;
   summary: {
     total: number;
     fillable: number;
@@ -221,6 +223,7 @@ export function scanPage(profile: CandidateProfile, mappings: SavedFieldMapping[
     site,
     fields,
     repeatableRecords: scanRepeatableRecords(profile),
+    resumeAttachment: scanResumeAttachment(),
     summary: {
       total: fields.length,
       fillable: fillable.length,

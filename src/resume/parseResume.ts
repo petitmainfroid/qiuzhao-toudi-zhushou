@@ -267,13 +267,17 @@ function findFullDate(value: string): string {
 }
 
 function extractSchool(value: string): string {
-  const compactChinese = value.replace(/(?<=\p{Script=Han})\s+(?=\p{Script=Han})/gu, "");
+  const withoutCurrentMarker = value.replace(
+    /(?:至今|现在|Present|Current)(?=\s*[\p{Script=Han}A-Za-z])/giu,
+    " "
+  );
+  const compactChinese = withoutCurrentMarker.replace(/(?<=\p{Script=Han})\s+(?=\p{Script=Han})/gu, "");
   const chinese = /([\p{Script=Han}·]{2,}?(?:大学|学院|学校|中学))/u.exec(compactChinese)?.[1];
-  const degreeLedDepartment = /^(?:直博|博士|MBA|硕士|本科|学士|大专|专科|高中|PhD|Master|Bachelor)\s+/i.test(value)
+  const degreeLedDepartment = /^(?:直博|博士|MBA|硕士|本科|学士|大专|专科|高中|PhD|Master|Bachelor)\s+/i.test(withoutCurrentMarker)
     && chinese?.endsWith("学院")
     && !/(?:大学|学校|中学)/.test(chinese);
   if (chinese && !degreeLedDepartment) return chinese;
-  return /([A-Za-z][A-Za-z .&'-]{2,}?(?:University|College|Institute|School))/i.exec(value)?.[1]?.trim() ?? "";
+  return /([A-Za-z][A-Za-z .&'-]{2,}?(?:University|College|Institute|School))/i.exec(withoutCurrentMarker)?.[1]?.trim() ?? "";
 }
 
 function extractCompany(value: string): string {

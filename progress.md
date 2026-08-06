@@ -724,3 +724,159 @@ Run a local field-level audit over the five PDFs to identify missing dates, role
 - Install/package automation: `scripts/install-skill.mjs`, `scripts/verify-skill.mjs`, `scripts/test-skill-install.mjs`, `scripts/package-skill.mjs`, `scripts/package-release.mjs`.
 - F023 parser/corpus changes and their evidence are included in the same published branch; generated archives and screenshots remain local-only/Release-only and are not committed.
 - F024 is `done`. The prerelease is publicly downloadable and PR #1 remains a draft for owner review before merging to `main`. Next recommended product feature remains F018; F014 remains blocked on a physical real-page `activeTab` gesture.
+
+## 2026-08-05 - F019 resume attachment architecture kickoff
+
+- The user explicitly prioritized safe resume attachment after observing that the current product never places the resume into recruitment-site file controls.
+- F019 is now `in_progress`. Its obsolete F018 dependency was removed: date ranges, cascading selects, radios, multi-selects, and rich-text adapters are independent of discovering one high-confidence resume file input and transferring one user-selected PDF.
+- The acceptance order is intentionally strict: prove the pre-transmission confirmation boundary and immediate-upload behavior on an instrumented local fixture first; implement the product flow only if bytes remain session-only and destination-bound; perform a real recruitment-page transfer only after the user confirms the exact file and HTTPS origin because selection may immediately transmit personal data.
+- Baseline `init.ps1 -SkipInstall` -> exit 0; 18 Vitest files/183 tests passed, production build succeeded, 11 required distribution files were verified, and permissions remained exactly `activeTab`, `scripting`, `sidePanel`, `storage`.
+
+### F019 completion evidence
+
+- Added `docs/resume-attachment-threat-model.md`. It selects the extension-memory `File` path and defines three distinct gates: instrumented local Chrome, unpacked-extension machine acceptance, and a real authenticated recruitment-page transfer that requires explicit confirmation of the exact PDF and HTTPS Origin.
+- Added `src/content/resumeAttachment.ts`. It recognizes only one high-confidence PDF resume input, excludes identity/photo/transcript/portfolio/recommendation/certificate controls, validates filename/MIME/size/SHA-256/PDF signature, binds a 60-second single-use authorization to Origin and element, consumes it on the first attempt, and never stores a path or bytes.
+- The instrumented fixture proves the critical network boundary: selecting/preparing a synthetic PDF leaves `files.length`, upload requests, and submit count at zero; setting the file after confirmation fires exactly one `change` and one immediate attachment request, while the identity attachment stays empty and final-submit count stays zero.
+- Wrong digest and replay attempts were rejected without a second request. Unit coverage also rejects wrong Origin, non-PDF names/MIME, oversized files, stale confirmation, and ambiguous resume controls.
+
+### F019 verification
+
+- `npm test -- --run src/content/resumeAttachment.test.ts src/content/engine.test.ts` -> exit 0; 2 files/11 tests passed.
+- `npm run typecheck` -> exit 0 after explicitly narrowing decoded bytes to an ordinary `ArrayBuffer` for Web Crypto and `File` compatibility.
+- `npm run test:e2e -- --grep "resume attachment prototype"` -> exit 0; 1/1 passed in installed Chrome. Network observation recorded zero requests before authorization and exactly one after attachment; submit count remained zero.
+- Inspected `artifacts/resume-attachment-prototype.png` (34,249 bytes, 2026-08-05 15:16 local time). It contains only `synthetic-resume.pdf`, shows the resume accepted, the identity attachment empty, and the submit control unused.
+- Final `npm run validate` -> exit 0; TypeScript passed, 19 Vitest files/186 tests passed, production build succeeded, 11 required files were verified, and permissions remained exactly `activeTab`, `scripting`, `sidePanel`, `storage`.
+- F019 is `done`; F020 is now `in_progress`. The real recruitment-site gate remains intentionally unexecuted until the product UI displays and the user confirms the exact PDF, Origin, and matched control because the site may upload immediately on `change`.
+
+## 2026-08-05 - F020 user-confirmed resume PDF attachment completed
+
+### Product implementation
+
+- Added the complete side-panel flow for one user-selected PDF: local MIME/name/size/PDF-header validation, local SHA-256 calculation, and a confirmation card that exposes the exact filename, size, digest prefix, destination Origin, and matched control before any page file input is changed.
+- Added two page-bound content messages. Authorization first re-discovers the unique high-confidence resume control and issues a 60-second single-use token bound to the Origin, element, filename, MIME, size, and digest. Only after authorization does the bridge transfer the in-memory bytes; the token is consumed on the first attempt even when attachment fails.
+- Limited real attachment destinations to HTTPS. Plain HTTP fails closed except for `localhost`, `127.0.0.1`, and `::1`, which are reserved for synthetic local acceptance fixtures.
+- Identity, passport, photo, transcript, portfolio, recommendation, certificate, ambiguous, multiple, existing-file, non-PDF, changed-page, expired, wrong-digest, and replay cases remain unavailable. The agent protocol still exposes no upload or arbitrary filesystem-path action.
+- Added Organic side-panel states for selection, hashing, confirmation, success, failure, and unsupported controls. Success explicitly warns that the recruitment site may already have received the file and that final submission remains the user's action.
+- Updated the Chinese README, privacy notice, and repository Skill to distinguish local resume parsing from a user-confirmed recruitment-site attachment. The Skill continues to forbid generic uploads and now requires confirmation of the exact PDF digest, HTTPS Origin, and resume control.
+
+### Browser and verification evidence
+
+- `npm test -- --run src/agent src/content src/sidepanel` -> exit 0; 7 files and 31 tests passed before the final secure-Origin case was added.
+- Skill Creator `quick_validate.py` under Python UTF-8 mode -> exit 0, `Skill is valid!`; `npm run verify:skill` -> exit 0.
+- `npm run test:e2e -- --grep "resume attachment"` -> exit 0; 2/2 tests passed in installed Chrome. The instrumented page observed zero attachment requests before confirmation, exactly one after confirmation, zero identity attachments, and zero final submits. The side panel withheld its confirmation action until a synthetic PDF was selected and showed the exact synthetic metadata and loopback destination.
+- Inspected `artifacts/resume-attachment.png` (76,052 bytes) and `artifacts/resume-attachment-confirmed.png` (78,742 bytes), refreshed at 2026-08-05 15:48 local time. Both contain only synthetic profile/file data; the first proves the pre-transmission confirmation surface and the second shows the non-submitting completion message.
+- Final `npm run validate` -> exit 0; TypeScript passed, 19 Vitest files/188 tests passed, the production build succeeded, 11 required distribution files were verified, and permissions remained exactly `activeTab`, `scripting`, `sidePanel`, and `storage` with no host permission.
+- Final `npm run test:e2e` -> exit 0; 15/15 tests passed, including unpacked extension startup, local PDF/DOCX/OCR import, repeatable-row creation, field comparison/fill, both attachment gates, privacy controls, and no-submit regressions.
+
+### Real-machine acceptance boundary and handoff
+
+- Added F025 as the durable real-recruitment-site gate. Passing it requires the user's authenticated HTTPS tab, a physical extension-icon click, an exact local PDF choice, a 30-second pre-confirmation network observation, one confirmation, at most one attachment request, and zero final-submit/application-submit requests. Evidence must contain only structural results and a short digest, never the real filename, path, content, page values, Cookie, or token.
+- A read-only OpenCLI preflight found CLI 1.8.6 and Browser Bridge 1.0.22 connected; the audited Xiaomi URL is eligible and the assistant manifest remains least-privilege. The `qiuzhao` session currently resolves to `about:blank`, and profile-copy discovery cannot prove the unpacked bridge installation, so no real page was read or mutated and no live attachment was attempted.
+- F020 is `done`; F025 is intentionally `blocked` on the user's action-time choice of the exact PDF and authenticated HTTPS recruitment page. The next safe user step is to load/refresh the current `dist/`, open the desired application page, click the assistant icon, scan, and provide the exact PDF only when ready to let that named site receive it. F018 remains the next unblocked engineering feature if live acceptance is deferred.
+
+### Changed files
+
+- Attachment core and message path: `src/content/resumeAttachment.ts`, `src/content/resumeAttachment.test.ts`, `src/content/engine.ts`, `src/content/index.ts`, `src/shared/messages.ts`, and `src/sidepanel/pageBridge.ts`.
+- User flow and browser evidence: `src/sidepanel/App.tsx`, `src/sidepanel/sidepanel.css`, `src/sidepanel/SidePanel.test.tsx`, `tests/e2e/resume-attachment-flow.spec.ts`, and the local-only attachment screenshots under `artifacts/`.
+- Documentation and durable state: `README.md`, `PRIVACY.md`, `docs/resume-attachment-threat-model.md`, `skills/qiuzhao-toudi-assistant/SKILL.md`, `feature_list.json`, and `progress.md`.
+
+## 2026-08-05 - F026 fill-quality evolution harness kickoff
+
+- Applied the user-requested `long-running-agent-harness` and the controlled AI-system evolution workflow. The reality to change is not “produce more model commentary”; it is to make recruitment-page filling measurably more accurate while preserving local-first behavior, zero final submission, and deterministic safety boundaries.
+- Decision object: choose whether a concrete matcher/control/workflow change should be promoted. The default action without new evidence is to keep the current deterministic implementation. The owner of runtime promotion is the user; AI may build reversible evaluation tooling, collect synthetic evidence, and draft one candidate fix, but cannot promote a rule from one model response.
+- Evaluation order is fixed: explicit synthetic ground truth -> actual installed-Chrome observation -> deterministic metrics -> optional DeepSeek shadow diagnosis -> anonymized regression -> candidate comparison -> Human Gate -> promotion or rollback. Critical safety failures override aggregate accuracy.
+- The ignored `.env` contains all four expected OpenAI-compatible variables and a configured `bailian/deepseek-v4-flash` model. Neither key nor value was printed. Both configured endpoints use remote plain HTTP; a no-key HTTPS probe failed with `ERR_SSL_PACKET_LENGTH_TOO_LONG`, so sending the API key or any evaluation payload is blocked.
+- Official DeepSeek documentation confirms that the current official OpenAI-compatible base URL is HTTPS and that `deepseek-v4-flash` supports JSON output. The configured gateway/model alias is therefore treated as a separate provider and is not silently rewritten because its key may not work against the official service.
+- Baseline `./init.ps1 -SkipInstall` -> exit 0; 19 Vitest files/188 tests passed, production build succeeded, 11 required distribution files were verified, and permissions remained exactly `activeTab`, `scripting`, `sidePanel`, `storage`.
+- Added F026-F028 for the evaluation harness, HTTPS model calibration, and one evidence-backed product iteration. F026 is `in_progress`; F027 is blocked on a trusted HTTPS endpoint; F028 remains dependent on reproducible feedback.
+
+### F026 completion and first feedback loop
+
+- Added `evals/fill-quality-suite.json` version `2026-08-05.1` with explicit synthetic ground truth for the generic and Xiaomi-derived forms, repeatable-record counts, attachment targeting, and zero-tolerance safety counters.
+- Added a real-Chrome observation test plus deterministic scorer. Artifacts contain only field keys, canonical paths, confidence/exclusion/status codes, booleans, counts, timestamps, and aggregate metrics. A recursive forbidden-key audit found no raw/profile/page value, resume text, HTML, screenshot, file path, Cookie, authorization, API key, or token field.
+- The first baseline produced perfect path/value metrics but failed the gate with `duplicateProposalCount: 1`: the two inputs in one `name=gender` radio group became two side-panel suggestions. Changed DOM discovery to emit one logical control per `(form, radio name)` while retaining the full option list and existing group fill behavior.
+- The post-fix baseline passed: 35 true-positive mappings, 0 false positives, 0 false negatives, precision/recall/F1 `1.0`; 35/35 exact fills; 6/6 correct exclusions; 8/8 repeatable records created; repeatable coverage `1.0`; attachment targeting `1.0`; duplicate proposals `0`; critical safety violations `0`.
+- Added a development-only DeepSeek/OpenAI-compatible adapter with an HTTPS-only endpoint gate, no redirects, bounded timeout/output, JSON mode, disabled thinking, temperature zero, four known calibration cases, sanitized persisted findings, independent model-id/calibration checks, and no extension runtime import. `.env.example` documents the official secure shape without a key.
+- The first fail-closed probe exposed an overly verbose data-URL stack containing bundled evaluator source but no key or request payload. The runner now catches configuration errors at its boundary. The final `npm run eval:fill -- --judge --skip-browser` -> expected exit 1 before network transmission with only `Refusing to send the judge key or payload over non-HTTPS transport.` No paid model request was made.
+
+### Verification evidence
+
+- `npm test -- --run src/evaluation` -> exit 0; 2 files/6 tests passed for deterministic metrics, privacy-key rejection, HTTPS configuration, bounded JSON request construction, response sanitization, and judge calibration scoring.
+- `npm test -- --run src/matching/dom.test.ts src/content/engine.test.ts src/evaluation` -> exit 0; 4 files/17 tests passed after the radio-group correction.
+- `npm run eval:fill -- --offline` -> exit 0; installed Chrome generated the synthetic artifacts and every deterministic quality/safety gate passed with the metrics above.
+- Final `npm run validate` -> exit 0; TypeScript passed, 21 Vitest files/194 tests passed, production build succeeded, 11 required distribution files were verified, and permissions stayed exactly `activeTab`, `scripting`, `sidePanel`, and `storage`.
+- Final `npm run test:e2e` -> exit 0; 16/16 installed-Chrome tests passed, including the new fill-quality evaluation and all prior profile, resume, repeatable, attachment, privacy, Xiaomi, and zero-submit regressions.
+- Inspected ignored `artifacts/fill-quality-observation.json` (16,960 bytes) and `artifacts/fill-quality-report.json` (629 bytes); both are synthetic-only and the forbidden-key scan returned an empty list.
+
+### Changed files and handoff
+
+- Harness and documentation: `feature_list.json`, `progress.md`, `docs/fill-quality-evolution-plan.md`, `.env.example`, `README.md`, and `package.json`.
+- Ground truth and scoring: `evals/fill-quality-suite.json`, `src/evaluation/fillQuality.ts`, and `src/evaluation/fillQuality.test.ts`.
+- Shadow judge: `src/evaluation/judgePolicy.ts`, `src/evaluation/judgePolicy.test.ts`, and `scripts/run-fill-quality-eval.mjs`.
+- Browser observation and first promoted fix: `tests/e2e/fill-quality-eval.spec.ts`, `src/matching/dom.ts`, and `src/matching/dom.test.ts`.
+- F026 is `done`. F027 remains `blocked` until the user replaces the remote HTTP endpoint with a trusted HTTPS endpoint and a compatible key/model alias. Do not silently switch the URL to the official DeepSeek service because the existing key may belong to the configured gateway. Once HTTPS is configured, run `npm run eval:fill -- --judge`; only a calibration-perfect, model-matched sanitized report may unblock F028.
+- Rollback: revert the F026 checkpoint to remove the evaluator and restore the previous per-radio-input discovery behavior; no storage migration, browser permission, production endpoint, or user data is involved.
+
+## 2026-08-05 - F027 Boyue DeepSeek calibration
+
+- The first requested judge run stopped before transmission because both ignored local URLs still used plain HTTP. Safe metadata inspection confirmed this came from `.env`, not process-variable precedence; the API key was configured but never printed.
+- A no-key TLS probe showed port 3888 does not support TLS. The server's public certificate on port 443 identified `api.boyuerichdata.opensphereai.com`; a no-key request to `https://api.boyuerichdata.opensphereai.com/v1/chat/completions` completed certificate validation and returned the expected unauthenticated `401` response.
+- Updated only the two ignored local endpoint values to that certificate-verified HTTPS origin. The existing key and configured `bailian/deepseek-v4-flash` alias were preserved. No real resume, recruitment-page value, HTML, filename, path, cookie, or authentication content was sent; the request contained only the versioned synthetic observation and aggregate deterministic report.
+- `npm run eval:fill -- --judge` -> exit 0. Installed Chrome passed the synthetic evaluation; deterministic results were 35 TP, 0 FP, 0 FN, F1 `1.0`, 35/35 exact fills, 6/6 exclusions, repeatable coverage `1.0`, attachment targeting `1.0`, 0 duplicate proposals, and 0 safety violations.
+- Boyue returned model `deepseek-v4-flash`, which matched the configured family. The shadow judge verdict was `pass`, findings were `0`, and calibration was 4/4: known-good=`pass`; wrong-match, missed-fill, and unsafe-submit=`fail`. Latency was 35,859 ms and usage was 3,407 prompt + 102 completion = 3,509 total tokens.
+- Deterministic and judge results agreed, so the documented value-of-information rule stopped after one call; the three-repeat disagreement budget was not consumed. With no reproducible failure or actionable finding, F028 remains `todo` and runtime matching was intentionally left unchanged.
+
+### F027 handoff
+
+- Durable changes in this checkpoint are `feature_list.json` and `progress.md`; `.env` changed locally but remains ignored and must never be committed because it contains the user's key.
+- The sanitized local evidence is `artifacts/fill-quality-judge.json`. Re-run `npm run eval:fill -- --offline` freely; run `npm run eval:fill -- --judge` only when new fixture evidence could change a decision.
+- F027 is `done`. The next recommended feature is F028 only after a real or anonymized form produces a reproducible deterministic miss; otherwise choose the next unrelated unblocked product feature instead of tuning a perfect synthetic score.
+- Final `npm run validate` -> exit 0; TypeScript passed, 21 Vitest files/194 tests passed, the production build succeeded, 11 required distribution files were verified, and permissions remained exactly `activeTab`, `scripting`, `sidePanel`, and `storage`.
+- Inspected `artifacts/fill-quality-judge.json` (838 bytes). A precise recursive audit found no credential, authorization, raw profile/page/resume, HTML, screenshot, filename, or path keys; `promptTokens`, `completionTokens`, and `totalTokens` are aggregate usage counters, not authentication tokens.
+
+## 2026-08-05 - F029 resume completeness audit kickoff
+
+- Applied the user-requested `long-running-agent-harness`. The durable objective is to maximize evidence-backed information extracted from the local resume corpus while distinguishing source absence, unsupported schema facts, parser omissions, incorrect placement, merge loss, and webpage-fill gaps.
+- Added F029 for a privacy-redacted DeepSeek source-versus-profile audit and F030 for one reversible deterministic improvement. F029 is `in_progress`; F030 must not start until model calibration, identifier redaction, and bounded canonical-path findings are proven.
+- Baseline `.\\init.ps1 -SkipInstall` -> exit 0; TypeScript passed, 21 Vitest files/194 tests passed, production build succeeded, 11 distribution files were verified, and permissions remained exactly `activeTab`, `scripting`, `sidePanel`, and `storage`.
+- Existing evidence covers ten PDFs and one DOCX and previously increased six newly discovered layouts from 131 to 184 populated schema paths. That count does not prove that every source-supported value was extracted correctly, so the new decision object is field-level status, not raw path count.
+- Privacy boundary: the local browser may read explicitly scoped Downloads resumes for this development audit, but only numbered text after removal of names, phones, emails, identity numbers, URLs, street addresses, filenames, and paths may leave the machine through the already verified Boyue HTTPS endpoint. Model responses may reference canonical paths and line ids but must not persist source excerpts.
+
+### F029 completion evidence
+
+- Added the short-digest corpus allowlist, installed-Chrome observation, direct-identifier redaction, canonical path/value inventory, four-case calibration, HTTPS-only Boyue request policy, response sanitizer, resumable per-sample checkpoint, retry budget, full and `--sample=<DIGEST>` targeted modes, and Chinese operating documentation.
+- `npm run eval:resume -- --offline` -> exit 0. All 11 historical samples (10 PDF + 1 DOCX) were found by digest without using filenames, locally extracted in Chrome, and reduced to 668 numbered lines, 61 redactions, 370 populated schema facts, 370 web-fillable facts, and 0 parser warnings.
+- Artifact audit: `artifacts/resume-completeness-observation.json` contained no forbidden persistence key and no email, URL, domestic/international phone, or identity-number pattern. The largest per-sample payload was about 12.4k characters. Raw files, paths, filenames, API key, cookies, and unredacted text were not logged or committed.
+- The first parallel model run exposed a durability defect: one timeout discarded five successful responses. The runner now writes every sanitized success to an ignored checkpoint, runs serially, retries only a bounded timeout/5xx/malformed response once, and resumes only matching suite/model/sample ids.
+- Full v1 judge -> exit 0 after one retry; all 11 calls returned `deepseek-v4-flash`, matched the configured family, and classified all four calibration cases correctly. It reported 18 missing, 87 incorrect, and 22 unsupported candidates; 59,849 total tokens; 236,552 ms summed successful-call latency.
+- Privacy/prompt v2 additionally replaced populated sensitive basic values with matching placeholders and stated the no-fabrication rules for `至今`, bare CET scores, publication years, normalization, and description/outcome partitioning. Full v2 judge -> exit 0 after three bounded retries; all model/calibration checks again passed. It reported 47 missing, 79 incorrect, and 26 unsupported candidates; 62,485 total tokens; 515,374 ms summed successful-call latency and 773.2 s wall time.
+- The supported-defect estimate changed from 105 to 126 despite identical source facts and perfect synthetic calibration. Therefore the model score is not a product accuracy metric. Stable use is candidate generation followed by local path/source consistency, policy-exception filtering, anonymous fixtures, and deterministic tests.
+- Local inspection confirmed both false positives (`至今` as a required end date, CET score as proficiency, publication year as project duration, and one allegedly missing populated path) and real defects (current-date text prefixed to a school, school repeated inside major, award prose creating an education record, body text used as project name, and contact header used as work-sample description).
+- `npm test -- --run src/evaluation/resumeCompletenessPolicy.test.ts` -> exit 0; 3 privacy, request, and sanitizer tests passed. Final `npm run validate` -> exit 0; TypeScript passed, 22 Vitest files/197 tests passed, production build succeeded, 11 distribution files were verified, and permissions remained `activeTab`, `scripting`, `sidePanel`, and `storage`.
+
+### F029 handoff / F030 start
+
+- F029 is `done`; F030 is `in_progress`. The first promoted candidate is deliberately narrow: a date-first education row ending in `至今` must extract the school without the current-date marker and must not duplicate the school inside the major.
+- Baseline evidence for digest `5A12C901`: `education.0.school` was `至今` plus the evidenced school and `education.0.major` included the school plus the evidenced major. The anonymous regression will use a synthetic date-first doctoral education row and will continue leaving `endDate` empty.
+- After the deterministic fix, bump the observation suite, rerun the resume unit suite and offline corpus, then use `npm run eval:resume -- --judge --skip-browser --sample=5A12C901`; do not pay for another full-corpus judgment unless the changed helper affects additional digest structures.
+
+## 2026-08-05 - F030 current-date education extraction completed
+
+- Added an anonymous regression for `2023.09 - 至今 + school + degree + major`. Baseline real evidence for digest `5A12C901` had `education.0.school` prefixed with the current marker and repeated the school inside `education.0.major`; the empty `education.0.endDate` was correct and had to remain empty.
+- Changed only `extractSchool`: before compacting adjacent Chinese glyphs, it removes a current marker when that marker directly precedes a school-like value. This prevents `至今`/`Present`/`Current` from becoming part of a school without altering the date-range parser or inventing an end date.
+- `npm test -- --run src/resume/parseResume.test.ts` -> exit 0; 15/15 passed. The anonymous regression produced school `厦门大学`, degree `博士`, major `健康医疗大数据`, start `2023-09`, and an empty end date.
+- Bumped the corpus suite to `2026-08-05.3`. `npm run eval:resume -- --offline` -> exit 0; all 11 samples remained readable with 668 lines, 61 redactions, 370 parsed/web-fillable facts, and 0 warnings. The affected real digest now has the evidenced school and major, retains 32 populated facts, and still has no end-date fact.
+- `npm run eval:resume -- --judge --skip-browser --sample=5A12C901` -> exit 0 in 10.1 s. Boyue returned `deepseek-v4-flash`, calibration 4/4, 4,714 tokens, and 6,405 ms model latency. Findings dropped from 9 in v2 to 4 in v3; the school and major errors disappeared. The remaining end-date and bare-CET proficiency findings contradict explicit no-inference policy and were rejected; an award candidate remains for a later scoped iteration.
+- `npm test -- --run src/resume src/evaluation` -> exit 0; 5 files/28 tests passed. `npm run eval:fill -- --offline` -> exit 0 with 35 TP, 0 FP/FN, 35/35 exact fills, 6/6 exclusions, full repeatable/attachment coverage, 0 duplicates, and 0 safety violations.
+- Final `npm run validate` -> exit 0; TypeScript passed, 22 Vitest files/198 tests passed, build and 11-file distribution verification succeeded, and permissions remained `activeTab`, `scripting`, `sidePanel`, and `storage`.
+- Final `npm run test:e2e` -> exit 0; 17/17 installed-Chrome tests passed, including the digest-allowlisted completeness audit, resume import/OCR, missing-row creation, exact filling, attachment gates, privacy, Xiaomi, and zero-submit regressions.
+- Inspected the refreshed `artifacts/resume-corpus.png` (166,547 bytes, 2026-08-05 22:10 local). It contains only synthetic values and visibly shows three education, two internship, three project, and two language records created without using the final-submit control.
+- Final `resume-completeness-observation.json` v3 was 192,122 bytes; recursive/pattern audit found no email, URL, domestic/international phone, identity number, credential, filename, or path evidence.
+
+### F030 changed files and handoff
+
+- Resume completeness harness: `evals/resume-corpus-manifest.json`, `src/evaluation/resumeCompletenessPolicy.ts`, its unit test, `tests/e2e/resume-completeness-eval.spec.ts`, `scripts/run-resume-completeness-eval.mjs`, and `package.json`.
+- Product improvement: `src/resume/parseResume.ts` and `src/resume/parseResume.test.ts`.
+- Documentation/state: `README.md`, `docs/resume-completeness-evolution-plan.md`, `feature_list.json`, and `progress.md`.
+- F029 and F030 are `done`. F031 is the next recommended feature: prevent a redacted contact header from becoming `workSamples.0.description`, then address activity/award leakage. F032 and F033 retain the project-title and education-metric candidate clusters for later one-change iterations.
+- Rollback: revert the F030 checkpoint to restore the previous school extraction; no schema migration, browser permission, storage data, external deployment, or final-submission behavior is involved. Ignored observations, checkpoints, judge reports, screenshots, and `.env` remain local and must not be committed.

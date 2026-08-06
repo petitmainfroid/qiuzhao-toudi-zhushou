@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "suiteVersion": "2026-08-05.3",
+  "samples": [
+    { "sampleId": "4FFDB2FC", "format": "pdf" },
+    { "sampleId": "5A12C901", "format": "pdf" },
+    { "sampleId": "E5A6ADD6", "format": "pdf" },
+    { "sampleId": "06B46FDE", "format": "pdf" },
+    { "sampleId": "BC238C94", "format": "pdf" },
+    { "sampleId": "2EA7842E", "format": "pdf" },
+    { "sampleId": "317CA5B2", "format": "pdf" },
+    { "sampleId": "6EA82132", "format": "docx" },
+    { "sampleId": "74F1E5AC", "format": "pdf" },
+    { "sampleId": "79636754", "format": "pdf" },
+    { "sampleId": "EA62283F", "format": "pdf" }
+  ]
+}

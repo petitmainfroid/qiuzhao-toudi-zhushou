@@ -44,7 +44,8 @@
 4. 查看“网页为空”“内容一致”和“内容冲突”的比较结果。
 5. 按需创建缺失的教育、实习、项目、作品、获奖或语言记录。
 6. 只勾选确认无误的字段，然后点击“填写已选项”。
-7. 回到网页检查内容、手动选择附件或完成验证码，最后由本人提交。
+7. 如果侧边栏发现唯一且明确的“上传简历”PDF 控件，可在侧边栏亲自选择 PDF；核对文件名、大小、摘要、目标网站和目标控件后，再点击一次“确认上传到……”。招聘网站可能在这一步立即接收文件。
+8. 回到网页检查填写内容和简历附件，手动完成其他附件或验证码，最后由本人提交。
 
 页面跳转或刷新后，`activeTab` 权限可能失效。看到“无法读取当前页面”或 `Cannot access contents of the page` 时，请停留在招聘页面并重新点击扩展图标，再扫描一次。
 
@@ -83,12 +84,14 @@ cd qiuzhao-toudi-zhushou
 ```powershell
 npm run validate
 npm run test:e2e
+npm run eval:fill -- --offline
 npm run package:release
 npm run install:skill
 ```
 
 - `npm run validate`：类型检查、全部单元/组件测试、生产构建和权限审计。
-- `npm run test:e2e`：验证档案、简历导入、页面比较、动态记录创建、隐私控制和禁止最终提交。
+- `npm run test:e2e`：验证档案、简历导入、页面比较、动态记录创建、用户确认的简历附件、隐私控制和禁止最终提交。
+- `npm run eval:fill -- --offline`：在真实 Chrome 中用纯合成 ground truth 计算匹配、填写、排除、建行、附件和安全指标，不调用外部模型。
 - `npm run package`：生成并审计浏览器扩展 ZIP。
 - `npm run package:skill`：验证并生成 Codex Skill ZIP。
 - `npm run package:release`：生成扩展包、Skill 包和完整发行包。
@@ -101,6 +104,7 @@ npm run install:skill
 - 比较网页与档案内容，默认跳过一致值，并单独提示冲突。
 - 为六类重复信息安全创建缺失记录，每次结构变化后重新扫描。
 - 填写普通输入、文本域、原生下拉、单选、`contenteditable` 和已适配的飞书 ATS 可搜索下拉。
+- 在唯一、高置信度的 HTTPS 招聘站点简历控件上，附加用户本次亲自选择并再次确认的单个 PDF。
 - 记住同一网站中用户确认的字段纠错映射。
 - 导出、导入或永久删除本地档案与映射。
 
@@ -109,11 +113,15 @@ npm run install:skill
 - 仅申请 `storage`、`activeTab`、`scripting` 和 `sidePanel` 权限，不申请永久全站访问。
 - 不存储招聘网站密码、Cookie、验证码、身份凭据或浏览器会话。
 - 不填写密码、验证码、CAPTCHA、身份证、护照、银行卡和隐藏字段。
-- 不自动操作文件控件；简历附件仍需用户本人选择和确认。
+- 不提供任意文件上传；只在用户亲选 PDF 并核对文件摘要、HTTPS 站点和简历控件后，允许一次、60 秒内有效的附加尝试。其他附件仍由用户手动处理。
 - 不绕过登录、短信验证、身份检查或网站风控。
 - 不点击最终申请提交按钮。
 - 出生日期、性别、籍贯、政治面貌等敏感字段默认要求确认。
 - 不使用遥测、广告、云端账号或远程运行时代码。
+
+开发者可以选择运行 `npm run eval:fill -- --judge`，让 `.env` 中配置的 OpenAI-compatible 模型对合成评测结果做 shadow review。该命令不属于扩展运行时，只接受 HTTPS、拒绝重定向，并且不会发送真实简历、档案值、网页值、截图或文件路径；模型意见不能替代确定性回归和人工晋升。
+
+需要审计真实本地简历的提取完整性时，先运行 `npm run eval:resume -- --offline` 生成摘要白名单、去标识观测；明确允许 Boyue 读取去标识证据后，再运行 `npm run eval:resume -- --judge --skip-browser`。全量基线完成后应使用 `--sample=<8位摘要>` 定向复评。详细隐私边界、模型误报规则和晋升门槛见 `docs/resume-completeness-evolution-plan.md`。
 
 完整说明见 [PRIVACY.md](./PRIVACY.md)。
 
