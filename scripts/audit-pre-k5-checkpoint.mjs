@@ -182,7 +182,10 @@ let existingFiles = 0;
 const largeFiles = [];
 const binaryFiles = [];
 const symlinks = [];
-const observationFiles = candidates.filter((path) => path.startsWith("ats-corpus/observations/") && path.endsWith(".json"));
+const observationFiles = sortedUnique([
+  ...nulList(["ls-files", "-z", "--", "ats-corpus/observations/**/*.json"]),
+  ...untracked.filter((path) => path.startsWith("ats-corpus/observations/") && path.endsWith(".json"))
+]);
 const activeObservationDigests = new Set();
 const duplicateObservationDigests = [];
 let currentSchemaObservations = 0;

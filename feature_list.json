@@ -1631,7 +1631,7 @@
     {
       "id": "F082",
       "title": "Audit and preserve the pre-K5 root worktree checkpoint",
-      "status": "in_progress",
+      "status": "done",
       "depends_on": ["F081"],
       "acceptance": [
         "Every tracked modification and untracked file in the root worktree is inventoried by path class, file count, size, and intended repository role; ignored build/test outputs and unrelated local files are not staged.",
@@ -1647,7 +1647,7 @@
         "npm run test:e2e",
         "Parse feature_list.json, run git diff --check, compare the staged path list to the audited candidate list, create the local checkpoint commit, and prove no remote push occurred."
       ],
-      "notes": "Started 2026-08-07 after ./init.ps1 -SkipInstall passed with 45 test files / 393 tests and the production permission audit. F039 remains independently owned by the K2 worktree and is not modified by this root-worktree checkpoint."
+      "notes": "Completed 2026-08-07. The audited 201-path pre-K5 candidate had manifest SHA-256 39bcb4ef288a3496cd83250a6aadc5972f25446324ed12a25eb4c9b5694483dd and was preserved by local checkpoint commit c7c24f8f432e5e7eb2e5a91666f2cfed85faf49b on agent/ats-observation-core. Validation passed 45 files / 393 tests, E2E passed 29/29, staged paths matched the audited manifest exactly, and remote refs were unchanged. The Xiaomi legacy observation remains a documented fail-closed staging artifact rather than a promoted sample. F039 remains independently owned by the K2 worktree and was not modified. No push occurred."
     },
     {
       "id": "F083",
