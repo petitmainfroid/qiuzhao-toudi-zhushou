@@ -61,7 +61,7 @@ export async function sendDebuggerCommand<T = unknown>(
       commandPromise,
       new Promise<never>((_, reject) => {
         timer = setTimeout(() => reject(new EmbeddedCdpError(
-          "bridge-failed",
+          "timeout",
           `CDP 命令 ${method} 在 ${Math.round(timeoutMs / 1000)} 秒内没有完成。`
         )), timeoutMs);
       })

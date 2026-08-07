@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { CircleStop, Link2, RefreshCw, Search, ShieldAlert, ShieldCheck } from "lucide-react";
+import { Camera, CircleStop, Link2, RefreshCw, Search, ShieldAlert, ShieldCheck, X } from "lucide-react";
 import type {
   PageActionAuthorizationView,
   PageFindResult,
@@ -28,6 +28,7 @@ export function PowerSessionCard({ bridge }: { bridge: PowerSessionBridge }) {
   const [findText, setFindText] = useState("");
   const [findResult, setFindResult] = useState<PageFindResult | null>(null);
   const [actionAuthorization, setActionAuthorization] = useState<PageActionAuthorizationView | null>(null);
+  const [screenshotDataUrl, setScreenshotDataUrl] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -47,6 +48,7 @@ export function PowerSessionCard({ bridge }: { bridge: PowerSessionBridge }) {
         setPageState(null);
         setFindResult(null);
         setActionAuthorization(null);
+        setScreenshotDataUrl(null);
       }
     }
     catch (cause) {
@@ -79,6 +81,25 @@ export function PowerSessionCard({ bridge }: { bridge: PowerSessionBridge }) {
     }
     catch (cause) {
       setError(cause instanceof Error ? cause.message : "页面结构读取失败。");
+    }
+    finally {
+      setBusy(false);
+    }
+  }
+
+  async function captureScreenshot() {
+    if (!session.sessionId) return;
+    setBusy(true);
+    setError("");
+    try {
+      const result = await bridge.captureScreenshot(session.sessionId);
+      if (result.status !== "captured" || !result.dataUrl) {
+        throw new Error(`页面截图失败：${result.reason ?? "bridge-failed"}`);
+      }
+      setScreenshotDataUrl(result.dataUrl);
+    }
+    catch (cause) {
+      setError(cause instanceof Error ? cause.message : "页面截图失败。");
     }
     finally {
       setBusy(false);
@@ -145,6 +166,9 @@ export function PowerSessionCard({ bridge }: { bridge: PowerSessionBridge }) {
             <button type="button" onClick={() => void run(() => bridge.refresh())} disabled={busy}>
               <RefreshCw size={14} aria-hidden="true" />刷新状态
             </button>
+            <button type="button" onClick={() => void captureScreenshot()} disabled={busy}>
+              <Camera size={14} aria-hidden="true" />页面预览
+            </button>
             <button type="button" onClick={() => void run(() => bridge.stop())} disabled={busy}>
               <CircleStop size={14} aria-hidden="true" />断开连接
             </button>
@@ -155,6 +179,18 @@ export function PowerSessionCard({ bridge }: { bridge: PowerSessionBridge }) {
           </button>
         )}
       </div>
+
+      {screenshotDataUrl ? (
+        <figure className="ephemeral-screenshot">
+          <figcaption>
+            <span>临时页面预览 · 不保存到日志或本机</span>
+            <button type="button" onClick={() => setScreenshotDataUrl(null)} aria-label="移除临时页面预览">
+              <X size={13} aria-hidden="true" />移除
+            </button>
+          </figcaption>
+          <img src={screenshotDataUrl} alt="当前招聘页面的临时截图" />
+        </figure>
+      ) : null}
 
       {active ? (
         <section className="page-state-panel" aria-labelledby="page-state-title">

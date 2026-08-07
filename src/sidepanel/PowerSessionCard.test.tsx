@@ -47,6 +47,15 @@ describe("PowerSessionCard", () => {
         authorizationId: "action_auth_12345",
         expiresAt: Date.now() + 60_000
       })),
+      authorizeUpload: vi.fn(),
+      uploadSavedResume: vi.fn(),
+      cancelUpload: vi.fn(),
+      captureScreenshot: vi.fn(async () => ({
+        requestId: "screenshot_request_123",
+        status: "captured" as const,
+        durationBucket: "lt-100ms" as const,
+        dataUrl: "data:image/png;base64,iVBORw0KGgo="
+      })),
       stop: vi.fn()
     };
     render(<PowerSessionCard bridge={bridge} />);
@@ -71,6 +80,41 @@ describe("PowerSessionCard", () => {
     expect(bridge.find).toHaveBeenCalledWith({ text: "毕业院校", limit: 8 });
   });
 
+  it("shows screenshots only as removable in-memory previews", async () => {
+    const bridge = {
+      status: vi.fn(async () => ({
+        status: "active" as const,
+        sessionId: "power_screenshot",
+        tabId: 42,
+        origin: "https://jobs.example",
+        path: "/apply"
+      })),
+      start: vi.fn(),
+      refresh: vi.fn(),
+      pageState: vi.fn(),
+      find: vi.fn(),
+      authorizeActions: vi.fn(),
+      authorizeUpload: vi.fn(),
+      uploadSavedResume: vi.fn(),
+      cancelUpload: vi.fn(),
+      captureScreenshot: vi.fn(async () => ({
+        requestId: "screenshot_request_123",
+        status: "captured" as const,
+        durationBucket: "lt-100ms" as const,
+        dataUrl: "data:image/png;base64,iVBORw0KGgo="
+      })),
+      stop: vi.fn()
+    } satisfies PowerSessionBridge;
+    render(<PowerSessionCard bridge={bridge} />);
+
+    await screen.findByText("https://jobs.example");
+    fireEvent.click(screen.getByRole("button", { name: "页面预览" }));
+    expect(await screen.findByAltText("当前招聘页面的临时截图")).toBeInTheDocument();
+    expect(bridge.captureScreenshot).toHaveBeenCalledWith("power_screenshot");
+    fireEvent.click(screen.getByRole("button", { name: "移除临时页面预览" }));
+    expect(screen.queryByAltText("当前招聘页面的临时截图")).not.toBeInTheDocument();
+  });
+
   it("explains a cross-Origin pause and permits an explicit reconnect", async () => {
     const bridge: PowerSessionBridge = {
       status: vi.fn(async () => ({
@@ -84,6 +128,10 @@ describe("PowerSessionCard", () => {
       pageState: vi.fn(),
       find: vi.fn(),
       authorizeActions: vi.fn(),
+      authorizeUpload: vi.fn(),
+      uploadSavedResume: vi.fn(),
+      cancelUpload: vi.fn(),
+      captureScreenshot: vi.fn(),
       stop: vi.fn()
     };
     render(<PowerSessionCard bridge={bridge} />);

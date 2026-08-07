@@ -4,6 +4,9 @@ import type {
   PageFindQuery,
   PageFindResult,
   PageActionAuthorizationView,
+  PageScreenshotResult,
+  PageUploadAuthorizationView,
+  PageUploadResult,
   PrivacySafePageState,
   PowerSessionView
 } from "../bridge/protocol";
@@ -15,6 +18,15 @@ export interface PowerSessionBridge {
   pageState(): Promise<PrivacySafePageState>;
   find(query: PageFindQuery): Promise<PageFindResult>;
   authorizeActions(): Promise<PageActionAuthorizationView>;
+  authorizeUpload(sessionId: string, snapshotId: string, ref: string): Promise<PageUploadAuthorizationView>;
+  uploadSavedResume(
+    authorizationId: string,
+    sessionId: string,
+    snapshotId: string,
+    ref: string
+  ): Promise<PageUploadResult>;
+  cancelUpload(sessionId: string, snapshotId: string, ref: string): Promise<PageUploadResult>;
+  captureScreenshot(sessionId: string): Promise<PageScreenshotResult>;
   stop(): Promise<PowerSessionView>;
 }
 
@@ -51,6 +63,21 @@ function authorizationFrom(response: EmbeddedBridgeResponse): PageActionAuthoriz
   if (!response.ok) throw new Error(response.error);
   if (!("authorization" in response)) throw new Error("浏览器会话没有返回动作授权。");
   return response.authorization;
+}
+
+function uploadAuthorizationFrom(response: EmbeddedBridgeResponse): PageUploadAuthorizationView {
+  if (response.ok && "uploadAuthorization" in response) return response.uploadAuthorization;
+  throw new Error(!response.ok ? response.error : "简历上传确认没有建立。请重新扫描当前页面。");
+}
+
+function uploadFrom(response: EmbeddedBridgeResponse): PageUploadResult {
+  if (response.ok && "upload" in response) return response.upload;
+  throw new Error(!response.ok ? response.error : "简历没有上传。请重新连接并扫描当前页面。");
+}
+
+function screenshotFrom(response: EmbeddedBridgeResponse): PageScreenshotResult {
+  if (response.ok && "screenshot" in response) return response.screenshot;
+  throw new Error(!response.ok ? response.error : "当前页面截图失败。");
 }
 
 async function targetTabId(): Promise<number> {
@@ -92,6 +119,50 @@ export class ChromePowerSessionBridge implements PowerSessionBridge {
     return authorizationFrom(await send({ type: "POWER_PAGE_ACTION_AUTHORIZE", requestId: requestId() }));
   }
 
+  async authorizeUpload(sessionId: string, snapshotId: string, ref: string): Promise<PageUploadAuthorizationView> {
+    return uploadAuthorizationFrom(await send({
+      type: "POWER_PAGE_UPLOAD_AUTHORIZE",
+      requestId: requestId(),
+      sessionId,
+      snapshotId,
+      ref
+    }));
+  }
+
+  async uploadSavedResume(
+    authorizationId: string,
+    sessionId: string,
+    snapshotId: string,
+    ref: string
+  ): Promise<PageUploadResult> {
+    return uploadFrom(await send({
+      type: "POWER_PAGE_UPLOAD",
+      requestId: requestId(),
+      authorizationId,
+      sessionId,
+      snapshotId,
+      ref
+    }));
+  }
+
+  async cancelUpload(sessionId: string, snapshotId: string, ref: string): Promise<PageUploadResult> {
+    return uploadFrom(await send({
+      type: "POWER_PAGE_UPLOAD_CANCEL",
+      requestId: requestId(),
+      sessionId,
+      snapshotId,
+      ref
+    }));
+  }
+
+  async captureScreenshot(sessionId: string): Promise<PageScreenshotResult> {
+    return screenshotFrom(await send({
+      type: "POWER_PAGE_SCREENSHOT",
+      requestId: requestId(),
+      sessionId
+    }));
+  }
+
   async stop(): Promise<PowerSessionView> {
     return sessionFrom(await send({ type: "POWER_SESSION_STOP", requestId: requestId() }));
   }
@@ -120,6 +191,30 @@ export class PreviewPowerSessionBridge implements PowerSessionBridge {
 
   async authorizeActions(): Promise<PageActionAuthorizationView> {
     throw new Error("动作授权只在安装扩展并连接 HTTPS 页面后可用。");
+  }
+
+  async authorizeUpload(): Promise<PageUploadAuthorizationView> {
+    throw new Error("简历上传只在安装扩展并连接 HTTPS 页面后可用。");
+  }
+
+  async uploadSavedResume(): Promise<PageUploadResult> {
+    throw new Error("简历上传只在安装扩展并连接 HTTPS 页面后可用。");
+  }
+
+  async cancelUpload(_sessionId: string, _snapshotId: string, ref: string): Promise<PageUploadResult> {
+    return {
+      requestId: requestId(),
+      ref,
+      action: "upload-saved-resume",
+      status: "cancelled",
+      attempts: 0,
+      reason: "user-cancelled",
+      durationBucket: "lt-100ms"
+    };
+  }
+
+  async captureScreenshot(): Promise<PageScreenshotResult> {
+    throw new Error("页面截图只在安装扩展并连接 HTTPS 页面后可用。");
   }
 
   async stop(): Promise<PowerSessionView> {

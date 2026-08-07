@@ -19,6 +19,7 @@
     "eval:kernel-state": "playwright test tests/e2e/page-state-find.spec.ts",
     "eval:kernel-actions": "playwright test tests/e2e/kernel-actions.spec.ts",
     "eval:kernel-workflows": "playwright test tests/e2e/kernel-workflows.spec.ts",
+    "eval:kernel-evidence": "playwright test tests/e2e/kernel-evidence.spec.ts",
     "verify:dist": "node scripts/verify-dist.mjs",
     "verify:package": "node scripts/verify-package.mjs",
     "verify:skill": "node scripts/verify-skill.mjs",

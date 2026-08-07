@@ -14,11 +14,10 @@ import {
   type RepeatableGroupKey
 } from "../content/repeatableRecords";
 import type {
-  ResumeAttachmentAuthorization,
   ResumeAttachmentCandidate,
-  ResumeAttachmentRejection,
   ResumeAttachmentResult
 } from "../content/resumeAttachment";
+import type { EmbeddedBridgeRequest, EmbeddedBridgeResponse } from "../bridge/protocol";
 
 export interface PageBridge {
   scan(profile: CandidateProfile, mappings?: SavedFieldMapping[]): Promise<ScanResult>;
@@ -54,14 +53,40 @@ async function sendToTab(tabId: number, request: ContentRequest): Promise<Conten
   return chrome.tabs.sendMessage(tabId, request) as Promise<ContentResponse>;
 }
 
-async function fileToBase64(file: File): Promise<string> {
-  const bytes = new Uint8Array(await file.arrayBuffer());
-  const chunks: string[] = [];
-  for (let offset = 0; offset < bytes.length; offset += 0x8000) {
-    chunks.push(String.fromCharCode(...bytes.subarray(offset, offset + 0x8000)));
-  }
-  bytes.fill(0);
-  return btoa(chunks.join(""));
+function bridgeRequestId(): string {
+  if (typeof crypto.randomUUID === "function") return crypto.randomUUID().replaceAll("-", "");
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (value) => value.toString(16).padStart(2, "0")).join("");
+}
+
+async function sendRuntime(request: EmbeddedBridgeRequest): Promise<EmbeddedBridgeResponse> {
+  return chrome.runtime.sendMessage(request) as Promise<EmbeddedBridgeResponse>;
+}
+
+async function resolveKernelUploadTarget(candidate: ResumeAttachmentCandidate): Promise<ResumeAttachmentCandidate> {
+  const status = await sendRuntime({ type: "POWER_SESSION_STATUS", requestId: bridgeRequestId() });
+  if (!status.ok || !("session" in status)) return candidate;
+  const session = status.session;
+  if (session.status !== "active" || !session.sessionId || session.origin !== candidate.destinationOrigin) return candidate;
+  const found = await sendRuntime({
+    type: "POWER_PAGE_FIND",
+    requestId: bridgeRequestId(),
+    query: { text: candidate.fieldLabel, limit: 20 }
+  });
+  if (!found.ok || !("result" in found)) return candidate;
+  const fileMatches = found.result.matches.filter((match) =>
+    match.safety === "file" && match.label === candidate.fieldLabel
+  );
+  if (fileMatches.length !== 1) return candidate;
+  return {
+    ...candidate,
+    kernelTarget: {
+      sessionId: session.sessionId,
+      snapshotId: found.result.snapshotId,
+      ref: fileMatches[0]!.ref
+    }
+  };
 }
 
 export class ChromePageBridge implements PageBridge {
@@ -72,7 +97,15 @@ export class ChromePageBridge implements PageBridge {
     if (!("ok" in response) || !response.ok || !("fields" in response.result)) {
       throw new Error("error" in response ? response.error : "当前页面扫描失败。");
     }
-    return response.result;
+    const result = response.result;
+    if (result.resumeAttachment?.status !== "ready" || !result.resumeAttachment.candidate) return result;
+    return {
+      ...result,
+      resumeAttachment: {
+        ...result.resumeAttachment,
+        candidate: await resolveKernelUploadTarget(result.resumeAttachment.candidate)
+      }
+    };
   }
 
   async fill(profile: CandidateProfile, selections: FillSelection[], mappings: SavedFieldMapping[] = []): Promise<FillResult> {
@@ -96,39 +129,41 @@ export class ChromePageBridge implements PageBridge {
   }
 
   async attachResume(
-    file: File,
+    _file: File,
     candidate: ResumeAttachmentCandidate,
-    sha256: string,
-    approvedAt: number
+    _sha256: string,
+    _approvedAt: number
   ): Promise<ResumeAttachmentResult> {
-    const tabId = await activeTabId();
-    await prepareContentScript(tabId);
-    const authorizationResponse = await sendToTab(tabId, {
-      type: "AUTHORIZE_RESUME_ATTACHMENT",
-      metadata: {
-        elementId: candidate.elementId,
-        destinationOrigin: candidate.destinationOrigin,
-        filename: file.name,
-        size: file.size,
-        mimeType: file.type,
-        sha256,
-        approvedAt
-      }
+    const target = candidate.kernelTarget;
+    if (!target) return { status: "rejected", reason: "stale-reference" };
+    const authorizationResponse = await sendRuntime({
+      type: "POWER_PAGE_UPLOAD_AUTHORIZE",
+      requestId: bridgeRequestId(),
+      sessionId: target.sessionId,
+      snapshotId: target.snapshotId,
+      ref: target.ref
     });
     if (!("ok" in authorizationResponse) || !authorizationResponse.ok) {
       throw new Error("error" in authorizationResponse ? authorizationResponse.error : "简历附件授权失败。");
     }
-    const authorization = authorizationResponse.result as ResumeAttachmentAuthorization | ResumeAttachmentRejection;
-    if (!authorization.ok) return { status: "rejected", reason: authorization.reason };
+    if (!("uploadAuthorization" in authorizationResponse)) {
+      return { status: "rejected", reason: "invalid-authorization" };
+    }
 
-    const response = await sendToTab(tabId, {
-      type: "ATTACH_RESUME_FILE",
-      payload: { token: authorization.token, base64: await fileToBase64(file) }
+    const response = await sendRuntime({
+      type: "POWER_PAGE_UPLOAD",
+      requestId: bridgeRequestId(),
+      authorizationId: authorizationResponse.uploadAuthorization.authorizationId,
+      sessionId: target.sessionId,
+      snapshotId: target.snapshotId,
+      ref: target.ref
     });
-    if (!("ok" in response) || !response.ok || !("status" in response.result)) {
+    if (!("ok" in response) || !response.ok || !("upload" in response)) {
       throw new Error("error" in response ? response.error : "简历附件传输失败。");
     }
-    return response.result as ResumeAttachmentResult;
+    return response.upload.status === "verified"
+      ? { status: "attached" }
+      : { status: "rejected", reason: response.upload.reason ?? "verification-failed" };
   }
 }
 
