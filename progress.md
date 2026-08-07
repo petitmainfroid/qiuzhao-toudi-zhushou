@@ -1186,3 +1186,10 @@ Run a local field-level audit over the five PDFs to identify missing dates, role
 - Final serialized `npm run test:e2e` -> exit 0: 23/23 real-Chrome tests passed in 3.0 minutes, including K0–K3 and every existing profile, PDF, OCR, privacy, repeatable-record and Xiaomi-derived regression.
 - `git diff --check` reported no whitespace error. Secret-pattern review found only existing policy/test placeholders and no credential. No `.env`, real profile/resume/PDF, Cookie, header/body, HAR, trace, real filled-page screenshot, selector, ref or authorization capability is included in publishable evidence.
 - F040 remains `in_progress` only until this verified implementation is committed, pushed to `agent/browser-kernel-k3-workflows`, and attached to a Draft PR based on `agent/browser-kernel-k2-actions`. The next feature after publication is F041; F043 live-site mutation remains future user-authorized work.
+
+### F040 publication
+
+- Committed the verified K3 implementation as `4294bf8e8515a70859d7f015a723a85a840f3447` (`完成 K3 有界工作流与幂等恢复`) and pushed `agent/browser-kernel-k3-workflows` to origin.
+- Opened Draft PR #5, `F040：完成 K3 有界工作流与幂等恢复`, against the exact stacked base `agent/browser-kernel-k2-actions`: `https://github.com/petitmainfroid/qiuzhao-toudi-zhushou/pull/5`.
+- The implementation commit contains 19 intended protocol/runtime/test/documentation files. Staged whitespace, suspicious-path and secret-pattern audits passed. The separate original ATS/GT worktree was not staged, rewritten or included.
+- F040 is now `done`. The next unblocked feature is F041 on `agent/browser-kernel-k4-evidence`; do not start it on the K3 branch. The ignored local aggregate report and screenshot remain current under `artifacts/` and contain no real recruitment data.

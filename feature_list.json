@@ -812,7 +812,7 @@
     {
       "id": "F040",
       "title": "Add waits, same-Origin navigation, and idempotent workflow control",
-      "status": "in_progress",
+      "status": "done",
       "depends_on": ["F039"],
       "branch": "agent/browser-kernel-k3-workflows",
       "pr_base": "agent/browser-kernel-k2-actions",
@@ -831,7 +831,7 @@
                              "npm run test:e2e",
                              "Inspect artifacts/kernel-workflows.png and the idempotency report."
                          ],
-      "notes": "K3 started 2026-08-07 on the exact stacked branch after the published K2 branch was independently recovered and its 31-file/255-test baseline passed. The frozen 12/6/4 denominator and RED gates are documented in docs/browser-kernel-k3-workflow-plan.md. Infinite waits, cross-Origin silent continuation, cookies, network bodies, arbitrary navigation, clipboard fallback, and unbounded recovery remain excluded. Mark done only after the feature branch and stacked draft PR are published."
+      "notes": "K3 completed 2026-08-07 on agent/browser-kernel-k3-workflows. Implementation commit 4294bf8e8515a70859d7f015a723a85a840f3447 is pushed and Draft PR #5 targets agent/browser-kernel-k2-actions. The fixed real-Chrome result is 12/12 positive, 6/6 bounded failure, 4/4 idempotency, with all RED counts zero; validate passed 33 files/270 tests and full E2E passed 23/23. Infinite waits, cross-Origin continuation, cookies, network bodies, arbitrary navigation, clipboard fallback, final submission, and unbounded recovery remain excluded."
     },
     {
       "id": "F041",
