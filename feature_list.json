@@ -836,7 +836,7 @@
     {
       "id": "F041",
       "title": "Add user-confirmed upload, screenshots, logs, and typed errors",
-      "status": "in_progress",
+      "status": "done",
       "depends_on": ["F040"],
       "branch": "agent/browser-kernel-k4-evidence",
       "pr_base": "agent/browser-kernel-k3-workflows",

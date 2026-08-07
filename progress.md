@@ -1210,3 +1210,10 @@ Run a local field-level audit over the five PDFs to identify missing dates, role
 - `npm run eval:kernel-evidence` passed in real Chromium with unpacked extensions and an anonymous HTTPS fixture: 8/8 positive cases and 8/8 bounded failures. The current ignored report has zero duplicate upload, unconfirmed upload, arbitrary path/file, cross-Origin continuation, screenshot persistence, forbidden log field and final-submission counts.
 - `npm run validate` passed: 36 test files / 285 tests, TypeScript, production build, 13 required distribution files and exact browser permission audit. `npm run test:e2e` passed 24/24 serial browser tests, including all previous attachment, parsing, filling, repeatable-record and K1–K3 regressions.
 - Visually inspected `artifacts/kernel-evidence.png` (85,226 bytes): it contains only the anonymous Organic side-panel aggregate, 8/8 counts and zero red-line counts; it does not contain a filled recruitment page, PDF content, filename or profile value. `artifacts/kernel-evidence-report.json` also passed the forbidden-field inspection.
+
+## 2026-08-07 F041 K4 publication handoff
+
+- Committed the scoped K4 implementation as `cb2f4e07b02fcb9e5152d1a92d9c41879ecf1bdd` (`完成 K4 简历上传与隐私证据层`) after staged whitespace, suspicious-path and secret-pattern audits passed. No `artifacts/`, `.env`, credential, real resume or original ATS/GT worktree file was staged.
+- Pushed `agent/browser-kernel-k4-evidence` and opened Draft PR #6, `F041：完成 K4 简历上传与隐私证据层`, against the exact stacked base `agent/browser-kernel-k3-workflows`: `https://github.com/petitmainfroid/qiuzhao-toudi-zhushou/pull/6`.
+- F041 is now `done`. The next dependency-unblocked feature is F042 on `agent/browser-kernel-k5-adapters`, based on `agent/browser-kernel-k4-evidence`; it should remove the remaining direct mutation paths only after adapter parity evidence, not combine K5 with this PR.
+- Handoff has no implementation blocker. The ignored local `artifacts/kernel-evidence-report.json` and `artifacts/kernel-evidence.png` remain current and privacy-inspected for review; the repository intentionally does not commit them.
