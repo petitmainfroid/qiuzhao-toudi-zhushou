@@ -4,6 +4,9 @@ import type { PrivacySafePageStateService } from "../bridge/pageState";
 import type { PageActionService } from "../bridge/pageActions";
 import type { PageWorkflowService } from "../bridge/pageWorkflows";
 import type { PersistentRequestLedger } from "../bridge/requestLedger";
+import type { PageUploadService } from "../bridge/pageUpload";
+import type { PageScreenshotService } from "../bridge/pageScreenshot";
+import type { PrivacySafeEvidenceLog } from "../bridge/evidenceLog";
 import {
   handleEmbeddedBridgeRequest,
   isTrustedExtensionSender
@@ -273,5 +276,69 @@ describe("embedded bridge background authorization", () => {
       })
     });
     expect(act).not.toHaveBeenCalled();
+  });
+
+  it("routes saved-resume upload through the shared ledger and stores only a sanitized command log", async () => {
+    const manager = managerMock();
+    const activeSession = {
+      status: "active" as const,
+      sessionId: "power_session_upload",
+      tabId: 42,
+      origin: "https://jobs.example",
+      path: "/apply"
+    };
+    vi.mocked(manager.status).mockResolvedValue(activeSession);
+    const pageStateService = { registry: { invalidate: vi.fn() } } as unknown as PrivacySafePageStateService;
+    const pageActionService = { invalidate: vi.fn() } as unknown as PageActionService;
+    const workflow = { wait: vi.fn() } as unknown as PageWorkflowService;
+    const ledger = {
+      run: vi.fn(async (_operation, execute) => ({ kind: "executed" as const, value: await execute() }))
+    } as unknown as PersistentRequestLedger;
+    const pageUpload = {
+      upload: vi.fn(async (request) => ({
+        requestId: request.requestId,
+        ref: request.ref,
+        action: "upload-saved-resume" as const,
+        status: "verified" as const,
+        attempts: 1 as const,
+        durationBucket: "lt-100ms" as const
+      })),
+      invalidate: vi.fn()
+    } as unknown as PageUploadService;
+    const screenshot = { capture: vi.fn() } as unknown as PageScreenshotService;
+    const append = vi.fn(async () => undefined);
+    const log = { append, list: vi.fn(async () => []) } as unknown as PrivacySafeEvidenceLog;
+    const sender = { id: "assistant-id", url: "chrome-extension://assistant-id/sidepanel.html" };
+    const request = {
+      type: "POWER_PAGE_UPLOAD" as const,
+      requestId: "upload_request_1234",
+      authorizationId: "upload_authorization_123",
+      sessionId: "power_session_upload",
+      snapshotId: "state_snapshot_123",
+      ref: "node_reference_123"
+    };
+
+    const response = await handleEmbeddedBridgeRequest(
+      request,
+      sender,
+      manager,
+      pageStateService,
+      pageActionService,
+      workflow,
+      ledger,
+      pageUpload,
+      screenshot,
+      log
+    );
+    expect(response).toEqual({ ok: true, upload: expect.objectContaining({ status: "verified", attempts: 1 }) });
+    expect(pageUpload.upload).toHaveBeenCalledWith(request, activeSession);
+    expect(append).toHaveBeenCalledWith({
+      command: "upload-saved-resume",
+      ref: "node_reference_123",
+      status: "verified",
+      attempts: 1,
+      durationBucket: "lt-100ms"
+    });
+    expect(JSON.stringify(vi.mocked(append).mock.calls)).not.toMatch(/filename|sha256|bytes|cookie|headers|query|profile|value/i);
   });
 });

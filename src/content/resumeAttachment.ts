@@ -9,6 +9,11 @@ export interface ResumeAttachmentCandidate {
   fieldLabel: string;
   destinationOrigin: string;
   acceptsPdf: boolean;
+  kernelTarget?: {
+    sessionId: string;
+    snapshotId: string;
+    ref: string;
+  };
 }
 
 export interface ResumeAttachmentScan {
@@ -57,7 +62,20 @@ export type ResumeAttachmentFailureReason = ResumeAttachmentRejection["reason"]
   | "digest-mismatch"
   | "invalid-payload"
   | "not-pdf"
-  | "transfer-failed";
+  | "transfer-failed"
+  | "invalid-authorization"
+  | "session-inactive"
+  | "debugger-conflict"
+  | "stale-reference"
+  | "timeout"
+  | "blocked-control"
+  | "page-changed"
+  | "verification-failed"
+  | "user-cancelled"
+  | "invalid-resume"
+  | "duplicate-request-conflict"
+  | "duplicate-request-uncertain"
+  | "bridge-failed";
 
 export interface ResumeAttachmentResult {
   status: "attached" | "rejected";

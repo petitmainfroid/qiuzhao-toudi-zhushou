@@ -28,11 +28,26 @@ import {
   requestFingerprint,
   type PersistentRequestLedger
 } from "../bridge/requestLedger";
+import {
+  createChromePageUploadService,
+  type PageUploadService
+} from "../bridge/pageUpload";
+import {
+  createChromePageScreenshotService,
+  type PageScreenshotService
+} from "../bridge/pageScreenshot";
+import {
+  createChromeEvidenceLog,
+  type PrivacySafeEvidenceLog
+} from "../bridge/evidenceLog";
 
 const defaultReferenceRegistry = new OpaqueReferenceRegistry();
 const defaultPageStateService = new PrivacySafePageStateService(defaultReferenceRegistry);
 const defaultPageActionService = createChromePageActionService(defaultReferenceRegistry);
 const defaultRequestLedger = createChromeRequestLedger();
+const defaultPageUploadService = createChromePageUploadService(defaultReferenceRegistry);
+const defaultPageScreenshotService = createChromePageScreenshotService();
+const defaultEvidenceLog = createChromeEvidenceLog();
 
 function duplicateAction(
   request: Extract<EmbeddedBridgeRequest, { type: "POWER_PAGE_ACTION" }>,
@@ -46,6 +61,24 @@ function duplicateAction(
       action: request.intent.kind,
       status: "blocked",
       strategy: "none",
+      attempts: 0,
+      reason,
+      durationBucket: "lt-100ms"
+    }
+  };
+}
+
+function duplicateUpload(
+  request: Extract<EmbeddedBridgeRequest, { type: "POWER_PAGE_UPLOAD" }>,
+  reason: "duplicate-request-conflict" | "duplicate-request-uncertain"
+): Extract<EmbeddedBridgeResponse, { ok: true; upload: unknown }> {
+  return {
+    ok: true,
+    upload: {
+      requestId: request.requestId,
+      ref: request.ref,
+      action: "upload-saved-resume",
+      status: "blocked",
       attempts: 0,
       reason,
       durationBucket: "lt-100ms"
@@ -80,7 +113,10 @@ export async function handleEmbeddedBridgeRequest(
     () => manager.status(),
     pageStateService
   ),
-  requestLedger: PersistentRequestLedger = defaultRequestLedger
+  requestLedger: PersistentRequestLedger = defaultRequestLedger,
+  pageUploadService: PageUploadService = defaultPageUploadService,
+  pageScreenshotService: PageScreenshotService = defaultPageScreenshotService,
+  evidenceLog: PrivacySafeEvidenceLog = defaultEvidenceLog
 ): Promise<EmbeddedBridgeResponse> {
   if (!isTrustedExtensionSender(sender)) {
     return { ok: false, code: "bridge-failed", error: "只有扩展界面中的用户操作可以启动浏览器会话。" };
@@ -116,10 +152,89 @@ export async function handleEmbeddedBridgeRequest(
         sessionId: request.sessionId,
         fingerprint: requestFingerprint(request)
       }, async () => pageActionService.act(request, await manager.status()));
-      if (outcome.kind === "conflict") return duplicateAction(request, "duplicate-request-conflict");
-      if (outcome.kind === "uncertain") return duplicateAction(request, "duplicate-request-uncertain");
+      if (outcome.kind === "conflict" || outcome.kind === "uncertain") {
+        const reason = outcome.kind === "conflict" ? "duplicate-request-conflict" : "duplicate-request-uncertain";
+        await evidenceLog.append({
+          command: "page-action",
+          ref: request.ref,
+          status: "blocked",
+          attempts: 0,
+          durationBucket: "lt-100ms",
+          failureCategory: reason
+        });
+        return duplicateAction(request, reason);
+      }
+      void evidenceLog.append({
+        command: "page-action",
+        ref: outcome.value.ref,
+        status: outcome.value.status,
+        attempts: outcome.value.attempts,
+        durationBucket: outcome.value.durationBucket,
+        ...(outcome.value.reason ? { failureCategory: outcome.value.reason } : {})
+      }).catch(() => undefined);
       return { ok: true, action: outcome.value };
     }
+    if (request.type === "POWER_PAGE_UPLOAD_AUTHORIZE") {
+      return {
+        ok: true,
+        uploadAuthorization: await pageUploadService.authorize(request, await manager.status(), true)
+      };
+    }
+    if (request.type === "POWER_PAGE_UPLOAD_CANCEL") {
+      const upload = pageUploadService.cancel(request);
+      await evidenceLog.append({
+        command: "upload-saved-resume",
+        ref: upload.ref,
+        status: upload.status,
+        attempts: upload.attempts,
+        durationBucket: upload.durationBucket,
+        failureCategory: "user-cancelled"
+      });
+      return { ok: true, upload };
+    }
+    if (request.type === "POWER_PAGE_UPLOAD") {
+      const outcome = await requestLedger.run({
+        requestId: request.requestId,
+        sessionId: request.sessionId,
+        fingerprint: requestFingerprint(request)
+      }, async () => pageUploadService.upload(request, await manager.status()));
+      if (outcome.kind === "conflict" || outcome.kind === "uncertain") {
+        const reason = outcome.kind === "conflict" ? "duplicate-request-conflict" : "duplicate-request-uncertain";
+        await evidenceLog.append({
+          command: "upload-saved-resume",
+          ref: request.ref,
+          status: "blocked",
+          attempts: 0,
+          durationBucket: "lt-100ms",
+          failureCategory: reason
+        });
+        return duplicateUpload(request, reason);
+      }
+      await evidenceLog.append({
+        command: "upload-saved-resume",
+        ref: outcome.value.ref,
+        status: outcome.value.status,
+        attempts: outcome.value.attempts,
+        durationBucket: outcome.value.durationBucket,
+        ...(outcome.value.reason ? { failureCategory: outcome.value.reason } : {})
+      });
+      return { ok: true, upload: outcome.value };
+    }
+    if (request.type === "POWER_PAGE_SCREENSHOT") {
+      const screenshot = await pageScreenshotService.capture(request, await manager.status(), true);
+      await evidenceLog.append({
+        command: "capture-screenshot",
+        status: screenshot.status,
+        attempts: screenshot.status === "captured" ? 1 : 0,
+        durationBucket: screenshot.durationBucket,
+        ...(screenshot.reason ? { failureCategory: screenshot.reason } : {})
+      });
+      return { ok: true, screenshot };
+    }
+    if (request.type === "POWER_EVIDENCE_LOGS") {
+      return { ok: true, logs: await evidenceLog.list() };
+    }
+    pageUploadService.invalidate();
     pageActionService.invalidate();
     pageStateService.registry.invalidate();
     return { ok: true, session: await manager.stop() };
@@ -137,7 +252,10 @@ export function registerPowerSessionRuntime(
     () => manager.status(),
     pageStateService
   ),
-  requestLedger: PersistentRequestLedger = defaultRequestLedger
+  requestLedger: PersistentRequestLedger = defaultRequestLedger,
+  pageUploadService: PageUploadService = defaultPageUploadService,
+  pageScreenshotService: PageScreenshotService = defaultPageScreenshotService,
+  evidenceLog: PrivacySafeEvidenceLog = defaultEvidenceLog
 ): void {
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (!isEmbeddedBridgeRequest(message)) return undefined;
@@ -148,7 +266,10 @@ export function registerPowerSessionRuntime(
       pageStateService,
       pageActionService,
       pageWorkflowService,
-      requestLedger
+      requestLedger,
+      pageUploadService,
+      pageScreenshotService,
+      evidenceLog
     ).then(sendResponse);
     return true;
   });
@@ -164,6 +285,7 @@ export function registerPowerSessionRuntime(
 
   chrome.tabs.onRemoved.addListener((tabId) => {
     pageActionService.invalidate();
+    pageUploadService.invalidate();
     pageStateService.registry.invalidate();
     void manager.handleTabClosed(tabId);
   });
@@ -171,6 +293,7 @@ export function registerPowerSessionRuntime(
   chrome.alarms.onAlarm.addListener((alarm) => {
     if (alarm.name === POWER_SESSION_EXPIRY_ALARM) {
       pageActionService.invalidate();
+      pageUploadService.invalidate();
       pageStateService.registry.invalidate();
       void manager.handleExpiryAlarm();
     }
@@ -178,6 +301,7 @@ export function registerPowerSessionRuntime(
 
   registerEmbeddedCdpListeners((tabId) => {
     pageActionService.invalidate();
+    pageUploadService.invalidate();
     pageStateService.registry.invalidate();
     void manager.handleDebuggerDetached(tabId);
   });

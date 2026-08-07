@@ -12,6 +12,7 @@ export type PowerSessionReason =
   | "debugger-detached"
   | "unsupported-page"
   | "debugger-busy"
+  | "timeout"
   | "bridge-failed";
 
 export interface EmbeddedPageState {
@@ -206,6 +207,65 @@ export interface PageActionResult {
   durationBucket: "lt-100ms" | "100-500ms" | "gt-500ms";
 }
 
+export type PageUploadFailureReason =
+  | "invalid-authorization"
+  | "session-inactive"
+  | "debugger-conflict"
+  | "stale-reference"
+  | "timeout"
+  | "blocked-control"
+  | "page-changed"
+  | "verification-failed"
+  | "user-cancelled"
+  | "invalid-resume"
+  | "duplicate-request-conflict"
+  | "duplicate-request-uncertain"
+  | "bridge-failed";
+
+export interface PageUploadAuthorizationView {
+  authorizationId: string;
+  expiresAt: number;
+  origin: string;
+  ref: string;
+}
+
+export interface PageUploadResult {
+  requestId: string;
+  ref: string;
+  action: "upload-saved-resume";
+  status: "verified" | "failed" | "blocked" | "cancelled";
+  attempts: 0 | 1;
+  reason?: PageUploadFailureReason;
+  durationBucket: "lt-100ms" | "100-500ms" | "gt-500ms";
+}
+
+export type PageScreenshotFailureReason =
+  | "session-inactive"
+  | "debugger-conflict"
+  | "timeout"
+  | "page-changed"
+  | "bridge-failed";
+
+export interface PageScreenshotResult {
+  requestId: string;
+  status: "captured" | "failed";
+  durationBucket: "lt-100ms" | "100-500ms" | "gt-500ms";
+  reason?: PageScreenshotFailureReason;
+  dataUrl?: string;
+}
+
+export type EvidenceCommandType = "page-action" | "upload-saved-resume" | "capture-screenshot";
+export type EvidenceCommandStatus = "verified" | "captured" | "failed" | "blocked" | "cancelled";
+
+export interface EvidenceCommandLogEntry {
+  command: EvidenceCommandType;
+  ref?: string;
+  status: EvidenceCommandStatus;
+  attempts: 0 | 1 | 2;
+  durationBucket: "lt-100ms" | "100-500ms" | "gt-500ms";
+  failureCategory?: PageActionFailureReason | PageUploadFailureReason | PageScreenshotFailureReason;
+}
+
 interface BridgeRequestBase {
   requestId: string;
 }
@@ -233,6 +293,27 @@ export type EmbeddedBridgeRequest =
       ref: string;
       intent: PageActionIntent;
     })
+  | (BridgeRequestBase & {
+      type: "POWER_PAGE_UPLOAD_AUTHORIZE";
+      sessionId: string;
+      snapshotId: string;
+      ref: string;
+    })
+  | (BridgeRequestBase & {
+      type: "POWER_PAGE_UPLOAD";
+      authorizationId: string;
+      sessionId: string;
+      snapshotId: string;
+      ref: string;
+    })
+  | (BridgeRequestBase & {
+      type: "POWER_PAGE_UPLOAD_CANCEL";
+      sessionId: string;
+      snapshotId: string;
+      ref: string;
+    })
+  | (BridgeRequestBase & { type: "POWER_PAGE_SCREENSHOT"; sessionId: string })
+  | (BridgeRequestBase & { type: "POWER_EVIDENCE_LOGS" })
   | (BridgeRequestBase & { type: "POWER_SESSION_STOP" });
 
 export type EmbeddedBridgeResponse =
@@ -243,6 +324,10 @@ export type EmbeddedBridgeResponse =
   | { ok: true; wait: PageWaitResult }
   | { ok: true; authorization: PageActionAuthorizationView }
   | { ok: true; action: PageActionResult }
+  | { ok: true; uploadAuthorization: PageUploadAuthorizationView }
+  | { ok: true; upload: PageUploadResult }
+  | { ok: true; screenshot: PageScreenshotResult }
+  | { ok: true; logs: EvidenceCommandLogEntry[] }
   | { ok: false; code: PowerSessionReason; error: string };
 
 function hasExactKeys(value: object, allowed: readonly string[]): boolean {
@@ -372,12 +457,38 @@ export function isEmbeddedBridgeRequest(value: unknown): value is EmbeddedBridge
       && isIdentifier(request.ref)
       && isPageActionIntent(request.intent);
   }
+  if (request.type === "POWER_PAGE_UPLOAD_AUTHORIZE") {
+    return hasExactKeys(request, ["type", "requestId", "sessionId", "snapshotId", "ref"])
+      && isIdentifier(request.sessionId)
+      && isIdentifier(request.snapshotId)
+      && isIdentifier(request.ref);
+  }
+  if (request.type === "POWER_PAGE_UPLOAD") {
+    return hasExactKeys(request, [
+      "type", "requestId", "authorizationId", "sessionId", "snapshotId", "ref"
+    ])
+      && isIdentifier(request.authorizationId)
+      && isIdentifier(request.sessionId)
+      && isIdentifier(request.snapshotId)
+      && isIdentifier(request.ref);
+  }
+  if (request.type === "POWER_PAGE_UPLOAD_CANCEL") {
+    return hasExactKeys(request, ["type", "requestId", "sessionId", "snapshotId", "ref"])
+      && isIdentifier(request.sessionId)
+      && isIdentifier(request.snapshotId)
+      && isIdentifier(request.ref);
+  }
+  if (request.type === "POWER_PAGE_SCREENSHOT") {
+    return hasExactKeys(request, ["type", "requestId", "sessionId"])
+      && isIdentifier(request.sessionId);
+  }
   const exactBaseTypes = [
     "POWER_SESSION_STATUS",
     "POWER_SESSION_TARGET",
     "POWER_SESSION_REFRESH_STATE",
     "POWER_PAGE_STATE",
     "POWER_PAGE_ACTION_AUTHORIZE",
+    "POWER_EVIDENCE_LOGS",
     "POWER_SESSION_STOP"
   ];
   return exactBaseTypes.includes(request.type ?? "")

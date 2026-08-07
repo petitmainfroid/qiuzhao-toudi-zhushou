@@ -116,4 +116,42 @@ describe("embedded bridge protocol validation", () => {
       condition: { kind: "find", query: { text: "name", xpath: "//*" }, minimumMatches: 1 }
     })).toBe(false);
   });
+
+  it("accepts only opaque saved-resume upload and ephemeral screenshot requests", () => {
+    const authorize = {
+      type: "POWER_PAGE_UPLOAD_AUTHORIZE",
+      requestId: "upload_authorize_123",
+      sessionId: "power_session_1234",
+      snapshotId: "state_snapshot_123",
+      ref: "node_reference_123"
+    };
+    expect(isEmbeddedBridgeRequest(authorize)).toBe(true);
+    const upload = {
+      type: "POWER_PAGE_UPLOAD",
+      requestId: "upload_execute_1234",
+      authorizationId: "upload_authorization_123",
+      sessionId: "power_session_1234",
+      snapshotId: "state_snapshot_123",
+      ref: "node_reference_123"
+    };
+    expect(isEmbeddedBridgeRequest(upload)).toBe(true);
+    expect(isEmbeddedBridgeRequest({
+      type: "POWER_PAGE_SCREENSHOT",
+      requestId: "screenshot_request_123",
+      sessionId: "power_session_1234"
+    })).toBe(true);
+    expect(isEmbeddedBridgeRequest({ type: "POWER_EVIDENCE_LOGS", requestId: "evidence_logs_1234" })).toBe(true);
+
+    for (const forbidden of [
+      { path: "C:\\private\\resume.pdf" },
+      { filename: "private.pdf" },
+      { sha256: "a".repeat(64) },
+      { base64: "JVBERi0=" },
+      { selector: "input[type=file]" },
+      { script: "document.querySelector('input')" },
+      { method: "DOM.setFileInputFiles" }
+    ]) {
+      expect(isEmbeddedBridgeRequest({ ...upload, ...forbidden })).toBe(false);
+    }
+  });
 });

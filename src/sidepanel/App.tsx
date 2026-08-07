@@ -103,6 +103,14 @@ function destinationHost(candidate: ResumeAttachmentCandidate): string {
 }
 
 function attachmentFailureMessage(reason?: ResumeAttachmentFailureReason): string {
+  if (reason === "debugger-conflict") return "当前页面被 DevTools 或其他自动化工具占用，请关闭后重试。";
+  if (reason === "timeout") return "浏览器在限定时间内没有完成上传，请重新连接后重试。";
+  if (reason === "stale-reference" || reason === "page-changed") return "页面或唯一文件控件已经变化，请重新扫描。";
+  if (reason === "blocked-control") return "文件控件不可用、已有附件或不是唯一安全目标，请手动检查。";
+  if (reason === "verification-failed") return "网站没有确认接收 PDF，已停止继续操作。";
+  if (reason === "invalid-resume") return "本机常用简历已变化或无效，请重新保存 PDF。";
+  if (reason === "duplicate-request-conflict" || reason === "duplicate-request-uncertain") return "检测到重复上传请求；为避免重复附件，本次没有再次执行。";
+  if (reason === "user-cancelled") return "你已取消本次简历上传。";
   if (reason === "authorization-expired" || reason === "stale-confirmation") return "确认已经超过 60 秒，请重新扫描后再选择文件。";
   if (reason === "digest-mismatch" || reason === "invalid-digest") return "文件摘要发生变化，已停止附件操作。";
   if (reason === "candidate-changed" || reason === "existing-file" || reason === "invalid-destination") return "页面、目标控件或现有附件已经变化，请重新扫描。";
@@ -515,6 +523,9 @@ export function SidePanel({
               <dl className="attachment-target">
                 <div><dt>目标网站</dt><dd>{scan.resumeAttachment.candidate.destinationOrigin}</dd></div>
                 <div><dt>目标控件</dt><dd>{scan.resumeAttachment.candidate.fieldLabel}</dd></div>
+                {scan.resumeAttachment.candidate.kernelTarget ? (
+                  <div><dt>内核引用</dt><dd><code>{scan.resumeAttachment.candidate.kernelTarget.ref}</code></dd></div>
+                ) : null}
               </dl>
               <label className="attachment-picker">
                 <span>{attachmentState === "hashing" ? "正在核对文件" : "选择要附加的 PDF 简历"}</span>
