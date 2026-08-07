@@ -61,6 +61,7 @@ export interface PageControlSemantics {
   placeholder?: string;
   name?: string;
   nearbyText?: string;
+  section?: string;
 }
 
 export interface PrivacySafeControl {
@@ -82,12 +83,14 @@ export interface PrivacySafePageState {
   snapshotId: string;
   origin: string;
   path: string;
+  sections: string[];
   controls: PrivacySafeControl[];
   summary: {
     controlCount: number;
     frameCount: number;
     openShadowRootCount: number;
     blockedControlCount: number;
+    sectionCount: number;
   };
 }
 

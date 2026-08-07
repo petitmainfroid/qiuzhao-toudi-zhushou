@@ -1,4 +1,11 @@
 import type { CandidateProfile } from "../domain/profile";
+import {
+  defaultAtsFamilyRegistry,
+  feishuRecruitingTemplate,
+  genericHtmlTemplate
+} from "../ats/defaultTemplates";
+import { AtsMatchingRuntime } from "../ats/matchingRuntime";
+import { AtsTemplateRegistry } from "../ats/templateRegistry";
 import { fillPage, scanPage, type FillResult, type FillSelection, type ScanResult } from "../content/engine";
 import {
   createMissingRepeatableRecords,
@@ -14,6 +21,27 @@ interface FixtureGroup {
   livePrefix: string;
   fields: Array<{ name: string; label: string; textarea?: boolean }>;
 }
+
+const fixtureTemplate = {
+  ...feishuRecruitingTemplate,
+  fieldRules: feishuRecruitingTemplate.fieldRules.map((rule) => rule.action === "exclude"
+    ? rule
+    : { ...rule, driverHint: "native" as const, verification: "normalized-equality" as const })
+};
+class FeishuFixtureRuntime extends AtsMatchingRuntime {
+  constructor() {
+    super(defaultAtsFamilyRegistry, new AtsTemplateRegistry([genericHtmlTemplate, fixtureTemplate]));
+  }
+
+  override resolve(descriptors: Parameters<AtsMatchingRuntime["resolve"]>[0]) {
+    return super.resolve(descriptors, {
+      origin: "https://xiaomi.jobs.f.mioffice.cn",
+      pathname: "/internship/resume/7663053400020879658/apply"
+    });
+  }
+}
+const fixtureRuntime = new FeishuFixtureRuntime();
+const repeatableOptions = { template: fixtureTemplate };
 
 const fixtureGroups: FixtureGroup[] = [
   {
@@ -86,6 +114,7 @@ declare global {
       scan(profile: CandidateProfile): ScanResult;
       fill(profile: CandidateProfile, selections: FillSelection[]): Promise<FillResult>;
       addClickCount: number;
+      saveClickCount: number;
       deleteClickCount: number;
       submitCount: number;
     };
@@ -116,6 +145,19 @@ function appendRow(group: FixtureGroup): number {
     item.append(label, control);
     record.append(item);
   });
+  if (["education", "workExperiences", "projects"].includes(group.key)) {
+    const save = document.createElement("button");
+    save.type = "button";
+    save.className = "record-save";
+    save.textContent = "保存";
+    save.addEventListener("click", () => {
+      window.__repeatableFixture.saveClickCount += 1;
+      record.dataset.saved = "true";
+      save.disabled = true;
+      save.textContent = "已保存";
+    });
+    record.append(save);
+  }
   records.append(record);
   return index;
 }
@@ -136,20 +178,21 @@ function updateStatus(scan: RepeatableRecordsScan) {
 
 window.__repeatableFixture = {
   scanRepeatable(profile) {
-    const result = scanRepeatableRecords(profile);
+    const result = scanRepeatableRecords(profile, repeatableOptions);
     updateStatus(result);
     return result;
   },
   async create(profile, group) {
-    const result = await createMissingRepeatableRecords(profile, group);
-    updateStatus(scanRepeatableRecords(profile));
+    const result = await createMissingRepeatableRecords(profile, group, repeatableOptions);
+    updateStatus(scanRepeatableRecords(profile, repeatableOptions));
     document.getElementById("event-log")!.textContent =
       `${group}: 创建 ${result.createdCount}，剩余 ${result.remainingCount}，状态 ${result.status}${result.reason ? ` / ${result.reason}` : ""}`;
     return result;
   },
-  scan: scanPage,
-  fill: fillPage,
+  scan: (profile) => scanPage(profile, [], fixtureRuntime),
+  fill: (profile, selections) => fillPage(profile, selections, [], fixtureRuntime),
   addClickCount: 0,
+  saveClickCount: 0,
   deleteClickCount: 0,
   submitCount: 0
 };

@@ -4,7 +4,7 @@ test("Xiaomi-derived fixture scans and fills reusable fields without submission"
   await page.goto("/xiaomi-fixture.html");
   const result = await page.evaluate(async () => {
     const profile = {
-      schemaVersion: 2 as const,
+      schemaVersion: 4 as const,
       updatedAt: "",
       basic: {
         fullName: "小米回归测试",
@@ -43,7 +43,11 @@ test("Xiaomi-derived fixture scans and fills reusable fields without submission"
     candidateCount: 1,
     candidate: { fieldLabel: "上传简历", acceptsPdf: true }
   });
-  expect(result.scan.fields.find((field) => field.fieldLabel === "个人证件")?.excludedReason).toBe("sensitive-unsupported");
+  expect(result.scan.fields.find((field) => field.fieldLabel === "个人证件")).toMatchObject({
+    profilePath: "basic.identityDocumentNumber",
+    requiresConfirmation: true,
+    hasValue: false
+  });
   expect(result.fill.filledCount).toBeGreaterThanOrEqual(20);
   await expect(page.locator('[data-form-field-name="education_list[0].school"] input')).toHaveValue("第一测试大学");
   await expect(page.locator('#education\\[0\\]\\.degree .atsx-select-selection-selected-value')).toHaveText("硕士");

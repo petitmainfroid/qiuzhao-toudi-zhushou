@@ -1,0 +1,170 @@
+{
+  "schemaVersion": 1,
+  "id": "huya-moka-campus-candidate-resume-v1",
+  "company": {
+    "id": "huya",
+    "name": "虎牙直播",
+    "publicSlug": "huya"
+  },
+  "classification": {
+    "atsFamily": "moka",
+    "kind": "shared-ats-tenant",
+    "vendor": "Moka",
+    "sharedVendorTemplate": true,
+    "basis": "The public app.mokahr.com tenant shell identifies org huya and site mode campus; the public apply-web bundle owns the candidate-home route, standard resume field catalog, default resume selection, candidateInfo load boundary, and resumeInfo update boundary."
+  },
+  "source": {
+    "originPattern": "https://app.mokahr.com",
+    "pathTemplate": "/campus_apply/huya/:siteId",
+    "hashRouteTemplate": "#/candidateHome/resume",
+    "language": "zh-CN",
+    "pageType": "campus-candidate-standard-resume-editor"
+  },
+  "evidence": {
+    "capturedAt": "2026-08-07",
+    "source": "credential-free public Moka tenant shell plus public apply-web JavaScript standard-resume contract",
+    "evidenceType": "public-shell-and-bundle-contract",
+    "routeRequiresCandidateSession": true,
+    "usesMokaDefaultApplySetting": true,
+    "removedDefaultBlock": "uploadInfo",
+    "boundary": "The public shell proves tenant identity and the bundle proves the default standard-resume contract. The authenticated candidateInfo endpoint and rendered candidate page were not accessed. No current value, authentication data, filename, request or response body, upload, write, save, CAPTCHA action, or application submission entered this artifact."
+  },
+  "denominators": {
+    "groups": 9,
+    "logicalFields": 41,
+    "requiredFields": 1,
+    "repeatableGroups": 6,
+    "configuredOptionFields": 7,
+    "attachmentFields": 0,
+    "identitySensitiveFields": 1
+  },
+  "optionCatalogs": {
+    "gender": {
+      "kind": "labels",
+      "labels": ["男", "女"]
+    },
+    "academicDegree": {
+      "kind": "labels",
+      "labels": ["本科", "硕士", "博士", "高中", "大专", "中专", "MBA", "其他"]
+    },
+    "languageProficiency": {
+      "kind": "labels",
+      "labels": ["一般", "良好", "熟练", "精通"]
+    },
+    "workExperience": {
+      "kind": "numeric-range-with-special-values",
+      "numericYears": { "min": 1, "max": 40 },
+      "special": [
+        { "label": "在校生", "value": -1 },
+        { "label": "应届毕业生", "value": 0 },
+        { "label": "1年以下", "value": 0.5 }
+      ]
+    }
+  },
+  "groups": [
+    {
+      "groupKey": "basicInfo",
+      "label": "个人信息",
+      "repeatable": false,
+      "fields": [
+        { "fieldName": "name", "label": "姓名", "type": "string_info", "required": true },
+        { "fieldName": "phone", "label": "手机号码", "type": "string_info", "required": false },
+        { "fieldName": "email", "label": "邮箱", "type": "string_info", "required": false },
+        { "fieldName": "gender", "label": "性别", "type": "select", "required": false, "optionCatalogId": "gender" },
+        { "fieldName": "birthDate", "label": "出生日期 (年龄)", "type": "day_info", "required": false },
+        { "fieldName": "experience", "label": "工作经验", "type": "select", "required": false, "optionCatalogId": "workExperience" },
+        { "fieldName": "academicDegree", "label": "最高学历", "type": "select", "required": false, "optionCatalogId": "academicDegree" },
+        { "fieldName": "location", "label": "所在地", "type": "string_info", "required": false },
+        { "fieldName": "lastCompany", "label": "最近公司", "type": "string_info", "required": false },
+        { "fieldName": "citizenId", "label": "证件号码", "type": "string_info", "required": false, "sensitive": true, "confirmationRequired": true }
+      ]
+    },
+    {
+      "groupKey": "jobIntention",
+      "label": "求职意向",
+      "repeatable": false,
+      "fields": [
+        { "fieldName": "salary", "label": "当前薪资", "type": "string_info", "required": false },
+        { "fieldName": "aimSalary", "label": "期望薪资", "type": "string_info", "required": false },
+        { "fieldName": "forwardLocation", "label": "期望城市", "type": "string_info", "required": false }
+      ]
+    },
+    {
+      "groupKey": "experienceInfo",
+      "label": "工作经历",
+      "repeatable": true,
+      "fields": [
+        { "fieldName": "startDate", "label": "开始时间", "type": "date_info", "required": false },
+        { "fieldName": "endDate", "label": "结束时间", "type": "date_info", "required": false },
+        { "fieldName": "company", "label": "公司名称", "type": "string_info", "required": false },
+        { "fieldName": "title", "label": "职位名称", "type": "string_info", "required": false },
+        { "fieldName": "summary", "label": "工作职责", "type": "text_info", "required": false }
+      ]
+    },
+    {
+      "groupKey": "educationInfo",
+      "label": "教育背景",
+      "repeatable": true,
+      "fields": [
+        { "fieldName": "startDate", "label": "开始时间", "type": "date_info", "required": false },
+        { "fieldName": "endDate", "label": "结束时间", "type": "date_info", "required": false },
+        { "fieldName": "school", "label": "学校名称", "type": "string_info", "required": false },
+        { "fieldName": "speciality", "label": "专业名称", "type": "string_info", "required": false },
+        { "fieldName": "academicDegree", "label": "学历", "type": "select", "required": false, "optionCatalogId": "academicDegree" }
+      ]
+    },
+    {
+      "groupKey": "practiceInfo",
+      "label": "实习经历",
+      "repeatable": true,
+      "fields": [
+        { "fieldName": "startDate", "label": "开始时间", "type": "date_info", "required": false },
+        { "fieldName": "endDate", "label": "结束时间", "type": "date_info", "required": false },
+        { "fieldName": "company", "label": "公司名称", "type": "string_info", "required": false },
+        { "fieldName": "title", "label": "职位名称", "type": "string_info", "required": false },
+        { "fieldName": "summary", "label": "工作职责", "type": "text_info", "required": false }
+      ]
+    },
+    {
+      "groupKey": "projectInfo",
+      "label": "项目经验",
+      "repeatable": true,
+      "fields": [
+        { "fieldName": "startDate", "label": "开始时间", "type": "date_info", "required": false },
+        { "fieldName": "endDate", "label": "结束时间", "type": "date_info", "required": false },
+        { "fieldName": "projectName", "label": "项目名称", "type": "string_info", "required": false },
+        { "fieldName": "title", "label": "职务", "type": "string_info", "required": false },
+        { "fieldName": "projectDescription", "label": "项目描述", "type": "text_info", "required": false },
+        { "fieldName": "responsibilities", "label": "项目中职责", "type": "text_info", "required": false }
+      ]
+    },
+    {
+      "groupKey": "languageInfo",
+      "label": "语言能力",
+      "repeatable": true,
+      "fields": [
+        { "fieldName": "language", "label": "语言类型", "type": "string_info", "required": false },
+        { "fieldName": "level", "label": "掌握程度", "type": "select", "required": false, "optionCatalogId": "languageProficiency" },
+        { "fieldName": "listenAndSpeak", "label": "听说", "type": "select", "required": false, "optionCatalogId": "languageProficiency" },
+        { "fieldName": "readAndWrite", "label": "读写", "type": "select", "required": false, "optionCatalogId": "languageProficiency" }
+      ]
+    },
+    {
+      "groupKey": "selfDescription",
+      "label": "自我描述",
+      "repeatable": false,
+      "fields": [
+        { "fieldName": "personal", "label": "自我描述", "type": "text_info", "required": false }
+      ]
+    },
+    {
+      "groupKey": "awardInfo",
+      "label": "获奖经历",
+      "repeatable": true,
+      "fields": [
+        { "fieldName": "awardDate", "label": "获奖时间", "type": "date_info", "required": false },
+        { "fieldName": "awardName", "label": "奖项名称", "type": "string_info", "required": false }
+      ]
+    }
+  ]
+}

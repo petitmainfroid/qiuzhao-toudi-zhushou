@@ -2,8 +2,18 @@ import { resolve } from "node:path";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [react()],
+  resolve: {
+    alias: {
+      "@developer-tools": resolve(
+        __dirname,
+        mode === "collector"
+          ? "src/devtools/ats-collector/entry.tsx"
+          : "src/devtools/entry.tsx"
+      )
+    }
+  },
   build: {
     outDir: "dist",
     emptyOutDir: true,
@@ -15,4 +25,4 @@ export default defineConfig({
       }
     }
   }
-});
+}));

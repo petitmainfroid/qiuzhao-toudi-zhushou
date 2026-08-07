@@ -1,0 +1,4029 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-08-07T09:57:27.998Z",
+  "source": {
+    "origin": "https://meta.jobs.feishu.cn",
+    "pathTemplate": "/:id/resume/:id/apply",
+    "language": "zh-CN",
+    "pageType": "application",
+    "captureToolVersion": "0.2.0"
+  },
+  "family": {
+    "id": "generic-html",
+    "version": "1",
+    "confidence": 0,
+    "evidence": []
+  },
+  "sections": [
+    "简历",
+    "基本信息",
+    "教育经历",
+    "实习经历"
+  ],
+  "controls": [
+    {
+      "controlKey": "control_0001",
+      "role": "link",
+      "tag": "a",
+      "semantics": {
+        "label": "首页"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0002",
+      "role": "link",
+      "tag": "a",
+      "semantics": {
+        "label": "职位"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0003",
+      "role": "link",
+      "tag": "a",
+      "semantics": {
+        "label": "关于我们"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0004",
+      "role": "button",
+      "tag": "button",
+      "semantics": {
+        "label": "查看应聘记录"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0005",
+      "role": "radio",
+      "tag": "input",
+      "inputType": "radio",
+      "semantics": {
+        "label": "无"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0006",
+      "role": "radio",
+      "tag": "input",
+      "inputType": "radio",
+      "semantics": {
+        "label": "无"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0007",
+      "role": "radio",
+      "tag": "input",
+      "inputType": "radio",
+      "semantics": {
+        "label": "无"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0008",
+      "role": "button",
+      "tag": "custom",
+      "semantics": {
+        "section": "简历"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0009",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "file",
+      "semantics": {
+        "section": "简历"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "file"
+    },
+    {
+      "controlKey": "control_0010",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {
+        "label": "姓名"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0011",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {
+        "label": "邮箱"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0012",
+      "role": "combobox",
+      "tag": "custom",
+      "semantics": {},
+      "options": [],
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0013",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {
+        "label": "国籍（地区）"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0014",
+      "role": "combobox",
+      "tag": "custom",
+      "semantics": {
+        "section": "教育经历"
+      },
+      "options": [],
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0015",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {
+        "label": "学校名称",
+        "section": "教育经历"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0016",
+      "role": "combobox",
+      "tag": "custom",
+      "semantics": {
+        "section": "教育经历"
+      },
+      "options": [],
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0017",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {
+        "label": "学历",
+        "section": "教育经历"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0018",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {
+        "label": "专业",
+        "section": "教育经历"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0019",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {
+        "section": "教育经历"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0020",
+      "role": "combobox",
+      "tag": "custom",
+      "semantics": {
+        "section": "教育经历"
+      },
+      "options": [],
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0021",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {
+        "label": "学校名称",
+        "section": "教育经历"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0022",
+      "role": "combobox",
+      "tag": "custom",
+      "semantics": {
+        "section": "教育经历"
+      },
+      "options": [],
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0023",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {
+        "label": "学历",
+        "section": "教育经历"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0024",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {
+        "label": "专业",
+        "section": "教育经历"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0025",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {
+        "section": "教育经历"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0026",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {
+        "label": "公司名称",
+        "section": "实习经历"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0027",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {
+        "label": "职位名称",
+        "section": "实习经历"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0028",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {
+        "label": "至今",
+        "section": "实习经历"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0029",
+      "role": "textbox",
+      "tag": "textarea",
+      "semantics": {
+        "label": "描述",
+        "section": "实习经历"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0030",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {
+        "label": "公司名称",
+        "section": "实习经历"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0031",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {
+        "label": "职位名称",
+        "section": "实习经历"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0032",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {
+        "section": "实习经历"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0033",
+      "role": "textbox",
+      "tag": "textarea",
+      "semantics": {
+        "label": "描述",
+        "section": "实习经历"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0034",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {},
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0035",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {},
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0036",
+      "role": "button",
+      "tag": "button",
+      "semantics": {
+        "label": "提交简历"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "final-submit"
+    },
+    {
+      "controlKey": "control_0037",
+      "role": "listbox",
+      "tag": "custom",
+      "semantics": {},
+      "options": [
+        "阿尔巴尼亚",
+        "阿尔及利亚",
+        "阿富汗",
+        "阿根廷",
+        "爱尔兰",
+        "埃及",
+        "埃塞俄比亚",
+        "爱沙尼亚",
+        "阿联酋",
+        "阿鲁巴",
+        "阿曼",
+        "安道尔",
+        "安哥拉",
+        "安圭拉",
+        "安提瓜和巴布达",
+        "澳大利亚",
+        "奥地利",
+        "奥兰群岛",
+        "阿塞拜疆",
+        "巴巴多斯",
+        "巴布亚新几内亚",
+        "巴哈马",
+        "白俄罗斯",
+        "百慕大",
+        "巴基斯坦",
+        "巴拉圭",
+        "巴勒斯坦",
+        "巴林",
+        "巴拿马",
+        "保加利亚",
+        "巴西",
+        "北马里亚纳",
+        "贝宁",
+        "比利时",
+        "冰岛",
+        "博茨瓦纳",
+        "波多黎各",
+        "波兰",
+        "玻利维亚",
+        "伯利兹",
+        "波斯尼亚",
+        "不丹",
+        "布基纳法索",
+        "布隆迪",
+        "布维岛",
+        "朝鲜",
+        "赤道几内亚",
+        "丹麦",
+        "德国",
+        "东帝汶"
+      ],
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0038",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "阿尔巴尼亚"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0039",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "阿尔及利亚"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0040",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "阿富汗"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0041",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "阿根廷"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0042",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "爱尔兰"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0043",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "埃及"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0044",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "埃塞俄比亚"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0045",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "爱沙尼亚"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0046",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "阿联酋"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0047",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "阿鲁巴"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0048",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "阿曼"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0049",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "安道尔"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0050",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "安哥拉"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0051",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "安圭拉"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0052",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "安提瓜和巴布达"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0053",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "澳大利亚"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0054",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "奥地利"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0055",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "奥兰群岛"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0056",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "阿塞拜疆"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0057",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "巴巴多斯"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0058",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "巴布亚新几内亚"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0059",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "巴哈马"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0060",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "白俄罗斯"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0061",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "百慕大"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0062",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "巴基斯坦"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0063",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "巴拉圭"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0064",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "巴勒斯坦"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0065",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "巴林"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0066",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "巴拿马"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0067",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "保加利亚"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0068",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "巴西"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0069",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "北马里亚纳"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0070",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "贝宁"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0071",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "比利时"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0072",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "冰岛"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0073",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "博茨瓦纳"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0074",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "波多黎各"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0075",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "波兰"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0076",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "玻利维亚"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0077",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "伯利兹"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0078",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "波斯尼亚"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0079",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "不丹"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0080",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "布基纳法索"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0081",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "布隆迪"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0082",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "布维岛"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0083",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "朝鲜"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0084",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "赤道几内亚"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0085",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "丹麦"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0086",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "德国"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0087",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "东帝汶"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0088",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "多哥"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0089",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "多米尼加共和国"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0090",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "多米尼克"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0091",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "厄瓜多尔"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0092",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "厄立特里亚"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0093",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "俄罗斯联邦"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0094",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "法国"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0095",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "法罗群岛"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0096",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "梵蒂冈"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0097",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "法属波利尼西亚"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0098",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "斐济"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0099",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "菲律宾"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0100",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "芬兰"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0101",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "佛得角"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0102",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "冈比亚"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0103",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "刚果（布）"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0104",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "刚果（金）"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0105",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "格陵兰"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0106",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "格林纳达"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0107",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "格鲁吉亚"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0108",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "哥伦比亚"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0109",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "根西"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0110",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "哥斯达黎加"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0111",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "瓜德罗普"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0112",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "关岛"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0113",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "古巴"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0114",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "圭亚那"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0115",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "海地"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0116",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "韩国"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0117",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "哈萨克斯坦"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0118",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "赫德岛和麦克唐纳岛"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0119",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "黑山"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0120",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "荷兰"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0121",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "荷兰加勒比区"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0122",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "洪都拉斯"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0123",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "加纳"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0124",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "加拿大"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0125",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "柬埔寨"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0126",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "加蓬"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0127",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "吉布提"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0128",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "捷克"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0129",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "吉尔吉斯斯坦"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0130",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "基里巴斯"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0131",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "津巴布韦"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0132",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "几内亚"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0133",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "几内亚比绍"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0134",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "开曼群岛"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0135",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "喀麦隆"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0136",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "卡塔尔"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0137",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "科科斯（基林）群岛"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0138",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "克罗地亚"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0139",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "科摩罗"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0140",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "肯尼亚"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0141",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "科索沃"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0142",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "科特迪瓦"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0143",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "科威特"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0144",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "库克群岛"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0145",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "库拉索"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0146",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "莱索托"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0147",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "老挝"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0148",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "拉脱维亚"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0149",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "黎巴嫩"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0150",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "利比里亚"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0151",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "利比亚"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0152",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "列支敦士登"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0153",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "立陶宛"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0154",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "罗马尼亚"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0155",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "卢森堡"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0156",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "卢旺达"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0157",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "马达加斯加"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0158",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "马恩岛"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0159",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "马尔代夫"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0160",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "马耳他"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0161",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "马尔维纳斯群岛"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0162",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "马来西亚"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0163",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "马拉维"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0164",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "马里"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0165",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "毛里求斯"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0166",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "毛利塔尼亚"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0167",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "马其顿"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0168",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "马绍尔群岛"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0169",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "马提尼克"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0170",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "美国"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0171",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "美属萨摩亚"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0172",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "美属太平洋各群岛"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0173",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "美属维尔京群岛"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0174",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "蒙古"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0175",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "孟加拉国"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0176",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "蒙特塞拉特"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0177",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "缅甸"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0178",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "密克罗尼西亚"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0179",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "秘鲁"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0180",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "摩尔多瓦"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0181",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "摩洛哥"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0182",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "摩纳哥"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0183",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "莫桑比克"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0184",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "墨西哥"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0185",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "纳米比亚"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0186",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "南非"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0187",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "南极洲"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0188",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "南乔治亚岛和南桑德韦奇岛"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0189",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "南苏丹"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0190",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "瑙鲁"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0191",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "尼加拉瓜"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0192",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "尼泊尔"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0193",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "尼日尔"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0194",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "尼日利亚"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0195",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "纽埃"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0196",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "诺福克岛"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0197",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "挪威"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0198",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "帕劳"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0199",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "皮特凯恩群岛"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0200",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "葡萄牙"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0201",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "日本"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0202",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "瑞典"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0203",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "瑞士"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0204",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "萨尔瓦多"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0205",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "塞尔维亚"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0206",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "塞拉利昂"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0207",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "塞内加尔"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0208",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "塞浦路斯"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0209",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "塞舌尔"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0210",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "萨摩亚"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0211",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "沙特阿拉伯"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0212",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "圣诞岛"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0213",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "圣多美和普林西比"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0214",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "圣赫勒拿、阿森松和特里斯坦 - 达库尼亚"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0215",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "圣基茨和尼维斯"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0216",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "圣卢西亚"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0217",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "圣马力诺"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0218",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "圣文森特和格林纳丁斯"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0219",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "斯里兰卡"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0220",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "斯洛伐克"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0221",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "斯洛文尼亚"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0222",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "斯瓦尔巴群岛"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0223",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "斯威士兰"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0224",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "苏丹"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0225",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "苏里南"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0226",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "所罗门群岛"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0227",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "索马里"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0228",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "泰国"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0229",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "塔吉克斯坦"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0230",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "汤加"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0231",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "坦桑尼亚"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0232",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "特克斯和凯科斯群岛"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0233",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "特立尼达和多巴哥"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0234",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "土耳其"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0235",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "土库曼斯坦"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0236",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "突尼斯"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0237",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "托克劳"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0238",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "图瓦卢"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0239",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "瓦利斯群岛和富图纳群岛"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0240",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "瓦努阿图"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0241",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "危地马拉"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0242",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "委内瑞拉"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0243",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "文莱"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0244",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "乌干达"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0245",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "乌克兰"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0246",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "乌拉圭"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0247",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "乌兹别克斯坦"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0248",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "西班牙"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0249",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "希腊"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0250",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "新加坡"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0251",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "新喀里多尼亚"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0252",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "新西兰"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0253",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "匈牙利"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0254",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "西撒哈拉"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0255",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "叙利亚"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0256",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "牙买加"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0257",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "亚美尼亚"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0258",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "也门"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0259",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "意大利"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0260",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "伊拉克"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0261",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "伊朗"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0262",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "印度"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0263",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "印度尼西亚"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0264",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "英国公民"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0265",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "英属维尔京群岛"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0266",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "英属印度洋领地"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0267",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "以色列"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0268",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "约旦"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0269",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "越南"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0270",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "赞比亚"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0271",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "泽西"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0272",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "乍得"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0273",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "直布罗陀"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0274",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "智利"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0275",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "中非"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0276",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "中国"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0277",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "中国澳门"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0278",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "中国台湾"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0279",
+      "role": "option",
+      "tag": "custom",
+      "semantics": {
+        "label": "中国香港"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    }
+  ],
+  "summary": {
+    "controlCount": 279,
+    "blockedControlCount": 2,
+    "frameControlCount": 0,
+    "openShadowControlCount": 0,
+    "sectionCount": 4
+  },
+  "privacy": {
+    "currentValuesIncluded": false,
+    "sessionReferencesIncluded": false,
+    "queryValuesIncluded": false,
+    "fileMetadataIncluded": false
+  }
+}

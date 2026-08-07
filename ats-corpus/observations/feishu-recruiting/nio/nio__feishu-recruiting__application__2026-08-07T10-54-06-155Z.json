@@ -1,0 +1,457 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-08-07T10:54:06.155Z",
+  "source": {
+    "origin": "https://nio.jobs.feishu.cn",
+    "pathTemplate": "/index/resume/:id/apply",
+    "language": "zh-CN",
+    "pageType": "application",
+    "captureToolVersion": "0.2.0"
+  },
+  "family": {
+    "id": "generic-html",
+    "version": "1",
+    "confidence": 0,
+    "evidence": []
+  },
+  "sections": [
+    "简历",
+    "基本信息",
+    "教育经历",
+    "项目经历",
+    "自我评价"
+  ],
+  "controls": [
+    {
+      "controlKey": "control_0001",
+      "role": "link",
+      "tag": "a",
+      "semantics": {
+        "label": "职位"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0002",
+      "role": "link",
+      "tag": "a",
+      "semantics": {
+        "label": "蔚来校招"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0003",
+      "role": "radio",
+      "tag": "input",
+      "inputType": "radio",
+      "semantics": {
+        "label": "推荐方式",
+        "name": "code_type"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0004",
+      "role": "radio",
+      "tag": "input",
+      "inputType": "radio",
+      "semantics": {
+        "label": "推荐方式",
+        "name": "code_type"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0005",
+      "role": "combobox",
+      "tag": "custom",
+      "semantics": {
+        "label": "意向城市",
+        "name": "[长标识]"
+      },
+      "options": [],
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0006",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {
+        "label": "意向城市",
+        "name": "[长标识]"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0007",
+      "role": "button",
+      "tag": "custom",
+      "semantics": {
+        "label": "简历附件",
+        "name": "attachment_resume",
+        "section": "简历"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0008",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "file",
+      "semantics": {
+        "label": "简历附件",
+        "name": "attachment_resume",
+        "section": "简历"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "file"
+    },
+    {
+      "controlKey": "control_0009",
+      "role": "button",
+      "tag": "button",
+      "semantics": {
+        "label": "简历附件",
+        "name": "attachment_resume",
+        "nearbyText": "将你的简历拖拽至此处",
+        "section": "简历"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0010",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {
+        "label": "姓名",
+        "name": "name"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0011",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {
+        "label": "邮箱",
+        "name": "email"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0012",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {
+        "label": "工作年限",
+        "name": "experience_years"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0013",
+      "role": "combobox",
+      "tag": "input",
+      "inputType": "search",
+      "semantics": {
+        "label": "所在地点",
+        "name": "current_city"
+      },
+      "options": [],
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0014",
+      "role": "combobox",
+      "tag": "input",
+      "inputType": "search",
+      "semantics": {
+        "label": "期望工作地点",
+        "name": "preferred_city_list"
+      },
+      "options": [],
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0015",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {
+        "label": "预计入职时间"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0016",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {
+        "label": "学校名称",
+        "name": "school"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0017",
+      "role": "combobox",
+      "tag": "input",
+      "inputType": "search",
+      "semantics": {
+        "label": "学历",
+        "name": "degree"
+      },
+      "options": [],
+      "disabled": false,
+      "readOnly": true,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0018",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {
+        "label": "专业",
+        "name": "field_of_study"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0019",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {
+        "label": "起止时间",
+        "name": "start_end_time"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0020",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {
+        "label": "起止时间",
+        "name": "start_end_time"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0021",
+      "role": "button",
+      "tag": "button",
+      "semantics": {
+        "label": "添加"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0022",
+      "role": "checkbox",
+      "tag": "input",
+      "inputType": "checkbox",
+      "semantics": {
+        "label": "没有工作经历"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0023",
+      "role": "button",
+      "tag": "button",
+      "semantics": {
+        "label": "添加"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0024",
+      "role": "button",
+      "tag": "button",
+      "semantics": {
+        "label": "添加"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0025",
+      "role": "button",
+      "tag": "button",
+      "semantics": {
+        "label": "添加"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0026",
+      "role": "checkbox",
+      "tag": "input",
+      "inputType": "checkbox",
+      "semantics": {},
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0027",
+      "role": "button",
+      "tag": "button",
+      "semantics": {
+        "label": "提交简历"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "final-submit"
+    }
+  ],
+  "summary": {
+    "controlCount": 27,
+    "blockedControlCount": 2,
+    "frameControlCount": 0,
+    "openShadowControlCount": 0,
+    "sectionCount": 5
+  },
+  "privacy": {
+    "currentValuesIncluded": false,
+    "sessionReferencesIncluded": false,
+    "queryValuesIncluded": false,
+    "fileMetadataIncluded": false
+  }
+}

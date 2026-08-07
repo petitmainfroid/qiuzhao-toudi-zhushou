@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { createEmptyProfile } from "../domain/profile";
+import { createEmptyProfile, PROFILE_SCHEMA_VERSION } from "../domain/profile";
 import {
   PROFILE_STORAGE_KEY,
   ProfileRepository,
@@ -33,7 +33,7 @@ describe("ProfileRepository", () => {
 
   it("loads a blank profile when storage is empty", async () => {
     await expect(repository.load()).resolves.toMatchObject({
-      schemaVersion: 2,
+      schemaVersion: PROFILE_SCHEMA_VERSION,
       basic: { fullName: "" }
     });
   });
@@ -59,7 +59,7 @@ describe("ProfileRepository", () => {
     });
 
     await expect(repository.load()).resolves.toMatchObject({
-      schemaVersion: 2,
+      schemaVersion: PROFILE_SCHEMA_VERSION,
       basic: { fullName: "旧档案" },
       education: [{ school: "旧院校" }]
     });

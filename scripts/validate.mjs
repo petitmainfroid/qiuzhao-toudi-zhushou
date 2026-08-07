@@ -7,6 +7,7 @@ if (!process.env.npm_execpath) {
 const checks = [
   ["run", "typecheck"],
   ["test", "--", "--run"],
+  ["run", "verify:corpus"],
   ["run", "build"],
   ["run", "verify:dist"]
 ];

@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Archive,
   Award,
+  BadgeCheck,
+  BookOpen,
   BriefcaseBusiness,
   Check,
   CircleAlert,
@@ -16,9 +18,11 @@ import {
   Plus,
   Save,
   ShieldCheck,
+  ShieldAlert,
   Trash2,
   Upload,
-  UserRound
+  UserRound,
+  UsersRound
 } from "lucide-react";
 import {
   calculateProfileCompletion,
@@ -49,6 +53,7 @@ import {
   type SavedResumeMetadata,
   type SavedResumeRepositoryLike
 } from "../storage/savedResumeRepository";
+import { SupplementalProfileSections } from "./SupplementalProfileSections";
 import "../styles/theme.css";
 import "./options.css";
 
@@ -62,6 +67,10 @@ const LANGUAGE_OPTIONS = [
   "普通话", "粤语", "印尼语", "马来语", "泰语", "塞尔维亚语"
 ];
 const PROFICIENCY_OPTIONS = ["入门", "日常会话", "商务会话", "熟练", "流利", "无障碍沟通", "母语"];
+const MARITAL_STATUS_OPTIONS = ["未婚", "已婚", "离异", "丧偶", "其他"];
+const IDENTITY_DOCUMENT_OPTIONS = ["居民身份证", "护照", "港澳居民来往内地通行证", "台湾居民来往大陆通行证", "外国人永久居留身份证", "其他证件"];
+const YES_NO_OPTIONS = ["是", "否"];
+const WORK_YEARS_OPTIONS = ["应届生", "1年以下", "1-3年", "3-5年", "5-10年", "10年以上"];
 
 interface ResumeImportFeedback {
   status: "idle" | "parsing" | "success" | "error";
@@ -97,7 +106,7 @@ interface FieldProps {
   value: string;
   onChange: (value: string) => void;
   error?: string;
-  type?: "text" | "email" | "tel" | "date" | "month" | "url";
+  type?: "text" | "email" | "tel" | "date" | "month" | "url" | "password";
   placeholder?: string;
   autoComplete?: string;
 }
@@ -133,18 +142,20 @@ interface SelectFieldProps {
   value: string;
   options: string[];
   onChange: (value: string) => void;
+  error?: string;
 }
 
-function SelectField({ label, value, options, onChange }: SelectFieldProps) {
+function SelectField({ label, value, options, onChange, error }: SelectFieldProps) {
   const preservedValue = value && !options.includes(value) ? value : null;
   return (
     <label className="field">
       <span>{label}</span>
-      <select aria-label={label} value={value} onChange={(event) => onChange(event.target.value)}>
+      <select aria-label={label} aria-invalid={Boolean(error)} value={value} onChange={(event) => onChange(event.target.value)}>
         <option value="">请选择</option>
         {preservedValue ? <option value={preservedValue}>{preservedValue}（已导入）</option> : null}
         {options.map((option) => <option key={option} value={option}>{option}</option>)}
       </select>
+      {error ? <small className="field-error">{error}</small> : null}
     </label>
   );
 }
@@ -463,7 +474,11 @@ export function ProfileEditor({
     ["awards", "获奖", <Award size={17} />],
     ["languages", "语言能力", <Languages size={17} />],
     ["preference", "求职偏好", <MapPinned size={17} />],
-    ["answers", "常用回答", <MessageSquareText size={17} />]
+    ["answers", "常用回答", <MessageSquareText size={17} />],
+    ["campus", "校园经历", <UsersRound size={17} />],
+    ["certificates", "证书信息", <BadgeCheck size={17} />],
+    ["research", "论文与专利", <BookOpen size={17} />],
+    ["family", "家庭与联系人", <ShieldAlert size={17} />]
   ] as const;
 
   function updateEducation(index: number, key: keyof EducationRecord, value: string) {
@@ -610,6 +625,7 @@ export function ProfileEditor({
         <div className="form-sections">
           <section className="form-card" id="basic">
             <SectionHeader index="01" icon={<UserRound size={21} />} title="基本信息" description="用于招聘系统中最常见的身份和联系方式字段。" />
+            <div className="sensitive-notice" role="note">证件资料会保存在这台设备的扩展本地存储中，目前尚未加密；招聘网页填写前仍需逐项确认。不要在这里保存网站密码、验证码或 CAPTCHA。</div>
             <div className="field-grid">
               <Field label="姓名" value={profile.basic.fullName} autoComplete="name" onChange={(value) => update((draft) => { draft.basic.fullName = value; })} />
               <Field label="常用英文名" value={profile.basic.preferredName} onChange={(value) => update((draft) => { draft.basic.preferredName = value; })} />
@@ -621,6 +637,18 @@ export function ProfileEditor({
               <Field label="当前城市" value={profile.basic.currentCity} autoComplete="address-level2" onChange={(value) => update((draft) => { draft.basic.currentCity = value; })} />
               <Field label="籍贯" value={profile.basic.hometown} onChange={(value) => update((draft) => { draft.basic.hometown = value; })} />
               <Field label="政治面貌" value={profile.basic.politicalStatus} onChange={(value) => update((draft) => { draft.basic.politicalStatus = value; })} />
+              <SelectField label="证件类型" value={profile.basic.identityDocumentType ?? ""} options={IDENTITY_DOCUMENT_OPTIONS} error={validation.errors["basic.identityDocumentType"]} onChange={(value) => update((draft) => { draft.basic.identityDocumentType = value; })} />
+              <Field label="证件号码" type="password" autoComplete="off" value={profile.basic.identityDocumentNumber ?? ""} error={validation.errors["basic.identityDocumentNumber"]} onChange={(value) => update((draft) => { draft.basic.identityDocumentNumber = value; })} />
+              <Field label="民族" value={profile.basic.ethnicity ?? ""} onChange={(value) => update((draft) => { draft.basic.ethnicity = value; })} />
+              <SelectField label="婚姻状况" value={profile.basic.maritalStatus ?? ""} options={MARITAL_STATUS_OPTIONS} onChange={(value) => update((draft) => { draft.basic.maritalStatus = value; })} />
+              <Field label="宗教信仰" value={profile.basic.religion ?? ""} onChange={(value) => update((draft) => { draft.basic.religion = value; })} />
+              <Field label="身高（cm）" value={profile.basic.heightCm ?? ""} onChange={(value) => update((draft) => { draft.basic.heightCm = value; })} />
+              <Field label="体重（kg）" value={profile.basic.weightKg ?? ""} onChange={(value) => update((draft) => { draft.basic.weightKg = value; })} />
+              <Field label="家庭所在城市" value={profile.basic.homeCity ?? ""} onChange={(value) => update((draft) => { draft.basic.homeCity = value; })} />
+              <Field label="家庭所在区县" value={profile.basic.homeDistrict ?? ""} onChange={(value) => update((draft) => { draft.basic.homeDistrict = value; })} />
+              <Field label="学校所在城市" value={profile.basic.schoolCity ?? ""} onChange={(value) => update((draft) => { draft.basic.schoolCity = value; })} />
+              <Field label="学校所在区县" value={profile.basic.schoolDistrict ?? ""} onChange={(value) => update((draft) => { draft.basic.schoolDistrict = value; })} />
+              <Field label="兴趣爱好" value={profile.basic.hobbies ?? ""} onChange={(value) => update((draft) => { draft.basic.hobbies = value; })} />
             </div>
           </section>
 
@@ -641,10 +669,14 @@ export function ProfileEditor({
                   <SelectField label="学历" value={record.degree} options={DEGREE_OPTIONS} onChange={(value) => updateEducation(index, "degree", value)} />
                   <SelectField label="学历类型" value={record.educationType} options={EDUCATION_TYPE_OPTIONS} onChange={(value) => updateEducation(index, "educationType", value)} />
                   <Field label="专业" value={record.major} onChange={(value) => updateEducation(index, "major", value)} />
+                  <Field label="学院名称" value={record.college ?? ""} onChange={(value) => updateEducation(index, "college", value)} />
+                  <Field label="专业分类" value={record.majorCategory ?? ""} onChange={(value) => updateEducation(index, "majorCategory", value)} />
                   <Field label="入学时间" type="month" value={record.startDate} onChange={(value) => updateEducation(index, "startDate", value)} />
                   <Field label="毕业时间" type="month" value={record.endDate} error={validation.errors[`education.${index}.endDate`]} onChange={(value) => updateEducation(index, "endDate", value)} />
                   <Field label="GPA" value={record.gpa} onChange={(value) => updateEducation(index, "gpa", value)} />
                   <Field label="专业排名" value={record.ranking} placeholder="例如：前 10%" onChange={(value) => updateEducation(index, "ranking", value)} />
+                  <TextAreaField label="专业主要课程" value={record.mainCourses ?? ""} rows={3} onChange={(value) => updateEducation(index, "mainCourses", value)} />
+                  <TextAreaField label="专业描述" value={record.description ?? ""} rows={3} onChange={(value) => updateEducation(index, "description", value)} />
                 </div>
               </article>
             ))}
@@ -665,10 +697,13 @@ export function ProfileEditor({
                 <div className="field-grid">
                   <Field label="公司名称" value={record.company} onChange={(value) => updateWork(index, "company", value)} />
                   <Field label="部门" value={record.department} onChange={(value) => updateWork(index, "department", value)} />
+                  <Field label="行业类别" value={record.industry ?? ""} onChange={(value) => updateWork(index, "industry", value)} />
+                  <Field label="工作地点" value={record.location ?? ""} onChange={(value) => updateWork(index, "location", value)} />
                   <Field label="岗位名称" value={record.role} onChange={(value) => updateWork(index, "role", value)} />
                   <Field label="开始时间" type="month" value={record.startDate} onChange={(value) => updateWork(index, "startDate", value)} />
                   <Field label="结束时间" type="month" value={record.endDate} error={validation.errors[`workExperiences.${index}.endDate`]} onChange={(value) => updateWork(index, "endDate", value)} />
                   <TextAreaField label="工作描述" value={record.description} onChange={(value) => updateWork(index, "description", value)} />
+                  <TextAreaField label="实习成果" value={record.achievement ?? ""} rows={3} onChange={(value) => updateWork(index, "achievement", value)} />
                 </div>
               </article>
             ))}
@@ -690,6 +725,7 @@ export function ProfileEditor({
                   <Field label="开始时间" type="month" value={record.startDate} onChange={(value) => updateProject(index, "startDate", value)} />
                   <Field label="结束时间" type="month" value={record.endDate} error={validation.errors[`projects.${index}.endDate`]} onChange={(value) => updateProject(index, "endDate", value)} />
                   <TextAreaField label="项目描述" value={record.description} onChange={(value) => updateProject(index, "description", value)} />
+                  <TextAreaField label="项目中职责" value={record.responsibilities ?? ""} rows={3} onChange={(value) => updateProject(index, "responsibilities", value)} />
                   <TextAreaField label="项目成果" value={record.outcome} rows={3} onChange={(value) => updateProject(index, "outcome", value)} />
                   <Field label="项目链接" type="url" value={record.link} placeholder="https://" onChange={(value) => updateProject(index, "link", value)} />
                 </div>
@@ -727,7 +763,10 @@ export function ProfileEditor({
                 </div>
                 <div className="field-grid">
                   <Field label="获奖名称" value={record.name} onChange={(value) => updateAward(index, "name", value)} />
+                  <Field label="奖项类别" value={record.category ?? ""} onChange={(value) => updateAward(index, "category", value)} />
                   <Field label="获奖时间" type="month" value={record.date} onChange={(value) => updateAward(index, "date", value)} />
+                  <Field label="奖项级别" value={record.level ?? ""} placeholder="例如：国际级、国家级、省级" onChange={(value) => updateAward(index, "level", value)} />
+                  <Field label="奖项等级" value={record.grade ?? ""} placeholder="例如：一等奖、银奖" onChange={(value) => updateAward(index, "grade", value)} />
                   <TextAreaField label="获奖描述" value={record.description} onChange={(value) => updateAward(index, "description", value)} />
                 </div>
               </article>
@@ -747,6 +786,10 @@ export function ProfileEditor({
                 <div className="field-grid">
                   <SelectField label="语言" value={record.language} options={LANGUAGE_OPTIONS} onChange={(value) => updateLanguage(index, "language", value)} />
                   <SelectField label="熟练程度" value={record.proficiency} options={PROFICIENCY_OPTIONS} onChange={(value) => updateLanguage(index, "proficiency", value)} />
+                  <Field label="语言考试/证书" value={record.qualification ?? ""} placeholder="例如：CET-6、IELTS" onChange={(value) => updateLanguage(index, "qualification", value)} />
+                  <Field label="听说能力" value={record.listeningSpeaking ?? ""} onChange={(value) => updateLanguage(index, "listeningSpeaking", value)} />
+                  <Field label="读写能力" value={record.readingWriting ?? ""} onChange={(value) => updateLanguage(index, "readingWriting", value)} />
+                  <Field label="成绩" value={record.score ?? ""} onChange={(value) => updateLanguage(index, "score", value)} />
                 </div>
               </article>
             ))}
@@ -757,8 +800,15 @@ export function ProfileEditor({
             <SectionHeader index="08" icon={<MapPinned size={21} />} title="求职偏好" description="多个岗位或城市请用顿号分隔，方便不同网站复用。" />
             <div className="field-grid">
               <Field label="目标岗位" value={profile.jobPreference.targetRoles} placeholder="例如：产品经理、产品运营" onChange={(value) => update((draft) => { draft.jobPreference.targetRoles = value; })} />
+              <Field label="期望行业" value={profile.jobPreference.targetIndustries ?? ""} placeholder="例如：互联网、企业服务" onChange={(value) => update((draft) => { draft.jobPreference.targetIndustries = value; })} />
               <Field label="意向城市" value={profile.jobPreference.preferredCities} placeholder="例如：上海、杭州" onChange={(value) => update((draft) => { draft.jobPreference.preferredCities = value; })} />
+              <Field label="期望薪资" value={profile.jobPreference.expectedSalary ?? ""} onChange={(value) => update((draft) => { draft.jobPreference.expectedSalary = value; })} />
+              <Field label="当前薪资" value={profile.jobPreference.currentSalary ?? ""} onChange={(value) => update((draft) => { draft.jobPreference.currentSalary = value; })} />
               <Field label="可到岗日期" type="date" value={profile.jobPreference.availableDate} onChange={(value) => update((draft) => { draft.jobPreference.availableDate = value; })} />
+              <SelectField label="是否接受岗位调剂" value={profile.jobPreference.acceptsAdjustment ?? ""} options={YES_NO_OPTIONS} onChange={(value) => update((draft) => { draft.jobPreference.acceptsAdjustment = value; })} />
+              <SelectField label="是否内推" value={profile.jobPreference.internalReferral ?? ""} options={YES_NO_OPTIONS} onChange={(value) => update((draft) => { draft.jobPreference.internalReferral = value; })} />
+              <Field label="招聘信息来源" value={profile.jobPreference.recruitmentSource ?? ""} placeholder="例如：官方网站、校园招聘、员工推荐" onChange={(value) => update((draft) => { draft.jobPreference.recruitmentSource = value; })} />
+              <SelectField label="工作经验" value={profile.jobPreference.workYears ?? ""} options={WORK_YEARS_OPTIONS} onChange={(value) => update((draft) => { draft.jobPreference.workYears = value; })} />
             </div>
           </section>
 
@@ -772,16 +822,18 @@ export function ProfileEditor({
             </div>
           </section>
 
+          <SupplementalProfileSections profile={profile} validation={validation} update={update} />
+
           <section className="attachment-note" aria-labelledby="attachment-title">
             <FileText size={22} aria-hidden="true" />
             <div>
               <h2 id="attachment-title">常用 PDF 可复用，目标网站仍需确认</h2>
-              <p>上方选择的 PDF 原件会保存在扩展的本地数据库中，不保存文件路径，也不会上传到云端。招聘网页发现唯一简历控件后可直接复用，但每个网站仍要由你确认一次；获奖证明、个人证件、验证码和最终提交不自动处理。</p>
+              <p>上方选择的 PDF 原件会保存在扩展的本地数据库中，不保存文件路径，也不会上传到云端。招聘网页发现唯一简历控件后可直接复用，但每个网站仍要由你确认一次；证件号码可确认后填写，但证件附件、验证码和最终提交不自动处理。</p>
             </div>
           </section>
 
           <section className="privacy-controls" aria-labelledby="privacy-controls-title">
-            <SectionHeader index="10" icon={<ShieldCheck size={21} />} title="本地数据管理" description="导出备份、恢复档案，或删除这台设备上的全部个人数据。" />
+            <SectionHeader index="14" icon={<ShieldCheck size={21} />} title="本地数据管理" description="导出备份、恢复档案，或删除这台设备上的全部个人数据。" />
             <div className="privacy-stats">
               <div><strong>1</strong><span>份求职档案</span></div>
               <div><strong>{mappings.length}</strong><span>条网站字段对应关系</span></div>
@@ -795,6 +847,7 @@ export function ProfileEditor({
               </label>
               <button className="delete-data-button action-with-icon" type="button" onClick={() => setConfirmDelete(true)}><Trash2 size={17} />删除全部本地数据</button>
             </div>
+            <p className="privacy-export-warning">导出的 JSON 备份会包含证件号码等档案原文，请只保存在你信任的设备中。</p>
             {confirmDelete ? (
               <div className="delete-confirmation" role="alert">
                 <div><strong>确认永久删除？</strong><p>求职档案、所有网站字段对应关系和保存的 PDF 简历都会从这台设备移除。此操作无法撤销。</p></div>

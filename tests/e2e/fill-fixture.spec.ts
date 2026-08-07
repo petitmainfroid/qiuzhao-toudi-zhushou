@@ -3,8 +3,9 @@ import { expect, test } from "@playwright/test";
 test("fill fixture changes selected fields and leaves excluded controls untouched", async ({ page }) => {
   await page.goto("/fixture.html");
   const result = await page.evaluate(async () => {
+    document.getElementById("resume")?.insertAdjacentHTML("beforebegin", '<label for="identity-number">身份证号码</label><input id="identity-number" />');
     const profile = {
-      schemaVersion: 2 as const,
+      schemaVersion: 4 as const,
       updatedAt: "",
       basic: {
         fullName: "端到端验证",
@@ -16,7 +17,9 @@ test("fill fixture changes selected fields and leaves excluded controls untouche
         nationality: "",
         currentCity: "",
         hometown: "",
-        politicalStatus: ""
+        politicalStatus: "",
+        identityDocumentType: "居民身份证",
+        identityDocumentNumber: "TEST-ID-000042"
       },
       education: [{
         id: "education-e2e",
@@ -47,11 +50,14 @@ test("fill fixture changes selected fields and leaves excluded controls untouche
       answers: { selfIntroduction: "", selfEvaluation: "", strengths: "", careerPlan: "" }
     };
     const scan = window.__qiuzhaoFixture.scan(profile);
+    const identity = scan.fields.find((field) => field.profilePath === "basic.identityDocumentNumber")!;
     const selections = scan.fields
-      .filter((field) => field.profilePath && field.hasValue && !field.excludedReason)
+      .filter((field) => field.profilePath && field.hasValue && !field.excludedReason && field.profilePath !== "basic.identityDocumentNumber")
       .map((field) => ({ elementId: field.elementId, profilePath: field.profilePath! }));
     const fill = await window.__qiuzhaoFixture.fill(profile, selections);
-    return { scan, fill };
+    const identityBlankBeforeConfirmation = (document.getElementById("identity-number") as HTMLInputElement).value === "";
+    const identityFill = await window.__qiuzhaoFixture.fill(profile, [{ elementId: identity.elementId, profilePath: identity.profilePath! }]);
+    return { scan, fill, identity, identityBlankBeforeConfirmation, identityFill };
   });
 
   expect(result.fill.filledCount).toBeGreaterThanOrEqual(5);
@@ -62,6 +68,10 @@ test("fill fixture changes selected fields and leaves excluded controls untouche
   await expect(page.locator("#project-description")).toHaveText("验证内容脚本会触发页面事件。");
   await expect(page.locator("#captcha")).toHaveValue("");
   await expect(page.locator("#password")).toHaveValue("");
+  expect(result.identity).toMatchObject({ requiresConfirmation: true, valuePreview: "••••••0042" });
+  expect(result.identityBlankBeforeConfirmation).toBe(true);
+  expect(result.identityFill).toMatchObject({ filledCount: 1, skippedCount: 0 });
+  await expect(page.locator("#identity-number")).toHaveValue("TEST-ID-000042");
   await expect(page.locator("#resume")).toHaveValue("");
   expect(await page.evaluate(() => window.__qiuzhaoFixture.eventCount)).toBeGreaterThanOrEqual(5);
   expect(await page.evaluate(() => window.__qiuzhaoFixture.submitCount)).toBe(0);
@@ -74,7 +84,7 @@ test("page comparison keeps raw page values private and blocks stale conflicts",
 
   const result = await page.evaluate(async () => {
     const profile = {
-      schemaVersion: 2 as const,
+      schemaVersion: 4 as const,
       updatedAt: "",
       basic: {
         fullName: "档案中的姓名",
@@ -152,7 +162,7 @@ test("page comparison keeps raw page values private and blocks stale conflicts",
 test("fill fixture discovers dynamic fields without promoting ambiguity", async ({ page }) => {
   await page.goto("/fixture.html");
   const initialCount = await page.evaluate(() => window.__qiuzhaoFixture.scan({
-    schemaVersion: 2,
+    schemaVersion: 4,
     updatedAt: "",
     basic: { fullName: "动态验证", preferredName: "", gender: "", birthDate: "", phone: "", email: "", nationality: "", currentCity: "", hometown: "", politicalStatus: "" },
     education: [],
@@ -167,7 +177,7 @@ test("fill fixture discovers dynamic fields without promoting ambiguity", async 
 
   await page.getByRole("button", { name: "添加补充字段" }).click();
   const dynamic = await page.evaluate(() => window.__qiuzhaoFixture.scan({
-    schemaVersion: 2,
+    schemaVersion: 4,
     updatedAt: "",
     basic: { fullName: "动态验证", preferredName: "", gender: "", birthDate: "", phone: "", email: "", nationality: "", currentCity: "", hometown: "", politicalStatus: "" },
     education: [],
@@ -182,7 +192,7 @@ test("fill fixture discovers dynamic fields without promoting ambiguity", async 
 
   expect(dynamic.summary.total).toBe(initialCount + 2);
   const contact = dynamic.fields.find((field) => field.fieldLabel === "紧急联系人姓名");
-  expect(contact?.confidence).not.toBe("high");
+  expect(contact?.confidence).toBe("high");
   expect(contact?.requiresConfirmation).toBe(true);
   const location = dynamic.fields.find((field) => field.fieldLabel === "所在地");
   expect(location?.confidence).not.toBe("high");

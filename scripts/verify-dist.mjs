@@ -1,7 +1,22 @@
-import { access, readFile } from "node:fs/promises";
+import { access, readFile, readdir } from "node:fs/promises";
 import { resolve } from "node:path";
 
 const projectRoot = resolve(import.meta.dirname, "..");
+const collectorMarkers = [
+  "QIUZHAO_ATS_COLLECTOR_DEV_ONLY_V1",
+  "ATS 匿名结构采集器",
+  "下载匿名 JSON"
+];
+
+async function textFiles(directory) {
+  const files = [];
+  for (const entry of await readdir(directory, { withFileTypes: true })) {
+    const target = resolve(directory, entry.name);
+    if (entry.isDirectory()) files.push(...await textFiles(target));
+    else if (/\.(?:html|js|json)$/i.test(entry.name)) files.push(target);
+  }
+  return files;
+}
 const requiredFiles = [
   "manifest.json",
   "options.html",
@@ -55,6 +70,14 @@ if (manifest.background?.service_worker !== "background.js") {
   throw new Error("Manifest background service worker is not wired to background.js.");
 }
 
+const productionText = (await Promise.all(
+  (await textFiles(resolve(projectRoot, "dist"))).map((file) => readFile(file, "utf8"))
+)).join("\n");
+for (const marker of collectorMarkers) {
+  if (productionText.includes(marker)) throw new Error(`Development-only ATS collector leaked into dist: ${marker}`);
+}
+
 console.log(`Verified ${requiredFiles.length} required distribution files.`);
 console.log(`Verified exact browser-kernel permissions: ${actualPermissions.join(", ")}.`);
 console.log("Verified host permission <all_urls> and forbidden permission absence.");
+console.log("Verified development-only ATS collector absence from production dist.");

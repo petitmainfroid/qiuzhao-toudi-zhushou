@@ -4,6 +4,7 @@
 - 岗位：算法实习生（A96028）
 - 审计日期：2026-08-03
 - 来源：目标页公开 HTML 中的 `js-websiteInfo.website_info.resume_form_schema`；字段快照位于 `tests/fixtures/xiaomi-internship-schema.json`。
+- 规范化 Ground Truth：`ats-corpus/ground-truth/feishu-recruiting/xiaomi/xiaomi__internship-application__v1.json`。
 - 登录边界：未登录访问会跳转到 `/internship/login`。登录页仅展示手机号、验证码、隐私同意和登录控件；扩展不得填写验证码、勾选隐私同意或触发登录。
 
 ## 真实字段范围
@@ -27,7 +28,7 @@
 
 1. 新增国籍、学历类型、项目链接、作品、获奖、语言能力和自我评价字段。
 2. 年龄不重复存储，由出生日期实时计算，避免每年产生过期值。
-3. 个人证件、验证码和证明附件继续排除；简历 PDF 只通过唯一目标、摘要与 Origin 绑定的一次性确认流程处理；最终投递按钮没有任何自动化入口。
+3. 个人证件号码进入确认必需路径，验证码和证明附件继续排除；简历 PDF 只通过唯一目标、摘要与 Origin 绑定的一次性确认流程处理；最终投递按钮没有任何自动化入口。
 4. 识别飞书 ATS 的 `data-form-field-name`、`data-form-field-i18n-name` 和 `.atsx-form-item` 结构，并从字段名推断多条经历的数组序号。
 5. 登录后的真实扫描只在用户完成短信登录并明确授权后执行；真实页测试保持只读，填写行为在结构一致的本地回归页验证，任何环境都不点击提交。
 

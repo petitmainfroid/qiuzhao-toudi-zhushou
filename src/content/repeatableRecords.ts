@@ -1,15 +1,15 @@
+import { defaultAtsMatchingRuntime } from "../ats/defaultRuntime";
+import type { AtsMatchingRuntime } from "../ats/matchingRuntime";
+import type { AtsFamilyTemplate, AtsTemplateRepeatableRule } from "../ats/templateContracts";
 import type { CandidateProfile } from "../domain/profile";
+import {
+  repeatableGroupKeys,
+  type RepeatableGroupKey
+} from "../domain/repeatableGroups";
+import { discoverFields } from "../matching/dom";
 
-export const repeatableGroupKeys = [
-  "education",
-  "workExperiences",
-  "workSamples",
-  "projects",
-  "awards",
-  "languages"
-] as const;
-
-export type RepeatableGroupKey = typeof repeatableGroupKeys[number];
+export { repeatableGroupKeys } from "../domain/repeatableGroups";
+export type { RepeatableGroupKey } from "../domain/repeatableGroups";
 
 export type RepeatableCreateReason =
   | "no-supported-adapter"
@@ -36,7 +36,7 @@ export interface RepeatableGroupScan {
 }
 
 export interface RepeatableRecordsScan {
-  adapterId: "xiaomi-recruitment" | null;
+  adapterId: string | null;
   groups: RepeatableGroupScan[];
 }
 
@@ -51,11 +51,21 @@ export interface RepeatableCreateResult {
   reason?: RepeatableCreateReason;
 }
 
+export interface RepeatableRuntimeOptions {
+  template?: AtsFamilyTemplate;
+  atsRuntime?: AtsMatchingRuntime;
+}
+
+export interface RepeatableCreateOptions extends RepeatableRuntimeOptions {
+  maxCreate?: number;
+  mutationTimeoutMs?: number;
+}
+
 interface GroupDefinition {
+  familyId: string;
   key: RepeatableGroupKey;
   label: string;
-  pathAliases: string[];
-  sectionClasses: string[];
+  rule: AtsTemplateRepeatableRule;
 }
 
 interface InternalGroupScan extends RepeatableGroupScan {
@@ -63,60 +73,39 @@ interface InternalGroupScan extends RepeatableGroupScan {
   addFingerprint: string | null;
 }
 
-const MAX_CREATE_PER_ACTION = 10;
 const DEFAULT_MUTATION_TIMEOUT_MS = 1_500;
+const fallbackLabels: Record<RepeatableGroupKey, string> = {
+  education: "教育经历",
+  workExperiences: "实习经历",
+  workSamples: "作品",
+  projects: "项目经历",
+  awards: "获奖经历",
+  languages: "语言能力"
+};
 
-const groupDefinitions: GroupDefinition[] = [
-  {
-    key: "education",
-    label: "教育经历",
-    pathAliases: ["education_list", "education"],
-    sectionClasses: ["resumeEditForm-education"]
-  },
-  {
-    key: "workExperiences",
-    label: "实习经历",
-    pathAliases: ["internship_list", "internship"],
-    sectionClasses: ["resumeEditForm-internship"]
-  },
-  {
-    key: "workSamples",
-    label: "作品",
-    pathAliases: ["works_list", "works", "work"],
-    sectionClasses: ["resumeEditForm-work", "resumeEditForm-works"]
-  },
-  {
-    key: "projects",
-    label: "项目经历",
-    pathAliases: ["project_list", "project"],
-    sectionClasses: ["resumeEditForm-project"]
-  },
-  {
-    key: "awards",
-    label: "获奖经历",
-    pathAliases: ["award_list", "award"],
-    sectionClasses: ["resumeEditForm-award"]
-  },
-  {
-    key: "languages",
-    label: "语言能力",
-    pathAliases: ["language_list", "language"],
-    sectionClasses: ["resumeEditForm-language"]
-  }
-];
-
-function currentPage(): { origin: string; pathname: string; href: string } {
-  if (typeof location === "undefined") return { origin: "local", pathname: "", href: "local" };
-  return { origin: location.origin, pathname: location.pathname, href: location.href };
+function currentPage(): { href: string } {
+  return { href: typeof location === "undefined" ? "local" : location.href };
 }
 
-function supportedAdapter(): boolean {
-  const page = currentPage();
-  const realXiaomi = page.origin === "https://xiaomi.jobs.f.mioffice.cn"
-    && /^\/internship\/resume\/\d+\/apply\/?$/.test(page.pathname);
-  const localFixture = /^(?:http:\/\/)?(?:127\.0\.0\.1|localhost)(?::\d+)?$/.test(page.origin)
-    && document.documentElement.dataset.qiuzhaoRepeatableFixture === "xiaomi";
-  return realXiaomi || localFixture;
+function resolveTemplate(options: RepeatableRuntimeOptions): AtsFamilyTemplate {
+  if (options.template) return options.template;
+  return (options.atsRuntime ?? defaultAtsMatchingRuntime).resolve(discoverFields()).template;
+}
+
+function groupDefinitions(template: AtsFamilyTemplate): GroupDefinition[] {
+  return template.repeatableRules.map((rule) => {
+    const section = template.sections.find((candidate) => candidate.id === rule.sectionId);
+    return {
+      familyId: template.familyId,
+      key: rule.group,
+      label: section?.labels[0] ?? fallbackLabels[rule.group],
+      rule
+    };
+  });
+}
+
+export function supportsRepeatableRecordAdapter(options: RepeatableRuntimeOptions = {}): boolean {
+  return groupDefinitions(resolveTemplate(options)).length > 0;
 }
 
 function meaningfulRecord(record: object): boolean {
@@ -147,7 +136,7 @@ function structuralPaths(): string[] {
   return [...paths];
 }
 
-function indexFromPath(path: string, aliases: string[]): number | null {
+function indexFromPath(path: string, aliases: readonly string[]): number | null {
   for (const alias of aliases) {
     const prefix = `${alias}[`;
     if (!path.startsWith(prefix)) continue;
@@ -162,7 +151,7 @@ function indexFromPath(path: string, aliases: string[]): number | null {
 
 function pageIndexes(definition: GroupDefinition): number[] {
   const indexes = structuralPaths().flatMap((path) => {
-    const index = indexFromPath(path, definition.pathAliases);
+    const index = indexFromPath(path, definition.rule.pathAliases);
     return Number.isInteger(index) ? [index as number] : [];
   });
   return [...new Set(indexes)].sort((left, right) => left - right);
@@ -173,24 +162,33 @@ function isDisabled(element: HTMLElement): boolean {
     || element.getAttribute("aria-disabled") === "true";
 }
 
+function matchedSelector(element: HTMLElement, selectors: readonly string[]): string {
+  return selectors.find((selector) => element.matches(selector)) ?? "unknown";
+}
+
 function addFingerprint(definition: GroupDefinition, element: HTMLElement): string {
-  const mode = element.classList.contains("createFormSection-addBtn") ? "empty" : "populated";
   return [
-    "xiaomi-recruitment",
+    definition.familyId,
     definition.key,
-    mode,
+    matchedSelector(element, definition.rule.addControlSelectors),
     element.tagName.toLowerCase(),
     [...element.classList].sort().join(".")
   ].join("|");
 }
 
+function normalizedLabel(element: HTMLElement): string {
+  return (element.textContent ?? "").replace(/\s+/g, " ").trim();
+}
+
 function addCandidates(definition: GroupDefinition): HTMLElement[] {
-  const roots = definition.sectionClasses.flatMap((className) =>
-    Array.from(document.querySelectorAll<HTMLElement>(`.${className}`))
+  const roots = definition.rule.sectionSelectors.flatMap((selector) =>
+    Array.from(document.querySelectorAll<HTMLElement>(selector))
   );
+  const allowedLabels = new Set(definition.rule.addLabels);
+  const selector = definition.rule.addControlSelectors.join(", ");
   return [...new Set(roots.flatMap((root) =>
-    Array.from(root.querySelectorAll<HTMLElement>(".formOperate-addBtn, .createFormSection-addBtn"))
-      .filter((element) => /^(添加|新增)$/.test((element.textContent ?? "").replace(/\s+/g, " ").trim()))
+    Array.from(root.querySelectorAll<HTMLElement>(selector))
+      .filter((element) => allowedLabels.has(normalizedLabel(element)))
   ))];
 }
 
@@ -225,29 +223,37 @@ function publicScan(scan: InternalGroupScan): RepeatableGroupScan {
   return result;
 }
 
-export function scanRepeatableRecords(profile: CandidateProfile): RepeatableRecordsScan {
-  if (!supportedAdapter()) {
-    return {
-      adapterId: null,
-      groups: groupDefinitions.map((definition) => ({
-        key: definition.key,
-        label: definition.label,
-        profileCount: profileRecords(profile, definition.key).filter(meaningfulRecord).length,
-        pageCount: 0,
-        indexes: [],
-        missingCount: 0,
-        canCreate: false,
-        reason: "no-supported-adapter"
-      }))
-    };
-  }
+function unsupportedGroups(profile: CandidateProfile): RepeatableGroupScan[] {
+  return repeatableGroupKeys.map((key) => ({
+    key,
+    label: fallbackLabels[key],
+    profileCount: profileRecords(profile, key).filter(meaningfulRecord).length,
+    pageCount: 0,
+    indexes: [],
+    missingCount: 0,
+    canCreate: false,
+    reason: "no-supported-adapter"
+  }));
+}
+
+export function scanRepeatableRecords(
+  profile: CandidateProfile,
+  options: RepeatableRuntimeOptions = {}
+): RepeatableRecordsScan {
+  const template = resolveTemplate(options);
+  const definitions = groupDefinitions(template);
+  if (definitions.length === 0) return { adapterId: null, groups: unsupportedGroups(profile) };
   return {
-    adapterId: "xiaomi-recruitment",
-    groups: groupDefinitions.map((definition) => publicScan(scanInternal(profile, definition)))
+    adapterId: template.familyId,
+    groups: definitions.map((definition) => publicScan(scanInternal(profile, definition)))
   };
 }
 
-function waitForIndexChange(definition: GroupDefinition, beforeIndexes: number[], timeoutMs: number): Promise<boolean> {
+function waitForIndexChange(
+  definition: GroupDefinition,
+  beforeIndexes: number[],
+  timeoutMs: number
+): Promise<boolean> {
   const changed = () => JSON.stringify(pageIndexes(definition)) !== JSON.stringify(beforeIndexes);
   if (changed()) return Promise.resolve(true);
   return new Promise((resolve) => {
@@ -270,28 +276,32 @@ function resultStatus(createdCount: number, remainingCount: number): RepeatableC
   return remainingCount === 0 ? "created" : "partial";
 }
 
+function unsupportedResult(group: RepeatableGroupKey): RepeatableCreateResult {
+  return {
+    group,
+    status: "skipped",
+    initialPageCount: 0,
+    finalPageCount: 0,
+    requestedCount: 0,
+    createdCount: 0,
+    remainingCount: 0,
+    reason: "no-supported-adapter"
+  };
+}
+
 export async function createMissingRepeatableRecords(
   profile: CandidateProfile,
   group: RepeatableGroupKey,
-  options: { maxCreate?: number; mutationTimeoutMs?: number } = {}
+  options: RepeatableCreateOptions = {}
 ): Promise<RepeatableCreateResult> {
-  const definition = groupDefinitions.find((candidate) => candidate.key === group);
-  if (!definition || !supportedAdapter()) {
-    return {
-      group,
-      status: "skipped",
-      initialPageCount: 0,
-      finalPageCount: 0,
-      requestedCount: 0,
-      createdCount: 0,
-      remainingCount: 0,
-      reason: "no-supported-adapter"
-    };
-  }
+  const template = resolveTemplate(options);
+  const definition = groupDefinitions(template).find((candidate) => candidate.key === group);
+  if (!definition) return unsupportedResult(group);
 
   let before = scanInternal(profile, definition);
   const initialPageCount = before.pageCount;
-  const maxCreate = Math.max(0, Math.min(MAX_CREATE_PER_ACTION, options.maxCreate ?? MAX_CREATE_PER_ACTION));
+  const requestedMaximum = options.maxCreate ?? definition.rule.maximumCreatesPerRun;
+  const maxCreate = Math.max(0, Math.min(definition.rule.maximumCreatesPerRun, requestedMaximum));
   const requestedCount = Math.min(before.missingCount, maxCreate);
   if (!before.canCreate || requestedCount === 0) {
     return {

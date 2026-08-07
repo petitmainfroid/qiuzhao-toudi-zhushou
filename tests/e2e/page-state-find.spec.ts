@@ -113,6 +113,19 @@ async function sendBridgeMessage<T>(panel: import("@playwright/test").Page, requ
   return panel.evaluate(async (payload) => chrome.runtime.sendMessage(payload), request) as Promise<T>;
 }
 
+async function startPowerSession(panel: import("@playwright/test").Page, targetUrl: string): Promise<void> {
+  const response = await panel.evaluate(async (url) => {
+    const tab = (await chrome.tabs.query({})).find((candidate) => candidate.url === url);
+    if (typeof tab?.id !== "number") throw new Error(`No extension tab found for ${url}`);
+    return chrome.runtime.sendMessage({
+      type: "POWER_SESSION_START",
+      requestId: "page_state_start",
+      tabId: tab.id
+    });
+  }, targetUrl) as { ok: boolean; error?: string };
+  expect(response.ok, response.error).toBe(true);
+}
+
 test("privacy-safe state/find reaches anonymous HTTPS ground truth without leaking or submitting", async () => {
   test.setTimeout(120_000);
   const extensionPath = resolve(process.cwd(), "dist");
@@ -165,8 +178,7 @@ test("privacy-safe state/find reaches anonymous HTTPS ground truth without leaki
       await chrome.storage.local.set({ "qiuzhao.privacyAcknowledged": true });
     });
     await panel.reload();
-    await panel.getByRole("button", { name: "连接当前招聘页" }).click();
-    await expect(panel.getByRole("heading", { name: "已连接当前招聘页" })).toBeVisible({ timeout: 20_000 });
+    await startPowerSession(panel, target.url());
 
     const firstResponse = await sendBridgeMessage<{ ok: true; state: SafeState }>(panel, {
       type: "POWER_PAGE_STATE",
@@ -250,13 +262,6 @@ test("privacy-safe state/find reaches anonymous HTTPS ground truth without leaki
     expect(first.controls.find((control) => control.semantics.label === "常用简历 PDF")?.safety).toBe("file");
     const submissionCount = await target.evaluate(() => (window as unknown as { __submitCount: number }).__submitCount);
     expect(submissionCount).toBe(0);
-
-    await panel.getByRole("button", { name: "读取结构" }).click();
-    await expect(panel.getByText(new RegExp(`已识别 ${first.summary.controlCount} 个控件`))).toBeVisible();
-    await panel.getByLabel("按字段语义查找").fill("毕业院校");
-    await panel.getByRole("button", { name: "查找" }).click();
-    await expect(panel.getByRole("list", { name: "语义查找结果" }).getByText("毕业院校", { exact: true })).toBeVisible();
-    await panel.screenshot({ path: "artifacts/page-state-find.png", fullPage: true });
 
     await writeFile("artifacts/page-state-find-report.json", `${JSON.stringify({
       schemaVersion: 1,

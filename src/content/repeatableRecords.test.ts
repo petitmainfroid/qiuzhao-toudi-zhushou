@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { feishuRecruitingTemplate } from "../ats/defaultTemplates";
 import {
   createProjectRecord,
   createWorkExperienceRecord,
@@ -9,9 +10,7 @@ import {
   scanRepeatableRecords
 } from "./repeatableRecords";
 
-function enableFixtureAdapter() {
-  document.documentElement.dataset.qiuzhaoRepeatableFixture = "xiaomi";
-}
+const feishuOptions = { template: feishuRecruitingTemplate };
 
 function meaningfulProjects(count: number) {
   return Array.from({ length: count }, (_, index) => ({
@@ -29,13 +28,11 @@ function projectField(index: number): HTMLElement {
 
 afterEach(() => {
   document.body.replaceChildren();
-  delete document.documentElement.dataset.qiuzhaoRepeatableFixture;
   vi.restoreAllMocks();
 });
 
 describe("repeatable recruitment records", () => {
   it("compares meaningful profile records with distinct visible page indexes", () => {
-    enableFixtureAdapter();
     document.body.innerHTML = `
       <section class="resumeEditForm-project">
         <div data-cy="project[0].nameInput"></div>
@@ -47,8 +44,8 @@ describe("repeatable recruitment records", () => {
     profile.projects = meaningfulProjects(3);
     profile.workExperiences = [createWorkExperienceRecord()];
 
-    const scan = scanRepeatableRecords(profile);
-    expect(scan.adapterId).toBe("xiaomi-recruitment");
+    const scan = scanRepeatableRecords(profile, feishuOptions);
+    expect(scan.adapterId).toBe("feishu-recruiting");
     expect(scan.groups.find(({ key }) => key === "projects")).toMatchObject({
       profileCount: 3,
       pageCount: 1,
@@ -66,7 +63,6 @@ describe("repeatable recruitment records", () => {
   });
 
   it("creates one project row at a time and rescans after every click", async () => {
-    enableFixtureAdapter();
     document.body.innerHTML = `
       <form>
         <section class="resumeEditForm-project">
@@ -90,7 +86,10 @@ describe("repeatable recruitment records", () => {
 
     const profile = createEmptyProfile();
     profile.projects = meaningfulProjects(3);
-    const result = await createMissingRepeatableRecords(profile, "projects", { mutationTimeoutMs: 50 });
+    const result = await createMissingRepeatableRecords(profile, "projects", {
+      ...feishuOptions,
+      mutationTimeoutMs: 50
+    });
 
     expect(result).toMatchObject({
       status: "created",
@@ -106,7 +105,6 @@ describe("repeatable recruitment records", () => {
   });
 
   it("stops after an empty-section control changes identity", async () => {
-    enableFixtureAdapter();
     document.body.innerHTML = `
       <section class="resumeEditForm-internship">
         <div class="records"></div>
@@ -129,7 +127,10 @@ describe("repeatable recruitment records", () => {
       company: `Company ${index + 1}`
     }));
 
-    const result = await createMissingRepeatableRecords(profile, "workExperiences", { mutationTimeoutMs: 50 });
+    const result = await createMissingRepeatableRecords(profile, "workExperiences", {
+      ...feishuOptions,
+      mutationTimeoutMs: 50
+    });
     expect(result).toMatchObject({
       status: "partial",
       createdCount: 1,
@@ -140,7 +141,6 @@ describe("repeatable recruitment records", () => {
   });
 
   it("refuses ambiguous add controls without clicking either candidate", async () => {
-    enableFixtureAdapter();
     document.body.innerHTML = `
       <section class="resumeEditForm-project">
         <button type="button" class="formOperate-addBtn">添加</button>
@@ -152,13 +152,15 @@ describe("repeatable recruitment records", () => {
     const profile = createEmptyProfile();
     profile.projects = meaningfulProjects(1);
 
-    const result = await createMissingRepeatableRecords(profile, "projects", { mutationTimeoutMs: 50 });
+    const result = await createMissingRepeatableRecords(profile, "projects", {
+      ...feishuOptions,
+      mutationTimeoutMs: 50
+    });
     expect(result).toMatchObject({ status: "skipped", createdCount: 0, reason: "ambiguous-add-control" });
     expect(clickSpy).not.toHaveBeenCalled();
   });
 
   it("stops when one click changes the row structure by more than one", async () => {
-    enableFixtureAdapter();
     document.body.innerHTML = `
       <section class="resumeEditForm-project">
         <div class="records"><div data-cy="project[0].nameInput"></div></div>
@@ -171,7 +173,10 @@ describe("repeatable recruitment records", () => {
     const profile = createEmptyProfile();
     profile.projects = meaningfulProjects(3);
 
-    const result = await createMissingRepeatableRecords(profile, "projects", { mutationTimeoutMs: 50 });
+    const result = await createMissingRepeatableRecords(profile, "projects", {
+      ...feishuOptions,
+      mutationTimeoutMs: 50
+    });
     expect(result).toMatchObject({
       status: "stopped",
       createdCount: 0,
@@ -181,7 +186,6 @@ describe("repeatable recruitment records", () => {
   });
 
   it("enforces the ten-row action bound", async () => {
-    enableFixtureAdapter();
     document.body.innerHTML = `
       <section class="resumeEditForm-project">
         <div class="records"><div data-cy="project[0].nameInput"></div></div>
@@ -196,7 +200,10 @@ describe("repeatable recruitment records", () => {
     const profile = createEmptyProfile();
     profile.projects = meaningfulProjects(12);
 
-    const result = await createMissingRepeatableRecords(profile, "projects", { mutationTimeoutMs: 50 });
+    const result = await createMissingRepeatableRecords(profile, "projects", {
+      ...feishuOptions,
+      mutationTimeoutMs: 50
+    });
     expect(result).toMatchObject({
       status: "partial",
       requestedCount: 10,

@@ -1,4 +1,5 @@
 import type { ControlKind } from "./types";
+import { supplementalCanonicalFields } from "./supplementalCatalog";
 
 export interface CanonicalField {
   path: string;
@@ -325,5 +326,6 @@ export const canonicalFields: CanonicalField[] = [
     label: "职业规划",
     aliases: ["职业规划", "职业目标", "未来规划", "career plan", "career goals", "career objective"],
     kinds: ["textarea", "contenteditable", "text"]
-  }
+  },
+  ...supplementalCanonicalFields
 ];

@@ -1,0 +1,183 @@
+{
+  "company": {
+    "id": "huya",
+    "name": "虎牙直播",
+    "origin": "https://app.mokahr.com",
+    "atsVendor": "Moka"
+  },
+  "sourceUrl": "https://app.mokahr.com/campus_apply/huya/4112#/candidateHome/resume",
+  "capturedAt": "2026-08-07",
+  "evidenceType": "public-shell-and-bundle-contract",
+  "tenant": {
+    "orgId": "huya",
+    "siteId": 4112,
+    "mode": "campus",
+    "siteName": "系统默认校园招聘门户",
+    "pageTitle": "虎牙直播-校园招聘",
+    "locale": "zh-CN",
+    "websiteVersion": 1,
+    "usePreviewStandardResume": true,
+    "hideWebsiteOnlineResume": false
+  },
+  "bundle": {
+    "releaseAtCapture": "20251106-1526-fa4e7-release",
+    "assetAtCapture": "applyWeb-20251106-1526-fa4e7-release.js",
+    "candidateRoute": "/candidateHome/:page",
+    "resumeRoute": "/candidateHome/resume",
+    "loadEndpoint": "/api/outer/ats-apply/personal-center/candidateInfo",
+    "saveEndpoint": "/personal-center/resumeInfo",
+    "saveMethod": "PUT"
+  },
+  "denominators": {
+    "groups": 9,
+    "logicalFields": 41,
+    "requiredFields": 1,
+    "repeatableGroups": 6,
+    "configuredOptionFields": 7,
+    "attachmentFields": 0,
+    "identitySensitiveFields": 1
+  },
+  "optionCatalogs": {
+    "gender": {
+      "kind": "labels",
+      "labels": ["男", "女"]
+    },
+    "academicDegree": {
+      "kind": "labels",
+      "labels": ["本科", "硕士", "博士", "高中", "大专", "中专", "MBA", "其他"]
+    },
+    "languageProficiency": {
+      "kind": "labels",
+      "labels": ["一般", "良好", "熟练", "精通"]
+    },
+    "workExperience": {
+      "kind": "numeric-range-with-special-values",
+      "numericYears": { "min": 1, "max": 40 },
+      "special": [
+        { "label": "在校生", "value": -1 },
+        { "label": "应届毕业生", "value": 0 },
+        { "label": "1年以下", "value": 0.5 }
+      ]
+    }
+  },
+  "standardResumeContract": {
+    "sourceConstant": "DEFAULT_APPLY_SETTING",
+    "removedBlock": "uploadInfo",
+    "groups": [
+      {
+        "id": "basicInfo",
+        "title": "个人信息",
+        "repeatable": false,
+        "requiredIds": ["name"],
+        "fields": [
+          { "id": "name", "name": "姓名", "type": "string_info" },
+          { "id": "phone", "name": "手机号码", "type": "string_info" },
+          { "id": "email", "name": "邮箱", "type": "string_info" },
+          { "id": "gender", "name": "性别", "type": "select", "optionCatalog": "gender" },
+          { "id": "birthDate", "name": "出生日期 (年龄)", "type": "day_info" },
+          { "id": "experience", "name": "工作经验", "type": "select", "optionCatalog": "workExperience" },
+          { "id": "academicDegree", "name": "最高学历", "type": "select", "optionCatalog": "academicDegree" },
+          { "id": "location", "name": "所在地", "type": "string_info" },
+          { "id": "lastCompany", "name": "最近公司", "type": "string_info" },
+          { "id": "citizenId", "name": "证件号码", "type": "string_info", "sensitive": true }
+        ]
+      },
+      {
+        "id": "jobIntention",
+        "title": "求职意向",
+        "repeatable": false,
+        "requiredIds": [],
+        "fields": [
+          { "id": "salary", "name": "当前薪资", "type": "string_info" },
+          { "id": "aimSalary", "name": "期望薪资", "type": "string_info" },
+          { "id": "forwardLocation", "name": "期望城市", "type": "string_info" }
+        ]
+      },
+      {
+        "id": "experienceInfo",
+        "title": "工作经历",
+        "repeatable": true,
+        "requiredIds": [],
+        "fields": [
+          { "id": "startDate", "name": "开始时间", "type": "date_info" },
+          { "id": "endDate", "name": "结束时间", "type": "date_info" },
+          { "id": "company", "name": "公司名称", "type": "string_info" },
+          { "id": "title", "name": "职位名称", "type": "string_info" },
+          { "id": "summary", "name": "工作职责", "type": "text_info" }
+        ]
+      },
+      {
+        "id": "educationInfo",
+        "title": "教育背景",
+        "repeatable": true,
+        "requiredIds": [],
+        "fields": [
+          { "id": "startDate", "name": "开始时间", "type": "date_info" },
+          { "id": "endDate", "name": "结束时间", "type": "date_info" },
+          { "id": "school", "name": "学校名称", "type": "string_info" },
+          { "id": "speciality", "name": "专业名称", "type": "string_info" },
+          { "id": "academicDegree", "name": "学历", "type": "select", "optionCatalog": "academicDegree" }
+        ]
+      },
+      {
+        "id": "practiceInfo",
+        "title": "实习经历",
+        "repeatable": true,
+        "requiredIds": [],
+        "fields": [
+          { "id": "startDate", "name": "开始时间", "type": "date_info" },
+          { "id": "endDate", "name": "结束时间", "type": "date_info" },
+          { "id": "company", "name": "公司名称", "type": "string_info" },
+          { "id": "title", "name": "职位名称", "type": "string_info" },
+          { "id": "summary", "name": "工作职责", "type": "text_info" }
+        ]
+      },
+      {
+        "id": "projectInfo",
+        "title": "项目经验",
+        "repeatable": true,
+        "requiredIds": [],
+        "fields": [
+          { "id": "startDate", "name": "开始时间", "type": "date_info" },
+          { "id": "endDate", "name": "结束时间", "type": "date_info" },
+          { "id": "projectName", "name": "项目名称", "type": "string_info" },
+          { "id": "title", "name": "职务", "type": "string_info" },
+          { "id": "projectDescription", "name": "项目描述", "type": "text_info" },
+          { "id": "responsibilities", "name": "项目中职责", "type": "text_info" }
+        ]
+      },
+      {
+        "id": "languageInfo",
+        "title": "语言能力",
+        "repeatable": true,
+        "requiredIds": [],
+        "fields": [
+          { "id": "language", "name": "语言类型", "type": "string_info" },
+          { "id": "level", "name": "掌握程度", "type": "select", "optionCatalog": "languageProficiency" },
+          { "id": "listenAndSpeak", "name": "听说", "type": "select", "optionCatalog": "languageProficiency" },
+          { "id": "readAndWrite", "name": "读写", "type": "select", "optionCatalog": "languageProficiency" }
+        ]
+      },
+      {
+        "id": "selfDescription",
+        "title": "自我描述",
+        "repeatable": false,
+        "requiredIds": [],
+        "fields": [
+          { "id": "personal", "name": "自我描述", "type": "text_info" }
+        ]
+      },
+      {
+        "id": "awardInfo",
+        "title": "获奖经历",
+        "repeatable": true,
+        "requiredIds": [],
+        "fields": [
+          { "id": "awardDate", "name": "获奖时间", "type": "date_info" },
+          { "id": "awardName", "name": "奖项名称", "type": "string_info" }
+        ]
+      }
+    ]
+  },
+  "evidenceBoundary": "The public tenant shell proves 虎牙直播/huya/site 4112 and the public Moka bundle proves the standard candidate-resume contract. The authenticated candidateInfo endpoint was not called. No rendered candidate DOM, current value, cookie, token, filename, request body, response body, upload, write, save, CAPTCHA action, or application submission is stored."
+}

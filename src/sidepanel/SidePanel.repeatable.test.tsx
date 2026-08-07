@@ -11,7 +11,7 @@ function repeatableScan(missingCount: number): ScanResult {
     site: "https://xiaomi.jobs.f.mioffice.cn",
     fields: [],
     repeatableRecords: {
-      adapterId: "xiaomi-recruitment",
+      adapterId: "feishu-recruiting",
       groups: [{
         key: "projects",
         label: "项目经历",
@@ -38,7 +38,7 @@ function repeatableScan(missingCount: number): ScanResult {
 }
 
 describe("SidePanel repeatable record actions", () => {
-  it("uses an explicit group action and rescans after safe creation", async () => {
+  it("creates supported missing records inside the one-click workflow and rescans", async () => {
     const profile = createEmptyProfile();
     profile.basic.fullName = "Fixture Candidate";
     profile.basic.phone = "13800000000";
@@ -80,14 +80,10 @@ describe("SidePanel repeatable record actions", () => {
     };
 
     render(<SidePanel repository={{ load: async () => profile }} pageBridge={bridge} />);
-    fireEvent.click(await screen.findByRole("button", { name: "扫描当前页面" }));
-    expect(await screen.findByText("先补齐经历卡片")).toBeInTheDocument();
-    expect(screen.getByText("档案 2 条 · 网页 1 条 · 缺少 1 条")).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole("button", { name: "创建缺失的项目经历" }));
+    fireEvent.click(await screen.findByRole("button", { name: "自动填写当前页面" }));
     await waitFor(() => expect(bridge.createRepeatableRecords).toHaveBeenCalledWith(profile, "projects"));
     await waitFor(() => expect(bridge.scan).toHaveBeenCalledTimes(2));
-    expect(await screen.findByText(/已创建 1 条记录并重新扫描/)).toBeInTheDocument();
-    expect(screen.queryByText("先补齐经历卡片")).not.toBeInTheDocument();
+    expect(await screen.findByText(/已自动新增 1 条经历卡片并重新识别页面/)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /创建缺失/ })).not.toBeInTheDocument();
   });
 });

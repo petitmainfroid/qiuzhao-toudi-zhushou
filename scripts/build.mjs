@@ -4,9 +4,14 @@ import { build as bundle } from "esbuild";
 import { build as buildVite } from "vite";
 
 const projectRoot = resolve(import.meta.dirname, "..");
-const outdir = resolve(projectRoot, "dist");
+const collectorBuild = process.argv.includes("--collector");
+const outdir = resolve(projectRoot, collectorBuild ? "dist-collector" : "dist");
 
-await buildVite({ configFile: resolve(projectRoot, "vite.config.ts") });
+await buildVite({
+  configFile: resolve(projectRoot, "vite.config.ts"),
+  mode: collectorBuild ? "collector" : "production",
+  build: { outDir: outdir }
+});
 await mkdir(outdir, { recursive: true });
 
 await bundle({
@@ -50,9 +55,12 @@ await Promise.all([
     resolve(ocrOutdir, "chi_sim.traineddata.gz")
   )
 ]);
+
 const pdfjsOutdir = resolve(outdir, "pdfjs");
 await mkdir(pdfjsOutdir, { recursive: true });
 await Promise.all([
   cp(resolve(projectRoot, "node_modules/pdfjs-dist/cmaps"), resolve(pdfjsOutdir, "cmaps"), { recursive: true }),
   cp(resolve(projectRoot, "node_modules/pdfjs-dist/standard_fonts"), resolve(pdfjsOutdir, "standard_fonts"), { recursive: true })
 ]);
+
+if (collectorBuild) console.log("Built development-only ATS collector extension in dist-collector.");

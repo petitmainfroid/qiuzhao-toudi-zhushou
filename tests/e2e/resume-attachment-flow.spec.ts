@@ -48,7 +48,7 @@ test("resume attachment UI requires file and destination confirmation", async ({
   await page.goto("/sidepanel.html");
   await seedReadyProfile(page);
 
-  await page.getByRole("button", { name: "扫描当前页面" }).click();
+  await page.getByRole("button", { name: "自动填写当前页面" }).click();
   await expect(page.getByRole("heading", { name: "附加简历 PDF" })).toBeVisible();
   await expect(page.getByText("http://127.0.0.1:4173")).toBeVisible();
   await expect(page.getByRole("button", { name: /确认上传到/ })).toHaveCount(0);
@@ -75,7 +75,7 @@ test("saved resume survives reload, attaches without another file choice, and is
   await page.goto("/sidepanel.html");
   await seedReadyProfile(page);
 
-  await page.getByRole("button", { name: "扫描当前页面" }).click();
+  await page.getByRole("button", { name: "自动填写当前页面" }).click();
   await page.getByLabel("选择要附加的 PDF 简历").setInputFiles({
     name: "reusable-synthetic-resume.pdf",
     mimeType: "application/pdf",
@@ -84,7 +84,7 @@ test("saved resume survives reload, attaches without another file choice, and is
   await expect(page.getByText(/PDF 已保存于本机/)).toBeVisible();
 
   await page.reload();
-  await page.getByRole("button", { name: "扫描当前页面" }).click();
+  await page.getByRole("button", { name: "自动填写当前页面" }).click();
   await expect(page.getByText("reusable-synthetic-resume.pdf")).toBeVisible();
   await expect(page.getByText("已保存于本机，可长期复用")).toBeVisible();
   const confirm = page.getByRole("button", { name: "确认上传到 127.0.0.1:4173" });

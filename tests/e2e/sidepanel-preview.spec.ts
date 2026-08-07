@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-test("page comparison groups empty, equal, and conflict fields before filling", async ({ page }) => {
+test("one-click autofill handles safe fields and centralizes exceptions", async ({ page }) => {
   await page.setViewportSize({ width: 420, height: 900 });
   await page.goto("/sidepanel.html");
   await page.evaluate(() => {
@@ -46,16 +46,18 @@ test("page comparison groups empty, equal, and conflict fields before filling", 
   });
   await page.reload();
 
-  await page.getByRole("button", { name: "扫描当前页面" }).click();
+  await expect(page.getByRole("button", { name: "扫描当前页面" })).toHaveCount(0);
+  await page.getByRole("button", { name: "自动填写当前页面" }).click();
   await expect(page.getByRole("heading", { name: "招聘表单验证页" })).toBeVisible();
-  await expect(page.getByLabel("选择 姓名")).toBeChecked();
+  await expect(page.getByRole("heading", { name: "只处理这 2 个例外" })).toBeVisible();
   await expect(page.getByText("已经一致 1 项")).toBeVisible();
   await expect(page.getByText("存在冲突")).toBeVisible();
-  await expect(page.getByLabel("选择 出生日期")).not.toBeChecked();
-  await page.getByLabel("选择 出生日期").check();
-  await expect(page.getByRole("button", { name: "填写已选 2 项" })).toBeVisible();
-  await page.screenshot({ path: "artifacts/page-comparison.png", fullPage: true });
+  await expect(page.getByLabel("确认填写 出生日期")).not.toBeChecked();
+  await expect(page.getByLabel("确认填写 项目介绍")).not.toBeChecked();
+  await page.getByLabel("确认填写 出生日期").check();
+  await expect(page.getByRole("button", { name: "确认并继续填写 2 项" })).toBeVisible();
+  await page.screenshot({ path: "artifacts/one-click-autofill.png", fullPage: true });
 
-  await page.getByRole("button", { name: "填写已选 2 项" }).click();
+  await page.getByRole("button", { name: "确认并继续填写 2 项" }).click();
   await expect(page.getByText(/已填写 2 项/)).toBeVisible();
 });

@@ -11,6 +11,15 @@ import {
   type ResumeAttachmentResult,
   type ResumeAttachmentScan
 } from "../content/resumeAttachment";
+import {
+  fillFocusedRecovery,
+  inspectFocusedRecoveryTarget,
+  installFocusedRecoveryTracking,
+  resetFocusedRecoveryState,
+  type FocusedRecoveryTargetResult,
+  type FocusedRecoveryWriteRequest,
+  type FocusedRecoveryWriteResult
+} from "../content/focusedRecovery";
 
 declare global {
   interface Window {
@@ -20,6 +29,9 @@ declare global {
       scanResumeAttachment(): ResumeAttachmentScan;
       authorizeResumeAttachment(metadata: ResumeAttachmentMetadata): ResumeAttachmentAuthorization | ResumeAttachmentRejection;
       attachAuthorizedResume(payload: ResumeAttachmentPayload): Promise<ResumeAttachmentResult>;
+      inspectFocusedRecoveryTarget(): FocusedRecoveryTargetResult;
+      fillFocusedRecovery(request: FocusedRecoveryWriteRequest): Promise<FocusedRecoveryWriteResult>;
+      resetFocusedRecoveryState(): void;
       eventCount: number;
       submitCount: number;
       attachmentChangeCount: number;
@@ -28,12 +40,17 @@ declare global {
   }
 }
 
+installFocusedRecoveryTracking();
+
 window.__qiuzhaoFixture = {
   scan: scanPage,
   fill: fillPage,
   scanResumeAttachment,
   authorizeResumeAttachment,
   attachAuthorizedResume,
+  inspectFocusedRecoveryTarget,
+  fillFocusedRecovery,
+  resetFocusedRecoveryState,
   eventCount: 0,
   submitCount: 0,
   attachmentChangeCount: 0,

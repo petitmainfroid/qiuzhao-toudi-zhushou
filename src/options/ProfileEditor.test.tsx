@@ -97,6 +97,55 @@ describe("ProfileEditor", () => {
     expect(screen.queryByRole("heading", { name: "项目经历 1" })).not.toBeInTheDocument();
   });
 
+  it("edits and saves the expanded reusable information sections", async () => {
+    const repository = createRepository();
+    render(<ProfileEditor repository={repository} />);
+
+    expect(await screen.findByRole("heading", { name: "校园经历" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "证书信息" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "论文与专利" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "家庭与紧急联系人" })).toBeInTheDocument();
+    expect(screen.getByText(/家庭成员资料涉及第三方隐私/)).toBeInTheDocument();
+    expect(screen.getByText(/证件资料会保存在这台设备.*目前尚未加密/)).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText("民族"), { target: { value: "汉族" } });
+    fireEvent.change(screen.getByLabelText("证件类型"), { target: { value: "居民身份证" } });
+    fireEvent.change(screen.getByLabelText("证件号码"), { target: { value: "TEST-ID-000042" } });
+    fireEvent.change(screen.getByLabelText("期望行业"), { target: { value: "企业服务" } });
+
+    fireEvent.click(screen.getByRole("button", { name: "添加一段在校职务" }));
+    fireEvent.change(screen.getByLabelText("职务名称"), { target: { value: "学生会负责人" } });
+    fireEvent.change(screen.getByLabelText("职务描述"), { target: { value: "组织真实校园活动。" } });
+
+    fireEvent.click(screen.getByRole("button", { name: "添加一项证书" }));
+    fireEvent.change(screen.getByLabelText("证书名称"), { target: { value: "测试资格证书" } });
+
+    fireEvent.click(screen.getByRole("button", { name: "添加一篇论文" }));
+    fireEvent.change(screen.getByLabelText("论文名称"), { target: { value: "匿名论文标题" } });
+
+    fireEvent.click(screen.getByRole("button", { name: "添加一项专利" }));
+    fireEvent.change(screen.getByLabelText("专利名称"), { target: { value: "匿名专利名称" } });
+
+    fireEvent.click(screen.getByRole("button", { name: "添加一位家庭成员" }));
+    fireEvent.change(screen.getByLabelText("家庭成员姓名"), { target: { value: "经同意的联系人" } });
+    fireEvent.change(screen.getByLabelText("与本人关系"), { target: { value: "家属" } });
+
+    fireEvent.click(screen.getAllByRole("button", { name: "保存档案" })[0]);
+    await waitFor(() => expect(repository.save).toHaveBeenCalledWith(expect.objectContaining({
+      basic: expect.objectContaining({
+        ethnicity: "汉族",
+        identityDocumentType: "居民身份证",
+        identityDocumentNumber: "TEST-ID-000042"
+      }),
+      jobPreference: expect.objectContaining({ targetIndustries: "企业服务" }),
+      campusLeadership: [expect.objectContaining({ title: "学生会负责人" })],
+      certificates: [expect.objectContaining({ name: "测试资格证书" })],
+      publications: [expect.objectContaining({ title: "匿名论文标题" })],
+      patents: [expect.objectContaining({ name: "匿名专利名称" })],
+      familyMembers: [expect.objectContaining({ relationship: "家属" })]
+    })));
+  });
+
   it("shows validation feedback and blocks invalid saves", async () => {
     const repository = createRepository();
     render(<ProfileEditor repository={repository} />);

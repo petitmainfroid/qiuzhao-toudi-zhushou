@@ -8,6 +8,7 @@ import type {
 } from "../content/engine";
 import type { ContentRequest, ContentResponse } from "../shared/messages";
 import type { SavedFieldMapping } from "../mapping/types";
+import { profileValuePreview } from "../privacy/sensitivePreview";
 import {
   createMissingRepeatableRecords,
   type RepeatableCreateResult,
@@ -19,6 +20,10 @@ import type {
   ResumeAttachmentRejection,
   ResumeAttachmentResult
 } from "../content/resumeAttachment";
+import type {
+  FocusedRecoveryTargetResult,
+  FocusedRecoveryWriteResult
+} from "../content/focusedRecovery";
 
 export interface PageBridge {
   scan(profile: CandidateProfile, mappings?: SavedFieldMapping[]): Promise<ScanResult>;
@@ -29,6 +34,12 @@ export interface PageBridge {
     sha256: string,
     approvedAt: number
   ): Promise<ResumeAttachmentResult>;
+  getFocusedRecoveryTarget?(): Promise<FocusedRecoveryTargetResult>;
+  fillFocusedRecovery?(
+    token: string,
+    profilePath: string,
+    value: string
+  ): Promise<FocusedRecoveryWriteResult>;
   fill(profile: CandidateProfile, selections: FillSelection[], mappings?: SavedFieldMapping[]): Promise<FillResult>;
 }
 
@@ -130,6 +141,33 @@ export class ChromePageBridge implements PageBridge {
     }
     return response.result as ResumeAttachmentResult;
   }
+
+  async getFocusedRecoveryTarget(): Promise<FocusedRecoveryTargetResult> {
+    const tabId = await activeTabId();
+    await prepareContentScript(tabId);
+    const response = await sendToTab(tabId, { type: "GET_FOCUSED_RECOVERY_TARGET" });
+    if (!("ok" in response) || !response.ok || !("status" in response.result)) {
+      throw new Error("无法读取刚刚聚焦的招聘字段。");
+    }
+    return response.result as FocusedRecoveryTargetResult;
+  }
+
+  async fillFocusedRecovery(
+    token: string,
+    profilePath: string,
+    value: string
+  ): Promise<FocusedRecoveryWriteResult> {
+    const tabId = await activeTabId();
+    await prepareContentScript(tabId);
+    const response = await sendToTab(tabId, {
+      type: "FILL_FOCUSED_RECOVERY",
+      request: { token, profilePath, value }
+    });
+    if (!("ok" in response) || !response.ok || !("status" in response.result)) {
+      throw new Error("聚焦字段补填失败。");
+    }
+    return response.result as FocusedRecoveryWriteResult;
+  }
 }
 
 function previewProposal(
@@ -157,13 +195,15 @@ function previewProposal(
     fingerprint: `preview|${elementId}`,
     mappingSource: "rule",
     hasValue: value.trim().length > 0,
-    valuePreview: value,
+    valuePreview: profileValuePreview(profilePath, value),
     comparisonStatus,
     ...(comparisonStatus === "conflict" ? { comparisonToken: `preview-conflict-${elementId}` } : {})
   };
 }
 
 export class PreviewPageBridge implements PageBridge {
+  private focusedRecoveryToken: string | null = null;
+
   async scan(profile: CandidateProfile, mappings: SavedFieldMapping[] = []): Promise<ScanResult> {
     const fields: FillProposal[] = [
       previewProposal(profile, "preview-name", "姓名", "basic.fullName", "姓名", "high", false),
@@ -204,7 +244,7 @@ export class PreviewPageBridge implements PageBridge {
         reasons: ["使用你为此网站保存的字段对应关系"],
         requiresConfirmation: Boolean(canonical.sensitive),
         hasValue: Boolean(value.trim()),
-        valuePreview: value,
+        valuePreview: profileValuePreview(saved.profilePath, value),
         comparisonStatus: "empty" as const,
         mappingSource: "saved" as const
       };
@@ -271,6 +311,40 @@ export class PreviewPageBridge implements PageBridge {
       return { status: "rejected", reason: "candidate-changed" };
     }
     return { status: "attached" };
+  }
+
+  async getFocusedRecoveryTarget(): Promise<FocusedRecoveryTargetResult> {
+    this.focusedRecoveryToken = `preview-focused-${Date.now().toString(36)}`;
+    return {
+      status: "ready",
+      token: this.focusedRecoveryToken,
+      fieldLabel: "未匹配的作品链接",
+      controlKind: "text",
+      expiresInMs: 60_000
+    };
+  }
+
+  async fillFocusedRecovery(
+    token: string,
+    profilePath: string,
+    value: string
+  ): Promise<FocusedRecoveryWriteResult> {
+    const canonical = canonicalFields.find((field) => field.path === profilePath);
+    if (
+      !this.focusedRecoveryToken
+      || token !== this.focusedRecoveryToken
+      || !canonical
+      || canonical.sensitive
+      || !value.trim()
+    ) {
+      return { status: "rejected", reason: "authorization-expired" };
+    }
+    this.focusedRecoveryToken = null;
+    return {
+      status: "filled",
+      fieldLabel: "未匹配的作品链接",
+      canonicalLabel: canonical.label
+    };
   }
 }
 

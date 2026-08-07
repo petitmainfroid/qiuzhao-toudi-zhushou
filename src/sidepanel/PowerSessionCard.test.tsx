@@ -27,8 +27,9 @@ describe("PowerSessionCard", () => {
         snapshotId: "state_test_0001",
         origin: "https://jobs.example",
         path: "/apply/1",
+        sections: [],
         controls: [],
-        summary: { controlCount: 9, frameCount: 2, openShadowRootCount: 1, blockedControlCount: 2 }
+        summary: { controlCount: 9, frameCount: 2, openShadowRootCount: 1, blockedControlCount: 2, sectionCount: 0 }
       })),
       find: vi.fn(async () => ({
         snapshotId: "state_test_0002",

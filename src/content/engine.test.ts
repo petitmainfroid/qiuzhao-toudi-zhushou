@@ -1,4 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
+import { defaultAtsFamilyRegistry, defaultAtsTemplateRegistry } from "../ats/defaultTemplates";
+import { AtsMatchingRuntime } from "../ats/matchingRuntime";
 import { createEmptyProfile } from "../domain/profile";
 import { fillPage, normalizeComparableValue, scanPage, type FillSelection } from "./engine";
 
@@ -19,6 +21,19 @@ function completeTestProfile() {
     link: ""
   });
   return profile;
+}
+
+class FeishuEngineTestRuntime extends AtsMatchingRuntime {
+  constructor() {
+    super(defaultAtsFamilyRegistry, defaultAtsTemplateRegistry);
+  }
+
+  override resolve(descriptors: Parameters<AtsMatchingRuntime["resolve"]>[0]) {
+    return super.resolve(descriptors, {
+      origin: "https://nio.jobs.feishu.cn",
+      pathname: "/index/resume/7665959622004705546/apply"
+    });
+  }
 }
 
 describe("content fill engine", () => {
@@ -75,6 +90,52 @@ describe("content fill engine", () => {
     expect((document.getElementById("resume") as HTMLInputElement).files).toHaveLength(0);
     expect(inputEvents).toHaveBeenCalled();
     expect(submit).not.toHaveBeenCalled();
+  });
+
+  it("routes a family match through its declared driver and fails closed on incompatible DOM", async () => {
+    document.body.innerHTML = `<label>性别<input name="basic_info.gender" /></label>`;
+    const profile = completeTestProfile();
+    const runtime = new FeishuEngineTestRuntime();
+    const scan = scanPage(profile, [], runtime);
+
+    expect(scan.fields[0].atsTemplate).toMatchObject({
+      familyId: "feishu-recruiting",
+      driverHint: "feishu-select",
+      verification: "selected-option"
+    });
+    const result = await fillPage(profile, [{
+      elementId: scan.fields[0].elementId,
+      profilePath: "basic.gender"
+    }], [], runtime);
+
+    expect(result).toMatchObject({ filledCount: 0, skippedCount: 1 });
+    expect(result.outcomes[0]).toMatchObject({ reason: "unsupported-value-or-control" });
+    expect((document.querySelector("input") as HTMLInputElement).value).toBe("");
+  });
+
+  it("masks a saved identity number and writes it only after explicit selection", async () => {
+    document.body.innerHTML = `<label for="identity">身份证号码</label><input id="identity" />`;
+    const profile = completeTestProfile();
+    profile.basic.identityDocumentType = "居民身份证";
+    profile.basic.identityDocumentNumber = "TEST-ID-000042";
+
+    const scan = scanPage(profile);
+    expect(scan.fields[0]).toMatchObject({
+      profilePath: "basic.identityDocumentNumber",
+      requiresConfirmation: true,
+      hasValue: true,
+      valuePreview: "••••••0042",
+      comparisonStatus: "empty"
+    });
+    expect((document.getElementById("identity") as HTMLInputElement).value).toBe("");
+
+    const result = await fillPage(profile, [{
+      elementId: scan.fields[0].elementId,
+      profilePath: "basic.identityDocumentNumber"
+    }]);
+
+    expect(result).toMatchObject({ filledCount: 1, skippedCount: 0 });
+    expect((document.getElementById("identity") as HTMLInputElement).value).toBe("TEST-ID-000042");
   });
 
   it("compares page values without exposing them and requires an exact conflict approval", async () => {

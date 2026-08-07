@@ -122,6 +122,8 @@ test("resume import fills the existing profile form from a local DOCX without si
   await expect(page.getByLabel("手机号码")).toHaveValue("13800138000");
   await expect(page.getByLabel("邮箱")).toHaveValue("lin.xiaozhou@example.com");
   await expect(page.getByLabel("当前城市")).toHaveValue("杭州");
+  await expect(page.getByLabel("证件类型")).toHaveValue("居民身份证");
+  await expect(page.getByLabel("证件号码")).toHaveValue("320000200306180000");
   const educationCards = page.locator("#education article.repeat-card");
   await expect(educationCards).toHaveCount(2);
   await expect(educationCards.nth(0).getByLabel("院校名称")).toHaveValue("上海交通大学");
@@ -157,7 +159,7 @@ test("resume import fills the existing profile form from a local DOCX without si
   expect(stored).toContain("林晓舟");
   expect(stored).not.toContain("campus-resume.docx");
   expect(stored).not.toContain("RAW-ONLY");
-  expect(stored).not.toContain("320000200306180000");
+  expect(stored).toContain('"identityDocumentNumber":"320000200306180000"');
   expect(externalRequests).toEqual([]);
   await page.screenshot({ path: "artifacts/resume-import.png", fullPage: true });
 });

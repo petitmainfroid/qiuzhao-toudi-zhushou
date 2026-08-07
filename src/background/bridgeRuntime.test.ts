@@ -90,8 +90,9 @@ describe("embedded bridge background authorization", () => {
       snapshotId: "state_test_0001",
       origin: "https://jobs.example",
       path: "/apply",
+      sections: [],
       controls: [],
-      summary: { controlCount: 0, frameCount: 1, openShadowRootCount: 0, blockedControlCount: 0 }
+      summary: { controlCount: 0, frameCount: 1, openShadowRootCount: 0, blockedControlCount: 0, sectionCount: 0 }
     };
     const pageStateService = {
       read: vi.fn(async () => state),

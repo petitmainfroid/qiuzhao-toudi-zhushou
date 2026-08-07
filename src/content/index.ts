@@ -2,6 +2,11 @@ import { fillPage, scanPage } from "./engine";
 import { createMissingRepeatableRecords } from "./repeatableRecords";
 import { attachAuthorizedResume, authorizeResumeAttachment } from "./resumeAttachment";
 import type { ContentRequest, ContentResponse } from "../shared/messages";
+import {
+  fillFocusedRecovery,
+  inspectFocusedRecoveryTarget,
+  installFocusedRecoveryTracking
+} from "./focusedRecovery";
 
 declare global {
   interface Window {
@@ -11,6 +16,7 @@ declare global {
 
 if (!window.__QIUZHAO_ASSISTANT_READY__) {
   window.__QIUZHAO_ASSISTANT_READY__ = true;
+  installFocusedRecoveryTracking();
   chrome.runtime.onMessage.addListener(
     (message: ContentRequest, _sender, sendResponse: (response: ContentResponse) => void) => {
       try {
@@ -38,6 +44,18 @@ if (!window.__QIUZHAO_ASSISTANT_READY__) {
             .catch((error) => sendResponse({
               ok: false,
               error: error instanceof Error ? error.message : "简历附件处理失败"
+            }));
+          return true;
+        }
+        else if (message.type === "GET_FOCUSED_RECOVERY_TARGET") {
+          sendResponse({ ok: true, result: inspectFocusedRecoveryTarget() });
+        }
+        else if (message.type === "FILL_FOCUSED_RECOVERY") {
+          void fillFocusedRecovery(message.request)
+            .then((result) => sendResponse({ ok: true, result }))
+            .catch((error) => sendResponse({
+              ok: false,
+              error: error instanceof Error ? error.message : "聚焦字段补填失败"
             }));
           return true;
         }

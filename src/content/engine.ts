@@ -1,14 +1,30 @@
 import { getProfileValue, type CandidateProfile } from "../domain/profile";
 import { canonicalFields } from "../matching/catalog";
 import { describeControl, discoverFields, findControlByElementId } from "../matching/dom";
-import { matchField, matchFields } from "../matching/matcher";
-import { normalizeFieldText } from "../matching/normalize";
 import type { MatchResult } from "../matching/types";
 import { createFieldFingerprint } from "../mapping/fingerprint";
 import type { SavedFieldMapping } from "../mapping/types";
+import { profileValuePreview as safeProfileValuePreview } from "../privacy/sensitivePreview";
 import { readControlCandidates, writeControlVerified } from "./pageDriver";
-import { scanRepeatableRecords, type RepeatableRecordsScan } from "./repeatableRecords";
+import {
+  scanRepeatableRecords,
+  supportsRepeatableRecordAdapter,
+  type RepeatableRecordsScan
+} from "./repeatableRecords";
 import { scanResumeAttachment, type ResumeAttachmentScan } from "./resumeAttachment";
+import { defaultAtsMatchingRuntime } from "../ats/defaultRuntime";
+import {
+  type AtsMatchingRuntime,
+  type AtsScanMetadata
+} from "../ats/matchingRuntime";
+import { normalizeComparableValue } from "./valueNormalization";
+import {
+  completeRepeatableLifecycles,
+  type RepeatableLifecycleResult,
+  type RepeatableLifecycleWrite
+} from "./repeatableLifecycle";
+
+export { normalizeComparableValue } from "./valueNormalization";
 
 export interface FillProposal extends MatchResult {
   fingerprint: string;
@@ -24,6 +40,7 @@ export type PageValueComparison = "empty" | "equal" | "conflict" | "unreadable";
 export interface ScanResult {
   title: string;
   site: string;
+  ats?: AtsScanMetadata;
   fields: FillProposal[];
   repeatableRecords?: RepeatableRecordsScan;
   resumeAttachment?: ResumeAttachmentScan;
@@ -57,10 +74,11 @@ export interface FillResult {
   outcomes: FillItemOutcome[];
   filledCount: number;
   skippedCount: number;
+  repeatableLifecycles?: RepeatableLifecycleResult[];
 }
 
-function previewValue(value: string): string {
-  const collapsed = value.replace(/\s+/g, " ").trim();
+function previewValue(profilePath: string, value: string): string {
+  const collapsed = safeProfileValuePreview(profilePath, value);
   return collapsed.length > 72 ? `${collapsed.slice(0, 69)}…` : collapsed;
 }
 
@@ -97,16 +115,6 @@ let comparisonTokenCounter = 0;
 function comparisonToken(): string {
   comparisonTokenCounter += 1;
   return `comparison-${Date.now().toString(36)}-${comparisonTokenCounter.toString(36)}`;
-}
-
-export function normalizeComparableValue(profilePath: string, value: string): string {
-  const trimmed = value.normalize("NFKC").trim();
-  if (/email/i.test(profilePath)) return trimmed.toLowerCase();
-  if (/phone|mobile|tel/i.test(profilePath)) return trimmed.replace(/\D/g, "");
-  if (/(?:^|\.)(?:date|birthDate|startDate|endDate|availableDate|age)(?:\.|$)/i.test(profilePath)) {
-    return trimmed.replace(/\D/g, "");
-  }
-  return normalizeFieldText(trimmed);
 }
 
 function currentControlCandidates(element: HTMLElement): string[] | null {
@@ -170,16 +178,22 @@ function applySavedMapping(
       score: 1,
       confidence: "high",
       reasons: ["使用你为此网站保存的字段对应关系"],
-      requiresConfirmation: Boolean(canonical.sensitive)
+      requiresConfirmation: Boolean(canonical.sensitive),
+      ...(match.atsTemplate ? { atsTemplate: match.atsTemplate } : {})
     }
   };
 }
 
-export function scanPage(profile: CandidateProfile, mappings: SavedFieldMapping[] = []): ScanResult {
+export function scanPage(
+  profile: CandidateProfile,
+  mappings: SavedFieldMapping[] = [],
+  atsRuntime: AtsMatchingRuntime = defaultAtsMatchingRuntime
+): ScanResult {
   conflictSnapshots.clear();
   const descriptors = discoverFields();
   const site = currentSite();
-  const ruleMatches = matchFields(descriptors);
+  const atsSession = atsRuntime.resolve(descriptors);
+  const ruleMatches = descriptors.map((descriptor) => atsSession.match(descriptor));
   const fields = ruleMatches.map<FillProposal>((ruleMatch, index) => {
     const applied = applySavedMapping(descriptors[index], ruleMatch, mappings, site);
     const match = applied.match;
@@ -196,7 +210,7 @@ export function scanPage(profile: CandidateProfile, mappings: SavedFieldMapping[
       fingerprint: applied.fingerprint,
       mappingSource: applied.mappingSource,
       hasValue: value.trim().length > 0,
-      valuePreview: previewValue(profileValuePreview(profile, match)),
+      valuePreview: previewValue(match.profilePath ?? "", profileValuePreview(profile, match)),
       comparisonStatus: comparison.status,
       ...(comparison.token ? { comparisonToken: comparison.token } : {})
     };
@@ -208,8 +222,9 @@ export function scanPage(profile: CandidateProfile, mappings: SavedFieldMapping[
   return {
     title: document.title,
     site,
+    ats: atsSession.metadata,
     fields,
-    repeatableRecords: scanRepeatableRecords(profile),
+    repeatableRecords: scanRepeatableRecords(profile, { template: atsSession.template }),
     resumeAttachment: scanResumeAttachment(),
     summary: {
       total: fields.length,
@@ -235,20 +250,25 @@ export async function fillControl(element: HTMLElement, value: string): Promise<
 export async function fillPage(
   profile: CandidateProfile,
   selections: FillSelection[],
-  mappings: SavedFieldMapping[] = []
+  mappings: SavedFieldMapping[] = [],
+  atsRuntime: AtsMatchingRuntime = defaultAtsMatchingRuntime
 ): Promise<FillResult> {
   const site = currentSite();
+  const pageDescriptors = discoverFields();
+  const descriptorByElementId = new Map(pageDescriptors.map((descriptor) => [descriptor.elementId, descriptor]));
+  const atsSession = atsRuntime.resolve(pageDescriptors);
   const outcomes: FillItemOutcome[] = [];
+  const repeatableWrites: RepeatableLifecycleWrite[] = [];
   for (const selection of selections) {
     const element = findControlByElementId(selection.elementId);
     if (!element) {
       outcomes.push({ ...selection, status: "skipped", reason: "field-not-found" });
       continue;
     }
-    const descriptor = describeControl(element, 0);
+    const descriptor = descriptorByElementId.get(selection.elementId) ?? describeControl(element, 0);
     const verifiedMatch = applySavedMapping(
       descriptor,
-      matchField(descriptor),
+      atsSession.match(descriptor),
       mappings,
       site
     ).match;
@@ -295,7 +315,11 @@ export async function fillPage(
       }
     }
     const write = await writeControlVerified(element, value, {
-      normalize: (candidate) => normalizeComparableValue(selection.profilePath, candidate)
+      normalize: (candidate) => normalizeComparableValue(selection.profilePath, candidate),
+      ...(verifiedMatch.atsTemplate ? {
+        driverHint: verifiedMatch.atsTemplate.driverHint,
+        verification: verifiedMatch.atsTemplate.verification
+      } : {})
     });
     if (write.status !== "verified") {
       outcomes.push({
@@ -308,11 +332,17 @@ export async function fillPage(
       continue;
     }
     outcomes.push({ ...selection, status: "filled" });
+    repeatableWrites.push({ element, profilePath: selection.profilePath, value });
   }
+
+  const repeatableLifecycles = supportsRepeatableRecordAdapter({ template: atsSession.template })
+    ? await completeRepeatableLifecycles(repeatableWrites, { template: atsSession.template })
+    : [];
 
   return {
     outcomes,
     filledCount: outcomes.filter((outcome) => outcome.status === "filled").length,
-    skippedCount: outcomes.filter((outcome) => outcome.status === "skipped").length
+    skippedCount: outcomes.filter((outcome) => outcome.status === "skipped").length,
+    ...(repeatableLifecycles.length > 0 ? { repeatableLifecycles } : {})
   };
 }

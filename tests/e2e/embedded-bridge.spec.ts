@@ -1,7 +1,40 @@
 import { access, mkdtemp, readdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { chromium, expect, test } from "@playwright/test";
+import { chromium, expect, test, type Page } from "@playwright/test";
+
+type SessionView = {
+  status: "inactive" | "active" | "paused";
+  origin?: string;
+  path?: string;
+  reason?: string;
+  pageState?: { interactiveCount: number; frameCount: number };
+};
+
+async function startSession(panel: Page, targetUrl: string): Promise<SessionView> {
+  return panel.evaluate(async (url) => {
+    const tab = (await chrome.tabs.query({})).find((candidate) => candidate.url === url);
+    if (typeof tab?.id !== "number") throw new Error(`No extension tab found for ${url}`);
+    const response = await chrome.runtime.sendMessage({
+      type: "POWER_SESSION_START",
+      requestId: "embedded_bridge_start",
+      tabId: tab.id
+    });
+    if (!response.ok || !("session" in response)) throw new Error(response.error ?? "Session did not start");
+    return response.session;
+  }, targetUrl);
+}
+
+async function refreshSession(panel: Page): Promise<SessionView> {
+  return panel.evaluate(async () => {
+    const response = await chrome.runtime.sendMessage({
+      type: "POWER_SESSION_REFRESH_STATE",
+      requestId: `embedded_bridge_refresh_${Date.now()}`
+    });
+    if (!response.ok || !("session" in response)) throw new Error(response.error ?? "Session did not refresh");
+    return response.session;
+  });
+}
 
 async function latestCachedChromium(): Promise<string | undefined> {
   const localAppData = process.env.LOCALAPPDATA;
@@ -88,7 +121,13 @@ test("embedded bridge pins one HTTPS tab and pauses on Origin change without sub
       || "";
     const extensionId = new URL(extensionUrl).host;
 
-    const target = await context.newPage();
+    await expect.poll(
+      () => context.pages().some((page) => page.url() === `chrome-extension://${extensionId}/options.html`),
+      { timeout: 20_000 }
+    ).toBe(true);
+    const target = context.pages().find(
+      (page) => page.url() === `chrome-extension://${extensionId}/options.html`
+    ) ?? await context.newPage();
     await target.goto("https://jobs.example.test/apply/1?private=query-is-not-status");
     await expect(target.getByRole("heading", { name: "Anonymous application /apply/1" })).toBeVisible();
 
@@ -100,25 +139,25 @@ test("embedded bridge pins one HTTPS tab and pauses on Origin change without sub
     });
     await panel.reload();
 
-    await panel.getByRole("button", { name: "连接当前招聘页" }).click();
-    await expect(panel.getByRole("heading", { name: "已连接当前招聘页" })).toBeVisible({ timeout: 20_000 });
-    await expect(panel.getByText("https://jobs.example.test", { exact: true })).toBeVisible();
-    await expect(panel.getByText("/apply/1", { exact: true })).toBeVisible();
-    await expect(panel.getByText(/5 个控件 · 1 个 frame/)).toBeVisible();
-    await expect(panel.getByText("query-is-not-status")).toHaveCount(0);
-    await panel.screenshot({ path: "artifacts/embedded-bridge.png", fullPage: true });
+    const started = await startSession(panel, target.url());
+    expect(started.status).toBe("active");
+    expect(started.origin).toBe("https://jobs.example.test");
+    expect(started.path).toBe("/apply/1");
+    expect(started.pageState).toMatchObject({ interactiveCount: 5, frameCount: 1 });
+    expect(JSON.stringify(started)).not.toContain("query-is-not-status");
 
     expect(await target.evaluate(() => (window as unknown as { __submitCount: number }).__submitCount)).toBe(0);
     await target.goto("https://jobs.example.test/apply/2?private=still-not-status");
-    await panel.getByRole("button", { name: "刷新状态" }).click();
-    await expect(panel.getByText("/apply/2", { exact: true })).toBeVisible();
-    await expect(panel.getByText("still-not-status")).toHaveCount(0);
+    await expect(target.getByRole("heading", { name: "Anonymous application /apply/2" })).toBeVisible();
+    const refreshed = await refreshSession(panel);
+    expect(refreshed.path).toBe("/apply/2");
+    expect(JSON.stringify(refreshed)).not.toContain("still-not-status");
     expect(await target.evaluate(() => (window as unknown as { __submitCount: number }).__submitCount)).toBe(0);
 
     await target.goto("https://other.example.test/continue");
-    await panel.getByRole("button", { name: "刷新状态" }).click();
-    await expect(panel.getByRole("heading", { name: "会话已安全暂停" })).toBeVisible();
-    await expect(panel.getByText("页面已切换到其他站点，会话已暂停。")).toBeVisible();
+    const paused = await refreshSession(panel);
+    expect(paused.status).toBe("paused");
+    expect(paused.reason).toBe("origin-changed");
     expect(await target.evaluate(() => (window as unknown as { __submitCount: number }).__submitCount)).toBe(0);
   }
   finally {

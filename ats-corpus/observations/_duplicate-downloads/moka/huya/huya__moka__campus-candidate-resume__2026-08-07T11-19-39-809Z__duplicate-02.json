@@ -1,0 +1,1082 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-08-07T11:19:39.809Z",
+  "source": {
+    "origin": "https://app.mokahr.com",
+    "pathTemplate": "/campus_apply/huya/:id",
+    "language": "zh-CN",
+    "pageType": "unknown",
+    "captureToolVersion": "0.2.0"
+  },
+  "family": {
+    "id": "generic-html",
+    "version": "1",
+    "confidence": 0,
+    "evidence": []
+  },
+  "sections": [
+    "实习经历",
+    "语言能力"
+  ],
+  "controls": [
+    {
+      "controlKey": "control_0001",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {},
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0002",
+      "role": "link",
+      "tag": "a",
+      "semantics": {
+        "label": "返回校招主页"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0003",
+      "role": "link",
+      "tag": "a",
+      "semantics": {
+        "label": "我的简历"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0004",
+      "role": "link",
+      "tag": "a",
+      "semantics": {
+        "label": "投递记录"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0005",
+      "role": "button",
+      "tag": "button",
+      "semantics": {},
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0006",
+      "role": "link",
+      "tag": "a",
+      "semantics": {
+        "label": "社会招聘",
+        "nearbyText": "我的简历 投递记录 隐私政策 退出"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0007",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {
+        "label": "姓名"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0008",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {
+        "label": "+86"
+      },
+      "disabled": false,
+      "readOnly": true,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0009",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {
+        "label": "请输入手机号"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0010",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {
+        "label": "邮箱"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0011",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {
+        "label": "请选择"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0012",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {
+        "label": "请选择"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0013",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {
+        "label": "请选择"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0014",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {
+        "label": "所在地"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0015",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {
+        "label": "最近公司"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0016",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {
+        "label": "身份证"
+      },
+      "disabled": false,
+      "readOnly": true,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "identity"
+    },
+    {
+      "controlKey": "control_0017",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {
+        "label": "证件号码"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0018",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {
+        "label": "出生日期 (年龄)"
+      },
+      "disabled": false,
+      "readOnly": true,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0019",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {
+        "label": "当前薪资"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0020",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {
+        "label": "期望薪资"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0021",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {
+        "label": "期望城市"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0022",
+      "role": "link",
+      "tag": "a",
+      "semantics": {
+        "label": "添加",
+        "nearbyText": "工作经历"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0023",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {
+        "label": "年"
+      },
+      "disabled": false,
+      "readOnly": true,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0024",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {
+        "label": "月"
+      },
+      "disabled": false,
+      "readOnly": true,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0025",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {
+        "label": "年"
+      },
+      "disabled": false,
+      "readOnly": true,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0026",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {
+        "label": "月"
+      },
+      "disabled": false,
+      "readOnly": true,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0027",
+      "role": "checkbox",
+      "tag": "input",
+      "inputType": "checkbox",
+      "semantics": {
+        "label": "至今"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0028",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {
+        "label": "公司名称"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0029",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {
+        "label": "职位名称"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0030",
+      "role": "textbox",
+      "tag": "textarea",
+      "semantics": {
+        "label": "内容"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0031",
+      "role": "link",
+      "tag": "a",
+      "semantics": {
+        "label": "添加",
+        "nearbyText": "教育背景"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0032",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {
+        "label": "年"
+      },
+      "disabled": false,
+      "readOnly": true,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0033",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {
+        "label": "月"
+      },
+      "disabled": false,
+      "readOnly": true,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0034",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {
+        "label": "年"
+      },
+      "disabled": false,
+      "readOnly": true,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0035",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {
+        "label": "月"
+      },
+      "disabled": false,
+      "readOnly": true,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0036",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {
+        "label": "请输入就读学校"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0037",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {
+        "label": "请输入专业名称"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0038",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {
+        "label": "请选择"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0039",
+      "role": "link",
+      "tag": "a",
+      "semantics": {
+        "label": "添加",
+        "nearbyText": "实习经历"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0040",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {
+        "label": "年"
+      },
+      "disabled": false,
+      "readOnly": true,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0041",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {
+        "label": "月"
+      },
+      "disabled": false,
+      "readOnly": true,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0042",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {
+        "label": "年"
+      },
+      "disabled": false,
+      "readOnly": true,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0043",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {
+        "label": "月"
+      },
+      "disabled": false,
+      "readOnly": true,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0044",
+      "role": "checkbox",
+      "tag": "input",
+      "inputType": "checkbox",
+      "semantics": {
+        "label": "至今"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0045",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {
+        "label": "公司名称"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0046",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {
+        "label": "职位名称"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0047",
+      "role": "textbox",
+      "tag": "textarea",
+      "semantics": {
+        "label": "内容"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0048",
+      "role": "link",
+      "tag": "a",
+      "semantics": {
+        "label": "添加",
+        "nearbyText": "项目经验"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0049",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {
+        "label": "年"
+      },
+      "disabled": false,
+      "readOnly": true,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0050",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {
+        "label": "月"
+      },
+      "disabled": false,
+      "readOnly": true,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0051",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {
+        "label": "年"
+      },
+      "disabled": false,
+      "readOnly": true,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0052",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {
+        "label": "月"
+      },
+      "disabled": false,
+      "readOnly": true,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0053",
+      "role": "checkbox",
+      "tag": "input",
+      "inputType": "checkbox",
+      "semantics": {
+        "label": "至今"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0054",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {
+        "label": "项目名称"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0055",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {
+        "label": "职务"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0056",
+      "role": "textbox",
+      "tag": "textarea",
+      "semantics": {
+        "label": "内容"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0057",
+      "role": "textbox",
+      "tag": "textarea",
+      "semantics": {
+        "label": "项目中职责"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0058",
+      "role": "link",
+      "tag": "a",
+      "semantics": {
+        "label": "添加",
+        "nearbyText": "语言能力"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0059",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {
+        "label": "语言类型"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0060",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {
+        "label": "请选择"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0061",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {
+        "label": "请选择"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0062",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {
+        "label": "请选择"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0063",
+      "role": "textbox",
+      "tag": "textarea",
+      "semantics": {
+        "label": "简介"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0064",
+      "role": "link",
+      "tag": "a",
+      "semantics": {
+        "label": "添加",
+        "nearbyText": "获奖经历"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0065",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {
+        "label": "年"
+      },
+      "disabled": false,
+      "readOnly": true,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0066",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {
+        "label": "月"
+      },
+      "disabled": false,
+      "readOnly": true,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0067",
+      "role": "textbox",
+      "tag": "input",
+      "inputType": "text",
+      "semantics": {
+        "label": "奖项名称"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0068",
+      "role": "button",
+      "tag": "button",
+      "semantics": {
+        "label": "保存"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0069",
+      "role": "link",
+      "tag": "a",
+      "semantics": {
+        "label": "京公网安备 [长数字]号"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0070",
+      "role": "link",
+      "tag": "a",
+      "semantics": {
+        "label": "京ICP备[长数字]号-3"
+      },
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    },
+    {
+      "controlKey": "control_0071",
+      "role": "link",
+      "tag": "a",
+      "semantics": {},
+      "disabled": false,
+      "readOnly": false,
+      "required": false,
+      "multiple": false,
+      "boundary": "main",
+      "safety": "ordinary"
+    }
+  ],
+  "summary": {
+    "controlCount": 71,
+    "blockedControlCount": 1,
+    "frameControlCount": 0,
+    "openShadowControlCount": 0,
+    "sectionCount": 2
+  },
+  "privacy": {
+    "currentValuesIncluded": false,
+    "sessionReferencesIncluded": false,
+    "queryValuesIncluded": false,
+    "fileMetadataIncluded": false
+  }
+}

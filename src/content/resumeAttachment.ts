@@ -1,4 +1,4 @@
-import { describeControl, discoverFields, findControlByElementId } from "../matching/dom";
+import { discoverFields, findControlByElementId } from "../matching/dom";
 import { normalizeFieldText } from "../matching/normalize";
 
 export const MAX_RESUME_ATTACHMENT_BYTES = 10 * 1024 * 1024;

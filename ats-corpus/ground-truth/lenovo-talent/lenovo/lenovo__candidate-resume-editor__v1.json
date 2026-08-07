@@ -1,0 +1,166 @@
+{
+  "schemaVersion": 1,
+  "id": "lenovo-talent-resume-v1",
+  "company": {
+    "id": "lenovo",
+    "name": "联想",
+    "englishName": "Lenovo"
+  },
+  "source": {
+    "originPattern": "https://talent.lenovo.com.cn",
+    "pathTemplate": "/account/resume",
+    "language": "zh-CN",
+    "pageType": "candidate_resume_editor",
+    "surface": "pc",
+    "atsFamily": "lenovo-talent"
+  },
+  "evidence": {
+    "capturedAt": "2026-08-07",
+    "source": "public production PC component chunks plus GET /gateway/sysDict/all",
+    "frontendBuild": "v0.0.2",
+    "componentLibrary": "Element Plus",
+    "boundary": "Compiled-component and public-dictionary structure only; authenticated rendered-DOM behavior was not observed. No candidate values, authentication data, page write, upload, save, or application submission entered this artifact."
+  },
+  "denominators": {
+    "groups": 7,
+    "logicalFields": 55,
+    "workflowControls": 2,
+    "remoteOptionSets": 15,
+    "staticOptionSets": 1
+  },
+  "groups": [
+    {
+      "label": "上传简历",
+      "fieldName": "resume_upload",
+      "required": false,
+      "repeatable": false,
+      "fields": [
+        { "label": "简历附件", "fieldName": "resumeAttachment", "type": "attachment", "required": true, "requiredScope": "section_save", "accept": [".doc", ".docx", ".pdf"], "limit": 1, "maxBytes": 10485760 },
+        { "label": "照片（建议比例：295*413像素）", "fieldName": "resumeAvatar", "type": "image_attachment", "required": false, "accept": [".jpg", ".png"], "maxBytes": 10485760 }
+      ],
+      "workflowControls": [
+        { "label": "解析简历并自动填充", "fieldName": "confirmAnalysis", "type": "checkbox", "required": false },
+        { "label": "确认", "fieldName": "confirmBtn", "type": "checkbox", "required": true, "requiredScope": "section_save" }
+      ]
+    },
+    {
+      "label": "个人信息",
+      "fieldName": "resume_info",
+      "required": true,
+      "repeatable": false,
+      "fields": [
+        { "label": "姓", "fieldName": "surname", "type": "text", "required": true },
+        { "label": "名", "fieldName": "givenName", "type": "text", "required": true },
+        { "label": "性别", "fieldName": "gender", "type": "radio", "required": true, "optionSet": "Gender" },
+        { "label": "出生日期", "fieldName": "birthday", "type": "month", "required": true, "valueFormat": "YYYY/MM" },
+        { "label": "国家/地区", "fieldName": "country", "controlName": "countryName", "type": "select", "required": true, "optionSet": "country", "observedPcMultipleAttribute": true },
+        { "label": "证件类型", "fieldName": "certificateType", "type": "select", "required": true, "optionSet": "nationalId", "compositeLabel": "个人证件" },
+        { "label": "证件号码", "fieldName": "certificateNo", "type": "text", "required": true, "sensitive": true, "confirmationRequired": true, "compositeLabel": "个人证件" },
+        { "label": "期望工作地点", "fieldName": "expectWorkplaceName", "type": "select", "required": true, "optionSet": "city_portal", "multiple": true, "maxSelections": 3 },
+        { "label": "电子邮箱", "fieldName": "email", "type": "email", "required": true },
+        { "label": "手机号", "fieldName": "phone", "type": "text", "required": true },
+        { "label": "微信号", "fieldName": "wechat", "type": "text", "required": false },
+        { "label": "是否接受岗位调剂", "fieldName": "adjustJob", "type": "radio", "required": true, "optionSet": "yes_no" },
+        { "label": "可接受的岗位类型1", "fieldName": "adjustJobType1", "type": "select", "required": true, "optionSet": "jobType", "condition": "adjustJob == 1" },
+        { "label": "可接受的岗位类型2", "fieldName": "adjustJobType2", "type": "select", "required": false, "optionSet": "jobType", "condition": "adjustJob == 1" },
+        { "label": "是否曾在联想实习过", "fieldName": "lenovoPractice", "type": "radio", "required": true, "optionSet": "yes_no" },
+        { "label": "是否有亲属在联想或联想电讯盈科企业方案工作", "fieldName": "lenovoRelativesFlag", "type": "radio", "required": true, "optionSet": "yes_no" },
+        { "label": "是否参加过联想校园大使", "fieldName": "lenovoCampusAmbassador", "type": "select", "required": true, "optionSet": "lenovoCampus" }
+      ]
+    },
+    {
+      "label": "教育经历",
+      "fieldName": "educationExperiences",
+      "required": true,
+      "repeatable": true,
+      "fields": [
+        { "label": "学历（请从本科学历填写至最高学历）", "fieldName": "degree", "type": "select", "required": true, "optionSet": "education" },
+        { "label": "培养方式", "fieldName": "cultivationMethod", "type": "select", "required": true, "optionSet": "cultivationMethod" },
+        { "label": "学校名称", "fieldName": "university", "controlName": "universityName", "type": "remote_select", "required": true, "optionSet": "school_search" },
+        { "label": "入学时间", "fieldName": "enrollmentTime", "type": "month", "required": true, "valueFormat": "YYYY/MM" },
+        { "label": "毕业时间", "fieldName": "graduateTime", "type": "month", "required": true, "valueFormat": "YYYY/MM", "minField": "enrollmentTime" },
+        { "label": "院系", "fieldName": "department", "type": "text", "required": true },
+        { "label": "专业", "fieldName": "major", "type": "text", "required": true },
+        { "label": "研究方向", "fieldName": "researchArea", "type": "text", "required": false },
+        { "label": "年级排名", "fieldName": "ranking", "type": "select", "required": false, "optionSet": "rank" }
+      ]
+    },
+    {
+      "label": "实习经历",
+      "fieldName": "internExperiences",
+      "required": true,
+      "repeatable": true,
+      "fields": [
+        { "label": "是否有实习经验", "fieldName": "hasInternship", "type": "select", "required": true, "optionSet": "yes_no" },
+        { "label": "工作单位", "fieldName": "company", "type": "text", "required": true, "condition": "hasInternship == 1" },
+        { "label": "行业类别", "fieldName": "industry", "type": "select", "required": true, "optionSet": "industry", "condition": "hasInternship == 1" },
+        { "label": "入职时间", "fieldName": "entryTime", "type": "month", "required": true, "valueFormat": "YYYY/MM", "condition": "hasInternship == 1" },
+        { "label": "离职时间", "fieldName": "depatureDate", "type": "month", "required": true, "valueFormat": "YYYY/MM", "minField": "entryTime", "observedSpelling": true, "condition": "hasInternship == 1" },
+        { "label": "职位", "fieldName": "position", "type": "text", "required": true, "condition": "hasInternship == 1" },
+        { "label": "工作描述", "fieldName": "roleResponsibility", "type": "long_text", "required": true, "condition": "hasInternship == 1" }
+      ]
+    },
+    {
+      "label": "项目经验",
+      "fieldName": "projectExperiences",
+      "required": true,
+      "repeatable": true,
+      "fields": [
+        { "label": "是否有项目经验", "fieldName": "hasProject", "type": "select", "required": true, "optionSet": "yes_no" },
+        { "label": "项目名称", "fieldName": "projectName", "type": "text", "required": true, "condition": "hasProject == 1" },
+        { "label": "项目开始时间", "fieldName": "startTime", "type": "month", "required": true, "valueFormat": "YYYY/MM", "condition": "hasProject == 1" },
+        { "label": "项目结束时间", "fieldName": "endTime", "type": "month", "required": true, "valueFormat": "YYYY/MM", "minField": "startTime", "condition": "hasProject == 1" },
+        { "label": "项目职责", "fieldName": "roleResponsibility", "type": "text", "required": true, "condition": "hasProject == 1" },
+        { "label": "项目描述", "fieldName": "projectIntrodution", "type": "long_text", "required": true, "observedSpelling": true, "condition": "hasProject == 1" }
+      ]
+    },
+    {
+      "label": "技能/爱好",
+      "fieldName": "skillsAndHobbies",
+      "required": true,
+      "repeatable": false,
+      "fields": [
+        { "label": "英语等级", "fieldName": "englishLevel", "type": "select", "required": true, "optionSet": "level" },
+        { "label": "英语分数", "fieldName": "englishScore", "type": "text", "required": true },
+        { "label": "其他语言", "fieldName": "languageList[].otherLanguage", "type": "select", "required": false, "optionSet": "language" },
+        { "label": "听说能力", "fieldName": "languageList[].listenAndSpeak", "type": "select", "required": false, "optionSet": "Proficiency" },
+        { "label": "读写能力", "fieldName": "languageList[].readAndWrite", "type": "select", "required": false, "optionSet": "Proficiency" },
+        { "label": "编程能力", "fieldName": "programmingList[].programAbility", "type": "select", "required": false, "optionSet": "programming" },
+        { "label": "熟练程度", "fieldName": "programmingList[].proficiencyLevel", "type": "select", "required": false, "optionSet": "Proficiency" },
+        { "label": "IT技能", "fieldName": "itList[].itSkills", "type": "text", "required": false },
+        { "label": "熟练程度", "fieldName": "itList[].proficiencyLevel", "type": "select", "required": false, "optionSet": "Proficiency" },
+        { "label": "特长和爱好", "fieldName": "strengthHobby", "type": "long_text", "required": false }
+      ]
+    },
+    {
+      "label": "其他",
+      "fieldName": "resumeOther",
+      "required": true,
+      "repeatable": false,
+      "fields": [
+        { "label": "从哪儿获知此招聘信息", "fieldName": "informationChannell", "type": "select", "required": true, "optionSet": "InformationChannel", "observedSpelling": true },
+        { "label": "内推码", "fieldName": "referrerItCode", "type": "text", "required": false },
+        { "label": "其他来源说明", "fieldName": "inputMsg", "type": "text", "required": false, "renderedLabel": "", "condition": "informationChannell == 18" },
+        { "label": "自我评价", "fieldName": "selfEvaluation", "type": "long_text", "required": false }
+      ]
+    }
+  ],
+  "optionSets": [
+    { "id": "yes_no", "source": "public config chunk", "count": 2 },
+    { "id": "level", "source": "sysDict/all", "count": 11 },
+    { "id": "Gender", "source": "sysDict/all", "count": 2 },
+    { "id": "country", "source": "sysDict/all", "count": 195 },
+    { "id": "nationalId", "source": "sysDict/all", "count": 3 },
+    { "id": "city_portal", "source": "sysDict/all", "count": 19 },
+    { "id": "jobType", "source": "sysDict/all", "count": 6 },
+    { "id": "lenovoCampus", "source": "sysDict/all", "count": 4 },
+    { "id": "education", "source": "sysDict/all", "count": 5 },
+    { "id": "cultivationMethod", "source": "sysDict/all", "count": 5 },
+    { "id": "rank", "source": "sysDict/all", "count": 5 },
+    { "id": "industry", "source": "sysDict/all", "count": 9 },
+    { "id": "programming", "source": "sysDict/all", "count": 11 },
+    { "id": "Proficiency", "source": "sysDict/all", "count": 4 },
+    { "id": "language", "source": "sysDict/all", "count": 9 },
+    { "id": "InformationChannel", "source": "sysDict/all", "count": 12 }
+  ]
+}

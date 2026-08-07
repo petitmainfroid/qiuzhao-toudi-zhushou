@@ -22,7 +22,7 @@
       { "fieldKey": "basic_info.gender", "expectedPath": "basic.gender", "expectedAction": "fill" },
       { "fieldKey": "basic_info.nationality", "expectedPath": "basic.nationality", "expectedAction": "fill" },
       { "fieldKey": "basic_info.hometown_city", "expectedPath": "basic.hometown", "expectedAction": "fill" },
-      { "fieldKey": "basic_info.identification", "expectedPath": null, "expectedAction": "exclude" },
+      { "fieldKey": "basic_info.identification", "expectedPath": "basic.identityDocumentNumber", "expectedAction": "confirm" },
       { "fieldKey": "basic_info.preferred_city_list", "expectedPath": "jobPreference.preferredCities", "expectedAction": "fill" },
       { "fieldKey": "education_list[0].school", "expectedPath": "education.0.school", "expectedAction": "fill" },
       { "fieldKey": "education_list[0].degree", "expectedPath": "education.0.degree", "expectedAction": "fill" },

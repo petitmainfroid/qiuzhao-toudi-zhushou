@@ -143,7 +143,7 @@ describe("SidePanel", () => {
       pageBridge={bridge}
     />);
 
-    fireEvent.click(await screen.findByRole("button", { name: "扫描当前页面" }));
+    fireEvent.click(await screen.findByRole("button", { name: "自动填写当前页面" }));
     expect(await screen.findByText("restored-resume.pdf")).toBeInTheDocument();
     expect(screen.getByText("已保存于本机，可长期复用")).toBeInTheDocument();
     expect(bridge.attachResume).not.toHaveBeenCalled();
@@ -157,26 +157,28 @@ describe("SidePanel", () => {
     ));
   });
 
-  it("defaults to safe high-confidence selections only", async () => {
+  it("concentrates exceptions and continues with the safe plan by default", async () => {
     const profile = profileWithValues();
     const bridge: PageBridge = {
       scan: vi.fn(async () => scanResult()),
       fill: vi.fn(async (_profile: CandidateProfile, selections: FillSelection[]) => ({
-        outcomes: selections.map((selection) => ({ ...selection, status: "filled" as const })),
+        outcomes: selections.map((selection: FillSelection) => ({ ...selection, status: "filled" as const })),
         filledCount: selections.length,
         skippedCount: 0
       }))
     };
     render(<SidePanel repository={{ load: async () => profile }} pageBridge={bridge} />);
 
-    fireEvent.click(await screen.findByRole("button", { name: "扫描当前页面" }));
+    expect(screen.queryByRole("button", { name: "扫描当前页面" })).not.toBeInTheDocument();
+    fireEvent.click(await screen.findByRole("button", { name: "自动填写当前页面" }));
     await screen.findByRole("heading", { name: "侧栏测试页面" });
-    expect(screen.getByLabelText("选择 姓名")).toBeChecked();
-    expect(screen.getByLabelText("选择 出生日期")).not.toBeChecked();
-    expect(screen.getByLabelText("选择 项目介绍")).not.toBeChecked();
+    expect(screen.getByRole("heading", { name: "只处理这 2 个例外" })).toBeInTheDocument();
+    expect(screen.getByLabelText("确认填写 出生日期")).not.toBeChecked();
+    expect(screen.getByLabelText("确认填写 项目介绍")).not.toBeChecked();
     expect(screen.getByText("未匹配或已跳过 1 项")).toBeInTheDocument();
+    expect(bridge.fill).not.toHaveBeenCalled();
 
-    fireEvent.click(screen.getByRole("button", { name: "填写已选 1 项" }));
+    fireEvent.click(screen.getByRole("button", { name: "确认并继续填写 1 项" }));
     await waitFor(() => expect(bridge.fill).toHaveBeenCalledTimes(1));
     expect(bridge.fill).toHaveBeenCalledWith(profile, [
       { elementId: "name", profilePath: "basic.fullName" }
@@ -191,11 +193,11 @@ describe("SidePanel", () => {
     };
     render(<SidePanel repository={{ load: async () => profileWithValues() }} pageBridge={bridge} />);
 
-    fireEvent.click(await screen.findByRole("button", { name: "扫描当前页面" }));
-    await screen.findByLabelText("选择 出生日期");
-    fireEvent.click(screen.getByLabelText("选择 出生日期"));
-    fireEvent.click(screen.getByLabelText("选择 项目介绍"));
-    expect(screen.getByRole("button", { name: "填写已选 3 项" })).toBeEnabled();
+    fireEvent.click(await screen.findByRole("button", { name: "自动填写当前页面" }));
+    await screen.findByLabelText("确认填写 出生日期");
+    fireEvent.click(screen.getByLabelText("确认填写 出生日期"));
+    fireEvent.click(screen.getByLabelText("确认填写 项目介绍"));
+    expect(screen.getByRole("button", { name: "确认并继续填写 3 项" })).toBeEnabled();
   });
 
   it("saves and reapplies a user field correction", async () => {
@@ -230,10 +232,13 @@ describe("SidePanel", () => {
     };
     render(<SidePanel repository={{ load: async () => profile }} mappingRepository={mappingRepository} pageBridge={bridge} />);
 
-    fireEvent.click(await screen.findByRole("button", { name: "扫描当前页面" }));
-    const matchDetails = await screen.findAllByText("为什么这样匹配");
-    fireEvent.click(matchDetails[0]);
-    fireEvent.change(screen.getByLabelText("更改 姓名 对应字段"), { target: { value: "basic.email" } });
+    fireEvent.click(await screen.findByRole("button", { name: "自动填写当前页面" }));
+    fireEvent.click(await screen.findByText("查看自动匹配详情 1 项"));
+    const nameFieldSelect = screen.getByLabelText("更改 姓名 对应字段");
+    const matchDetails = nameFieldSelect.closest("details")?.querySelector("summary");
+    expect(matchDetails).not.toBeNull();
+    fireEvent.click(matchDetails!);
+    fireEvent.change(nameFieldSelect, { target: { value: "basic.email" } });
 
     await waitFor(() => expect(mappingRepository.save).toHaveBeenCalledWith({
       site: "https://jobs.example",
@@ -253,7 +258,7 @@ describe("SidePanel", () => {
     };
     render(<SidePanel repository={{ load: async () => profileWithValues() }} pageBridge={bridge} />);
 
-    fireEvent.click(await screen.findByRole("button", { name: "扫描当前页面" }));
+    fireEvent.click(await screen.findByRole("button", { name: "自动填写当前页面" }));
     const input = await screen.findByLabelText("选择要附加的 PDF 简历");
     const bytes = new TextEncoder().encode("%PDF-1.4\nsynthetic sidepanel attachment\n%%EOF");
     const file = new File([bytes], "synthetic-resume.pdf", { type: "application/pdf" });
@@ -273,5 +278,73 @@ describe("SidePanel", () => {
       expect.any(Number)
     ));
     expect(await screen.findByText(/简历已附加/)).toBeInTheDocument();
+  });
+
+  it("fills a safe-only page from the single primary action", async () => {
+    const profile = profileWithValues();
+    const safeOnly = scanResult();
+    safeOnly.fields = safeOnly.fields.filter((field) => ["name", "file"].includes(field.elementId));
+    const bridge: PageBridge = {
+      scan: vi.fn(async () => safeOnly),
+      fill: vi.fn(async (_profile, selections) => ({
+        outcomes: selections.map((selection: FillSelection) => ({ ...selection, status: "filled" as const })),
+        filledCount: selections.length,
+        skippedCount: 0
+      }))
+    };
+    render(<SidePanel repository={{ load: async () => profile }} pageBridge={bridge} />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "自动填写当前页面" }));
+
+    await waitFor(() => expect(bridge.scan).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(bridge.fill).toHaveBeenCalledTimes(1));
+    expect(screen.queryByText("填写前集中确认")).not.toBeInTheDocument();
+    expect(await screen.findByText(/已填写 1 项/)).toBeInTheDocument();
+  });
+
+  it("keeps manual recovery secondary and sends only one explicitly selected non-sensitive value", async () => {
+    const profile = profileWithValues();
+    const bridge: PageBridge = {
+      scan: vi.fn(async () => scanResult()),
+      fill: vi.fn(),
+      getFocusedRecoveryTarget: vi.fn(async () => ({
+        status: "ready" as const,
+        token: "focused-unit-token",
+        fieldLabel: "未匹配的作品链接",
+        controlKind: "text",
+        expiresInMs: 60_000
+      })),
+      fillFocusedRecovery: vi.fn(async () => ({
+        status: "filled" as const,
+        fieldLabel: "未匹配的作品链接",
+        canonicalLabel: "邮箱"
+      }))
+    };
+    render(<SidePanel repository={{ load: async () => profile }} pageBridge={bridge} />);
+
+    expect(screen.queryByText("某个字段没填上？")).not.toBeInTheDocument();
+    fireEvent.click(await screen.findByRole("button", { name: "自动填写当前页面" }));
+    const recoverySummary = await screen.findByText("某个字段没填上？");
+    const recoveryDetails = recoverySummary.closest("details");
+    expect(recoveryDetails).not.toBeNull();
+    fireEvent.click(recoverySummary);
+    fireEvent.click(screen.getByRole("button", { name: "读取刚刚聚焦的字段" }));
+
+    expect(await screen.findByText("已锁定：未匹配的作品链接")).toBeInTheDocument();
+    expect(Array.from(recoveryDetails!.querySelectorAll("option"), (option) => option.textContent))
+      .not.toContain("出生日期");
+    expect(recoveryDetails).not.toHaveTextContent("panel@example.test");
+    expect(recoveryDetails).not.toHaveTextContent("2003-08-01");
+    fireEvent.change(screen.getByLabelText("选择要补填的档案字段"), {
+      target: { value: "basic.email" }
+    });
+    fireEvent.click(screen.getByRole("button", { name: "填写这个字段" }));
+
+    await waitFor(() => expect(bridge.fillFocusedRecovery).toHaveBeenCalledWith(
+      "focused-unit-token",
+      "basic.email",
+      "panel@example.test"
+    ));
+    expect(await screen.findByText(/写入“未匹配的作品链接”并回读确认/)).toBeInTheDocument();
   });
 });

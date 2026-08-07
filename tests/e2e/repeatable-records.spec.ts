@@ -5,7 +5,7 @@ test("repeatable records are created one at a time, rescanned, and filled withou
 
   const result = await page.evaluate(async () => {
     const profile = {
-      schemaVersion: 2 as const,
+      schemaVersion: 4 as const,
       updatedAt: "",
       basic: {
         fullName: "重复记录回归",
@@ -55,12 +55,19 @@ test("repeatable records are created one at a time, rescanned, and filled withou
       .filter((field) => field.profilePath && field.hasValue && !field.excludedReason && field.comparisonStatus === "empty")
       .map((field) => ({ elementId: field.elementId, profilePath: field.profilePath! }));
     const fill = await window.__repeatableFixture.fill(profile, selections);
+    const secondScan = window.__repeatableFixture.scan(profile);
+    const secondSelections = secondScan.fields
+      .filter((field) => field.profilePath && field.hasValue && !field.excludedReason && field.comparisonStatus === "empty")
+      .map((field) => ({ elementId: field.elementId, profilePath: field.profilePath! }));
+    const secondFill = await window.__repeatableFixture.fill(profile, secondSelections);
     return {
       before,
       creations,
       after,
       fill,
+      secondFill,
       addClickCount: window.__repeatableFixture.addClickCount,
+      saveClickCount: window.__repeatableFixture.saveClickCount,
       deleteClickCount: window.__repeatableFixture.deleteClickCount,
       submitCount: window.__repeatableFixture.submitCount
     };
@@ -80,6 +87,15 @@ test("repeatable records are created one at a time, rescanned, and filled withou
   expect(result.deleteClickCount).toBe(0);
   expect(result.submitCount).toBe(0);
   expect(result.fill.filledCount).toBeGreaterThanOrEqual(28);
+  expect(result.fill.repeatableLifecycles).toHaveLength(10);
+  expect(result.fill.repeatableLifecycles?.filter(({ status }) => status === "saved")).toHaveLength(7);
+  expect(result.fill.repeatableLifecycles?.filter(({ status, reason }) =>
+    status === "verified" && reason === "no-save-required"
+  )).toHaveLength(3);
+  expect(result.fill.repeatableLifecycles?.some(({ status }) => status === "stopped")).toBe(false);
+  expect(result.saveClickCount).toBe(7);
+  expect(result.secondFill.filledCount).toBe(0);
+  expect(result.secondFill.repeatableLifecycles ?? []).toHaveLength(0);
 
   await expect(page.locator('[data-form-field-name="internship_list[1].company"] input')).toHaveValue("乙测试科技");
   await expect(page.locator('[data-form-field-name="project_list[2].name"] input')).toHaveValue("项目三");
