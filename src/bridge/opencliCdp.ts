@@ -106,6 +106,19 @@ export async function ensureAttached(tabId: number): Promise<void> {
     }
   }
 
+  // chrome.storage.session outlives an MV3 service worker, and Chrome may keep
+  // the extension-owned debugger attachment alive as well. Recover that
+  // attachment with a fixed harmless probe before trying to attach again.
+  try {
+    await sendDebuggerCommand({ tabId }, "DOM.enable", undefined, CDP_PROBE_TIMEOUT_MS);
+    attached.add(tabId);
+    await sendDebuggerCommand({ tabId }, "Page.enable", undefined, CDP_PROBE_TIMEOUT_MS);
+    return;
+  }
+  catch {
+    // A fresh session is not attached yet; continue through the normal path.
+  }
+
   let lastError: unknown;
   for (let attempt = 0; attempt < 2; attempt += 1) {
     try {

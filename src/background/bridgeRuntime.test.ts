@@ -2,6 +2,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { PowerSessionManager } from "../bridge/powerSession";
 import type { PrivacySafePageStateService } from "../bridge/pageState";
 import type { PageActionService } from "../bridge/pageActions";
+import type { PageWorkflowService } from "../bridge/pageWorkflows";
+import type { PersistentRequestLedger } from "../bridge/requestLedger";
 import {
   handleEmbeddedBridgeRequest,
   isTrustedExtensionSender
@@ -19,10 +21,17 @@ function managerMock() {
 
 describe("embedded bridge background authorization", () => {
   beforeEach(() => {
+    let sessionStorage: Record<string, unknown> = {};
     vi.stubGlobal("chrome", {
       runtime: {
         id: "assistant-id",
         getURL: (path: string) => `chrome-extension://assistant-id/${path}`
+      },
+      storage: {
+        session: {
+          get: vi.fn(async (key: string) => ({ [key]: sessionStorage[key] })),
+          set: vi.fn(async (value: Record<string, unknown>) => { sessionStorage = { ...sessionStorage, ...value }; })
+        }
       }
     });
   });
@@ -183,5 +192,86 @@ describe("embedded bridge background authorization", () => {
       action: expect.objectContaining({ status: "verified", attempts: 1 })
     });
     expect(JSON.stringify(response)).not.toMatch(/basic\.fullName|profile|value/i);
+  });
+
+  it("routes a bounded wait through the active workflow service", async () => {
+    const manager = managerMock();
+    const pageStateService = { registry: { invalidate: vi.fn() } } as unknown as PrivacySafePageStateService;
+    const pageActionService = { invalidate: vi.fn() } as unknown as PageActionService;
+    const wait = vi.fn(async (request) => ({
+      requestId: request.requestId,
+      condition: request.condition.kind,
+      status: "matched" as const,
+      polls: 2,
+      durationBucket: "100-500ms" as const
+    }));
+    const workflow = { wait } as unknown as PageWorkflowService;
+    const sender = { id: "assistant-id", url: "chrome-extension://assistant-id/sidepanel.html" };
+    const request = {
+      type: "POWER_PAGE_WAIT" as const,
+      requestId: "wait_request_1234",
+      sessionId: "power_session_1234",
+      condition: { kind: "find" as const, query: { text: "Name" }, minimumMatches: 1 },
+      timeoutMs: 1_000,
+      pollIntervalMs: 100
+    };
+
+    expect(await handleEmbeddedBridgeRequest(
+      request,
+      sender,
+      manager,
+      pageStateService,
+      pageActionService,
+      workflow
+    )).toEqual({
+      ok: true,
+      wait: expect.objectContaining({ status: "matched", polls: 2 })
+    });
+    expect(wait).toHaveBeenCalledWith(request);
+  });
+
+  it("maps a conflicting action request to a zero-attempt blocked result", async () => {
+    const manager = managerMock();
+    const activeSession = {
+      status: "active" as const,
+      sessionId: "power_session_1234",
+      tabId: 42,
+      origin: "https://jobs.example",
+      path: "/apply"
+    };
+    vi.mocked(manager.status).mockResolvedValue(activeSession);
+    const act = vi.fn();
+    const pageActionService = { act, invalidate: vi.fn() } as unknown as PageActionService;
+    const pageStateService = { registry: { invalidate: vi.fn() } } as unknown as PrivacySafePageStateService;
+    const workflow = { wait: vi.fn() } as unknown as PageWorkflowService;
+    const ledger = { run: vi.fn(async () => ({ kind: "conflict" as const })) } as unknown as PersistentRequestLedger;
+    const sender = { id: "assistant-id", url: "chrome-extension://assistant-id/sidepanel.html" };
+    const request = {
+      type: "POWER_PAGE_ACTION" as const,
+      requestId: "action_request_1234",
+      authorizationId: "action_auth_12345",
+      sessionId: "power_session_1234",
+      snapshotId: "state_snapshot_123",
+      ref: "node_reference_123",
+      intent: { kind: "fill" as const, source: { kind: "profile" as const, path: "basic.fullName" } }
+    };
+
+    expect(await handleEmbeddedBridgeRequest(
+      request,
+      sender,
+      manager,
+      pageStateService,
+      pageActionService,
+      workflow,
+      ledger
+    )).toEqual({
+      ok: true,
+      action: expect.objectContaining({
+        status: "blocked",
+        reason: "duplicate-request-conflict",
+        attempts: 0
+      })
+    });
+    expect(act).not.toHaveBeenCalled();
   });
 });

@@ -507,6 +507,9 @@ function inspectControls(flattened: FlattenedDocument): InspectedControlTarget[]
       readOnly: hasAttribute(record.node, "readonly") || attribute(record.node, "aria-readonly") === "true",
       required: hasAttribute(record.node, "required") || attribute(record.node, "aria-required") === "true",
       multiple: hasAttribute(record.node, "multiple") || attribute(record.node, "aria-multiselectable") === "true",
+      ...(["true", "false"].includes(attribute(record.node, "aria-expanded") ?? "")
+        ? { expanded: attribute(record.node, "aria-expanded") === "true" }
+        : {}),
       boundary: record.boundary
     };
     const safety = classifySafety(base, [

@@ -77,4 +77,43 @@ describe("embedded bridge protocol validation", () => {
     expect(isEmbeddedBridgeRequest({ ...base, intent: { kind: "click", purpose: "open-control" } })).toBe(true);
     expect(isEmbeddedBridgeRequest({ ...base, intent: { kind: "click", purpose: "submit" } })).toBe(false);
   });
+
+  it("accepts only bounded semantic wait conditions", () => {
+    const base = {
+      type: "POWER_PAGE_WAIT",
+      requestId: "request_wait_1234",
+      sessionId: "power_session_1234",
+      timeoutMs: 2_000,
+      pollIntervalMs: 100
+    };
+    const conditions = [
+      { kind: "find", query: { text: "school" }, minimumMatches: 1 },
+      { kind: "control-state", query: { text: "city", roles: ["combobox"] }, state: "expanded", minimumMatches: 1 },
+      { kind: "option-list", query: { text: "city" }, minimumOptions: 2, optionText: "Beijing" },
+      { kind: "same-origin-navigation" },
+      { kind: "dom-settle", quietMs: 250 }
+    ];
+    for (const condition of conditions) {
+      expect(isEmbeddedBridgeRequest({ ...base, condition })).toBe(true);
+    }
+  });
+
+  it("rejects wait requests that expose browser primitives or exceed fixed bounds", () => {
+    const valid = {
+      type: "POWER_PAGE_WAIT",
+      requestId: "request_wait_5678",
+      sessionId: "power_session_5678",
+      condition: { kind: "find", query: { text: "name" }, minimumMatches: 1 },
+      timeoutMs: 1_000,
+      pollIntervalMs: 100
+    };
+    expect(isEmbeddedBridgeRequest({ ...valid, selector: "#name" })).toBe(false);
+    expect(isEmbeddedBridgeRequest({ ...valid, script: "return document.body" })).toBe(false);
+    expect(isEmbeddedBridgeRequest({ ...valid, timeoutMs: 60_000 })).toBe(false);
+    expect(isEmbeddedBridgeRequest({ ...valid, pollIntervalMs: 10 })).toBe(false);
+    expect(isEmbeddedBridgeRequest({
+      ...valid,
+      condition: { kind: "find", query: { text: "name", xpath: "//*" }, minimumMatches: 1 }
+    })).toBe(false);
+  });
 });
