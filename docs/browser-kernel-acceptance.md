@@ -121,16 +121,17 @@ K2–K5 的节点拆分、堆叠分支、动作策略和三类真实 ATS 验收�
 - `npm run eval:kernel-adapters` 在真实 Chrome 中通过 3/3 匿名 ATS 家族。
 - Ground Truth 计划与映射为 14/14，映射精度 100%；支持写入 14/14，主策略和最终回读验证均为 100%。
 - 重复记录新增 1 次、保存 1 次，已保存简历上传 1 次；错误控件写入和最终投递动作均为 0。
-- 当前 `npm run validate` 通过 45 个测试文件、377 个测试、生产构建和权限审计；`npm run test:e2e` 通过 28/28 个串行真实 Chrome 用例。
+- 当前 `npm run validate` 通过 46 个测试文件、393 个测试、生产构建和权限审计；`npm run test:e2e` 通过 29/29 个串行真实 Chrome 用例。
 - `artifacts/kernel-adapters-report.json` 只包含匿名家族、能力、计数、比率和安全标志；`artifacts/kernel-adapters.png` 是 Organic 风格的无个人值验收摘要。
 - 生产飞书清单的独立匿名 canary 在真实 Chrome 中通过：K1 从受限容器元数据恢复技术字段键，同时去除网页值、简历文件名、上传时间和 URL 查询。写入 parity 覆盖文本、可搜索下拉、唯一复合日期区间、项目新增/保存和已保存 PDF；企业自定义题未修改，最终投递为 0。
 - 安装版侧栏在精确受信任飞书申请 URL 上已走生产 K5 resolver：扫描建议默认勾选 0 项，用户勾选后写入由内核回读验证。当前截图为 `artifacts/feishu-k5-sidepanel.png`，仅含匿名测试档案。
 - 第二个生产家族 Moka 已通过保守 L1 parity：公共 41 字段契约中 27 个可由当前档案无歧义承载的字段全部写后验证，三个连续自定义下拉会逐次重扫和精确重绑。独立工作经历、身份字段、无独立 schema 的细分字段、企业题、整页保存和最终提交均未操作。截图为 `artifacts/moka-k5-sidepanel.png`。
 - 第三个生产家族 Lenovo Talent 已通过保守 L1 parity：公开 55 字段契约逐项记录了 15 个自动处理和 40 个手动决策；14 个档案字段全部写后验证，保存的 PDF 上传 1 次。姓名拆分、radio 组、`YYYY/MM` 月份、远程学校、多选城市、条件创建、证件和专属问题均保持手动；整页保存和最终提交为 0。截图为 `artifacts/lenovo-k5-sidepanel.png`。
+- 第四个生产家族 Ctrip Careers 已通过保守 L1 parity：公开 28 控件契约逐项记录 14 个自动处理和 14 个手动决策，14 个档案字段全部写后验证。手机号只触发人工短信门槛，验证码未读取或填写；解析附件、作品集附件、整页保存和最终提交均为 0。截图为 `artifacts/ctrip-k5-sidepanel.png`。
 
 ### 尚未完成
 
-飞书、Moka 和 Lenovo Talent 的声明、匿名写入 parity 与安装版 K5 resolver 已完成。携程等已持有 Ground Truth 的家族仍未迁移，其他页面的旧直接填写路径尚未删除，因此 F042 保持 `in_progress`；真实招聘网站声明仍只属于 F043。
+飞书、Moka、Lenovo Talent 和 Ctrip Careers 的声明、匿名写入 parity 与安装版 K5 resolver 已完成。当前剩余工作是删除其他页面的旧直接填写路径、让未知页面明确提示缺少 K5 适配器并完成最终回归，因此 F042 保持 `in_progress`；真实招聘网站声明仍只属于 F043。
 
 ## 真实网页验收梯度
 

@@ -222,4 +222,17 @@ describe("ATS adapter runtime", () => {
       candidates: ["anonymous-family-a", "anonymous-family-b"]
     });
   });
+
+  it("treats a root path declaration as an exact route", () => {
+    const rootManifest = manifest("root-only", "root.example.test", "candidate.name");
+    rootManifest.detection.pathPrefixes = ["/"];
+    const registry = new AtsAdapterRegistry([rootManifest]);
+    const rootState = state("https://root.example.test", [
+      control("ref_root_12345678", "candidate.name")
+    ]);
+    rootState.path = "/";
+    expect(registry.detect(toAtsAdapterPageSummary(rootState)).status).toBe("matched");
+    rootState.path = "/campus";
+    expect(registry.detect(toAtsAdapterPageSummary(rootState)).status).toBe("unmatched");
+  });
 });

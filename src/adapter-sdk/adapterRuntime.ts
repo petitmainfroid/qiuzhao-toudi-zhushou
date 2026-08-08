@@ -94,7 +94,9 @@ function detectionScore(summary: AtsAdapterPageSummary, manifest: AtsAdapterMani
   const host = hostMatches(url.hostname.toLowerCase(), manifest);
   if (!host.matched) return null;
   const pathMatched = manifest.detection.pathPrefixes.length === 0
-    || manifest.detection.pathPrefixes.some((prefix) => summary.pathTemplate.startsWith(prefix));
+    || manifest.detection.pathPrefixes.some((prefix) =>
+      prefix === "/" ? summary.pathTemplate === "/" : summary.pathTemplate.startsWith(prefix)
+    );
   if (!pathMatched) return null;
   const markers = detectionMarkers(summary);
   const markerMatches = manifest.detection.semanticMarkers.filter((marker) => markers.has(marker)).length;

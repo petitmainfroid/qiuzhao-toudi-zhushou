@@ -96,6 +96,14 @@ and one saved PDF pass anonymous installed-side-panel parity. The other 40 field
 lifecycle remain manual. See
 [`k5-lenovo-manifest-migration.md`](k5-lenovo-manifest-migration.md).
 
+The fourth registered family is Ctrip's company-owned experienced-candidate editor. All 28 public
+bundle controls have a decision; 14 profile fields pass anonymous parity. Both file inputs remain
+manual because one triggers draft-replacing parsing and the other is a portfolio target, while SMS
+verification, full-date precision, current-job sentinels, remote school mode and five repeatable
+lifecycles remain outside current evidence. The root route declaration also hardened generic path
+detection so `/` no longer matches every same-origin path. See
+[`k5-ctrip-manifest-migration.md`](k5-ctrip-manifest-migration.md).
+
 ### K5-D — removal and acceptance
 
 - [done] Run three anonymous ATS-family E2E fixtures covering the complete F042 control denominator.
@@ -108,7 +116,9 @@ lifecycle remain manual. See
   installed-side-panel writes with zero save or submit actions.
 - [done] Register the conservative Lenovo Talent declaration, record all 55 public field
   decisions, and prove 14/14 profile writes plus one saved-PDF upload with zero save or submit.
-- [pending] Migrate additional ATS families, then remove the remaining non-K5
+- [done] Register the Ctrip custom-family declaration, record all 28 public control decisions,
+  and prove 14/14 writes with zero attachment, verification, save or submit actions.
+- [pending] Remove the remaining non-K5
   `chrome.scripting`/`tabs.sendMessage` mutation route only after their parity passes.
 - [pending] Run the final full regression and publish the F042 completion checkpoint.
 
