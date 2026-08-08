@@ -1373,3 +1373,10 @@ Run a local field-level audit over the five PDFs to identify missing dates, role
 - The full suite regenerated `artifacts/kernel-adapters-report.json` at 2026-08-08 15:01 Asia/Shanghai without changing its 3/3 family, 14/14 mapping/write, or zero-submit result. A forbidden-term scan passed, and the current Organic screenshot was visually re-inspected; both remain synthetic aggregate evidence only.
 - Changed files: `src/bridge/{pageState,pageState.test}.ts`, `src/ats/adapters/feishu/{manifest,index,manifest.test}.ts`, `tests/fixtures/feishu-manifest-page.ts`, `tests/e2e/feishu-manifest.spec.ts`, `docs/k5-feishu-manifest-migration.md`, `docs/browser-kernel-k5-adapter-plan.md`, `feature_list.json`, and `progress.md`.
 - F042 remains `in_progress`. Next add a Feishu write-parity fixture for searchable selects, unique composite date-range targeting, bounded repeatable add/save and saved PDF. Register the manifest in the installed resolver only after that passes; do not delete the legacy path until other production ATS families are migrated.
+
+### Publication evidence
+
+- Staged only the 13 intended K1/Feishu declaration, anonymous canary, documentation, harness and regenerated aggregate-report files. `git diff --cached --check`, credential-pattern and suspicious-path scans passed; no `.env`, real observation, personal profile, resume, cookie, trace or `test-results` file was included.
+- Committed the verified checkpoint as `bc8ff36cd8ddb02f6366f51602bf211be8e24bcf` (`迁移 K5 飞书声明与隐私语义`) and pushed `agent/browser-kernel-k5-adapters` to origin.
+- Draft PR #7 remains open against `agent/browser-kernel-k4-evidence`: `https://github.com/petitmainfroid/qiuzhao-toudi-zhushou/pull/7`.
+- This commit deliberately does not register the production manifest or change installed side-panel filling. The next checkpoint must provide write parity first.
