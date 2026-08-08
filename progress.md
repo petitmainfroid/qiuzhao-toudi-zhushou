@@ -1315,3 +1315,9 @@ Run a local field-level audit over the five PDFs to identify missing dates, role
 - No installed or user-visible behavior changed, so this checkpoint did not require a new screenshot or another E2E run; the immediately preceding K5 repeatable checkpoint already recorded 24/24 serialized real-Chromium regressions. No live recruitment site, real profile value, resume, `.env`, cookie, or ATS Ground Truth entered this change.
 - Changed files: `src/adapter-sdk/{contracts,adapterRuntime,adapterRuntime.test}.ts`, `src/content/repeatableRecords.ts`, `src/sidepanel/{adapterPageBridge,adapterPageBridge.test}.ts`, `docs/browser-kernel-k5-adapter-plan.md`, `feature_list.json`, and `progress.md`.
 - F042 remains `in_progress`. Next: register three anonymous ATS manifests/fixtures, add `npm run eval:kernel-adapters` plus allowlisted report/screenshot evidence, then switch the installed resolver and remove the legacy content path only after parity passes.
+
+### Publication evidence
+
+- Scoped diff and credential-pattern audits found only the nine intended K5 files and no secret material. `git diff --cached --check` passed; the only diagnostics were the repository's existing LF-to-CRLF checkout warnings.
+- Committed the compatibility checkpoint as `734ed426ac357b7759d6d82304387244bb956fe2` (`接入 K5 侧边栏兼容桥`) and pushed `agent/browser-kernel-k5-adapters` to origin.
+- Draft PR #7 remains open against `agent/browser-kernel-k4-evidence` and now contains this checkpoint: `https://github.com/petitmainfroid/qiuzhao-toudi-zhushou/pull/7`.
