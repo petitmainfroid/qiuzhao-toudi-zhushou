@@ -6,7 +6,6 @@ import type {
   FillSelection,
   ScanResult
 } from "../content/engine";
-import type { ContentRequest, ContentResponse } from "../shared/messages";
 import type { SavedFieldMapping } from "../mapping/types";
 import {
   createMissingRepeatableRecords,
@@ -17,7 +16,6 @@ import type {
   ResumeAttachmentCandidate,
   ResumeAttachmentResult
 } from "../content/resumeAttachment";
-import type { EmbeddedBridgeRequest, EmbeddedBridgeResponse } from "../bridge/protocol";
 import { AtsAdapterRegistry, ChromeRecruitmentKernelApi } from "../adapter-sdk";
 import {
   isProductionRecruitmentAdapterUrl,
@@ -25,7 +23,7 @@ import {
 } from "../ats/adapters";
 import { AdapterPageBridge } from "./adapterPageBridge";
 import { ChromePowerSessionBridge } from "./powerSessionBridge";
-import { RoutedPageBridge } from "./routedPageBridge";
+import { ProductionAdapterPageBridge } from "./productionAdapterPageBridge";
 
 export interface PageBridge {
   scan(profile: CandidateProfile, mappings?: SavedFieldMapping[]): Promise<ScanResult>;
@@ -40,14 +38,7 @@ export interface PageBridge {
 }
 
 function extensionRuntimeAvailable(): boolean {
-  return typeof chrome !== "undefined" && Boolean(chrome.runtime?.id && chrome.scripting && chrome.tabs);
-}
-
-async function activeTabId(): Promise<number> {
-  const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-  const tabId = tabs[0]?.id;
-  if (typeof tabId !== "number") throw new Error("没有找到当前活动页面。");
-  return tabId;
+  return typeof chrome !== "undefined" && Boolean(chrome.runtime?.id && chrome.tabs);
 }
 
 async function activeTabUrl(): Promise<string> {
@@ -55,131 +46,6 @@ async function activeTabUrl(): Promise<string> {
   const url = tabs[0]?.url;
   if (!url) throw new Error("active-page-url-unavailable");
   return url;
-}
-
-async function prepareContentScript(tabId: number): Promise<void> {
-  await chrome.scripting.executeScript({
-    target: { tabId },
-    files: ["content.js"]
-  });
-}
-
-async function sendToTab(tabId: number, request: ContentRequest): Promise<ContentResponse> {
-  return chrome.tabs.sendMessage(tabId, request) as Promise<ContentResponse>;
-}
-
-function bridgeRequestId(): string {
-  if (typeof crypto.randomUUID === "function") return crypto.randomUUID().replaceAll("-", "");
-  const bytes = new Uint8Array(16);
-  crypto.getRandomValues(bytes);
-  return Array.from(bytes, (value) => value.toString(16).padStart(2, "0")).join("");
-}
-
-async function sendRuntime(request: EmbeddedBridgeRequest): Promise<EmbeddedBridgeResponse> {
-  return chrome.runtime.sendMessage(request) as Promise<EmbeddedBridgeResponse>;
-}
-
-async function resolveKernelUploadTarget(candidate: ResumeAttachmentCandidate): Promise<ResumeAttachmentCandidate> {
-  const status = await sendRuntime({ type: "POWER_SESSION_STATUS", requestId: bridgeRequestId() });
-  if (!status.ok || !("session" in status)) return candidate;
-  const session = status.session;
-  if (session.status !== "active" || !session.sessionId || session.origin !== candidate.destinationOrigin) return candidate;
-  const found = await sendRuntime({
-    type: "POWER_PAGE_FIND",
-    requestId: bridgeRequestId(),
-    query: { text: candidate.fieldLabel, limit: 20 }
-  });
-  if (!found.ok || !("result" in found)) return candidate;
-  const fileMatches = found.result.matches.filter((match) =>
-    match.safety === "file" && match.label === candidate.fieldLabel
-  );
-  if (fileMatches.length !== 1) return candidate;
-  return {
-    ...candidate,
-    kernelTarget: {
-      sessionId: session.sessionId,
-      snapshotId: found.result.snapshotId,
-      ref: fileMatches[0]!.ref
-    }
-  };
-}
-
-export class ChromePageBridge implements PageBridge {
-  async scan(profile: CandidateProfile, mappings: SavedFieldMapping[] = []): Promise<ScanResult> {
-    const tabId = await activeTabId();
-    await prepareContentScript(tabId);
-    const response = await sendToTab(tabId, { type: "SCAN_PAGE", profile, mappings });
-    if (!("ok" in response) || !response.ok || !("fields" in response.result)) {
-      throw new Error("error" in response ? response.error : "当前页面扫描失败。");
-    }
-    const result = response.result;
-    if (result.resumeAttachment?.status !== "ready" || !result.resumeAttachment.candidate) return result;
-    return {
-      ...result,
-      resumeAttachment: {
-        ...result.resumeAttachment,
-        candidate: await resolveKernelUploadTarget(result.resumeAttachment.candidate)
-      }
-    };
-  }
-
-  async fill(profile: CandidateProfile, selections: FillSelection[], mappings: SavedFieldMapping[] = []): Promise<FillResult> {
-    const tabId = await activeTabId();
-    await prepareContentScript(tabId);
-    const response = await sendToTab(tabId, { type: "FILL_PAGE", profile, selections, mappings });
-    if (!("ok" in response) || !response.ok || !("outcomes" in response.result)) {
-      throw new Error("error" in response ? response.error : "当前页面填写失败。");
-    }
-    return response.result;
-  }
-
-  async createRepeatableRecords(profile: CandidateProfile, group: RepeatableGroupKey): Promise<RepeatableCreateResult> {
-    const tabId = await activeTabId();
-    await prepareContentScript(tabId);
-    const response = await sendToTab(tabId, { type: "CREATE_REPEATABLE_RECORDS", profile, group });
-    if (!("ok" in response) || !response.ok || !("createdCount" in response.result)) {
-      throw new Error("error" in response ? response.error : "创建招聘经历记录失败。");
-    }
-    return response.result;
-  }
-
-  async attachResume(
-    _file: File,
-    candidate: ResumeAttachmentCandidate,
-    _sha256: string,
-    _approvedAt: number
-  ): Promise<ResumeAttachmentResult> {
-    const target = candidate.kernelTarget;
-    if (!target) return { status: "rejected", reason: "stale-reference" };
-    const authorizationResponse = await sendRuntime({
-      type: "POWER_PAGE_UPLOAD_AUTHORIZE",
-      requestId: bridgeRequestId(),
-      sessionId: target.sessionId,
-      snapshotId: target.snapshotId,
-      ref: target.ref
-    });
-    if (!("ok" in authorizationResponse) || !authorizationResponse.ok) {
-      throw new Error("error" in authorizationResponse ? authorizationResponse.error : "简历附件授权失败。");
-    }
-    if (!("uploadAuthorization" in authorizationResponse)) {
-      return { status: "rejected", reason: "invalid-authorization" };
-    }
-
-    const response = await sendRuntime({
-      type: "POWER_PAGE_UPLOAD",
-      requestId: bridgeRequestId(),
-      authorizationId: authorizationResponse.uploadAuthorization.authorizationId,
-      sessionId: target.sessionId,
-      snapshotId: target.snapshotId,
-      ref: target.ref
-    });
-    if (!("ok" in response) || !response.ok || !("upload" in response)) {
-      throw new Error("error" in response ? response.error : "简历附件传输失败。");
-    }
-    return response.upload.status === "verified"
-      ? { status: "attached" }
-      : { status: "rejected", reason: response.upload.reason ?? "verification-failed" };
-  }
 }
 
 function previewProposal(
@@ -332,9 +198,8 @@ export function resolvePageBridge(): PageBridge {
     new AtsAdapterRegistry(productionRecruitmentAdapterManifests),
     powerSession
   );
-  return new RoutedPageBridge(
+  return new ProductionAdapterPageBridge(
     adapterBridge,
-    new ChromePageBridge(),
     activeTabUrl,
     isProductionRecruitmentAdapterUrl
   );

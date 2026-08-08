@@ -1,4 +1,4 @@
-import { cp, mkdir } from "node:fs/promises";
+import { cp, mkdir, rm } from "node:fs/promises";
 import { resolve } from "node:path";
 import { build as bundle } from "esbuild";
 import { build as buildVite } from "vite";
@@ -6,6 +6,7 @@ import { build as buildVite } from "vite";
 const projectRoot = resolve(import.meta.dirname, "..");
 const outdir = resolve(projectRoot, "dist");
 
+await rm(outdir, { recursive: true, force: true });
 await buildVite({ configFile: resolve(projectRoot, "vite.config.ts") });
 await mkdir(outdir, { recursive: true });
 
@@ -14,18 +15,6 @@ await bundle({
   outfile: resolve(outdir, "background.js"),
   bundle: true,
   format: "esm",
-  platform: "browser",
-  target: "chrome114",
-  sourcemap: false,
-  minify: true
-});
-
-await bundle({
-  entryPoints: [resolve(projectRoot, "src/content/index.ts")],
-  outfile: resolve(outdir, "content.js"),
-  bundle: true,
-  format: "iife",
-  globalName: "QiuzhaoContent",
   platform: "browser",
   target: "chrome114",
   sourcemap: false,

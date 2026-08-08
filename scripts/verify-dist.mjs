@@ -7,7 +7,6 @@ const requiredFiles = [
   "options.html",
   "sidepanel.html",
   "background.js",
-  "content.js",
   "noise.svg",
   "THIRD_PARTY_NOTICES.md",
   "third_party/opencli/LICENSE",
@@ -30,7 +29,6 @@ const expectedPermissions = [
   "activeTab",
   "alarms",
   "debugger",
-  "scripting",
   "sidePanel",
   "storage",
   "tabs",
@@ -55,6 +53,18 @@ if (manifest.background?.service_worker !== "background.js") {
   throw new Error("Manifest background service worker is not wired to background.js.");
 }
 
+try {
+  await access(resolve(projectRoot, "dist/content.js"));
+  throw new Error("Legacy content.js must not be present in the distribution.");
+}
+catch (error) {
+  if (error instanceof Error && error.message === "Legacy content.js must not be present in the distribution.") {
+    throw error;
+  }
+  if (!error || typeof error !== "object" || error.code !== "ENOENT") throw error;
+}
+
 console.log(`Verified ${requiredFiles.length} required distribution files.`);
 console.log(`Verified exact browser-kernel permissions: ${actualPermissions.join(", ")}.`);
 console.log("Verified host permission <all_urls> and forbidden permission absence.");
+console.log("Verified legacy content.js is absent.");

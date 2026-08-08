@@ -76,8 +76,8 @@ The selector-free portion of the reviewed Feishu family assets now exists as
 uploaded document names/timestamps from public semantics. Its write-parity fixture now covers a
 unique composite date-range reference, searchable combobox, section-scoped repeatable add/save and
 saved PDF. The installed resolver routes only exact reviewed Feishu HTTPS application URLs to K5;
-an unmatched or ambiguous Feishu adapter fails closed without legacy fallback. Other sites retain
-the legacy bridge during migration. See
+an unmatched or ambiguous Feishu adapter fails closed without fallback. During migration the other
+families retained the old bridge; K5-D removed that bridge after all four family parity nodes. See
 [`k5-feishu-manifest-migration.md`](k5-feishu-manifest-migration.md).
 
 The second registered production family is the conservative Moka standard-resume manifest. It is
@@ -118,9 +118,12 @@ detection so `/` no longer matches every same-origin path. See
   decisions, and prove 14/14 profile writes plus one saved-PDF upload with zero save or submit.
 - [done] Register the Ctrip custom-family declaration, record all 28 public control decisions,
   and prove 14/14 writes with zero attachment, verification, save or submit actions.
-- [pending] Remove the remaining non-K5
-  `chrome.scripting`/`tabs.sendMessage` mutation route only after their parity passes.
-- [pending] Run the final full regression and publish the F042 completion checkpoint.
+- [done] Remove the remaining non-K5 `chrome.scripting`/`tabs.sendMessage` mutation route after
+  all four production-family parity nodes pass.
+- [done] Reject unknown ATS URLs before page scanning, prove zero input/change/submit events in an
+  installed-extension Chrome regression, and show the user an explicit unsupported-page result.
+- [done] Remove the legacy content-script entry point and bundle, drop the `scripting` permission,
+  run the final full regression and publish the F042 completion checkpoint.
 
 ## Fixed gates
 

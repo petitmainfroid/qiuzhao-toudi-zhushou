@@ -1504,3 +1504,28 @@ Run a local field-level audit over the five PDFs to identify missing dates, role
 - Staged exactly the 17 intended Ctrip/runtime, anonymous fixture/E2E, documentation and evidence files. `git diff --cached --check` passed; suspicious-path, credential-pattern and aggregate-report forbidden-term scans each found zero issues. The Ctrip screenshot and regenerated tracked family screenshots were included only after visual privacy inspection.
 - Committed the checkpoint as `85dcd7b2512047ef499e3db15889f72306e34667` (`迁移 Ctrip K5 声明并收紧根路径检测`) and pushed `agent/browser-kernel-k5-adapters` to origin.
 - Draft PR #7 remains open against the exact stacked base `agent/browser-kernel-k4-evidence` and now contains all four production-family migration checkpoints: `https://github.com/petitmainfroid/qiuzhao-toudi-zhushou/pull/7`.
+
+## 2026-08-08 F042 unified K5 production route and legacy removal completion
+
+### Outcome and safety boundary
+
+- Marked F042 complete after routing the production side panel through one `ProductionAdapterPageBridge` over the declarative K5 adapter registry and typed K4 kernel. A successful exact-route scan pins that bridge for later user-selected fill, repeatable and saved-PDF operations; a later failed scan clears the route.
+- Removed `ChromePageBridge`, `RoutedPageBridge`, their tests, the content runtime-message protocol and the content-script entry point. Production code no longer calls `chrome.scripting.executeScript` or `chrome.tabs.sendMessage`, and the build no longer emits `content.js`.
+- Removed the `scripting` Manifest permission. The exact packaged permission set is now `activeTab`, `alarms`, `debugger`, `sidePanel`, `storage`, `tabs` and `webNavigation`, plus the already-reviewed `<all_urls>` host permission used by the pinned browser-session kernel.
+- Unknown URLs are rejected as `ats-adapter-url-unsupported` before adapter state scanning. Unmatched or ambiguous reviewed routes fail closed. The side panel explains that no fields were scanned or filled instead of silently falling back to a second engine.
+- Added an installed-extension anonymous HTTPS regression with a form-value sentinel and input/change/submit counters. The unsupported scan preserved the sentinel, recorded 0 input events, 0 change events and 0 submit events, and produced `artifacts/k5-unsupported-page.png`. The screenshot was visually inspected and contains no personal or real-site data.
+
+### Exact verification
+
+- `npm run validate` exited 0: TypeScript passed, 46 unit/integration test files and 394 tests passed, the clean production build completed, 12 required distribution files were present, the exact seven-permission allowlist passed, forbidden permissions remained absent and `dist/content.js` was absent.
+- `npm run test:e2e` exited 0: 30/30 serialized real-Chrome tests passed in 2.5 minutes. This includes four production-family anonymous installed-resolver cases, the three-family K5 evaluator, saved PDF, repeatable sections, all K1-K4 safety regressions and the new unknown-route zero-mutation case.
+- `npm run eval:kernel-adapters` exited 0: 3/3 anonymous families, 14/14 correct mappings, 14/14 primary and final verified writes, one repeatable add/save, one saved-resume upload, zero wrong-control writes and zero final-submit actions; the safety gate passed.
+- `npm run package` exited 0 after another full validation. The archive contains 228 entries, omits `content.js`, test fixtures, source maps and persisted personal data, and passes `verify:package`.
+- Visually inspected the current anonymous `artifacts/k5-unsupported-page.png`, `artifacts/feishu-k5-sidepanel.png` and `artifacts/lenovo-k5-sidepanel.png`. The regenerated `artifacts/kernel-adapters-report.json` remains marked `syntheticOnly: true` and contains only aggregate capability and safety evidence.
+
+### Handoff
+
+- Changed the production route in `src/sidepanel/{pageBridge,productionAdapterPageBridge,App}.ts` and added focused route/UI tests. Deleted `src/sidepanel/routedPageBridge.ts`, its test, `src/content/index.ts` and `src/shared/messages.ts`.
+- Changed packaging and permission gates in `public/manifest.json`, `scripts/{build,verify-dist,verify-package}.mjs` and `src/foundation.test.ts`. Every build cleans the exact worktree `dist` directory before generating artifacts so a stale legacy bundle cannot survive.
+- Added `tests/e2e/k5-unsupported-page.spec.ts`, updated K5 acceptance/plan documents and synchronized historical F001/F037 notes plus completed F042 reality in `feature_list.json`.
+- No implementation blocker remains for F042. Draft PR #7 is intentionally still draft. The next recommended feature is F043: perform user-authorized L2 read-only and then explicit L3 non-submitting acceptance on three live ATS families, convert every structural defect to an anonymous fixture, and never commit real filled-page data.

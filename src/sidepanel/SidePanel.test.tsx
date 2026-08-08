@@ -117,6 +117,19 @@ function scanResult(): ScanResult {
 }
 
 describe("SidePanel", () => {
+  it("reports an unsupported K5 route without implying that a legacy fallback ran", async () => {
+    const bridge: PageBridge = {
+      scan: vi.fn(async () => { throw new Error("ats-adapter-url-unsupported"); }),
+      fill: vi.fn()
+    };
+    render(<SidePanel repository={{ load: async () => profileWithValues() }} pageBridge={bridge} />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "扫描当前页面" }));
+
+    expect(await screen.findByText("当前招聘页面尚未适配；没有扫描或填写任何字段。")).toBeInTheDocument();
+    expect(bridge.fill).not.toHaveBeenCalled();
+  });
+
   it("restores a saved PDF and still requires destination confirmation", async () => {
     const bytes = new TextEncoder().encode("%PDF-1.4\nrestored unit resume\n%%EOF");
     const file = new File([bytes], "restored-resume.pdf", { type: "application/pdf" });
