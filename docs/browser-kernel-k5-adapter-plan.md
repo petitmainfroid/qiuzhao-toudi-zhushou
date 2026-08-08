@@ -88,6 +88,14 @@ controls. Multi-combobox parity also hardened the orchestrator: every structural
 rescans and uniquely rebinds remaining fields with the exact indexed technical key. See
 [`k5-moka-manifest-migration.md`](k5-moka-manifest-migration.md).
 
+The third registered family is Lenovo Talent's exact PC resume route. Its public component
+contract contains 7 groups and 55 logical fields; the K5 declaration records all 55 decisions but
+automates only 15 fields supported without name splitting, radio-group inference, date-format
+guessing, remote search, conditional creation, or multi-value coercion. Fourteen profile fields
+and one saved PDF pass anonymous installed-side-panel parity. The other 40 fields and repeatable
+lifecycle remain manual. See
+[`k5-lenovo-manifest-migration.md`](k5-lenovo-manifest-migration.md).
+
 ### K5-D — removal and acceptance
 
 - [done] Run three anonymous ATS-family E2E fixtures covering the complete F042 control denominator.
@@ -98,7 +106,9 @@ rescans and uniquely rebinds remaining fields with the exact indexed technical k
   no fallback when the Feishu adapter fails.
 - [done] Register the conservative Moka standard-resume declaration and prove 27/27 anonymous
   installed-side-panel writes with zero save or submit actions.
-- [pending] Migrate additional ATS families, then remove the remaining non-Feishu
+- [done] Register the conservative Lenovo Talent declaration, record all 55 public field
+  decisions, and prove 14/14 profile writes plus one saved-PDF upload with zero save or submit.
+- [pending] Migrate additional ATS families, then remove the remaining non-K5
   `chrome.scripting`/`tabs.sendMessage` mutation route only after their parity passes.
 - [pending] Run the final full regression and publish the F042 completion checkpoint.
 
