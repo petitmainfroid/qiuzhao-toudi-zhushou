@@ -1441,3 +1441,9 @@ Run a local field-level audit over the five PDFs to identify missing dates, role
 - Changed runtime/SDK files: `src/adapter-sdk/{adapterRuntime,orchestrator,orchestrator.test}.ts`, `src/ats/adapters/index.ts`, `src/ats/adapters/moka/{manifest,index,manifest.test}.ts`, and `src/sidepanel/pageBridge.ts`.
 - Changed fixture/evidence/docs: `tests/fixtures/moka-manifest-page.ts`, `tests/e2e/moka-manifest.spec.ts`, `artifacts/{moka-k5-sidepanel.png,feishu-k5-sidepanel.png,kernel-adapters-report.json}`, `docs/k5-moka-manifest-migration.md`, `docs/browser-kernel-k5-adapter-plan.md`, `docs/browser-kernel-acceptance.md`, `feature_list.json`, and `progress.md`.
 - F042 remains `in_progress`. Next migrate Lenovo conservatively because its public evidence contains exact technical component names, then evaluate Ctrip. Do not remove the legacy bridge until every intended production family has equivalent declaration, installed-resolver and anonymous write evidence; real-site acceptance remains F043.
+
+### Publication evidence
+
+- Staged exactly the 18 intended Moka/runtime, test, documentation and anonymous-evidence files. `git diff --cached --check` passed; suspicious-path, credential-pattern and aggregate-report forbidden-term scans each found zero issues. The current Moka screenshot was explicitly force-added only after visual privacy inspection.
+- Committed the checkpoint as `e4d573c122c24205665ecc2c4b8c3dd006abc6b7` (`迁移 Moka K5 声明与多下拉重绑`) and pushed `agent/browser-kernel-k5-adapters` to origin.
+- Draft PR #7 remains open against the exact stacked base `agent/browser-kernel-k4-evidence` and now contains this checkpoint: `https://github.com/petitmainfroid/qiuzhao-toudi-zhushou/pull/7`.
