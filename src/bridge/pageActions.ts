@@ -88,8 +88,26 @@ function durationBucket(duration: number): PageActionResult["durationBucket"] {
 }
 
 function actionValue(intent: PageActionIntent, profile: CandidateProfile): string | undefined {
-  if (intent.kind === "check" || intent.kind === "click") return undefined;
+  if (intent.kind === "check" || intent.kind === "click" || intent.kind === "fill-range") return undefined;
   return getProfileValue(profile, intent.source.path).trim();
+}
+
+function validDateRange(start: string, end: string): boolean {
+  const canonicalDate = /^\d{4}-\d{2}(?:-\d{2})?$/;
+  return canonicalDate.test(start)
+    && canonicalDate.test(end)
+    && start.length === end.length
+    && start <= end;
+}
+
+function allowedProfileRange(intent: Extract<PageActionIntent, { kind: "fill-range" }>): boolean {
+  const match = /^(education|workExperiences|projects)\.(\d+)\.startDate$/.exec(intent.source.startPath);
+  return Boolean(
+    match
+    && intent.source.endPath === `${match[1]}.${match[2]}.endDate`
+    && allowedProfilePath(intent.source.startPath)
+    && allowedProfilePath(intent.source.endPath)
+  );
 }
 
 function compatible(intent: PageActionIntent, target: ReferenceTarget): boolean {
@@ -107,6 +125,10 @@ function compatible(intent: PageActionIntent, target: ReferenceTarget): boolean 
       || target.role === "radio"
       || target.role === "combobox"
       || target.role === "listbox";
+  }
+  if (intent.kind === "fill-range") {
+    return (target.role === "textbox" || target.role === "combobox")
+      && (target.tag === "input" || target.tag === "custom");
   }
   return target.role === "textbox"
     || target.tag === "select"
@@ -223,15 +245,33 @@ export class PageActionService {
       this.invalidate();
       return staticResult(request, startedAt, this.dependencies.now(), "blocked", "invalid-authorization");
     }
+    if (request.intent.kind === "fill-range" && !allowedProfileRange(request.intent)) {
+      return staticResult(request, startedAt, this.dependencies.now(), "blocked", "invalid-profile-range");
+    }
     if (
       request.intent.kind !== "check"
       && request.intent.kind !== "click"
+      && request.intent.kind !== "fill-range"
       && !allowedProfilePath(request.intent.source.path)
     ) return staticResult(request, startedAt, this.dependencies.now(), "blocked", "invalid-profile-path");
 
     const expected = actionValue(request.intent, profile);
-    if (request.intent.kind !== "check" && request.intent.kind !== "click" && !expected) {
+    const expectedRange = request.intent.kind === "fill-range"
+      ? {
+          start: getProfileValue(profile, request.intent.source.startPath).trim(),
+          end: getProfileValue(profile, request.intent.source.endPath).trim()
+        }
+      : undefined;
+    if (expectedRange && (!expectedRange.start || !expectedRange.end)) {
       return staticResult(request, startedAt, this.dependencies.now(), "failed", "empty-profile-value");
+    }
+    if (expectedRange && !validDateRange(expectedRange.start, expectedRange.end)) {
+      return staticResult(request, startedAt, this.dependencies.now(), "blocked", "invalid-profile-range");
+    }
+    if (request.intent.kind !== "check" && request.intent.kind !== "click" && !expected) {
+      if (request.intent.kind !== "fill-range") {
+        return staticResult(request, startedAt, this.dependencies.now(), "failed", "empty-profile-value");
+      }
     }
 
     authorization.actionCount += 1;
@@ -239,6 +279,7 @@ export class PageActionService {
       action: request.intent.kind,
       strategy: "primary",
       ...(expected !== undefined ? { expected } : {}),
+      ...(expectedRange ? { expectedStart: expectedRange.start, expectedEnd: expectedRange.end } : {}),
       ...(request.intent.kind === "check" ? { desired: request.intent.desired } : {})
     });
     if (primary.verified) {
@@ -276,12 +317,12 @@ function sanitizedOutcome(value: unknown): FixedPageActionOutcome {
   }
   const candidate = value as Partial<FixedPageActionOutcome>;
   const strategies: PageActionStrategy[] = [
-    "none", "native-setter", "native-select", "custom-select", "exact-radio", "exact-check",
+    "none", "native-setter", "native-select", "custom-select", "native-date-range", "exact-radio", "exact-check",
     "contenteditable-text", "open-control", "keyboard-insert"
   ];
   const reasons: PageActionFailureReason[] = [
     "invalid-authorization", "session-inactive", "origin-changed", "stale-reference",
-    "invalid-profile-path", "empty-profile-value", "unsafe-control", "incompatible-action",
+    "invalid-profile-path", "invalid-profile-range", "empty-profile-value", "unsafe-control", "incompatible-action",
     "disabled-or-readonly", "hidden-control", "option-not-found", "option-ambiguous",
     "unsupported-control", "framework-rejected", "verification-failed", "bridge-failed"
   ];

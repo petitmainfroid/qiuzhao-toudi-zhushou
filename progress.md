@@ -1264,3 +1264,19 @@ Run a local field-level audit over the five PDFs to identify missing dates, role
 - Committed the verified checkpoint as `21d8bdfc312ce768223d2edbcb4c5a9e8583805f` (`建立 K5 适配器 SDK 与自定义下拉内核`) and pushed `agent/browser-kernel-k5-adapters` to origin.
 - Opened Draft PR #7, `F042：建立 K5 适配器 SDK 与自定义下拉内核`, against the exact stacked base `agent/browser-kernel-k4-evidence`: `https://github.com/petitmainfroid/qiuzhao-toudi-zhushou/pull/7`.
 - F042 remains `in_progress`. The next scoped increment is kernel-owned profile date-range filling with exact protocol validation, local profile resolution, fixed page-driver behavior, and readback verification; repeatable add/save, side-panel migration, three-family evaluation, and legacy removal remain later nodes.
+
+## 2026-08-08 F042 K5-C profile date-range increment
+
+### Implementation
+
+- Added the exact `fill-range` action intent. It accepts only a `profile-range` source whose canonical `startDate` and `endDate` paths belong to the same indexed education, work-experience, or project record. Raw dates, selectors, scripts, and arbitrary properties remain invalid at the bridge boundary.
+- The action service resolves both dates from the locally stored profile under the existing user-gesture authorization and pinned-session checks. Empty, malformed, mixed-precision, or reverse-ordered ranges fail before page mutation. Neither paths nor dates appear in action results or evidence logs.
+- Added the fixed `native-date-range` page strategy. It operates only on a recognized date-range group containing exactly two enabled, visible date/month/text inputs, dispatches cancellable `beforeinput` plus framework-compatible committed events, verifies both values, and restores both previous values when either readback is rejected. Ambiguous or unsupported structures fail closed and do not use keyboard fallback.
+- The adapter orchestrator now translates a declarative `date-range`/`profile-range` field into the kernel action. Adapters still receive no candidate values and cannot supply selectors or executable behavior.
+
+### Verification and handoff
+
+- Focused tests passed: 4 files / 35 tests covering exact protocol validation, local two-path resolution, adapter translation, successful two-input writing, ambiguity rejection, cancellation atomicity, readback rollback, and privacy-safe results.
+- `npm run validate` exited 0: TypeScript, 40 test files / 313 tests, production build, 13 required distribution files, exact permissions, and forbidden-permission absence all passed.
+- `npm run test:e2e` exited 0: 24/24 serial real-Chromium regressions passed in 2.3 minutes, including K1-K4, complex controls, saved-resume upload, repeatable records, privacy, and Xiaomi-derived no-submit coverage. This is a full regression result; the dedicated three-family K5 evaluator has not yet been implemented.
+- No installed side-panel behavior changed in this increment, so no new user-visible milestone screenshot was created. F042 remains `in_progress`; the next node is kernel-owned bounded repeatable-section add/save, followed by side-panel migration, three-family K5 evidence, and legacy-path removal.

@@ -53,11 +53,23 @@ function requestId(prefix: string): string {
 }
 
 function profileAction(field: AtsAdapterPlannedField): PageActionIntent | null {
+  if (field.intent.kind === "profile-range") {
+    return field.capability === "date-range"
+      ? {
+          kind: "fill-range",
+          source: {
+            kind: "profile-range",
+            startPath: field.intent.startPathPattern,
+            endPath: field.intent.endPathPattern
+          }
+        }
+      : null;
+  }
   if (field.intent.kind !== "profile-field") return null;
   const kind: "fill" | "select" = [
     "single-select", "multi-select", "choice"
   ].includes(field.capability) ? "select" : "fill";
-  if (["searchable-combobox", "date-range", "toggle", "file-upload"].includes(field.capability)) return null;
+  if (["searchable-combobox", "toggle", "file-upload"].includes(field.capability)) return null;
   return {
     kind,
     source: { kind: "profile", path: field.intent.pathPattern }

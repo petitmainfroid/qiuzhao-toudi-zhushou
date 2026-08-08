@@ -160,7 +160,9 @@ function kernel() {
     ref: request.ref,
     action: request.intent.kind,
     status: "verified",
-    strategy: request.intent.kind === "select" ? "native-select" : "native-setter",
+    strategy: request.intent.kind === "select"
+      ? "native-select"
+      : request.intent.kind === "fill-range" ? "native-date-range" : "native-setter",
     attempts: 1,
     durationBucket: "lt-100ms"
   }));
@@ -232,7 +234,7 @@ describe("recruitment adapter orchestrator", () => {
     expect(JSON.stringify(test.action.mock.calls)).not.toContain("value");
   });
 
-  it("blocks missing confirmation, unknown selections, duplicate work, ranges, and direct resume actions", async () => {
+  it("blocks missing confirmation, unknown selections, duplicate work, and direct resume actions", async () => {
     const test = kernel();
     const orchestrator = new RecruitmentAdapterOrchestrator(test.api, new AtsAdapterRegistry([manifest]));
     const resolution = await orchestrator.scan(sessionId);
@@ -255,10 +257,19 @@ describe("recruitment adapter orchestrator", () => {
       "not-in-plan",
       undefined,
       "duplicate-selection",
-      "unsupported-capability",
+      undefined,
       "saved-resume-requires-upload-gate"
     ]);
-    expect(test.action).toHaveBeenCalledTimes(1);
+    expect(test.action).toHaveBeenCalledTimes(2);
+    expect(test.action.mock.calls[1]?.[0].intent).toEqual({
+      kind: "fill-range",
+      source: {
+        kind: "profile-range",
+        startPath: "education.0.startDate",
+        endPath: "education.0.endDate"
+      }
+    });
+    expect(JSON.stringify(test.action.mock.calls)).not.toMatch(/2024-09|2027-06/);
   });
 
   it("executes searchable comboboxes as open, wait, refind, and profile-backed select", async () => {

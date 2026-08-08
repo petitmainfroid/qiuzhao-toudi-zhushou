@@ -153,11 +153,15 @@ export interface PageWaitResult {
   path?: string;
 }
 
-export const PAGE_ACTION_KINDS = ["fill", "type", "select", "check", "click"] as const;
+export const PAGE_ACTION_KINDS = ["fill", "type", "select", "fill-range", "check", "click"] as const;
 export type PageActionKind = typeof PAGE_ACTION_KINDS[number];
 
 export type PageActionIntent =
   | { kind: "fill" | "type" | "select"; source: { kind: "profile"; path: string } }
+  | {
+      kind: "fill-range";
+      source: { kind: "profile-range"; startPath: string; endPath: string };
+    }
   | { kind: "check"; desired: "checked" | "unchecked" }
   | { kind: "click"; purpose: "open-control" };
 
@@ -167,6 +171,7 @@ export type PageActionFailureReason =
   | "origin-changed"
   | "stale-reference"
   | "invalid-profile-path"
+  | "invalid-profile-range"
   | "empty-profile-value"
   | "unsafe-control"
   | "incompatible-action"
@@ -186,6 +191,7 @@ export type PageActionStrategy =
   | "native-setter"
   | "native-select"
   | "custom-select"
+  | "native-date-range"
   | "exact-radio"
   | "exact-check"
   | "contenteditable-text"
@@ -406,6 +412,12 @@ function isProfilePath(value: unknown): value is string {
     && !/(?:^|\.)(?:__proto__|prototype|constructor)(?:\.|$)/.test(value);
 }
 
+function isProfileDateRange(startPath: unknown, endPath: unknown): boolean {
+  if (!isProfilePath(startPath) || !isProfilePath(endPath)) return false;
+  const match = /^(education|workExperiences|projects)\.(\d+)\.startDate$/.exec(startPath);
+  return Boolean(match && endPath === `${match[1]}.${match[2]}.endDate`);
+}
+
 function isPageActionIntent(value: unknown): value is PageActionIntent {
   if (!value || typeof value !== "object") return false;
   const intent = value as Partial<PageActionIntent> & { source?: unknown; desired?: unknown; purpose?: unknown };
@@ -416,6 +428,14 @@ function isPageActionIntent(value: unknown): value is PageActionIntent {
     return hasExactKeys(source, ["kind", "path"])
       && source.kind === "profile"
       && isProfilePath(source.path);
+  }
+  if (intent.kind === "fill-range") {
+    if (!hasExactKeys(intent, ["kind", "source"])) return false;
+    if (!intent.source || typeof intent.source !== "object") return false;
+    const source = intent.source as { kind?: unknown; startPath?: unknown; endPath?: unknown };
+    return hasExactKeys(source, ["kind", "startPath", "endPath"])
+      && source.kind === "profile-range"
+      && isProfileDateRange(source.startPath, source.endPath);
   }
   if (intent.kind === "check") {
     return hasExactKeys(intent, ["kind", "desired"])

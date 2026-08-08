@@ -22,6 +22,8 @@ function profile(): CandidateProfile {
   const value = createEmptyProfile();
   value.updatedAt = "revision-1";
   value.basic.fullName = "Anonymous Candidate";
+  value.education[0]!.startDate = "2024-09";
+  value.education[0]!.endDate = "2027-06";
   return value;
 }
 
@@ -146,6 +148,66 @@ describe("page action service", () => {
     }));
     expect(executor.execute).toHaveBeenCalledOnce();
     expect(executor.keyboardFallback).toHaveBeenCalledOnce();
+  });
+
+  it("resolves both sides of a canonical profile date range without exposing either value", async () => {
+    vi.mocked(executor.execute).mockResolvedValue({
+      performed: true,
+      verified: true,
+      strategy: "native-date-range"
+    });
+    const service = new PageActionService(dependencies);
+    const control = target(registry, { role: "textbox", tag: "custom" });
+    const authorization = await service.authorize(session, true);
+    const result = await service.act(
+      request(authorization.authorizationId, control.ref, control.snapshotId, {
+        kind: "fill-range",
+        source: {
+          kind: "profile-range",
+          startPath: "education.0.startDate",
+          endPath: "education.0.endDate"
+        }
+      }),
+      session
+    );
+
+    expect(result).toEqual(expect.objectContaining({
+      action: "fill-range",
+      status: "verified",
+      strategy: "native-date-range",
+      attempts: 1
+    }));
+    expect(executor.execute).toHaveBeenCalledWith(
+      session,
+      expect.objectContaining({ backendNodeId: 101 }),
+      {
+        action: "fill-range",
+        strategy: "primary",
+        expectedStart: "2024-09",
+        expectedEnd: "2027-06"
+      }
+    );
+    expect(JSON.stringify(result)).not.toMatch(/2024-09|2027-06|startDate|endDate/);
+    expect(executor.keyboardFallback).not.toHaveBeenCalled();
+  });
+
+  it("blocks invalid or incomplete profile ranges before executing", async () => {
+    const service = new PageActionService(dependencies);
+    const control = target(registry, { role: "textbox", tag: "custom" });
+    const authorization = await service.authorize(session, true);
+    currentProfile.education[0]!.endDate = "";
+    expect(await service.act(
+      request(authorization.authorizationId, control.ref, control.snapshotId, {
+        kind: "fill-range",
+        source: {
+          kind: "profile-range",
+          startPath: "education.0.startDate",
+          endPath: "education.0.endDate"
+        }
+      }),
+      session
+    )).toEqual(expect.objectContaining({ status: "failed", attempts: 0, reason: "empty-profile-value" }));
+    expect(executor.execute).not.toHaveBeenCalled();
   });
 
   it("blocks restricted controls, stale snapshots, and changed profile revisions before execution", async () => {

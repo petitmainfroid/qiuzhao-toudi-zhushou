@@ -169,6 +169,111 @@ describe("fixed K2 page action registry", () => {
     })).toEqual({ performed: true, verified: true, strategy: "contenteditable-text" });
     expect(editor.textContent).toBe("anonymous rich text");
   });
+
+  it("fills and verifies exactly two inputs in a marked date-range group", () => {
+    document.body.innerHTML = `
+      <div data-date-range>
+        <input id="start" type="month" aria-label="Start month" />
+        <input id="end" type="month" aria-label="End month" />
+      </div>
+    `;
+    const start = document.getElementById("start") as HTMLInputElement;
+    const end = document.getElementById("end") as HTMLInputElement;
+    const events: string[] = [];
+    start.addEventListener("input", () => events.push("start"));
+    end.addEventListener("input", () => events.push("end"));
+
+    const result = runFixedPageAction.call(start, {
+      action: "fill-range",
+      strategy: "primary",
+      expectedStart: "2024-09",
+      expectedEnd: "2027-06"
+    });
+
+    expect(result).toEqual({ performed: true, verified: true, strategy: "native-date-range" });
+    expect([start.value, end.value]).toEqual(["2024-09", "2027-06"]);
+    expect(events).toEqual(["start", "end"]);
+    expect(JSON.stringify(result)).not.toMatch(/2024-09|2027-06/);
+  });
+
+  it("fails a date range atomically when the group is ambiguous or beforeinput is rejected", () => {
+    document.body.innerHTML = `
+      <div data-date-range>
+        <input id="start" type="month" value="2020-01" />
+        <input id="end" type="month" value="2021-01" />
+        <input id="extra" type="month" value="2022-01" />
+      </div>
+    `;
+    const start = document.getElementById("start") as HTMLInputElement;
+    expect(runFixedPageAction.call(start, {
+      action: "fill-range",
+      strategy: "primary",
+      expectedStart: "2024-09",
+      expectedEnd: "2027-06"
+    })).toEqual({
+      performed: false,
+      verified: false,
+      strategy: "native-date-range",
+      reason: "incompatible-action"
+    });
+    expect(start.value).toBe("2020-01");
+
+    document.body.innerHTML = `
+      <div data-date-range>
+        <input id="start" type="month" value="2020-01" />
+        <input id="end" type="month" value="2021-01" />
+      </div>
+    `;
+    const rejectedStart = document.getElementById("start") as HTMLInputElement;
+    const rejectedEnd = document.getElementById("end") as HTMLInputElement;
+    rejectedEnd.addEventListener("beforeinput", (event) => event.preventDefault());
+    expect(runFixedPageAction.call(rejectedStart, {
+      action: "fill-range",
+      strategy: "primary",
+      expectedStart: "2024-09",
+      expectedEnd: "2027-06"
+    })).toEqual({
+      performed: false,
+      verified: false,
+      strategy: "native-date-range",
+      reason: "framework-rejected"
+    });
+    expect([rejectedStart.value, rejectedEnd.value]).toEqual(["2020-01", "2021-01"]);
+  });
+
+  it("rolls both date inputs back when framework readback rejects one side", () => {
+    document.body.innerHTML = `
+      <div data-date-range>
+        <input id="start" type="month" value="2020-01" />
+        <input id="end" type="month" value="2021-01" />
+      </div>
+    `;
+    const start = document.getElementById("start") as HTMLInputElement;
+    const end = document.getElementById("end") as HTMLInputElement;
+    let reject = true;
+    end.addEventListener("input", () => {
+      if (reject) {
+        reject = false;
+        end.value = "2021-01";
+      }
+    });
+
+    const result = runFixedPageAction.call(start, {
+      action: "fill-range",
+      strategy: "primary",
+      expectedStart: "2024-09",
+      expectedEnd: "2027-06"
+    });
+
+    expect(result).toEqual({
+      performed: true,
+      verified: false,
+      strategy: "native-date-range",
+      reason: "verification-failed"
+    });
+    expect([start.value, end.value]).toEqual(["2020-01", "2021-01"]);
+    expect(JSON.stringify(result)).not.toMatch(/2020-01|2021-01|2024-09|2027-06/);
+  });
 });
 
 describe("verified page driver", () => {
