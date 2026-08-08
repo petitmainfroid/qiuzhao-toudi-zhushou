@@ -1257,3 +1257,10 @@ Run a local field-level audit over the five PDFs to identify missing dates, role
 - Re-read the repository operating guide, F042 ledger, progress handoff, and the complete long-running harness and GitHub publication instructions. The branch remains `agent/browser-kernel-k5-adapters`; F042 remains `in_progress`.
 - `./init.ps1 -SkipInstall` exited 0 with TypeScript, 40 test files / 307 tests, production build, 13 required distribution files, exact permissions, and forbidden-permission absence.
 - GitHub CLI authentication for `petitmainfroid` is now valid again. The intended checkpoint scope is limited to the K5 harness/plan, `src/adapter-sdk`, and the fixed custom-select/page-state changes listed in the prior handoff. The separate ATS/GT worktree remains excluded.
+
+## 2026-08-08 F042 K5-A/C checkpoint publication
+
+- Staged and audited only the 20 K5-owned harness, SDK, protocol, page-state, page-action, and page-driver files. `git diff --cached --check` passed; suspicious-path and credential-pattern scans reported zero findings. No `.env`, artifact, real resume, profile value, ATS Ground Truth, or separate-worktree file was included.
+- Committed the verified checkpoint as `21d8bdfc312ce768223d2edbcb4c5a9e8583805f` (`建立 K5 适配器 SDK 与自定义下拉内核`) and pushed `agent/browser-kernel-k5-adapters` to origin.
+- Opened Draft PR #7, `F042：建立 K5 适配器 SDK 与自定义下拉内核`, against the exact stacked base `agent/browser-kernel-k4-evidence`: `https://github.com/petitmainfroid/qiuzhao-toudi-zhushou/pull/7`.
+- F042 remains `in_progress`. The next scoped increment is kernel-owned profile date-range filling with exact protocol validation, local profile resolution, fixed page-driver behavior, and readback verification; repeatable add/save, side-panel migration, three-family evaluation, and legacy removal remain later nodes.
