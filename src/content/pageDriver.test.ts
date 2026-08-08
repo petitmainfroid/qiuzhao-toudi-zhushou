@@ -159,6 +159,50 @@ describe("fixed K2 page action registry", () => {
     });
   });
 
+  it("performs only fixed add/save repeatable buttons and leaves verification to the workflow", () => {
+    document.body.innerHTML = `
+      <button id="add" type="button">Add another project</button>
+      <button id="save" type="button">Save project</button>
+      <button id="submit" type="submit">Submit application</button>
+      <button id="delete" type="button">Delete project</button>
+    `;
+    const add = document.getElementById("add")!;
+    const save = document.getElementById("save")!;
+    const submit = document.getElementById("submit")!;
+    const remove = document.getElementById("delete")!;
+    const addClick = vi.fn();
+    const saveClick = vi.fn();
+    const submitClick = vi.fn();
+    const removeClick = vi.fn();
+    add.addEventListener("click", addClick);
+    save.addEventListener("click", saveClick);
+    submit.addEventListener("click", submitClick);
+    remove.addEventListener("click", removeClick);
+
+    expect(runFixedPageAction.call(add, {
+      action: "click",
+      strategy: "primary",
+      purpose: "add-repeatable-record"
+    })).toEqual({ performed: true, verified: false, strategy: "repeatable-add" });
+    expect(runFixedPageAction.call(save, {
+      action: "click",
+      strategy: "primary",
+      purpose: "save-repeatable-record"
+    })).toEqual({ performed: true, verified: false, strategy: "repeatable-save" });
+    expect(runFixedPageAction.call(submit, {
+      action: "click",
+      strategy: "primary",
+      purpose: "save-repeatable-record"
+    })).toEqual(expect.objectContaining({ performed: false, reason: "incompatible-action" }));
+    expect(runFixedPageAction.call(remove, {
+      action: "click",
+      strategy: "primary",
+      purpose: "add-repeatable-record"
+    })).toEqual(expect.objectContaining({ performed: false, reason: "unsafe-control" }));
+    expect([addClick.mock.calls.length, saveClick.mock.calls.length, submitClick.mock.calls.length, removeClick.mock.calls.length])
+      .toEqual([1, 1, 0, 0]);
+  });
+
   it("supports the standard empty contenteditable attribute", () => {
     document.body.innerHTML = `<div id="editor" contenteditable></div>`;
     const editor = document.getElementById("editor")!;

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { createEmptyProfile, type CandidateProfile } from "../domain/profile";
+import { createEmptyProfile, createProjectRecord, type CandidateProfile } from "../domain/profile";
 import { OpaqueReferenceRegistry } from "./pageState";
 import {
   PageActionService,
@@ -24,6 +24,7 @@ function profile(): CandidateProfile {
   value.basic.fullName = "Anonymous Candidate";
   value.education[0]!.startDate = "2024-09";
   value.education[0]!.endDate = "2027-06";
+  value.projects = [{ ...createProjectRecord(), id: "project-0", name: "Anonymous Project" }];
   return value;
 }
 
@@ -255,5 +256,45 @@ describe("page action service", () => {
       }),
       session
     )).toEqual(expect.objectContaining({ status: "blocked", attempts: 0, reason: "incompatible-action" }));
+  });
+
+  it("binds repeatable add clicks to an existing meaningful profile record", async () => {
+    vi.mocked(executor.execute).mockResolvedValue({
+      performed: true,
+      verified: false,
+      strategy: "repeatable-add"
+    });
+    const service = new PageActionService(dependencies);
+    const button = target(registry, { role: "button", tag: "button", inputType: "button" });
+    const authorization = await service.authorize(session, true);
+    const intent = {
+      kind: "click" as const,
+      purpose: "add-repeatable-record" as const,
+      source: { kind: "profile-record" as const, collection: "projects" as const, index: 0 }
+    };
+    const result = await service.act(
+      request(authorization.authorizationId, button.ref, button.snapshotId, intent),
+      session
+    );
+    expect(result).toEqual(expect.objectContaining({
+      status: "performed",
+      strategy: "repeatable-add",
+      attempts: 1
+    }));
+    expect(executor.execute).toHaveBeenCalledWith(session, expect.anything(), {
+      action: "click",
+      strategy: "primary",
+      purpose: "add-repeatable-record"
+    });
+
+    const nextButton = target(registry, { role: "button", tag: "button", inputType: "button" });
+    expect(await service.act(
+      request(authorization.authorizationId, nextButton.ref, nextButton.snapshotId, {
+        ...intent,
+        source: { ...intent.source, index: 1 }
+      }),
+      session
+    )).toEqual(expect.objectContaining({ status: "failed", attempts: 0, reason: "empty-profile-value" }));
+    expect(executor.execute).toHaveBeenCalledTimes(1);
   });
 });

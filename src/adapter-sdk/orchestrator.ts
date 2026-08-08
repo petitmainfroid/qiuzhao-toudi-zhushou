@@ -7,6 +7,7 @@ import type {
 } from "../bridge/protocol";
 import { AtsAdapterRegistry, type AtsAdapterResolution, toAtsAdapterPageSummary } from "./adapterRuntime";
 import type { AtsAdapterPlan, AtsAdapterPlannedField } from "./contracts";
+import type { AtsRepeatableCollection } from "./contracts";
 import type { RecruitmentKernelApi } from "./kernelApi";
 
 export interface AtsFieldSelection {
@@ -26,7 +27,7 @@ export type AtsFieldExecutionReason =
 
 export interface AtsFieldExecutionOutcome {
   controlKey: string;
-  status: "verified" | "failed" | "blocked" | "skipped";
+  status: "performed" | "verified" | "failed" | "blocked" | "skipped";
   attempts: 0 | 1 | 2;
   reason?: AtsFieldExecutionReason;
   action?: PageActionResult["action"];
@@ -43,6 +44,38 @@ export interface AtsSavedResumeTarget {
   sessionId: string;
   plan: AtsAdapterPlan;
   controlKey: string;
+}
+
+export interface AtsRepeatableExecutionRequest {
+  sessionId: string;
+  authorizationId: string;
+  plan: AtsAdapterPlan;
+  collection: AtsRepeatableCollection;
+}
+
+export interface AtsRepeatableSaveRequest extends AtsRepeatableExecutionRequest {
+  recordIndex: number;
+}
+
+export type AtsRepeatableExecutionReason =
+  | PageActionFailureReason
+  | "not-in-plan"
+  | "non-contiguous-records"
+  | "add-control-unavailable"
+  | "add-control-ambiguous"
+  | "save-control-unavailable"
+  | "save-control-ambiguous"
+  | "family-changed"
+  | "page-structure-changed"
+  | "limit-reached";
+
+export interface AtsRepeatableExecutionOutcome {
+  collection: AtsRepeatableCollection;
+  status: "created" | "saved" | "up-to-date" | "partial" | "failed" | "blocked";
+  initialPageCount: number;
+  finalPageCount: number;
+  createdCount: number;
+  reason?: AtsRepeatableExecutionReason;
 }
 
 function requestId(prefix: string): string {
@@ -92,6 +125,14 @@ function staticOutcome(
   reason: AtsFieldExecutionReason
 ): AtsFieldExecutionOutcome {
   return { controlKey, status, attempts: 0, reason };
+}
+
+function contiguousIndexes(indexes: number[]): boolean {
+  return indexes.every((value, index) => value === index);
+}
+
+function sameIndexes(left: number[], right: number[]): boolean {
+  return left.length === right.length && left.every((value, index) => value === right[index]);
 }
 
 export class RecruitmentAdapterOrchestrator {
@@ -148,6 +189,117 @@ export class RecruitmentAdapterOrchestrator {
       outcomes.push(outcomeFromAction(result));
     }
     return outcomes;
+  }
+
+  async createMissingRepeatableRecords(
+    request: AtsRepeatableExecutionRequest
+  ): Promise<AtsRepeatableExecutionOutcome> {
+    let plan = request.plan;
+    let repeatable = plan.repeatables.find((candidate) => candidate.collection === request.collection);
+    const initialPageCount = repeatable?.recordIndexes.length ?? 0;
+    const finish = (
+      status: AtsRepeatableExecutionOutcome["status"],
+      createdCount: number,
+      reason?: AtsRepeatableExecutionReason
+    ): AtsRepeatableExecutionOutcome => ({
+      collection: request.collection,
+      status,
+      initialPageCount,
+      finalPageCount: repeatable?.recordIndexes.length ?? initialPageCount,
+      createdCount,
+      ...(reason ? { reason } : {})
+    });
+    if (!repeatable) return finish("blocked", 0, "not-in-plan");
+    if (!contiguousIndexes(repeatable.recordIndexes)) return finish("blocked", 0, "non-contiguous-records");
+
+    let createdCount = 0;
+    while (createdCount < repeatable.maximumCreatesPerRun) {
+      if (repeatable.addControlKeys.length === 0) {
+        return finish(createdCount > 0 ? "partial" : "blocked", createdCount, "add-control-unavailable");
+      }
+      if (repeatable.addControlKeys.length !== 1) {
+        return finish(createdCount > 0 ? "partial" : "blocked", createdCount, "add-control-ambiguous");
+      }
+      const nextIndex = repeatable.recordIndexes.length;
+      const action = await this.kernel.action({
+        requestId: requestId("adapter_repeatable_add"),
+        authorizationId: request.authorizationId,
+        sessionId: request.sessionId,
+        snapshotId: plan.snapshotKey,
+        ref: repeatable.addControlKeys[0]!,
+        intent: {
+          kind: "click",
+          purpose: "add-repeatable-record",
+          source: { kind: "profile-record", collection: request.collection, index: nextIndex }
+        }
+      });
+      if (action.status === "failed" && action.reason === "empty-profile-value") {
+        return finish(createdCount > 0 ? "created" : "up-to-date", createdCount);
+      }
+      if (action.status !== "performed") {
+        return finish(action.status === "blocked" ? "blocked" : "failed", createdCount, action.reason ?? "verification-failed");
+      }
+
+      const resolution = await this.scan(request.sessionId);
+      if (resolution.status !== "matched" || resolution.plan.familyId !== plan.familyId) {
+        return finish("failed", createdCount, "family-changed");
+      }
+      const nextRepeatable = resolution.plan.repeatables.find((candidate) => candidate.collection === request.collection);
+      const expectedIndexes = [...repeatable.recordIndexes, nextIndex];
+      if (!nextRepeatable || !sameIndexes(nextRepeatable.recordIndexes, expectedIndexes)) {
+        return finish("failed", createdCount, "page-structure-changed");
+      }
+      createdCount += 1;
+      plan = resolution.plan;
+      repeatable = nextRepeatable;
+    }
+    return finish("partial", createdCount, "limit-reached");
+  }
+
+  async saveRepeatableRecord(request: AtsRepeatableSaveRequest): Promise<AtsRepeatableExecutionOutcome> {
+    const repeatable = request.plan.repeatables.find((candidate) => candidate.collection === request.collection);
+    const initialPageCount = repeatable?.recordIndexes.length ?? 0;
+    const finish = (
+      status: AtsRepeatableExecutionOutcome["status"],
+      reason?: AtsRepeatableExecutionReason
+    ): AtsRepeatableExecutionOutcome => ({
+      collection: request.collection,
+      status,
+      initialPageCount,
+      finalPageCount: initialPageCount,
+      createdCount: 0,
+      ...(reason ? { reason } : {})
+    });
+    if (!repeatable || !repeatable.recordIndexes.includes(request.recordIndex)) return finish("blocked", "not-in-plan");
+    const exact = repeatable.saveControls.filter((control) => control.recordIndex === request.recordIndex);
+    const candidates = exact.length > 0
+      ? exact
+      : repeatable.saveControls.filter((control) => control.recordIndex === null);
+    if (candidates.length === 0) return finish("blocked", "save-control-unavailable");
+    if (candidates.length !== 1) return finish("blocked", "save-control-ambiguous");
+    const action = await this.kernel.action({
+      requestId: requestId("adapter_repeatable_save"),
+      authorizationId: request.authorizationId,
+      sessionId: request.sessionId,
+      snapshotId: request.plan.snapshotKey,
+      ref: candidates[0]!.controlKey,
+      intent: { kind: "click", purpose: "save-repeatable-record" }
+    });
+    if (action.status !== "performed") {
+      return finish(action.status === "blocked" ? "blocked" : "failed", action.reason ?? "verification-failed");
+    }
+    const resolution = await this.scan(request.sessionId);
+    if (resolution.status !== "matched" || resolution.plan.familyId !== request.plan.familyId) {
+      return finish("failed", "family-changed");
+    }
+    const after = resolution.plan.repeatables.find((candidate) => candidate.collection === request.collection);
+    if (!after || !sameIndexes(after.recordIndexes, repeatable.recordIndexes)) {
+      return finish("failed", "page-structure-changed");
+    }
+    if (after.saveControls.some((control) => control.controlKey === candidates[0]!.controlKey)) {
+      return finish("failed", "verification-failed");
+    }
+    return finish("saved");
   }
 
   private async executeSearchableCombobox(

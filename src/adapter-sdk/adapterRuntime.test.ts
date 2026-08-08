@@ -138,6 +138,16 @@ describe("ATS adapter runtime", () => {
       control("ref_school_123456", "education_list[2].school"),
       control("ref_gender_123456", "candidate.gender", { role: "combobox", tag: "custom" }),
       control("ref_resume_123456", "resume.attachment", { role: "button", tag: "button", safety: "file" }),
+      control("ref_add_education_12", "education_list.add", {
+        role: "button",
+        tag: "button",
+        semantics: { name: "education_list.add", label: "Add education" }
+      }),
+      control("ref_save_education_1", "education_list[2].save", {
+        role: "button",
+        tag: "button",
+        semantics: { name: "education_list[2].save", label: "Save" }
+      }),
       control("ref_custom_123456", "custom.favorite_color"),
       control("ref_identity_1234", "candidate.name", { safety: "identity" }),
       control("ref_submit_123456", "candidate.name", {
@@ -171,6 +181,9 @@ describe("ATS adapter runtime", () => {
     ]));
     expect(result.plan.repeatables[0]).toMatchObject({
       collection: "education",
+      recordIndexes: [2],
+      addControlKeys: ["ref_add_education_12"],
+      saveControls: [{ controlKey: "ref_save_education_1", recordIndex: 2 }],
       maximumCreatesPerRun: 5
     });
   });

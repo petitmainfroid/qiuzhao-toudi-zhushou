@@ -32,6 +32,7 @@ export interface FixedPageActionPayload {
   expectedStart?: string;
   expectedEnd?: string;
   desired?: "checked" | "unchecked";
+  purpose?: "open-control" | "add-repeatable-record" | "save-repeatable-record";
 }
 
 export interface FixedPageActionOutcome {
@@ -68,7 +69,9 @@ export function runFixedPageAction(this: Element, payload: FixedPageActionPayloa
     ? payload.action === "select" ? "native-select"
       : payload.action === "fill-range" ? "native-date-range"
       : payload.action === "check" ? "exact-check"
-        : payload.action === "click" ? "open-control"
+        : payload.action === "click"
+          ? payload.purpose === "add-repeatable-record" ? "repeatable-add"
+            : payload.purpose === "save-repeatable-record" ? "repeatable-save" : "open-control"
           : isContentEditable ? "contenteditable-text" : "native-setter"
     : "keyboard-insert";
 
@@ -264,6 +267,37 @@ export function runFixedPageAction(this: Element, payload: FixedPageActionPayloa
   }
 
   if (payload.action === "click") {
+    if (payload.purpose === "add-repeatable-record" || payload.purpose === "save-repeatable-record") {
+      const strategy: PageActionStrategy = payload.purpose === "add-repeatable-record"
+        ? "repeatable-add"
+        : "repeatable-save";
+      const submitButton = element instanceof ownerWindow.HTMLButtonElement && element.type.toLowerCase() === "submit";
+      if (
+        !element.matches("button, input[type='button'], [role='button']")
+        || submitButton
+        || element.matches("a[href], input[type='submit']")
+      ) {
+        return fail("incompatible-action", strategy);
+      }
+      const label = normalize([
+        element.getAttribute("aria-label") ?? "",
+        element.getAttribute("title") ?? "",
+        element instanceof ownerWindow.HTMLInputElement ? element.value : "",
+        element.textContent ?? ""
+      ].join(" "));
+      const forbidden = ["submit", "apply", "application", "delete", "remove", "投递", "提交", "申请", "删除", "移除"];
+      if (!label || forbidden.some((token) => label.includes(normalize(token)))) {
+        return fail("unsafe-control", strategy);
+      }
+      const allowed = payload.purpose === "add-repeatable-record"
+        ? ["add", "addanother", "new", "新增", "添加", "继续添加"]
+        : ["save", "done", "confirm", "保存", "完成", "确定"];
+      if (!allowed.some((token) => label.includes(normalize(token)))) {
+        return fail("incompatible-action", strategy);
+      }
+      (element as HTMLElement).click();
+      return { performed: true, verified: false, strategy };
+    }
     const role = element.getAttribute("role");
     if ((role !== "combobox" && role !== "listbox") || element.matches("button, a[href]")) {
       return fail("incompatible-action", "open-control");

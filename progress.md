@@ -1280,3 +1280,19 @@ Run a local field-level audit over the five PDFs to identify missing dates, role
 - `npm run validate` exited 0: TypeScript, 40 test files / 313 tests, production build, 13 required distribution files, exact permissions, and forbidden-permission absence all passed.
 - `npm run test:e2e` exited 0: 24/24 serial real-Chromium regressions passed in 2.3 minutes, including K1-K4, complex controls, saved-resume upload, repeatable records, privacy, and Xiaomi-derived no-submit coverage. This is a full regression result; the dedicated three-family K5 evaluator has not yet been implemented.
 - No installed side-panel behavior changed in this increment, so no new user-visible milestone screenshot was created. F042 remains `in_progress`; the next node is kernel-owned bounded repeatable-section add/save, followed by side-panel migration, three-family K5 evidence, and legacy-path removal.
+
+## 2026-08-08 F042 K5-C bounded repeatable add/save increment
+
+### Implementation
+
+- The adapter planner now converts repeatable declarations into snapshot-scoped evidence: sorted record indexes, safe add-control refs, per-record save-control refs, and the manifest's bounded creation limit. It derives indexes only from declared technical semantic prefixes and excludes unavailable, unsafe, and final-submit controls.
+- Added exact repeatable click intents. An add click carries only an allowlisted collection and bounded record index; the action service permits it only when that exact locally stored profile record exists and contains meaningful data. Save clicks carry no profile value. Raw labels, selectors, scripts, values, or DOM ids remain outside the request protocol.
+- The fixed page driver permits repeatable clicks only on non-submit button controls whose visible/accessibility label matches the kernel-owned add/save vocabulary. Labels containing submit/apply/delete/remove equivalents fail closed. A click is honestly returned as `performed`, not `verified`; the privacy-safe evidence log now supports that intermediate state and also accepts the prior increment's `invalid-profile-range` failure category.
+- Added orchestrated create/save verification. Creation proceeds one record at a time, rescans through the pinned kernel after each click, and accepts only the exact next contiguous index with no removal or multi-row jump. It stops at the adapter limit, missing local profile record, ambiguity, family change, or structure change. Save succeeds only when record indexes are unchanged and the exact save control leaves the active save plan.
+
+### Verification and handoff
+
+- Focused kernel/SDK tests passed: 15 files / 95 tests. Coverage includes strict repeatable protocol bounds, local-record binding, fixed add/save label safety, intermediate `performed` evidence, planned record/control refs, one-at-a-time rescan, empty-profile termination, ambiguous controls, multi-row mutation rejection, and save readback.
+- `npm run validate` exited 0: TypeScript, 40 test files / 318 tests, production build, 13 required distribution files, exact permissions, and forbidden-permission absence all passed.
+- `npm run test:e2e` exited 0: 24/24 serial real-Chromium regressions passed in 2.2 minutes. Existing repeatable, privacy, K1-K4, PDF upload, Xiaomi-derived, and no-submit behavior remained intact.
+- This increment exposes the repeatable capability through the K5 orchestrator but does not yet switch the installed side-panel from the legacy content path. No new user-visible screenshot was required. F042 remains `in_progress`; next is side-panel scan/fill migration, then the three-family `eval:kernel-adapters` evidence and legacy-path removal.

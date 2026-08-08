@@ -67,6 +67,15 @@ const manifest: AtsAdapterManifest = {
       verification: "selected-option"
     },
     {
+      id: "project-name",
+      semanticKeys: ["project_list[].name"],
+      roles: ["textbox"],
+      capability: "text",
+      decision: "fill",
+      intent: { kind: "profile-field", pathPattern: "projects.{index}.name" },
+      verification: "normalized-equality"
+    },
+    {
       id: "saved-resume",
       semanticKeys: ["resume.attachment"],
       roles: ["button"],
@@ -76,11 +85,18 @@ const manifest: AtsAdapterManifest = {
       verification: "attachment-gate"
     }
   ],
-  repeatables: [],
+  repeatables: [{
+    collection: "projects",
+    sectionSemanticKeys: ["project_list"],
+    recordSemanticPrefixes: ["project_list[]"],
+    addControlLabels: ["Add project"],
+    saveControlLabels: ["Save project"],
+    maximumCreatesPerRun: 3
+  }],
   exclusions: { finalSubmitLabels: ["Submit application"] }
 };
 
-function state(): PrivacySafePageState {
+function state(projectCount = 1, includeSave = true): PrivacySafePageState {
   const controls: PrivacySafePageState["controls"] = [
     {
       ref: "ref_name_12345678",
@@ -143,7 +159,43 @@ function state(): PrivacySafePageState {
       multiple: false,
       boundary: "main",
       safety: "file"
-    }
+    },
+    ...Array.from({ length: projectCount }, (_, index) => ({
+      ref: `ref_project_${index}_123456`,
+      role: "textbox" as const,
+      tag: "input" as const,
+      semantics: { name: `project_list[${index}].name`, label: "Project name" },
+      disabled: false,
+      readOnly: false,
+      required: false,
+      multiple: false,
+      boundary: "main" as const,
+      safety: "ordinary" as const
+    })),
+    {
+      ref: "ref_project_add_12345",
+      role: "button",
+      tag: "button",
+      semantics: { name: "project_list.add", label: "Add project" },
+      disabled: false,
+      readOnly: false,
+      required: false,
+      multiple: false,
+      boundary: "main",
+      safety: "ordinary"
+    },
+    ...(includeSave ? [{
+      ref: "ref_project_save_1234",
+      role: "button" as const,
+      tag: "button" as const,
+      semantics: { name: `project_list[${projectCount - 1}].save`, label: "Save project" },
+      disabled: false,
+      readOnly: false,
+      required: false,
+      multiple: false,
+      boundary: "main" as const,
+      safety: "ordinary" as const
+    }] : [])
   ];
   return {
     snapshotId: "state_snapshot_123",
@@ -299,6 +351,146 @@ describe("recruitment adapter orchestrator", () => {
       }
     }));
     expect(JSON.stringify(vi.mocked(test.api.wait).mock.calls)).not.toContain("optionText");
+  });
+
+  it("creates one bounded repeatable row at a time and verifies every new record by rescanning", async () => {
+    const test = kernel();
+    let projectCount = 1;
+    test.api.state = vi.fn(async () => state(projectCount));
+    test.api.action = vi.fn(async (request): Promise<PageActionResult> => {
+      if (request.intent.kind === "click" && request.intent.purpose === "add-repeatable-record") {
+        if (request.intent.source.index >= 2) {
+          return {
+            requestId: request.requestId,
+            ref: request.ref,
+            action: "click",
+            status: "failed",
+            strategy: "none",
+            attempts: 0,
+            reason: "empty-profile-value",
+            durationBucket: "lt-100ms"
+          };
+        }
+        projectCount += 1;
+        return {
+          requestId: request.requestId,
+          ref: request.ref,
+          action: "click",
+          status: "performed",
+          strategy: "repeatable-add",
+          attempts: 1,
+          durationBucket: "lt-100ms"
+        };
+      }
+      throw new Error("unexpected action");
+    });
+    const orchestrator = new RecruitmentAdapterOrchestrator(test.api, new AtsAdapterRegistry([manifest]));
+    const resolution = await orchestrator.scan(sessionId);
+    if (resolution.status !== "matched") throw new Error("expected adapter match");
+
+    const outcome = await orchestrator.createMissingRepeatableRecords({
+      sessionId,
+      authorizationId: "action_authorization_123",
+      plan: resolution.plan,
+      collection: "projects"
+    });
+
+    expect(outcome).toEqual({
+      collection: "projects",
+      status: "created",
+      initialPageCount: 1,
+      finalPageCount: 2,
+      createdCount: 1
+    });
+    expect(test.api.action).toHaveBeenCalledTimes(2);
+    expect(vi.mocked(test.api.action).mock.calls[0]?.[0].intent).toEqual({
+      kind: "click",
+      purpose: "add-repeatable-record",
+      source: { kind: "profile-record", collection: "projects", index: 1 }
+    });
+  });
+
+  it("accepts a repeatable save only after the save control disappears without record loss", async () => {
+    const test = kernel();
+    let includeSave = true;
+    test.api.state = vi.fn(async () => state(1, includeSave));
+    test.api.action = vi.fn(async (request): Promise<PageActionResult> => {
+      includeSave = false;
+      return {
+        requestId: request.requestId,
+        ref: request.ref,
+        action: "click",
+        status: "performed",
+        strategy: "repeatable-save",
+        attempts: 1,
+        durationBucket: "lt-100ms"
+      };
+    });
+    const orchestrator = new RecruitmentAdapterOrchestrator(test.api, new AtsAdapterRegistry([manifest]));
+    const resolution = await orchestrator.scan(sessionId);
+    if (resolution.status !== "matched") throw new Error("expected adapter match");
+
+    expect(await orchestrator.saveRepeatableRecord({
+      sessionId,
+      authorizationId: "action_authorization_123",
+      plan: resolution.plan,
+      collection: "projects",
+      recordIndex: 0
+    })).toEqual({
+      collection: "projects",
+      status: "saved",
+      initialPageCount: 1,
+      finalPageCount: 1,
+      createdCount: 0
+    });
+    expect(test.api.action).toHaveBeenCalledWith(expect.objectContaining({
+      intent: { kind: "click", purpose: "save-repeatable-record" }
+    }));
+  });
+
+  it("fails closed on ambiguous add controls and multi-row mutation", async () => {
+    const ambiguous = kernel();
+    const ambiguousOrchestrator = new RecruitmentAdapterOrchestrator(
+      ambiguous.api,
+      new AtsAdapterRegistry([manifest])
+    );
+    const ambiguousResolution = await ambiguousOrchestrator.scan(sessionId);
+    if (ambiguousResolution.status !== "matched") throw new Error("expected adapter match");
+    const repeatable = ambiguousResolution.plan.repeatables[0]!;
+    repeatable.addControlKeys.push("ref_second_add_12345");
+    expect(await ambiguousOrchestrator.createMissingRepeatableRecords({
+      sessionId,
+      authorizationId: "action_authorization_123",
+      plan: ambiguousResolution.plan,
+      collection: "projects"
+    })).toEqual(expect.objectContaining({ status: "blocked", reason: "add-control-ambiguous", createdCount: 0 }));
+    expect(ambiguous.api.action).not.toHaveBeenCalled();
+
+    const changed = kernel();
+    let projectCount = 1;
+    changed.api.state = vi.fn(async () => state(projectCount));
+    changed.api.action = vi.fn(async (request): Promise<PageActionResult> => {
+      projectCount = 3;
+      return {
+        requestId: request.requestId,
+        ref: request.ref,
+        action: "click",
+        status: "performed",
+        strategy: "repeatable-add",
+        attempts: 1,
+        durationBucket: "lt-100ms"
+      };
+    });
+    const changedOrchestrator = new RecruitmentAdapterOrchestrator(changed.api, new AtsAdapterRegistry([manifest]));
+    const changedResolution = await changedOrchestrator.scan(sessionId);
+    if (changedResolution.status !== "matched") throw new Error("expected adapter match");
+    expect(await changedOrchestrator.createMissingRepeatableRecords({
+      sessionId,
+      authorizationId: "action_authorization_123",
+      plan: changedResolution.plan,
+      collection: "projects"
+    })).toEqual(expect.objectContaining({ status: "failed", reason: "page-structure-changed", createdCount: 0 }));
+    expect(changed.api.action).toHaveBeenCalledTimes(1);
   });
 
   it("routes saved resume only through the K4 confirmation gate", async () => {

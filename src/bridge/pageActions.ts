@@ -113,6 +113,11 @@ function allowedProfileRange(intent: Extract<PageActionIntent, { kind: "fill-ran
 function compatible(intent: PageActionIntent, target: ReferenceTarget): boolean {
   if (intent.kind === "check") return target.role === "checkbox" || target.role === "switch";
   if (intent.kind === "click") {
+    if (intent.purpose === "add-repeatable-record" || intent.purpose === "save-repeatable-record") {
+      return target.role === "button"
+        && target.tag !== "a"
+        && target.inputType !== "submit";
+    }
     return (target.role === "combobox" || target.role === "listbox")
       && target.tag !== "button" && target.tag !== "a";
   }
@@ -133,6 +138,20 @@ function compatible(intent: PageActionIntent, target: ReferenceTarget): boolean 
   return target.role === "textbox"
     || target.tag === "select"
     || target.role === "radio";
+}
+
+function profileRecord(profile: CandidateProfile, source: Extract<PageActionIntent, {
+  kind: "click";
+  purpose: "add-repeatable-record";
+}>["source"]): object | undefined {
+  const records = profile[source.collection];
+  return records[source.index];
+}
+
+function meaningfulRecord(record: object | undefined): boolean {
+  return Boolean(record && Object.entries(record).some(
+    ([key, value]) => key !== "id" && typeof value === "string" && value.trim().length > 0
+  ));
 }
 
 function staticResult(
@@ -167,7 +186,7 @@ function outcomeResult(
     requestId: request.requestId,
     ref: request.ref,
     action: request.intent.kind,
-    status: outcome.verified ? "verified" : "failed",
+    status: outcome.verified ? "verified" : outcome.performed && !outcome.reason ? "performed" : "failed",
     strategy: outcome.strategy,
     attempts,
     ...(outcome.reason ? { reason: outcome.reason } : {}),
@@ -262,6 +281,13 @@ export class PageActionService {
           end: getProfileValue(profile, request.intent.source.endPath).trim()
         }
       : undefined;
+    if (
+      request.intent.kind === "click"
+      && request.intent.purpose === "add-repeatable-record"
+      && !meaningfulRecord(profileRecord(profile, request.intent.source))
+    ) {
+      return staticResult(request, startedAt, this.dependencies.now(), "failed", "empty-profile-value");
+    }
     if (expectedRange && (!expectedRange.start || !expectedRange.end)) {
       return staticResult(request, startedAt, this.dependencies.now(), "failed", "empty-profile-value");
     }
@@ -280,7 +306,8 @@ export class PageActionService {
       strategy: "primary",
       ...(expected !== undefined ? { expected } : {}),
       ...(expectedRange ? { expectedStart: expectedRange.start, expectedEnd: expectedRange.end } : {}),
-      ...(request.intent.kind === "check" ? { desired: request.intent.desired } : {})
+      ...(request.intent.kind === "check" ? { desired: request.intent.desired } : {}),
+      ...(request.intent.kind === "click" ? { purpose: request.intent.purpose } : {})
     });
     if (primary.verified) {
       return outcomeResult(request, startedAt, this.dependencies.now(), primary, 1);
@@ -317,7 +344,7 @@ function sanitizedOutcome(value: unknown): FixedPageActionOutcome {
   }
   const candidate = value as Partial<FixedPageActionOutcome>;
   const strategies: PageActionStrategy[] = [
-    "none", "native-setter", "native-select", "custom-select", "native-date-range", "exact-radio", "exact-check",
+    "none", "native-setter", "native-select", "custom-select", "native-date-range", "repeatable-add", "repeatable-save", "exact-radio", "exact-check",
     "contenteditable-text", "open-control", "keyboard-insert"
   ];
   const reasons: PageActionFailureReason[] = [

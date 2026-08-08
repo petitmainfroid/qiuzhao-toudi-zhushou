@@ -9,11 +9,11 @@ export interface EvidenceLogStore {
 }
 
 const COMMANDS = ["page-action", "upload-saved-resume", "capture-screenshot"] as const;
-const STATUSES = ["verified", "captured", "failed", "blocked", "cancelled"] as const;
+const STATUSES = ["performed", "verified", "captured", "failed", "blocked", "cancelled"] as const;
 const DURATIONS = ["lt-100ms", "100-500ms", "gt-500ms"] as const;
 const FAILURE_CATEGORIES = [
   "invalid-authorization", "session-inactive", "origin-changed", "stale-reference",
-  "invalid-profile-path", "empty-profile-value", "unsafe-control", "incompatible-action",
+  "invalid-profile-path", "invalid-profile-range", "empty-profile-value", "unsafe-control", "incompatible-action",
   "disabled-or-readonly", "hidden-control", "option-not-found", "option-ambiguous",
   "unsupported-control", "framework-rejected", "verification-failed", "duplicate-request-conflict",
   "duplicate-request-uncertain", "debugger-conflict", "timeout", "blocked-control", "page-changed",

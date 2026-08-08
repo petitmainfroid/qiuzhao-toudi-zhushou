@@ -163,7 +163,17 @@ export type PageActionIntent =
       source: { kind: "profile-range"; startPath: string; endPath: string };
     }
   | { kind: "check"; desired: "checked" | "unchecked" }
-  | { kind: "click"; purpose: "open-control" };
+  | { kind: "click"; purpose: "open-control" }
+  | {
+      kind: "click";
+      purpose: "add-repeatable-record";
+      source: {
+        kind: "profile-record";
+        collection: "education" | "workExperiences" | "projects" | "workSamples" | "awards" | "languages";
+        index: number;
+      };
+    }
+  | { kind: "click"; purpose: "save-repeatable-record" };
 
 export type PageActionFailureReason =
   | "invalid-authorization"
@@ -192,6 +202,8 @@ export type PageActionStrategy =
   | "native-select"
   | "custom-select"
   | "native-date-range"
+  | "repeatable-add"
+  | "repeatable-save"
   | "exact-radio"
   | "exact-check"
   | "contenteditable-text"
@@ -207,7 +219,7 @@ export interface PageActionResult {
   requestId: string;
   ref: string;
   action: PageActionKind;
-  status: "verified" | "failed" | "blocked";
+  status: "performed" | "verified" | "failed" | "blocked";
   strategy: PageActionStrategy;
   attempts: 0 | 1 | 2;
   reason?: PageActionFailureReason;
@@ -262,7 +274,7 @@ export interface PageScreenshotResult {
 }
 
 export type EvidenceCommandType = "page-action" | "upload-saved-resume" | "capture-screenshot";
-export type EvidenceCommandStatus = "verified" | "captured" | "failed" | "blocked" | "cancelled";
+export type EvidenceCommandStatus = "performed" | "verified" | "captured" | "failed" | "blocked" | "cancelled";
 
 export interface EvidenceCommandLogEntry {
   command: EvidenceCommandType;
@@ -442,7 +454,18 @@ function isPageActionIntent(value: unknown): value is PageActionIntent {
       && (intent.desired === "checked" || intent.desired === "unchecked");
   }
   if (intent.kind === "click") {
-    return hasExactKeys(intent, ["kind", "purpose"]) && intent.purpose === "open-control";
+    if (intent.purpose === "open-control" || intent.purpose === "save-repeatable-record") {
+      return hasExactKeys(intent, ["kind", "purpose"]);
+    }
+    if (intent.purpose !== "add-repeatable-record" || !hasExactKeys(intent, ["kind", "purpose", "source"])) {
+      return false;
+    }
+    if (!intent.source || typeof intent.source !== "object") return false;
+    const source = intent.source as { kind?: unknown; collection?: unknown; index?: unknown };
+    return hasExactKeys(source, ["kind", "collection", "index"])
+      && source.kind === "profile-record"
+      && ["education", "workExperiences", "projects", "workSamples", "awards", "languages"].includes(String(source.collection))
+      && isBoundedInteger(source.index, 0, 49);
   }
   return false;
 }

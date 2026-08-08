@@ -6,6 +6,7 @@ import {
   type AtsAdapterPageSummary,
   type AtsAdapterPlan,
   type AtsAdapterPlannedField,
+  type AtsAdapterPlannedRepeatable,
   type AtsAdapterSkipReason,
   type AtsFieldIntent
 } from "./contracts";
@@ -110,6 +111,55 @@ function controlSemanticKey(control: AtsAdapterControlSummary): string {
 function recordIndex(control: AtsAdapterControlSummary): number | null {
   const match = /\[(\d+)\]/.exec(control.semantics.name ?? "");
   return match ? Number(match[1]) : null;
+}
+
+function controlSemanticText(control: AtsAdapterControlSummary): string {
+  return normalizeText([
+    control.semantics.label,
+    control.semantics.ariaLabel,
+    control.semantics.placeholder,
+    control.semantics.name,
+    control.semantics.nearbyText
+  ].filter(Boolean).join(" "));
+}
+
+function matchesAnyLabel(control: AtsAdapterControlSummary, labels: string[]): boolean {
+  const corpus = controlSemanticText(control);
+  return Boolean(corpus) && labels.some((label) => corpus.includes(normalizeText(label)));
+}
+
+function plannedRepeatables(
+  summary: AtsAdapterPageSummary,
+  manifest: AtsAdapterManifest
+): AtsAdapterPlannedRepeatable[] {
+  return manifest.repeatables.map((rule) => {
+    const prefixes = rule.recordSemanticPrefixes.map(normalizeSemanticKey);
+    const recordIndexes = [...new Set(summary.controls.flatMap((control) => {
+      const key = controlSemanticKey(control);
+      const index = recordIndex(control);
+      return index !== null && prefixes.some((prefix) => key === prefix || key.startsWith(`${prefix}.`))
+        ? [index]
+        : [];
+    }))].sort((left, right) => left - right);
+    const safeButtons = summary.controls.filter((control) =>
+      control.role === "button"
+      && control.safety === "ordinary"
+      && !control.disabled
+      && !control.readOnly
+      && !finalSubmitLabel(control, manifest)
+    );
+    return {
+      collection: rule.collection,
+      recordIndexes,
+      addControlKeys: safeButtons
+        .filter((control) => matchesAnyLabel(control, rule.addControlLabels))
+        .map((control) => control.controlKey),
+      saveControls: safeButtons
+        .filter((control) => matchesAnyLabel(control, rule.saveControlLabels))
+        .map((control) => ({ controlKey: control.controlKey, recordIndex: recordIndex(control) })),
+      maximumCreatesPerRun: rule.maximumCreatesPerRun
+    };
+  });
 }
 
 function resolvedIntent(intent: AtsFieldIntent, index: number | null): AtsFieldIntent | null {
@@ -246,7 +296,7 @@ export class AtsAdapterRegistry {
       familyVersion: manifest.family.version,
       snapshotKey: summary.snapshotKey,
       fields,
-      repeatables: structuredClone(manifest.repeatables),
+      repeatables: plannedRepeatables(summary, manifest),
       skipped
     };
   }

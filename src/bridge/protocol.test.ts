@@ -75,6 +75,26 @@ describe("embedded bridge protocol validation", () => {
     };
     expect(isEmbeddedBridgeRequest({ ...base, intent: { kind: "check", desired: "unchecked" } })).toBe(true);
     expect(isEmbeddedBridgeRequest({ ...base, intent: { kind: "click", purpose: "open-control" } })).toBe(true);
+    expect(isEmbeddedBridgeRequest({
+      ...base,
+      intent: {
+        kind: "click",
+        purpose: "add-repeatable-record",
+        source: { kind: "profile-record", collection: "projects", index: 2 }
+      }
+    })).toBe(true);
+    expect(isEmbeddedBridgeRequest({
+      ...base,
+      intent: { kind: "click", purpose: "save-repeatable-record" }
+    })).toBe(true);
+    expect(isEmbeddedBridgeRequest({
+      ...base,
+      intent: {
+        kind: "click",
+        purpose: "add-repeatable-record",
+        source: { kind: "profile-record", collection: "projects", index: 50 }
+      }
+    })).toBe(false);
     expect(isEmbeddedBridgeRequest({ ...base, intent: { kind: "click", purpose: "submit" } })).toBe(false);
   });
 

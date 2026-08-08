@@ -131,6 +131,19 @@ export interface AtsAdapterPlannedField {
   verification: AtsVerificationKind;
 }
 
+export interface AtsAdapterPlannedRepeatableControl {
+  controlKey: string;
+  recordIndex: number | null;
+}
+
+export interface AtsAdapterPlannedRepeatable {
+  collection: AtsRepeatableCollection;
+  recordIndexes: number[];
+  addControlKeys: string[];
+  saveControls: AtsAdapterPlannedRepeatableControl[];
+  maximumCreatesPerRun: number;
+}
+
 export type AtsAdapterSkipReason =
   | "unknown-field"
   | "ambiguous-rule"
@@ -151,6 +164,6 @@ export interface AtsAdapterPlan {
   familyVersion: string;
   snapshotKey: string;
   fields: AtsAdapterPlannedField[];
-  repeatables: AtsAdapterRepeatableRule[];
+  repeatables: AtsAdapterPlannedRepeatable[];
   skipped: AtsAdapterSkippedControl[];
 }
