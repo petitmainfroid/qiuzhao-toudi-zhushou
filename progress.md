@@ -1529,3 +1529,9 @@ Run a local field-level audit over the five PDFs to identify missing dates, role
 - Changed packaging and permission gates in `public/manifest.json`, `scripts/{build,verify-dist,verify-package}.mjs` and `src/foundation.test.ts`. Every build cleans the exact worktree `dist` directory before generating artifacts so a stale legacy bundle cannot survive.
 - Added `tests/e2e/k5-unsupported-page.spec.ts`, updated K5 acceptance/plan documents and synchronized historical F001/F037 notes plus completed F042 reality in `feature_list.json`.
 - No implementation blocker remains for F042. Draft PR #7 is intentionally still draft. The next recommended feature is F043: perform user-authorized L2 read-only and then explicit L3 non-submitting acceptance on three live ATS families, convert every structural defect to an anonymous fixture, and never commit real filled-page data.
+
+### Publication evidence
+
+- Staged exactly 22 implementation, deletion, test, documentation and anonymous-evidence paths. `git diff --cached --check` passed; staged-path, credential-pattern and synthetic-report gates passed. The three changed tracked screenshots and the new unsupported-page screenshot were included only after visual privacy inspection.
+- Committed the F042 completion node as `7193eaf2289d2f7715e0ca9d0d846034f712fd9c` (`完成 K5 生产路由并移除旧写入通道`) and pushed `agent/browser-kernel-k5-adapters` to origin.
+- Draft PR #7 remains open against `agent/browser-kernel-k4-evidence` and now contains the complete F042 result: `https://github.com/petitmainfroid/qiuzhao-toudi-zhushou/pull/7`.
