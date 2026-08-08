@@ -103,7 +103,10 @@ function compatible(intent: PageActionIntent, target: ReferenceTarget): boolean 
       && target.inputType !== "radio" && target.inputType !== "checkbox";
   }
   if (intent.kind === "select") {
-    return target.tag === "select" || target.role === "radio";
+    return target.tag === "select"
+      || target.role === "radio"
+      || target.role === "combobox"
+      || target.role === "listbox";
   }
   return target.role === "textbox"
     || target.tag === "select"
@@ -273,7 +276,7 @@ function sanitizedOutcome(value: unknown): FixedPageActionOutcome {
   }
   const candidate = value as Partial<FixedPageActionOutcome>;
   const strategies: PageActionStrategy[] = [
-    "none", "native-setter", "native-select", "exact-radio", "exact-check",
+    "none", "native-setter", "native-select", "custom-select", "exact-radio", "exact-check",
     "contenteditable-text", "open-control", "keyboard-insert"
   ];
   const reasons: PageActionFailureReason[] = [

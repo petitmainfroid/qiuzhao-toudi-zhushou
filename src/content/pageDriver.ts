@@ -215,6 +215,47 @@ export function runFixedPageAction(this: Element, payload: FixedPageActionPayloa
       : { performed: true, verified: false, strategy: "exact-radio", reason: "verification-failed" };
   }
 
+  if (payload.action === "select") {
+    const role = element.getAttribute("role");
+    if (role !== "combobox" && role !== "listbox") {
+      return fail("incompatible-action", "custom-select");
+    }
+    const optionSelector = [
+      "[role='option']",
+      ".atsx-select-dropdown-menu-item",
+      ".ud-select-option",
+      ".ant-select-item-option",
+      ".el-select-dropdown__item"
+    ].join(",");
+    const roots: ParentNode[] = [element.ownerDocument];
+    const rootNode = element.getRootNode();
+    if (rootNode !== element.ownerDocument && "querySelectorAll" in rootNode) roots.push(rootNode as ParentNode);
+    const options = [...new Set(roots.flatMap((root) => Array.from(root.querySelectorAll<HTMLElement>(optionSelector))))]
+      .filter((option) => {
+        if (!option.isConnected || option.closest("[hidden], [aria-hidden='true'], [inert]")) return false;
+        const optionStyle = ownerWindow.getComputedStyle?.(option);
+        return !optionStyle || (optionStyle.display !== "none" && optionStyle.visibility !== "hidden");
+      });
+    const target = normalize(expected);
+    const matches = options.filter((option) => [
+      option.textContent ?? "",
+      option.getAttribute("aria-label") ?? "",
+      option.getAttribute("data-value") ?? ""
+    ].some((candidate) => normalize(candidate) === target));
+    if (matches.length === 0) return fail("option-not-found", "custom-select");
+    if (matches.length > 1) return fail("option-ambiguous", "custom-select");
+    const option = matches[0]!;
+    option.click();
+    const selected = option.getAttribute("aria-selected") === "true"
+      || option.getAttribute("data-selected") === "true"
+      || option.matches(".is-selected, .selected, .atsx-select-dropdown-menu-item-selected, .ant-select-item-option-selected")
+      || (isInput && normalize(element.value) === target)
+      || normalize(element.getAttribute("aria-valuetext") ?? "") === target;
+    return selected
+      ? { performed: true, verified: true, strategy: "custom-select" }
+      : { performed: true, verified: false, strategy: "custom-select", reason: "verification-failed" };
+  }
+
   if (payload.action !== "fill" && payload.action !== "type") {
     return fail("incompatible-action", strategyName);
   }

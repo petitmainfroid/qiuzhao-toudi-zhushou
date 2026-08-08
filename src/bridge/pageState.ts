@@ -416,6 +416,22 @@ function optionCaptions(node: CdpDomNode): string[] {
   return options;
 }
 
+function associatedOptionCaptions(node: CdpDomNode, nodesById: Map<string, CdpDomNode>): string[] {
+  const options = optionCaptions(node);
+  const associatedIds = [attribute(node, "aria-controls"), attribute(node, "aria-owns")]
+    .filter(Boolean)
+    .flatMap((value) => value!.split(/\s+/).filter(Boolean));
+  for (const id of associatedIds) {
+    const associated = nodesById.get(id);
+    if (!associated) continue;
+    for (const caption of optionCaptions(associated)) {
+      if (!options.includes(caption)) options.push(caption);
+      if (options.length >= MAX_OPTIONS) return options;
+    }
+  }
+  return options;
+}
+
 export interface InspectedControlTarget {
   frameKey: string;
   backendNodeId: number;
@@ -502,7 +518,9 @@ function inspectControls(flattened: FlattenedDocument): InspectedControlTarget[]
         ...(technicalName && technicalName !== label ? { name: technicalName } : {}),
         ...(nearbyText && nearbyText !== label ? { nearbyText } : {})
       },
-      ...(role === "combobox" || role === "listbox" ? { options: optionCaptions(record.node) } : {}),
+      ...(role === "combobox" || role === "listbox"
+        ? { options: associatedOptionCaptions(record.node, nodesById) }
+        : {}),
       disabled: hasAttribute(record.node, "disabled") || attribute(record.node, "aria-disabled") === "true",
       readOnly: hasAttribute(record.node, "readonly") || attribute(record.node, "aria-readonly") === "true",
       required: hasAttribute(record.node, "required") || attribute(record.node, "aria-required") === "true",

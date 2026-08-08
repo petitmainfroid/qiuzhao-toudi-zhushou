@@ -81,6 +81,39 @@ describe("fixed K2 page action registry", () => {
     expect(select.selectedOptions[0]?.textContent).toBe("初始项");
   });
 
+  it("selects one exact custom option and requires synchronous readback", () => {
+    document.body.innerHTML = `
+      <div id="target" role="combobox" aria-expanded="true" aria-label="City"></div>
+      <div role="option" data-value="Beijing">Beijing</div>
+      <div role="option" data-value="Shanghai">Shanghai</div>
+    `;
+    const target = document.getElementById("target")!;
+    const options = Array.from(document.querySelectorAll<HTMLElement>("[role='option']"));
+    options.forEach((option) => option.addEventListener("click", () => {
+      options.forEach((candidate) => candidate.setAttribute("aria-selected", "false"));
+      option.setAttribute("aria-selected", "true");
+      target.setAttribute("aria-valuetext", option.textContent ?? "");
+    }));
+
+    expect(runFixedPageAction.call(target, {
+      action: "select",
+      strategy: "primary",
+      expected: "Shanghai"
+    })).toEqual({ performed: true, verified: true, strategy: "custom-select" });
+    expect(options.map((option) => option.getAttribute("aria-selected"))).toEqual(["false", "true"]);
+
+    expect(runFixedPageAction.call(target, {
+      action: "select",
+      strategy: "primary",
+      expected: "Shenzhen"
+    })).toEqual({
+      performed: false,
+      verified: false,
+      strategy: "custom-select",
+      reason: "option-not-found"
+    });
+  });
+
   it("never moves a radio action to a neighboring option", () => {
     document.body.innerHTML = `
       <label><input id="first" type="radio" name="degree" value="本科">本科</label>

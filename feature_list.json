@@ -858,7 +858,7 @@
     {
       "id": "F042",
       "title": "Expose a stable kernel API for recruitment adapters",
-      "status": "todo",
+      "status": "in_progress",
       "depends_on": ["F041"],
       "branch": "agent/browser-kernel-k5-adapters",
       "pr_base": "agent/browser-kernel-k4-evidence",
@@ -875,7 +875,7 @@
         "npm run test:e2e",
         "Review docs/browser-kernel-acceptance.md K5 evidence and inspect artifacts/kernel-adapters.png."
       ],
-      "notes": "K5 is the boundary between generic browser infrastructure and site/field adaptation. Do not claim real-site coverage from anonymous fixtures; F043 owns real acceptance. Publish the stacked branch and draft PR before starting F043."
+      "notes": "K5 is in progress in the isolated qiuzhaozhushou-k5 worktree. The first increment freezes a declarative adapter SDK and compliance gates: ATS adapters may describe family detection, canonical profile intent, generic control capabilities, and repeatable-section semantics, but may not carry selectors, arbitrary values, scripts, DOM/CDP ids, or page-action code. The dirty ATS/GT worktree remains untouched. Do not claim real-site coverage from anonymous fixtures; F043 owns real acceptance. Publish the stacked branch and draft PR before starting F043."
     },
     {
       "id": "F043",

@@ -185,6 +185,7 @@ export type PageActionStrategy =
   | "none"
   | "native-setter"
   | "native-select"
+  | "custom-select"
   | "exact-radio"
   | "exact-check"
   | "contenteditable-text"

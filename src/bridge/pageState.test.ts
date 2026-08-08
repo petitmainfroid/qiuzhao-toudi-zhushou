@@ -85,6 +85,33 @@ const session: PowerSessionView = {
 };
 
 describe("privacy-safe page state", () => {
+  it("associates portal options through aria-controls without returning option values", () => {
+    backendNodeId = 1;
+    const root: CdpDomNode = {
+      backendNodeId: backendNodeId++,
+      nodeType: 9,
+      nodeName: "#document",
+      frameId: "main-frame",
+      children: [element("html", {}, [element("body", {}, [
+        element("input", {
+          role: "combobox",
+          name: "candidate.preferred_city",
+          "aria-label": "Preferred city",
+          "aria-controls": "city-options",
+          "aria-expanded": "true"
+        }),
+        element("div", { id: "city-options", role: "listbox" }, [
+          element("div", { role: "option", "data-value": "private-code-1" }, [text("Beijing")]),
+          element("div", { role: "option", "data-value": "private-code-2" }, [text("Shanghai")])
+        ])
+      ])])]
+    };
+    const state = buildPrivacySafePageState(root, session, new OpaqueReferenceRegistry(() => "portalnonce"));
+    const combobox = state.controls.find((control) => control.semantics.name === "candidate.preferred_city");
+    expect(combobox?.options).toEqual(["Beijing", "Shanghai"]);
+    expect(JSON.stringify(state)).not.toContain("private-code");
+  });
+
   it("does not treat wrapped textarea values or select options as label text", () => {
     backendNodeId = 1;
     const root: CdpDomNode = {
