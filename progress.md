@@ -1407,3 +1407,10 @@ Run a local field-level audit over the five PDFs to identify missing dates, role
 - Changed production UI routing: `src/sidepanel/App.tsx`, `src/sidepanel/pageBridge.ts`, `src/sidepanel/routedPageBridge.ts`, and `src/sidepanel/routedPageBridge.test.ts`. The new data attribute contains only a canonical profile path and exists to make the installed side-panel acceptance deterministic.
 - Changed fixtures/evidence/docs: `tests/fixtures/feishu-manifest-page.ts`, `tests/e2e/feishu-manifest.spec.ts`, `artifacts/feishu-k5-sidepanel.png`, `artifacts/kernel-adapters-report.json`, `docs/k5-feishu-manifest-migration.md`, `docs/browser-kernel-k5-adapter-plan.md`, `docs/browser-kernel-acceptance.md`, `feature_list.json`, and `progress.md`.
 - F042 remains `in_progress`. The next recommended feature increment is a second production ATS-family declarative migration and the same anonymous installed-resolver parity. Do not delete `ChromePageBridge` until all intended non-Feishu families have equivalent evidence; do not claim a real company page result before F043.
+
+### Publication evidence
+
+- Staged exactly 21 implementation, test, documentation and anonymous evidence files. `git diff --cached --check` passed; suspicious-path, credential-pattern and aggregate-report forbidden-term scans each found zero issues. The new side-panel screenshot was explicitly allowlisted only after visual privacy inspection.
+- Committed this checkpoint as `dde34d6` (`接入飞书 K5 写入与生产路由`) and pushed `agent/browser-kernel-k5-adapters` to origin.
+- Draft PR #7 remains open against `agent/browser-kernel-k4-evidence`: `https://github.com/petitmainfroid/qiuzhao-toudi-zhushou/pull/7`.
+- This publication is a transitional resolver milestone, not F042 completion: Feishu uses K5, while non-Feishu sites still use the legacy bridge pending their own family parity.
