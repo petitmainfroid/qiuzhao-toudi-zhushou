@@ -76,6 +76,14 @@ evaluation blocker; it does not justify a resolver with no production rules. Aft
 assets merge, switch the installed resolver, rerun the same evaluator plus full regression, and only
 then remove the legacy direct mutation path.
 
+Migration checkpoint: the selector-free portion of the reviewed Feishu family assets now exists as
+`src/ats/adapters/feishu/manifest.ts`. K1 also inherits strictly formatted
+`data-form-field-name`/`data-form-field-i18n-name` metadata from nearby form containers and redacts
+uploaded document names/timestamps from public semantics. A real-Chrome anonymous Feishu canary
+proves read-only detection and planning with zero submit actions. See
+[`k5-feishu-manifest-migration.md`](k5-feishu-manifest-migration.md). Production resolver registration
+remains pending until write parity covers the family-specific composite controls.
+
 ### K5-D — removal and acceptance
 
 - [done] Run three anonymous ATS-family E2E fixtures covering the complete F042 control denominator.

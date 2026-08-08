@@ -189,13 +189,37 @@ function hasAttribute(node: CdpDomNode, wanted: string): boolean {
 
 function sanitizeSemanticText(value: string | undefined, maxLength = MAX_TEXT_LENGTH): string {
   if (!value) return "";
-  return value
+  const containsFileMetadata = /\.(?:pdf|docx?|rtf|txt|odt)\b|上次上传|最近上传|last\s+uploaded/iu.test(value);
+  let sanitized = value
     .replace(/https?:\/\/\S+/gi, "[链接]")
     .replace(/[\w.+-]+@[\w.-]+\.[a-z]{2,}/gi, "[邮箱]")
-    .replace(/\b\d{7,}\b/g, "[长数字]")
+    .replace(/\b\d{7,}\b/g, "[长数字]");
+  if (containsFileMetadata) {
+    sanitized = sanitized
+      .replace(/[^\s<>:"/\\|?*]{1,80}\.(?:pdf|docx?|rtf|txt|odt)\b/giu, "[文件]")
+      .replace(/\b\d{4}[-/]\d{1,2}[-/]\d{1,2}(?:\s+\d{1,2}:\d{2}(?::\d{2})?)?\b/g, "[时间]");
+  }
+  return sanitized
     .replace(/\s+/g, " ")
     .trim()
     .slice(0, maxLength);
+}
+
+function safeTechnicalFieldName(value: string | undefined): string {
+  if (!value || value.length > MAX_TEXT_LENGTH) return "";
+  return /^(?=.{1,120}$)[A-Za-z][A-Za-z0-9_.-]*(?:\[\d+\][A-Za-z0-9_.-]*)*$/.test(value)
+    ? value
+    : "";
+}
+
+function nearestFieldMetadata(record: FlatNode): { name: string; label: string } {
+  let current: FlatNode | null = record;
+  for (let depth = 0; current && depth < 8; depth += 1, current = current.parent) {
+    const name = safeTechnicalFieldName(attribute(current.node, "data-form-field-name"));
+    const label = sanitizeSemanticText(attribute(current.node, "data-form-field-i18n-name"), 80);
+    if (name || label) return { name, label };
+  }
+  return { name: "", label: "" };
 }
 
 function nodeName(node: CdpDomNode): string {
@@ -498,11 +522,13 @@ function inspectControls(flattened: FlattenedDocument): InspectedControlTarget[]
       ? textContent(record.node)
       : "";
     const placeholder = sanitizeSemanticText(attribute(record.node, "placeholder"), 80);
-    const technicalName = sanitizeSemanticText(attribute(record.node, "name"), 80);
+    const fieldMetadata = nearestFieldMetadata(record);
+    const technicalName = sanitizeSemanticText(attribute(record.node, "name"), 80) || fieldMetadata.name;
     const nearbyText = previousSemanticText(record, recordByNode);
     const associatedLabel = id ? labelByFor.get(id) || "" : "";
     const label = sanitizeSemanticText(
-      associatedLabel || wrappingLabel || ariaLabelledBy || ariaLabel || ownText || placeholder || nearbyText
+      associatedLabel || wrappingLabel || ariaLabelledBy || ariaLabel || ownText || placeholder
+        || fieldMetadata.label || nearbyText
         || attribute(record.node, "title") || technicalName,
       100
     );

@@ -85,6 +85,39 @@ const session: PowerSessionView = {
 };
 
 describe("privacy-safe page state", () => {
+  it("inherits allowlisted Feishu field metadata and redacts uploaded-file metadata", () => {
+    backendNodeId = 1;
+    const root: CdpDomNode = {
+      backendNodeId: backendNodeId++,
+      nodeType: 9,
+      nodeName: "#document",
+      frameId: "main-frame",
+      children: [element("html", {}, [element("body", {}, [
+        element("div", {
+          "data-form-field-name": "education_list[1].school",
+          "data-form-field-i18n-name": "学校名称"
+        }, [element("input")]),
+        element("div", {
+          "data-form-field-name": "private value 13800138000",
+          "data-form-field-i18n-name": "企业自定义题"
+        }, [element("input")]),
+        element("button", { type: "button" }, [text("私密姓名.pdf 上次上传 : 2026-02-25 23:31 更新 删除")])
+      ])])]
+    };
+
+    const state = buildPrivacySafePageState(root, session, new OpaqueReferenceRegistry(() => "feishunonce"));
+    expect(state.controls[0]).toEqual(expect.objectContaining({
+      semantics: expect.objectContaining({
+        label: "学校名称",
+        name: "education_list[1].school"
+      })
+    }));
+    expect(state.controls[1]?.semantics).toEqual({ label: "企业自定义题" });
+    expect(state.controls[2]?.semantics.label).toContain("[文件]");
+    expect(state.controls[2]?.semantics.label).toContain("[时间]");
+    expect(JSON.stringify(state)).not.toMatch(/私密姓名|2026-02-25|23:31|13800138000|private value/i);
+  });
+
   it("associates portal options through aria-controls without returning option values", () => {
     backendNodeId = 1;
     const root: CdpDomNode = {

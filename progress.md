@@ -1352,3 +1352,24 @@ Run a local field-level audit over the five PDFs to identify missing dates, role
 - Committed the implementation and evidence as `ba48545d9b72a829bece5d292452ab0f82147c4d` (`完成 K5 三家族匿名验收`) and pushed `agent/browser-kernel-k5-adapters` to origin.
 - Draft PR #7 remains open against the exact stacked base `agent/browser-kernel-k4-evidence`: `https://github.com/petitmainfroid/qiuzhao-toudi-zhushou/pull/7`.
 - This publication does not complete F042. The next safe node is production ATS declaration integration and installed-resolver parity; legacy removal must remain last.
+
+## 2026-08-08 F042 Feishu declaration migration checkpoint
+
+### Audit and implementation
+
+- Read the clean `agent/ats-observation-core` worktree at `6042c9e` without modifying it. Its Feishu detector/template covers one family across 小米、MetaApp、蔚来、安克创新 and 禾赛科技, but the repeatable rules include CSS selectors and its old execution path includes direct page operations. Only host/path evidence, stable technical keys, canonical mappings, labels and bounds were re-authored for K5.
+- Added the selector-free production declaration at `src/ats/adapters/feishu/manifest.ts`. Exact detection requires HTTPS, a trusted Feishu/mioffice host suffix, a reviewed resume-application path, and at least two technical markers. Sensitive gender/nationality/hometown fields remain confirmation-required; identity and unsupported multi-city questions are manual; saved resume uses the K4 attachment gate; final submit remains excluded.
+- Found a real integration gap while comparing the K5 K1 contract with the stored ATS observations: Feishu controls often carry no own `name`, while the stable key and label live on an ancestor `data-form-field-name` / `data-form-field-i18n-name`. K1 now inherits only strictly formatted technical keys from at most eight ancestor levels. It does not expose selectors, raw attributes, DOM ids/classes or page values.
+- Found a privacy defect in the historical observation shape: an uploaded-file button could expose a filename and upload time through its text label. K1 semantic sanitization now replaces common document filenames and associated timestamps with `[文件]` and `[时间]`. No historical observation or personal text was copied to this branch.
+- Added a real-Chrome anonymous Feishu canary using a routed `synthetic.jobs.feishu.cn` page. It checks inherited technical metadata, current-value/file-metadata/query redaction, one-family planning, custom-question skipping and zero final submit without performing a write.
+
+### Verification and handoff
+
+- Focused unit verification passed: 2 files / 17 tests for K1 metadata/privacy behavior and the production Feishu manifest's exact contract, five reviewed tenant shapes, canonical mappings, sensitive confirmation, PDF gate, custom-field skip, final-submit skip, and untrusted-location rejection.
+- The first E2E attempt exposed a test-only navigation race with the extension's first-install options tab. After reusing the installed options tab, the second attempt correctly stopped at the product's privacy disclosure because the test had not acknowledged it. The final test adds the same local consent setup used by the existing suite; the product gates were not weakened.
+- `npx playwright test tests/e2e/feishu-manifest.spec.ts --workers=1` then exited 0: 1/1 real-Chrome read-only canary passed in 12.1 seconds, with the test body completing in 5.4 seconds.
+- Final `npm run validate` exited 0 in 66.2 seconds: TypeScript, 42 test files / 336 tests, production build, 13 required distribution files, exact browser-kernel permissions and forbidden-permission absence all passed.
+- Final serialized `npm run test:e2e` exited 0: 26/26 real-Chrome tests passed in 2.8 minutes, including the new Feishu canary and all prior K1–K5, privacy, resume, repeatable, saved-PDF and no-submit regressions.
+- The full suite regenerated `artifacts/kernel-adapters-report.json` at 2026-08-08 15:01 Asia/Shanghai without changing its 3/3 family, 14/14 mapping/write, or zero-submit result. A forbidden-term scan passed, and the current Organic screenshot was visually re-inspected; both remain synthetic aggregate evidence only.
+- Changed files: `src/bridge/{pageState,pageState.test}.ts`, `src/ats/adapters/feishu/{manifest,index,manifest.test}.ts`, `tests/fixtures/feishu-manifest-page.ts`, `tests/e2e/feishu-manifest.spec.ts`, `docs/k5-feishu-manifest-migration.md`, `docs/browser-kernel-k5-adapter-plan.md`, `feature_list.json`, and `progress.md`.
+- F042 remains `in_progress`. Next add a Feishu write-parity fixture for searchable selects, unique composite date-range targeting, bounded repeatable add/save and saved PDF. Register the manifest in the installed resolver only after that passes; do not delete the legacy path until other production ATS families are migrated.
