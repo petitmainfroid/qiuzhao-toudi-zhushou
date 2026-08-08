@@ -1345,3 +1345,10 @@ Run a local field-level audit over the five PDFs to identify missing dates, role
 - Changed implementation/tests: `package.json`, `scripts/run-kernel-adapter-eval.mjs`, `src/adapter-sdk/{contracts,adapterRuntime,orchestrator}.ts` and tests, `src/bridge/{protocol,pageActions}.ts` and tests, `src/sidepanel/adapterPageBridge.test.ts`, `tests/fixtures/kernel-adapters-ground-truth.ts`, and `tests/e2e/kernel-adapters.spec.ts`.
 - Changed evidence/harness: `artifacts/kernel-adapters-report.json`, `artifacts/kernel-adapters.png`, `docs/browser-kernel-k5-adapter-plan.md`, `docs/browser-kernel-acceptance.md`, `feature_list.json`, and `progress.md`.
 - F042 remains `in_progress`. The evaluator completes anonymous three-family parity, but this branch still has no production ATS manifests. Next merge only the declarative ATS assets from the separate ATS/GT branch, register them in the production resolver, switch the installed side panel to `AdapterPageBridge`, prove parity again, and then remove the legacy direct mutation path. Do not claim a live recruitment-site result before F043.
+
+### Publication evidence
+
+- Staged only the 20 intended K5 evaluator files. `git diff --cached --check` passed; staged credential-pattern, suspicious-path, and report forbidden-term scans each found zero issues. The two committed artifacts are the inspected anonymous aggregate JSON and screenshot, not a real filled page.
+- Committed the implementation and evidence as `ba48545d9b72a829bece5d292452ab0f82147c4d` (`完成 K5 三家族匿名验收`) and pushed `agent/browser-kernel-k5-adapters` to origin.
+- Draft PR #7 remains open against the exact stacked base `agent/browser-kernel-k4-evidence`: `https://github.com/petitmainfroid/qiuzhao-toudi-zhushou/pull/7`.
+- This publication does not complete F042. The next safe node is production ATS declaration integration and installed-resolver parity; legacy removal must remain last.
