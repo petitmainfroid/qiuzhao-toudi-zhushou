@@ -189,13 +189,65 @@ function hasAttribute(node: CdpDomNode, wanted: string): boolean {
 
 function sanitizeSemanticText(value: string | undefined, maxLength = MAX_TEXT_LENGTH): string {
   if (!value) return "";
-  return value
+  const containsFileMetadata = /\.(?:pdf|docx?|rtf|txt|odt)\b|上次上传|最近上传|last\s+uploaded/iu.test(value);
+  let sanitized = value
     .replace(/https?:\/\/\S+/gi, "[链接]")
     .replace(/[\w.+-]+@[\w.-]+\.[a-z]{2,}/gi, "[邮箱]")
-    .replace(/\b\d{7,}\b/g, "[长数字]")
+    .replace(/\b\d{7,}\b/g, "[长数字]");
+  if (containsFileMetadata) {
+    sanitized = sanitized
+      .replace(/[^\s<>:"/\\|?*]{1,80}\.(?:pdf|docx?|rtf|txt|odt)\b/giu, "[文件]")
+      .replace(/\b\d{4}[-/]\d{1,2}[-/]\d{1,2}(?:\s+\d{1,2}:\d{2}(?::\d{2})?)?\b/g, "[时间]");
+  }
+  return sanitized
     .replace(/\s+/g, " ")
     .trim()
     .slice(0, maxLength);
+}
+
+function safeTechnicalFieldName(value: string | undefined): string {
+  if (!value || value.length > MAX_TEXT_LENGTH) return "";
+  return /^(?=.{1,120}$)[A-Za-z][A-Za-z0-9_.-]*(?:\[\d+\][A-Za-z0-9_.-]*)*$/.test(value)
+    ? value
+    : "";
+}
+
+function nearestFieldMetadata(record: FlatNode): { name: string; label: string } {
+  let current: FlatNode | null = record;
+  for (let depth = 0; current && depth < 8; depth += 1, current = current.parent) {
+    const name = safeTechnicalFieldName(attribute(current.node, "data-form-field-name"));
+    const label = sanitizeSemanticText(attribute(current.node, "data-form-field-i18n-name"), 80);
+    if (name || label) return { name, label };
+  }
+  return { name: "", label: "" };
+}
+
+function fixedDateRangeRoot(node: CdpDomNode): boolean {
+  if (hasAttribute(node, "data-date-range")) return true;
+  const className = attribute(node, "class") ?? "";
+  return /(?:^|\s)atsx-date-picker-period(?:-month)?(?:\s|$)/.test(className)
+    || /date-picker-period|date-range|daterange/i.test(className);
+}
+
+function fixedDateRangeInputs(record: FlatNode): CdpDomNode[] {
+  if (!fixedDateRangeRoot(record.node) || !nearestFieldMetadata(record).name) return [];
+  const inputs: CdpDomNode[] = [];
+  function collect(node: CdpDomNode): void {
+    if (nodeName(node) === "input") {
+      const type = safeInputType(node);
+      if (
+        typeof node.backendNodeId === "number"
+        && (type === "date" || type === "month" || type === "text")
+        && !hasAttribute(node, "disabled")
+        && !hasAttribute(node, "readonly")
+        && !hasAttribute(node, "hidden")
+        && attribute(node, "aria-hidden") !== "true"
+      ) inputs.push(node);
+    }
+    for (const child of node.children ?? []) collect(child);
+  }
+  collect(record.node);
+  return inputs.length === 2 ? inputs : [];
 }
 
 function nodeName(node: CdpDomNode): string {
@@ -416,6 +468,22 @@ function optionCaptions(node: CdpDomNode): string[] {
   return options;
 }
 
+function associatedOptionCaptions(node: CdpDomNode, nodesById: Map<string, CdpDomNode>): string[] {
+  const options = optionCaptions(node);
+  const associatedIds = [attribute(node, "aria-controls"), attribute(node, "aria-owns")]
+    .filter(Boolean)
+    .flatMap((value) => value!.split(/\s+/).filter(Boolean));
+  for (const id of associatedIds) {
+    const associated = nodesById.get(id);
+    if (!associated) continue;
+    for (const caption of optionCaptions(associated)) {
+      if (!options.includes(caption)) options.push(caption);
+      if (options.length >= MAX_OPTIONS) return options;
+    }
+  }
+  return options;
+}
+
 export interface InspectedControlTarget {
   frameKey: string;
   backendNodeId: number;
@@ -443,6 +511,8 @@ function inspectControls(flattened: FlattenedDocument): InspectedControlTarget[]
   const recordByNode = new Map(flattened.nodes.map((record) => [record.node, record]));
   const nodesById = new Map<string, CdpDomNode>();
   const labelByFor = new Map<string, string>();
+  const dateRangeRoots = new Map<CdpDomNode, CdpDomNode[]>();
+  const dateRangeInputIds = new Set<number>();
   for (const record of flattened.nodes) {
     const id = attribute(record.node, "id");
     if (id) nodesById.set(id, record.node);
@@ -451,14 +521,48 @@ function inspectControls(flattened: FlattenedDocument): InspectedControlTarget[]
       const text = labelText(record.node);
       if (target && text) labelByFor.set(target, text);
     }
+    const inputs = fixedDateRangeInputs(record);
+    if (inputs.length === 2) {
+      dateRangeRoots.set(record.node, inputs);
+      inputs.forEach((input) => dateRangeInputIds.add(input.backendNodeId!));
+    }
   }
 
   const controls: InspectedControlTarget[] = [];
   for (const record of flattened.nodes) {
     if (controls.length >= MAX_CONTROLS) break;
+    const dateRangeInputs = dateRangeRoots.get(record.node);
+    if (dateRangeInputs) {
+      const backendNodeId = record.node.backendNodeId;
+      if (typeof backendNodeId !== "number") continue;
+      const metadata = nearestFieldMetadata(record);
+      const label = metadata.label || previousSemanticText(record, recordByNode) || metadata.name;
+      const base: Omit<PrivacySafeControl, "ref" | "safety"> = {
+        role: "textbox",
+        tag: "custom",
+        semantics: {
+          ...(label ? { label } : {}),
+          name: metadata.name
+        },
+        disabled: dateRangeInputs.some((input) => hasAttribute(input, "disabled")),
+        readOnly: dateRangeInputs.some((input) => hasAttribute(input, "readonly")),
+        required: dateRangeInputs.some((input) => hasAttribute(input, "required")),
+        multiple: false,
+        boundary: record.boundary
+      };
+      const control = { ...base, safety: classifySafety(base) };
+      controls.push({
+        frameKey: record.frameKey,
+        backendNodeId,
+        fingerprint: fingerprintControl(control),
+        control
+      });
+      continue;
+    }
     const role = implicitRole(record.node);
     const backendNodeId = record.node.backendNodeId;
     if (!role || typeof backendNodeId !== "number") continue;
+    if (dateRangeInputIds.has(backendNodeId)) continue;
     if (hasAttribute(record.node, "hidden") || attribute(record.node, "aria-hidden") === "true") continue;
 
     const id = attribute(record.node, "id");
@@ -482,11 +586,13 @@ function inspectControls(flattened: FlattenedDocument): InspectedControlTarget[]
       ? textContent(record.node)
       : "";
     const placeholder = sanitizeSemanticText(attribute(record.node, "placeholder"), 80);
-    const technicalName = sanitizeSemanticText(attribute(record.node, "name"), 80);
+    const fieldMetadata = nearestFieldMetadata(record);
+    const technicalName = sanitizeSemanticText(attribute(record.node, "name"), 80) || fieldMetadata.name;
     const nearbyText = previousSemanticText(record, recordByNode);
     const associatedLabel = id ? labelByFor.get(id) || "" : "";
     const label = sanitizeSemanticText(
-      associatedLabel || wrappingLabel || ariaLabelledBy || ariaLabel || ownText || placeholder || nearbyText
+      associatedLabel || wrappingLabel || ariaLabelledBy || ariaLabel || ownText || placeholder
+        || fieldMetadata.label || nearbyText
         || attribute(record.node, "title") || technicalName,
       100
     );
@@ -502,7 +608,9 @@ function inspectControls(flattened: FlattenedDocument): InspectedControlTarget[]
         ...(technicalName && technicalName !== label ? { name: technicalName } : {}),
         ...(nearbyText && nearbyText !== label ? { nearbyText } : {})
       },
-      ...(role === "combobox" || role === "listbox" ? { options: optionCaptions(record.node) } : {}),
+      ...(role === "combobox" || role === "listbox"
+        ? { options: associatedOptionCaptions(record.node, nodesById) }
+        : {}),
       disabled: hasAttribute(record.node, "disabled") || attribute(record.node, "aria-disabled") === "true",
       readOnly: hasAttribute(record.node, "readonly") || attribute(record.node, "aria-readonly") === "true",
       required: hasAttribute(record.node, "required") || attribute(record.node, "aria-required") === "true",

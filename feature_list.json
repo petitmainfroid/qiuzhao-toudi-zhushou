@@ -23,8 +23,8 @@
       "status": "done",
       "depends_on": ["F000"],
       "acceptance": [
-        "npm run build produces a loadable dist/ with manifest.json, options.html, sidepanel.html, background.js, and content.js.",
-        "The initial MVP manifest requested only storage, activeTab, scripting, and sidePanel permissions; later F037 may expand this baseline through its own explicit acceptance and privacy review.",
+        "The initial F001 build produced a loadable dist/ with manifest.json, options.html, sidepanel.html, background.js, and content.js; F042 later removed the superseded content.js mutation bundle.",
+        "The initial MVP manifest requested only storage, activeTab, scripting, and sidePanel permissions; F037 expanded the embedded-kernel surface and F042 later removed scripting after K5 parity.",
         "Type checking and a smoke unit test pass."
       ],
       "verification": [
@@ -33,7 +33,7 @@
         "npm run build",
         "npm run verify:dist"
       ],
-      "notes": "Use Vite for React pages and esbuild for isolated background/content bundles. Keep the extension free of remote runtime code."
+      "notes": "Use Vite for React pages and esbuild for the isolated background bundle. F042 removed the legacy content-script entry point and cleans dist before every build so stale content.js cannot ship. Keep the extension free of remote runtime code."
     },
     {
       "id": "F002",
@@ -724,7 +724,7 @@
       "acceptance": [
         "Users install only the autumn-recruitment assistant; no OpenCLI CLI, daemon, Browser Bridge, local service, or second extension is required for persistent browser access.",
         "The extension embeds an Apache-2.0-attributed CDP transport and a user-gesture-created session that pins one HTTPS recruitment tab, survives same-Origin navigation, expires, detaches, and fails closed on an Origin change or debugger conflict.",
-        "The expanded manifest permission surface is exact, documented, and tested: debugger, tabs, webNavigation, alarms, activeTab, scripting, sidePanel, storage, and <all_urls>; cookies, downloads, tabGroups, arbitrary eval, password/CAPTCHA/identity automation, and final submission remain absent.",
+        "The K0 manifest permission surface was exact, documented, and tested: debugger, tabs, webNavigation, alarms, activeTab, scripting, sidePanel, storage, and <all_urls>; F042 later removed scripting with the legacy mutation route while preserving the embedded kernel.",
         "The bridge status exposes only the pinned Origin/path, lifecycle timestamps, interactive-control count, frame count, and typed reason; raw page values, cookies, credentials, and resume bytes never enter status or logs.",
         "A browser E2E launches only the built assistant, starts and stops an embedded session on an anonymous HTTPS page, verifies CDP structural state and same-Origin continuity, and proves a cross-Origin transition or final-submit attempt is not silently executed."
       ],
@@ -735,7 +735,7 @@
         "Inspect a current artifacts/embedded-bridge.png screenshot and confirm the visible session status does not contain page values or credentials.",
         "Review THIRD_PARTY_NOTICES.md and third_party/opencli/LICENSE."
       ],
-      "notes": "Completed on 2026-08-06 as K0 in docs/browser-kernel-acceptance.md. The one-extension CDP session pins one credential-free HTTPS Origin for 10 minutes, exposes only Origin/path/counts, survives same-Origin navigation, and detaches on cross-Origin, expiry, close, or conflict. Apache-2.0 attribution and license ship in dist/package. Final validation passed 28 files / 233 tests; full Chrome E2E passed 20/20 including a real debugger session on an anonymous HTTPS page with same-Origin continuity, cross-Origin pause, and zero final submissions; artifacts/embedded-bridge.png was visually inspected. The Node CLI/daemon, second extension, raw evaluation, cookies, network capture, downloads, arbitrary path upload, CAPTCHA/identity automation, and final submission are absent."
+      "notes": "Completed on 2026-08-06 as K0 in docs/browser-kernel-acceptance.md. The one-extension CDP session pins one credential-free HTTPS Origin for 10 minutes, exposes only Origin/path/counts, survives same-Origin navigation, and detaches on cross-Origin, expiry, close, or conflict. Apache-2.0 attribution and license ship in dist/package. Final validation passed 28 files / 233 tests; full Chrome E2E passed 20/20 including a real debugger session on an anonymous HTTPS page with same-Origin continuity, cross-Origin pause, and zero final submissions; artifacts/embedded-bridge.png was visually inspected. F042 later removed the scripting permission and content-script mutation channel; the typed debugger-backed kernel remains the only production page-operation route. The Node CLI/daemon, second extension, raw evaluation, cookies, network capture, downloads, arbitrary path upload, CAPTCHA/identity automation, and final submission are absent."
     },
     {
       "id": "F038",
@@ -858,7 +858,7 @@
     {
       "id": "F042",
       "title": "Expose a stable kernel API for recruitment adapters",
-      "status": "todo",
+      "status": "done",
       "depends_on": ["F041"],
       "branch": "agent/browser-kernel-k5-adapters",
       "pr_base": "agent/browser-kernel-k4-evidence",
@@ -875,7 +875,7 @@
         "npm run test:e2e",
         "Review docs/browser-kernel-acceptance.md K5 evidence and inspect artifacts/kernel-adapters.png."
       ],
-      "notes": "K5 is the boundary between generic browser infrastructure and site/field adaptation. Do not claim real-site coverage from anonymous fixtures; F043 owns real acceptance. Publish the stacked branch and draft PR before starting F043."
+      "notes": "Completed on 2026-08-08 in the isolated qiuzhaozhushou-k5 worktree and Draft PR #7. The declarative SDK, pinned orchestration, searchable combobox, composite date range, profile-backed toggles, section-scoped repeatable add/save and saved-resume routing all use the single typed K5/K4 kernel. Three synthetic ATS families pass at 14/14 correct mappings and 14/14 verified writes with zero wrong-control writes and zero final-submit actions. Four production families are registered behind exact fail-closed routes: Feishu covers text, searchable select, composite date range, repeatable project add/save and saved PDF; Moka maps 27/27 safe fields; Lenovo Talent records all 55 decisions and verifies 14 profile writes plus one saved PDF; Ctrip records all 28 decisions and verifies 14 profile writes while keeping ambiguous attachments and SMS verification manual. The old ChromePageBridge/RoutedPageBridge, runtime message protocol, content-script entry point, content.js bundle and scripting permission are removed. Unknown ATS URLs return an explicit unsupported result and the anonymous real-Chrome regression proves zero input/change/submit events. Final validation passes 46 files/394 tests, full E2E passes 30/30, and the K5 evaluator remains 14/14 with a passing safety gate. ATS adapters may not carry selectors, arbitrary values, scripts, DOM/CDP ids or page-action code. F043 alone owns real-site acceptance claims."
     },
     {
       "id": "F043",

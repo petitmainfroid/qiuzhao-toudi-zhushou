@@ -153,13 +153,28 @@ export interface PageWaitResult {
   path?: string;
 }
 
-export const PAGE_ACTION_KINDS = ["fill", "type", "select", "check", "click"] as const;
+export const PAGE_ACTION_KINDS = ["fill", "type", "select", "fill-range", "check", "click"] as const;
 export type PageActionKind = typeof PAGE_ACTION_KINDS[number];
 
 export type PageActionIntent =
   | { kind: "fill" | "type" | "select"; source: { kind: "profile"; path: string } }
+  | {
+      kind: "fill-range";
+      source: { kind: "profile-range"; startPath: string; endPath: string };
+    }
   | { kind: "check"; desired: "checked" | "unchecked" }
-  | { kind: "click"; purpose: "open-control" };
+  | { kind: "check"; source: { kind: "profile-presence"; path: string } }
+  | { kind: "click"; purpose: "open-control" }
+  | {
+      kind: "click";
+      purpose: "add-repeatable-record";
+      source: {
+        kind: "profile-record";
+        collection: "education" | "workExperiences" | "projects" | "workSamples" | "awards" | "languages";
+        index: number;
+      };
+    }
+  | { kind: "click"; purpose: "save-repeatable-record" };
 
 export type PageActionFailureReason =
   | "invalid-authorization"
@@ -167,6 +182,7 @@ export type PageActionFailureReason =
   | "origin-changed"
   | "stale-reference"
   | "invalid-profile-path"
+  | "invalid-profile-range"
   | "empty-profile-value"
   | "unsafe-control"
   | "incompatible-action"
@@ -185,6 +201,10 @@ export type PageActionStrategy =
   | "none"
   | "native-setter"
   | "native-select"
+  | "custom-select"
+  | "native-date-range"
+  | "repeatable-add"
+  | "repeatable-save"
   | "exact-radio"
   | "exact-check"
   | "contenteditable-text"
@@ -200,7 +220,7 @@ export interface PageActionResult {
   requestId: string;
   ref: string;
   action: PageActionKind;
-  status: "verified" | "failed" | "blocked";
+  status: "performed" | "verified" | "failed" | "blocked";
   strategy: PageActionStrategy;
   attempts: 0 | 1 | 2;
   reason?: PageActionFailureReason;
@@ -255,7 +275,7 @@ export interface PageScreenshotResult {
 }
 
 export type EvidenceCommandType = "page-action" | "upload-saved-resume" | "capture-screenshot";
-export type EvidenceCommandStatus = "verified" | "captured" | "failed" | "blocked" | "cancelled";
+export type EvidenceCommandStatus = "performed" | "verified" | "captured" | "failed" | "blocked" | "cancelled";
 
 export interface EvidenceCommandLogEntry {
   command: EvidenceCommandType;
@@ -405,6 +425,12 @@ function isProfilePath(value: unknown): value is string {
     && !/(?:^|\.)(?:__proto__|prototype|constructor)(?:\.|$)/.test(value);
 }
 
+function isProfileDateRange(startPath: unknown, endPath: unknown): boolean {
+  if (!isProfilePath(startPath) || !isProfilePath(endPath)) return false;
+  const match = /^(education|workExperiences|projects)\.(\d+)\.startDate$/.exec(startPath);
+  return Boolean(match && endPath === `${match[1]}.${match[2]}.endDate`);
+}
+
 function isPageActionIntent(value: unknown): value is PageActionIntent {
   if (!value || typeof value !== "object") return false;
   const intent = value as Partial<PageActionIntent> & { source?: unknown; desired?: unknown; purpose?: unknown };
@@ -416,12 +442,39 @@ function isPageActionIntent(value: unknown): value is PageActionIntent {
       && source.kind === "profile"
       && isProfilePath(source.path);
   }
+  if (intent.kind === "fill-range") {
+    if (!hasExactKeys(intent, ["kind", "source"])) return false;
+    if (!intent.source || typeof intent.source !== "object") return false;
+    const source = intent.source as { kind?: unknown; startPath?: unknown; endPath?: unknown };
+    return hasExactKeys(source, ["kind", "startPath", "endPath"])
+      && source.kind === "profile-range"
+      && isProfileDateRange(source.startPath, source.endPath);
+  }
   if (intent.kind === "check") {
-    return hasExactKeys(intent, ["kind", "desired"])
-      && (intent.desired === "checked" || intent.desired === "unchecked");
+    if (hasExactKeys(intent, ["kind", "desired"])) {
+      return intent.desired === "checked" || intent.desired === "unchecked";
+    }
+    if (!hasExactKeys(intent, ["kind", "source"]) || !intent.source || typeof intent.source !== "object") {
+      return false;
+    }
+    const source = intent.source as { kind?: unknown; path?: unknown };
+    return hasExactKeys(source, ["kind", "path"])
+      && source.kind === "profile-presence"
+      && isProfilePath(source.path);
   }
   if (intent.kind === "click") {
-    return hasExactKeys(intent, ["kind", "purpose"]) && intent.purpose === "open-control";
+    if (intent.purpose === "open-control" || intent.purpose === "save-repeatable-record") {
+      return hasExactKeys(intent, ["kind", "purpose"]);
+    }
+    if (intent.purpose !== "add-repeatable-record" || !hasExactKeys(intent, ["kind", "purpose", "source"])) {
+      return false;
+    }
+    if (!intent.source || typeof intent.source !== "object") return false;
+    const source = intent.source as { kind?: unknown; collection?: unknown; index?: unknown };
+    return hasExactKeys(source, ["kind", "collection", "index"])
+      && source.kind === "profile-record"
+      && ["education", "workExperiences", "projects", "workSamples", "awards", "languages"].includes(String(source.collection))
+      && isBoundedInteger(source.index, 0, 49);
   }
   return false;
 }

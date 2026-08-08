@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { createEmptyProfile, type CandidateProfile } from "../domain/profile";
+import { createEmptyProfile, createProjectRecord, type CandidateProfile } from "../domain/profile";
 import { OpaqueReferenceRegistry } from "./pageState";
 import {
   PageActionService,
@@ -22,6 +22,10 @@ function profile(): CandidateProfile {
   const value = createEmptyProfile();
   value.updatedAt = "revision-1";
   value.basic.fullName = "Anonymous Candidate";
+  value.education[0]!.startDate = "2024-09";
+  value.education[0]!.endDate = "2027-06";
+  value.answers.careerPlan = "Anonymous career plan";
+  value.projects = [{ ...createProjectRecord(), id: "project-0", name: "Anonymous Project" }];
   return value;
 }
 
@@ -148,6 +152,92 @@ describe("page action service", () => {
     expect(executor.keyboardFallback).toHaveBeenCalledOnce();
   });
 
+  it("resolves both sides of a canonical profile date range without exposing either value", async () => {
+    vi.mocked(executor.execute).mockResolvedValue({
+      performed: true,
+      verified: true,
+      strategy: "native-date-range"
+    });
+    const service = new PageActionService(dependencies);
+    const control = target(registry, { role: "textbox", tag: "custom" });
+    const authorization = await service.authorize(session, true);
+    const result = await service.act(
+      request(authorization.authorizationId, control.ref, control.snapshotId, {
+        kind: "fill-range",
+        source: {
+          kind: "profile-range",
+          startPath: "education.0.startDate",
+          endPath: "education.0.endDate"
+        }
+      }),
+      session
+    );
+
+    expect(result).toEqual(expect.objectContaining({
+      action: "fill-range",
+      status: "verified",
+      strategy: "native-date-range",
+      attempts: 1
+    }));
+    expect(executor.execute).toHaveBeenCalledWith(
+      session,
+      expect.objectContaining({ backendNodeId: 101 }),
+      {
+        action: "fill-range",
+        strategy: "primary",
+        expectedStart: "2024-09",
+        expectedEnd: "2027-06"
+      }
+    );
+    expect(JSON.stringify(result)).not.toMatch(/2024-09|2027-06|startDate|endDate/);
+    expect(executor.keyboardFallback).not.toHaveBeenCalled();
+  });
+
+  it("derives a checkbox target from local profile presence without exposing the value", async () => {
+    vi.mocked(executor.execute).mockResolvedValue({
+      performed: true,
+      verified: true,
+      strategy: "exact-check"
+    });
+    const service = new PageActionService(dependencies);
+    const control = target(registry, { role: "checkbox", tag: "input", inputType: "checkbox" });
+    const authorization = await service.authorize(session, true);
+    const result = await service.act(
+      request(authorization.authorizationId, control.ref, control.snapshotId, {
+        kind: "check",
+        source: { kind: "profile-presence", path: "answers.careerPlan" }
+      }),
+      session
+    );
+
+    expect(result).toEqual(expect.objectContaining({ status: "verified", strategy: "exact-check" }));
+    expect(executor.execute).toHaveBeenCalledWith(
+      session,
+      expect.objectContaining({ backendNodeId: 101 }),
+      { action: "check", strategy: "primary", desired: "checked" }
+    );
+    expect(JSON.stringify(result)).not.toContain(currentProfile.answers.careerPlan);
+  });
+
+  it("blocks invalid or incomplete profile ranges before executing", async () => {
+    const service = new PageActionService(dependencies);
+    const control = target(registry, { role: "textbox", tag: "custom" });
+    const authorization = await service.authorize(session, true);
+    currentProfile.education[0]!.endDate = "";
+    expect(await service.act(
+      request(authorization.authorizationId, control.ref, control.snapshotId, {
+        kind: "fill-range",
+        source: {
+          kind: "profile-range",
+          startPath: "education.0.startDate",
+          endPath: "education.0.endDate"
+        }
+      }),
+      session
+    )).toEqual(expect.objectContaining({ status: "failed", attempts: 0, reason: "empty-profile-value" }));
+    expect(executor.execute).not.toHaveBeenCalled();
+  });
+
   it("blocks restricted controls, stale snapshots, and changed profile revisions before execution", async () => {
     const service = new PageActionService(dependencies);
     const restricted = target(registry, { safety: "final-submit", role: "button", tag: "button", inputType: "submit" });
@@ -193,5 +283,45 @@ describe("page action service", () => {
       }),
       session
     )).toEqual(expect.objectContaining({ status: "blocked", attempts: 0, reason: "incompatible-action" }));
+  });
+
+  it("binds repeatable add clicks to an existing meaningful profile record", async () => {
+    vi.mocked(executor.execute).mockResolvedValue({
+      performed: true,
+      verified: false,
+      strategy: "repeatable-add"
+    });
+    const service = new PageActionService(dependencies);
+    const button = target(registry, { role: "button", tag: "button", inputType: "button" });
+    const authorization = await service.authorize(session, true);
+    const intent = {
+      kind: "click" as const,
+      purpose: "add-repeatable-record" as const,
+      source: { kind: "profile-record" as const, collection: "projects" as const, index: 0 }
+    };
+    const result = await service.act(
+      request(authorization.authorizationId, button.ref, button.snapshotId, intent),
+      session
+    );
+    expect(result).toEqual(expect.objectContaining({
+      status: "performed",
+      strategy: "repeatable-add",
+      attempts: 1
+    }));
+    expect(executor.execute).toHaveBeenCalledWith(session, expect.anything(), {
+      action: "click",
+      strategy: "primary",
+      purpose: "add-repeatable-record"
+    });
+
+    const nextButton = target(registry, { role: "button", tag: "button", inputType: "button" });
+    expect(await service.act(
+      request(authorization.authorizationId, nextButton.ref, nextButton.snapshotId, {
+        ...intent,
+        source: { ...intent.source, index: 1 }
+      }),
+      session
+    )).toEqual(expect.objectContaining({ status: "failed", attempts: 0, reason: "empty-profile-value" }));
+    expect(executor.execute).toHaveBeenCalledTimes(1);
   });
 });

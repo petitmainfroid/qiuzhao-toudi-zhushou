@@ -75,7 +75,85 @@ describe("embedded bridge protocol validation", () => {
     };
     expect(isEmbeddedBridgeRequest({ ...base, intent: { kind: "check", desired: "unchecked" } })).toBe(true);
     expect(isEmbeddedBridgeRequest({ ...base, intent: { kind: "click", purpose: "open-control" } })).toBe(true);
+    expect(isEmbeddedBridgeRequest({
+      ...base,
+      intent: {
+        kind: "click",
+        purpose: "add-repeatable-record",
+        source: { kind: "profile-record", collection: "projects", index: 2 }
+      }
+    })).toBe(true);
+    expect(isEmbeddedBridgeRequest({
+      ...base,
+      intent: { kind: "click", purpose: "save-repeatable-record" }
+    })).toBe(true);
+    expect(isEmbeddedBridgeRequest({
+      ...base,
+      intent: {
+        kind: "click",
+        purpose: "add-repeatable-record",
+        source: { kind: "profile-record", collection: "projects", index: 50 }
+      }
+    })).toBe(false);
     expect(isEmbeddedBridgeRequest({ ...base, intent: { kind: "click", purpose: "submit" } })).toBe(false);
+  });
+
+  it("accepts only a canonical same-record profile date range and no raw range values", () => {
+    const base = {
+      type: "POWER_PAGE_ACTION",
+      requestId: "request_range_12345",
+      authorizationId: "action_auth_range_123",
+      sessionId: "power_session_range_123",
+      snapshotId: "state_snapshot_range_123",
+      ref: "node_reference_range_123"
+    };
+    const validIntent = {
+      kind: "fill-range",
+      source: {
+        kind: "profile-range",
+        startPath: "education.2.startDate",
+        endPath: "education.2.endDate"
+      }
+    };
+    expect(isEmbeddedBridgeRequest({ ...base, intent: validIntent })).toBe(true);
+    expect(isEmbeddedBridgeRequest({
+      ...base,
+      intent: {
+        ...validIntent,
+        source: { ...validIntent.source, endPath: "education.3.endDate" }
+      }
+    })).toBe(false);
+    expect(isEmbeddedBridgeRequest({
+      ...base,
+      intent: {
+        ...validIntent,
+        source: { ...validIntent.source, start: "2024-09", end: "2027-06" }
+      }
+    })).toBe(false);
+  });
+
+  it("accepts a profile-backed presence check without accepting a raw boolean or value", () => {
+    const base = {
+      type: "POWER_PAGE_ACTION",
+      requestId: "request_check_1234",
+      authorizationId: "authorization_check_1234",
+      sessionId: "power_session_1234",
+      snapshotId: "state_snapshot_1234",
+      ref: "control_reference_1234",
+      intent: {
+        kind: "check",
+        source: { kind: "profile-presence", path: "answers.careerPlan" }
+      }
+    };
+    expect(isEmbeddedBridgeRequest(base)).toBe(true);
+    expect(isEmbeddedBridgeRequest({
+      ...base,
+      intent: { ...base.intent, desired: "checked" }
+    })).toBe(false);
+    expect(isEmbeddedBridgeRequest({
+      ...base,
+      intent: { ...base.intent, source: { ...base.intent.source, value: true } }
+    })).toBe(false);
   });
 
   it("accepts only bounded semantic wait conditions", () => {

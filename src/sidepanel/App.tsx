@@ -118,6 +118,16 @@ function attachmentFailureMessage(reason?: ResumeAttachmentFailureReason): strin
   return "附件没有添加。授权可能已使用或页面不再接受该文件，请重新扫描。";
 }
 
+export function scanFailureMessage(detail: string): string {
+  if (detail === "ats-adapter-url-unsupported") {
+    return "当前招聘页面尚未适配；没有扫描或填写任何字段。";
+  }
+  if (detail === "ats-adapter-unmatched" || detail === "ats-adapter-ambiguous") {
+    return "当前招聘页面的结构与已审核适配规则不一致；没有扫描或填写任何字段。";
+  }
+  return `无法读取当前页面。请先连接当前 HTTPS 招聘页后再试。技术原因：${detail}`;
+}
+
 function ProposalCard({
   proposal,
   selected,
@@ -138,7 +148,10 @@ function ProposalCard({
     unreadable: "无法比较"
   }[proposal.comparisonStatus];
   return (
-    <article className={`proposal-card confidence-${proposal.confidence}`}>
+    <article
+      className={`proposal-card confidence-${proposal.confidence}`}
+      data-profile-path={proposal.profilePath ?? undefined}
+    >
       <label className="proposal-select">
         <input
           type="checkbox"
@@ -365,7 +378,7 @@ export function SidePanel({
     catch (error) {
       setState("error");
       const detail = error instanceof Error ? error.message : "未知错误";
-      setMessage(`无法读取当前页面。请先连接当前 HTTPS 招聘页后再试。技术原因：${detail}`);
+      setMessage(scanFailureMessage(detail));
     }
   }
 

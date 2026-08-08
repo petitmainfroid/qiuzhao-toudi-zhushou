@@ -15,6 +15,27 @@ describe("privacy-safe evidence command log", () => {
       durationBucket: "100-500ms" as const
     };
     expect(sanitizeEvidenceLogEntry(safe)).toEqual(safe);
+    expect(sanitizeEvidenceLogEntry({
+      command: "page-action",
+      ref: "node_repeatablenonce_0001",
+      status: "performed",
+      attempts: 1,
+      durationBucket: "lt-100ms"
+    })).toEqual({
+      command: "page-action",
+      ref: "node_repeatablenonce_0001",
+      status: "performed",
+      attempts: 1,
+      durationBucket: "lt-100ms"
+    });
+    expect(sanitizeEvidenceLogEntry({
+      command: "page-action",
+      ref: "node_rangenonce_0001",
+      status: "blocked",
+      attempts: 0,
+      durationBucket: "lt-100ms",
+      failureCategory: "invalid-profile-range"
+    })).not.toBeNull();
     for (const leaked of [
       { ...safe, filename: "private.pdf" },
       { ...safe, path: "C:\\private\\resume.pdf" },

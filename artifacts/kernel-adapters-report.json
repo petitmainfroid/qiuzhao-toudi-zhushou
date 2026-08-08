@@ -1,0 +1,131 @@
+{
+  "schemaVersion": 1,
+  "suiteVersion": "k5-anonymous-ats-v1",
+  "generatedAt": "2026-08-08T08:29:38.240Z",
+  "syntheticOnly": true,
+  "familyCount": 3,
+  "families": [
+    {
+      "familyId": "anonymous-ats-alpha",
+      "plannedFieldCount": 4,
+      "mappingCorrectCount": 4,
+      "supportedWriteCount": 4,
+      "verifiedWriteCount": 4,
+      "primaryVerifiedCount": 4,
+      "failedWriteCount": 0,
+      "wrongControlWriteCount": 0,
+      "finalSubmitActionCount": 0,
+      "capabilities": [
+        "date",
+        "single-select",
+        "text"
+      ],
+      "roles": [
+        "combobox",
+        "textbox"
+      ],
+      "tags": [
+        "input",
+        "select",
+        "textarea"
+      ],
+      "boundaries": [
+        "main"
+      ],
+      "repeatableCreatedCount": 0,
+      "repeatableSavedCount": 0,
+      "savedResumeVerifiedCount": 0
+    },
+    {
+      "familyId": "anonymous-ats-beta",
+      "plannedFieldCount": 5,
+      "mappingCorrectCount": 5,
+      "supportedWriteCount": 5,
+      "verifiedWriteCount": 5,
+      "primaryVerifiedCount": 5,
+      "failedWriteCount": 0,
+      "wrongControlWriteCount": 0,
+      "finalSubmitActionCount": 0,
+      "capabilities": [
+        "choice",
+        "contenteditable",
+        "searchable-combobox",
+        "text",
+        "toggle"
+      ],
+      "roles": [
+        "checkbox",
+        "combobox",
+        "radio",
+        "textbox"
+      ],
+      "tags": [
+        "contenteditable",
+        "input"
+      ],
+      "boundaries": [
+        "main",
+        "same-origin-frame"
+      ],
+      "repeatableCreatedCount": 0,
+      "repeatableSavedCount": 0,
+      "savedResumeVerifiedCount": 0
+    },
+    {
+      "familyId": "anonymous-ats-gamma",
+      "plannedFieldCount": 5,
+      "mappingCorrectCount": 5,
+      "supportedWriteCount": 4,
+      "verifiedWriteCount": 4,
+      "primaryVerifiedCount": 4,
+      "failedWriteCount": 0,
+      "wrongControlWriteCount": 0,
+      "finalSubmitActionCount": 0,
+      "capabilities": [
+        "date-range",
+        "file-upload",
+        "text"
+      ],
+      "roles": [
+        "textbox"
+      ],
+      "tags": [
+        "input"
+      ],
+      "boundaries": [
+        "main",
+        "open-shadow"
+      ],
+      "repeatableCreatedCount": 1,
+      "repeatableSavedCount": 1,
+      "savedResumeVerifiedCount": 1
+    }
+  ],
+  "aggregate": {
+    "plannedFieldCount": 14,
+    "mappingCorrectCount": 14,
+    "mappingPrecision": 1,
+    "supportedWriteCount": 14,
+    "primaryVerifiedCount": 14,
+    "verifiedWriteCount": 14,
+    "primarySuccessRate": 1,
+    "finalSuccessRate": 1,
+    "wrongControlWriteCount": 0,
+    "finalSubmitActionCount": 0,
+    "repeatableCreatedCount": 1,
+    "repeatableSavedCount": 1,
+    "savedResumeVerifiedCount": 1
+  },
+  "safety": {
+    "rawSelectorActionCount": 0,
+    "arbitraryValueActionCount": 0,
+    "passwordActionCount": 0,
+    "verificationActionCount": 0,
+    "identityActionCount": 0,
+    "finalSubmitActionCount": 0,
+    "wrongControlWriteCount": 0
+  },
+  "gate": {
+    "pass": true
+  }
+}

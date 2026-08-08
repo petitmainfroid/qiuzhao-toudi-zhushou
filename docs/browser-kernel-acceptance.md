@@ -107,6 +107,34 @@ K2–K5 的节点拆分、堆叠分支、动作策略和三类真实 ATS 验收�
 - 误写、提交、第三次尝试、剪贴板、跨 Origin 动作和证据泄露计数全部为 0。
 - `artifacts/kernel-actions-report.json` 只保存匿名聚合与 case ID；`artifacts/kernel-actions.png` 展示无值的 Organic 验收摘要。
 
+## K5（F042）匿名三家族验收证据
+
+### 覆盖范围
+
+1. `anonymous-ats-alpha` 覆盖普通文本、textarea、原生 select 和单日期。
+2. `anonymous-ats-beta` 覆盖 contenteditable、可搜索下拉、radio、由档案字段是否存在驱动的 checkbox，以及同源 iframe。
+3. `anonymous-ats-gamma` 覆盖双输入日期区间、开放 Shadow DOM、重复记录新增/保存和已保存简历 PDF 上传。
+4. 未知企业自定义题保持手动；密码、验证码、身份、同意条款、破坏性动作和最终投递不进入可执行计划。
+
+### 自动化证据
+
+- `npm run eval:kernel-adapters` 在真实 Chrome 中通过 3/3 匿名 ATS 家族。
+- Ground Truth 计划与映射为 14/14，映射精度 100%；支持写入 14/14，主策略和最终回读验证均为 100%。
+- 重复记录新增 1 次、保存 1 次，已保存简历上传 1 次；错误控件写入和最终投递动作均为 0。
+- 当前 `npm run validate` 通过 46 个测试文件、394 个测试、生产构建和权限审计；`npm run test:e2e` 通过 30/30 个串行真实 Chrome 用例。
+- `artifacts/kernel-adapters-report.json` 只包含匿名家族、能力、计数、比率和安全标志；`artifacts/kernel-adapters.png` 是 Organic 风格的无个人值验收摘要。
+- 生产飞书清单的独立匿名 canary 在真实 Chrome 中通过：K1 从受限容器元数据恢复技术字段键，同时去除网页值、简历文件名、上传时间和 URL 查询。写入 parity 覆盖文本、可搜索下拉、唯一复合日期区间、项目新增/保存和已保存 PDF；企业自定义题未修改，最终投递为 0。
+- 安装版侧栏在精确受信任飞书申请 URL 上已走生产 K5 resolver：扫描建议默认勾选 0 项，用户勾选后写入由内核回读验证。当前截图为 `artifacts/feishu-k5-sidepanel.png`，仅含匿名测试档案。
+- 第二个生产家族 Moka 已通过保守 L1 parity：公共 41 字段契约中 27 个可由当前档案无歧义承载的字段全部写后验证，三个连续自定义下拉会逐次重扫和精确重绑。独立工作经历、身份字段、无独立 schema 的细分字段、企业题、整页保存和最终提交均未操作。截图为 `artifacts/moka-k5-sidepanel.png`。
+- 第三个生产家族 Lenovo Talent 已通过保守 L1 parity：公开 55 字段契约逐项记录了 15 个自动处理和 40 个手动决策；14 个档案字段全部写后验证，保存的 PDF 上传 1 次。姓名拆分、radio 组、`YYYY/MM` 月份、远程学校、多选城市、条件创建、证件和专属问题均保持手动；整页保存和最终提交为 0。截图为 `artifacts/lenovo-k5-sidepanel.png`。
+- 第四个生产家族 Ctrip Careers 已通过保守 L1 parity：公开 28 控件契约逐项记录 14 个自动处理和 14 个手动决策，14 个档案字段全部写后验证。手机号只触发人工短信门槛，验证码未读取或填写；解析附件、作品集附件、整页保存和最终提交均为 0。截图为 `artifacts/ctrip-k5-sidepanel.png`。
+- 旧 `ChromePageBridge`/`RoutedPageBridge`、runtime content 消息协议、content-script 入口和 `content.js` 构建产物均已删除；Manifest 不再申请 `scripting`。生产侧栏只有精确 URL 门控后的 K5 适配器路径。
+- 新增未知 ATS 安装版 Chrome 验收：扫描前后姓名哨兵值不变，`input`、`change`、`submit` 事件全部为 0，侧栏明确说明“没有扫描或填写任何字段”。截图为 `artifacts/k5-unsupported-page.png`。
+
+### F042 完成边界
+
+F042 已完成统一 K5 内核、四个生产家族的声明与匿名 parity、旧写入路径删除和未知页面零写入验收。这里仍然只是 L1 匿名 HTTPS 证据；真实招聘网站上的只读与用户确认后非提交验收只属于 F043，不能由本节点推断。
+
 ## 真实网页验收梯度
 
 - L0：单元测试；无浏览器。

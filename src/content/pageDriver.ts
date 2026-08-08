@@ -26,10 +26,13 @@ export interface PageWriteOptions {
 }
 
 export interface FixedPageActionPayload {
-  action: "fill" | "type" | "select" | "check" | "click";
+  action: "fill" | "type" | "select" | "fill-range" | "check" | "click";
   strategy: "primary" | "prepare-keyboard" | "verify-keyboard";
   expected?: string;
+  expectedStart?: string;
+  expectedEnd?: string;
   desired?: "checked" | "unchecked";
+  purpose?: "open-control" | "add-repeatable-record" | "save-repeatable-record";
 }
 
 export interface FixedPageActionOutcome {
@@ -64,8 +67,11 @@ export function runFixedPageAction(this: Element, payload: FixedPageActionPayloa
     || contentEditable === "plaintext-only";
   const strategyName: PageActionStrategy = payload.strategy === "primary"
     ? payload.action === "select" ? "native-select"
+      : payload.action === "fill-range" ? "native-date-range"
       : payload.action === "check" ? "exact-check"
-        : payload.action === "click" ? "open-control"
+        : payload.action === "click"
+          ? payload.purpose === "add-repeatable-record" ? "repeatable-add"
+            : payload.purpose === "save-repeatable-record" ? "repeatable-save" : "open-control"
           : isContentEditable ? "contenteditable-text" : "native-setter"
     : "keyboard-insert";
 
@@ -155,6 +161,95 @@ export function runFixedPageAction(this: Element, payload: FixedPageActionPayloa
   (element as HTMLElement).scrollIntoView?.({ block: "center", inline: "nearest" });
   (element as HTMLElement).focus?.({ preventScroll: true });
 
+  if (payload.action === "fill-range") {
+    const markerSelector = [
+      "[data-date-range]",
+      ".atsx-date-picker-period",
+      "[class*='date-range']",
+      "[class*='date-picker-period']",
+      "[class*='daterange']"
+    ].join(",");
+    const root = element.matches(markerSelector)
+      ? element
+      : element.closest(markerSelector);
+    if (!root) return fail("incompatible-action", "native-date-range");
+    const inputs = Array.from(root.querySelectorAll("input"))
+      .filter((candidate): candidate is HTMLInputElement => candidate instanceof ownerWindow.HTMLInputElement)
+      .filter((candidate) => ["date", "month", "text"].includes(candidate.type.toLowerCase()))
+      .filter((candidate) => {
+        if (!candidate.isConnected || candidate.disabled || candidate.readOnly) return false;
+        if (candidate.closest("[hidden], [aria-hidden='true'], [inert]")) return false;
+        const candidateStyle = ownerWindow.getComputedStyle?.(candidate);
+        return !candidateStyle || (candidateStyle.display !== "none" && candidateStyle.visibility !== "hidden");
+      });
+    if (inputs.length !== 2) return fail("incompatible-action", "native-date-range");
+    const expectedStart = payload.expectedStart ?? "";
+    const expectedEnd = payload.expectedEnd ?? "";
+    const canonicalDate = /^\d{4}-\d{2}(?:-\d{2})?$/;
+    if (
+      !canonicalDate.test(expectedStart)
+      || !canonicalDate.test(expectedEnd)
+      || expectedStart.length !== expectedEnd.length
+      || expectedStart > expectedEnd
+    ) return fail("invalid-profile-range", "native-date-range");
+    const inputValue = (input: HTMLInputElement, value: string): string | null => {
+      const type = input.type.toLowerCase();
+      if (type === "month") return value.slice(0, 7);
+      if (type === "date") return value.length === 10 ? value : null;
+      return value;
+    };
+    const values = [inputValue(inputs[0]!, expectedStart), inputValue(inputs[1]!, expectedEnd)];
+    if (values.some((value) => value === null)) return fail("invalid-profile-range", "native-date-range");
+    const dispatchRangeBeforeInput = (input: HTMLInputElement, value: string): boolean => {
+      const InputEventConstructor = ownerWindow.InputEvent;
+      if (typeof InputEventConstructor !== "function") return true;
+      return input.dispatchEvent(new InputEventConstructor("beforeinput", {
+        bubbles: true,
+        cancelable: true,
+        data: value,
+        inputType: "insertText"
+      }));
+    };
+    if (!dispatchRangeBeforeInput(inputs[0]!, values[0]!) || !dispatchRangeBeforeInput(inputs[1]!, values[1]!)) {
+      return fail("framework-rejected", "native-date-range");
+    }
+    const previous = inputs.map((input) => input.value);
+    const setter = Object.getOwnPropertyDescriptor(ownerWindow.HTMLInputElement.prototype, "value")?.set;
+    const setRangeValue = (input: HTMLInputElement, value: string): void => {
+      if (setter) setter.call(input, value);
+      else input.value = value;
+    };
+    const dispatchRangeEvents = (input: HTMLInputElement, value: string): void => {
+      const InputEventConstructor = ownerWindow.InputEvent;
+      if (typeof InputEventConstructor === "function") {
+        input.dispatchEvent(new InputEventConstructor("input", {
+          bubbles: true,
+          data: value,
+          inputType: "insertText"
+        }));
+      }
+      else input.dispatchEvent(new ownerWindow.Event("input", { bubbles: true }));
+      input.dispatchEvent(new ownerWindow.Event("change", { bubbles: true }));
+      input.dispatchEvent(new ownerWindow.FocusEvent("blur", { bubbles: false }));
+      input.dispatchEvent(new ownerWindow.FocusEvent("focusout", { bubbles: true }));
+    };
+    inputs.forEach((input, index) => {
+      setRangeValue(input, values[index]!);
+      dispatchRangeEvents(input, values[index]!);
+    });
+    root.dispatchEvent(new ownerWindow.Event("input", { bubbles: true }));
+    root.dispatchEvent(new ownerWindow.Event("change", { bubbles: true }));
+    const verified = inputs.every((input, index) => input.value === values[index]);
+    if (!verified) {
+      inputs.forEach((input, index) => {
+        setRangeValue(input, previous[index]!);
+        dispatchRangeEvents(input, previous[index]!);
+      });
+      return { performed: true, verified: false, strategy: "native-date-range", reason: "verification-failed" };
+    }
+    return { performed: true, verified: true, strategy: "native-date-range" };
+  }
+
   if (payload.action === "check") {
     const wanted = payload.desired === "checked";
     if (isInput && inputType === "checkbox") {
@@ -172,6 +267,37 @@ export function runFixedPageAction(this: Element, payload: FixedPageActionPayloa
   }
 
   if (payload.action === "click") {
+    if (payload.purpose === "add-repeatable-record" || payload.purpose === "save-repeatable-record") {
+      const strategy: PageActionStrategy = payload.purpose === "add-repeatable-record"
+        ? "repeatable-add"
+        : "repeatable-save";
+      const submitButton = element instanceof ownerWindow.HTMLButtonElement && element.type.toLowerCase() === "submit";
+      if (
+        !element.matches("button, input[type='button'], [role='button']")
+        || submitButton
+        || element.matches("a[href], input[type='submit']")
+      ) {
+        return fail("incompatible-action", strategy);
+      }
+      const label = normalize([
+        element.getAttribute("aria-label") ?? "",
+        element.getAttribute("title") ?? "",
+        element instanceof ownerWindow.HTMLInputElement ? element.value : "",
+        element.textContent ?? ""
+      ].join(" "));
+      const forbidden = ["submit", "apply", "application", "delete", "remove", "投递", "提交", "申请", "删除", "移除"];
+      if (!label || forbidden.some((token) => label.includes(normalize(token)))) {
+        return fail("unsafe-control", strategy);
+      }
+      const allowed = payload.purpose === "add-repeatable-record"
+        ? ["add", "addanother", "new", "新增", "添加", "继续添加"]
+        : ["save", "done", "confirm", "保存", "完成", "确定"];
+      if (!allowed.some((token) => label.includes(normalize(token)))) {
+        return fail("incompatible-action", strategy);
+      }
+      (element as HTMLElement).click();
+      return { performed: true, verified: false, strategy };
+    }
     const role = element.getAttribute("role");
     if ((role !== "combobox" && role !== "listbox") || element.matches("button, a[href]")) {
       return fail("incompatible-action", "open-control");
@@ -213,6 +339,47 @@ export function runFixedPageAction(this: Element, payload: FixedPageActionPayloa
     return element.checked
       ? { performed: true, verified: true, strategy: "exact-radio" }
       : { performed: true, verified: false, strategy: "exact-radio", reason: "verification-failed" };
+  }
+
+  if (payload.action === "select") {
+    const role = element.getAttribute("role");
+    if (role !== "combobox" && role !== "listbox") {
+      return fail("incompatible-action", "custom-select");
+    }
+    const optionSelector = [
+      "[role='option']",
+      ".atsx-select-dropdown-menu-item",
+      ".ud-select-option",
+      ".ant-select-item-option",
+      ".el-select-dropdown__item"
+    ].join(",");
+    const roots: ParentNode[] = [element.ownerDocument];
+    const rootNode = element.getRootNode();
+    if (rootNode !== element.ownerDocument && "querySelectorAll" in rootNode) roots.push(rootNode as ParentNode);
+    const options = [...new Set(roots.flatMap((root) => Array.from(root.querySelectorAll<HTMLElement>(optionSelector))))]
+      .filter((option) => {
+        if (!option.isConnected || option.closest("[hidden], [aria-hidden='true'], [inert]")) return false;
+        const optionStyle = ownerWindow.getComputedStyle?.(option);
+        return !optionStyle || (optionStyle.display !== "none" && optionStyle.visibility !== "hidden");
+      });
+    const target = normalize(expected);
+    const matches = options.filter((option) => [
+      option.textContent ?? "",
+      option.getAttribute("aria-label") ?? "",
+      option.getAttribute("data-value") ?? ""
+    ].some((candidate) => normalize(candidate) === target));
+    if (matches.length === 0) return fail("option-not-found", "custom-select");
+    if (matches.length > 1) return fail("option-ambiguous", "custom-select");
+    const option = matches[0]!;
+    option.click();
+    const selected = option.getAttribute("aria-selected") === "true"
+      || option.getAttribute("data-selected") === "true"
+      || option.matches(".is-selected, .selected, .atsx-select-dropdown-menu-item-selected, .ant-select-item-option-selected")
+      || (isInput && normalize(element.value) === target)
+      || normalize(element.getAttribute("aria-valuetext") ?? "") === target;
+    return selected
+      ? { performed: true, verified: true, strategy: "custom-select" }
+      : { performed: true, verified: false, strategy: "custom-select", reason: "verification-failed" };
   }
 
   if (payload.action !== "fill" && payload.action !== "type") {

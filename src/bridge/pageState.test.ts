@@ -85,6 +85,102 @@ const session: PowerSessionView = {
 };
 
 describe("privacy-safe page state", () => {
+  it("inherits allowlisted Feishu field metadata and redacts uploaded-file metadata", () => {
+    backendNodeId = 1;
+    const root: CdpDomNode = {
+      backendNodeId: backendNodeId++,
+      nodeType: 9,
+      nodeName: "#document",
+      frameId: "main-frame",
+      children: [element("html", {}, [element("body", {}, [
+        element("div", {
+          "data-form-field-name": "education_list[1].school",
+          "data-form-field-i18n-name": "学校名称"
+        }, [element("input")]),
+        element("div", {
+          "data-form-field-name": "private value 13800138000",
+          "data-form-field-i18n-name": "企业自定义题"
+        }, [element("input")]),
+        element("button", { type: "button" }, [text("私密姓名.pdf 上次上传 : 2026-02-25 23:31 更新 删除")])
+      ])])]
+    };
+
+    const state = buildPrivacySafePageState(root, session, new OpaqueReferenceRegistry(() => "feishunonce"));
+    expect(state.controls[0]).toEqual(expect.objectContaining({
+      semantics: expect.objectContaining({
+        label: "学校名称",
+        name: "education_list[1].school"
+      })
+    }));
+    expect(state.controls[1]?.semantics).toEqual({ label: "企业自定义题" });
+    expect(state.controls[2]?.semantics.label).toContain("[文件]");
+    expect(state.controls[2]?.semantics.label).toContain("[时间]");
+    expect(JSON.stringify(state)).not.toMatch(/私密姓名|2026-02-25|23:31|13800138000|private value/i);
+  });
+
+  it("emits one opaque composite reference for a two-input Feishu date range", () => {
+    backendNodeId = 1;
+    const root: CdpDomNode = {
+      backendNodeId: backendNodeId++,
+      nodeType: 9,
+      nodeName: "#document",
+      frameId: "main-frame",
+      children: [element("html", {}, [element("body", {}, [
+        element("div", {
+          class: "atsx-date-picker-period",
+          "data-form-field-name": "education_list[0].start_end_time",
+          "data-form-field-i18n-name": "起止时间"
+        }, [
+          element("input", { type: "month", value: "2020-09" }),
+          element("input", { type: "month", value: "2024-06" })
+        ])
+      ])])]
+    };
+
+    const registry = new OpaqueReferenceRegistry(() => "rangenonce");
+    const state = buildPrivacySafePageState(root, session, registry);
+    expect(state.controls).toHaveLength(1);
+    expect(state.controls[0]).toEqual(expect.objectContaining({
+      role: "textbox",
+      tag: "custom",
+      semantics: {
+        label: "起止时间",
+        name: "education_list[0].start_end_time"
+      }
+    }));
+    expect(registry.resolve(session.sessionId!, state.snapshotId, state.controls[0]!.ref)).toEqual(
+      expect.objectContaining({ tag: "custom", role: "textbox" })
+    );
+    expect(JSON.stringify(state)).not.toMatch(/2020-09|2024-06/);
+  });
+
+  it("associates portal options through aria-controls without returning option values", () => {
+    backendNodeId = 1;
+    const root: CdpDomNode = {
+      backendNodeId: backendNodeId++,
+      nodeType: 9,
+      nodeName: "#document",
+      frameId: "main-frame",
+      children: [element("html", {}, [element("body", {}, [
+        element("input", {
+          role: "combobox",
+          name: "candidate.preferred_city",
+          "aria-label": "Preferred city",
+          "aria-controls": "city-options",
+          "aria-expanded": "true"
+        }),
+        element("div", { id: "city-options", role: "listbox" }, [
+          element("div", { role: "option", "data-value": "private-code-1" }, [text("Beijing")]),
+          element("div", { role: "option", "data-value": "private-code-2" }, [text("Shanghai")])
+        ])
+      ])])]
+    };
+    const state = buildPrivacySafePageState(root, session, new OpaqueReferenceRegistry(() => "portalnonce"));
+    const combobox = state.controls.find((control) => control.semantics.name === "candidate.preferred_city");
+    expect(combobox?.options).toEqual(["Beijing", "Shanghai"]);
+    expect(JSON.stringify(state)).not.toContain("private-code");
+  });
+
   it("does not treat wrapped textarea values or select options as label text", () => {
     backendNodeId = 1;
     const root: CdpDomNode = {

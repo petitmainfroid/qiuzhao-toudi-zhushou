@@ -88,13 +88,41 @@ function durationBucket(duration: number): PageActionResult["durationBucket"] {
 }
 
 function actionValue(intent: PageActionIntent, profile: CandidateProfile): string | undefined {
-  if (intent.kind === "check" || intent.kind === "click") return undefined;
+  if (intent.kind === "check" || intent.kind === "click" || intent.kind === "fill-range") return undefined;
   return getProfileValue(profile, intent.source.path).trim();
+}
+
+function checkDesired(intent: Extract<PageActionIntent, { kind: "check" }>, profile: CandidateProfile) {
+  if ("desired" in intent) return intent.desired;
+  return getProfileValue(profile, intent.source.path).trim() ? "checked" : "unchecked";
+}
+
+function validDateRange(start: string, end: string): boolean {
+  const canonicalDate = /^\d{4}-\d{2}(?:-\d{2})?$/;
+  return canonicalDate.test(start)
+    && canonicalDate.test(end)
+    && start.length === end.length
+    && start <= end;
+}
+
+function allowedProfileRange(intent: Extract<PageActionIntent, { kind: "fill-range" }>): boolean {
+  const match = /^(education|workExperiences|projects)\.(\d+)\.startDate$/.exec(intent.source.startPath);
+  return Boolean(
+    match
+    && intent.source.endPath === `${match[1]}.${match[2]}.endDate`
+    && allowedProfilePath(intent.source.startPath)
+    && allowedProfilePath(intent.source.endPath)
+  );
 }
 
 function compatible(intent: PageActionIntent, target: ReferenceTarget): boolean {
   if (intent.kind === "check") return target.role === "checkbox" || target.role === "switch";
   if (intent.kind === "click") {
+    if (intent.purpose === "add-repeatable-record" || intent.purpose === "save-repeatable-record") {
+      return target.role === "button"
+        && target.tag !== "a"
+        && target.inputType !== "submit";
+    }
     return (target.role === "combobox" || target.role === "listbox")
       && target.tag !== "button" && target.tag !== "a";
   }
@@ -103,11 +131,32 @@ function compatible(intent: PageActionIntent, target: ReferenceTarget): boolean 
       && target.inputType !== "radio" && target.inputType !== "checkbox";
   }
   if (intent.kind === "select") {
-    return target.tag === "select" || target.role === "radio";
+    return target.tag === "select"
+      || target.role === "radio"
+      || target.role === "combobox"
+      || target.role === "listbox";
+  }
+  if (intent.kind === "fill-range") {
+    return (target.role === "textbox" || target.role === "combobox")
+      && (target.tag === "input" || target.tag === "custom");
   }
   return target.role === "textbox"
     || target.tag === "select"
     || target.role === "radio";
+}
+
+function profileRecord(profile: CandidateProfile, source: Extract<PageActionIntent, {
+  kind: "click";
+  purpose: "add-repeatable-record";
+}>["source"]): object | undefined {
+  const records = profile[source.collection];
+  return records[source.index];
+}
+
+function meaningfulRecord(record: object | undefined): boolean {
+  return Boolean(record && Object.entries(record).some(
+    ([key, value]) => key !== "id" && typeof value === "string" && value.trim().length > 0
+  ));
 }
 
 function staticResult(
@@ -142,7 +191,7 @@ function outcomeResult(
     requestId: request.requestId,
     ref: request.ref,
     action: request.intent.kind,
-    status: outcome.verified ? "verified" : "failed",
+    status: outcome.verified ? "verified" : outcome.performed && !outcome.reason ? "performed" : "failed",
     strategy: outcome.strategy,
     attempts,
     ...(outcome.reason ? { reason: outcome.reason } : {}),
@@ -220,15 +269,45 @@ export class PageActionService {
       this.invalidate();
       return staticResult(request, startedAt, this.dependencies.now(), "blocked", "invalid-authorization");
     }
+    if (request.intent.kind === "fill-range" && !allowedProfileRange(request.intent)) {
+      return staticResult(request, startedAt, this.dependencies.now(), "blocked", "invalid-profile-range");
+    }
     if (
       request.intent.kind !== "check"
       && request.intent.kind !== "click"
+      && request.intent.kind !== "fill-range"
+      && !allowedProfilePath(request.intent.source.path)
+    ) return staticResult(request, startedAt, this.dependencies.now(), "blocked", "invalid-profile-path");
+    if (
+      request.intent.kind === "check"
+      && "source" in request.intent
       && !allowedProfilePath(request.intent.source.path)
     ) return staticResult(request, startedAt, this.dependencies.now(), "blocked", "invalid-profile-path");
 
     const expected = actionValue(request.intent, profile);
-    if (request.intent.kind !== "check" && request.intent.kind !== "click" && !expected) {
+    const expectedRange = request.intent.kind === "fill-range"
+      ? {
+          start: getProfileValue(profile, request.intent.source.startPath).trim(),
+          end: getProfileValue(profile, request.intent.source.endPath).trim()
+        }
+      : undefined;
+    if (
+      request.intent.kind === "click"
+      && request.intent.purpose === "add-repeatable-record"
+      && !meaningfulRecord(profileRecord(profile, request.intent.source))
+    ) {
       return staticResult(request, startedAt, this.dependencies.now(), "failed", "empty-profile-value");
+    }
+    if (expectedRange && (!expectedRange.start || !expectedRange.end)) {
+      return staticResult(request, startedAt, this.dependencies.now(), "failed", "empty-profile-value");
+    }
+    if (expectedRange && !validDateRange(expectedRange.start, expectedRange.end)) {
+      return staticResult(request, startedAt, this.dependencies.now(), "blocked", "invalid-profile-range");
+    }
+    if (request.intent.kind !== "check" && request.intent.kind !== "click" && !expected) {
+      if (request.intent.kind !== "fill-range") {
+        return staticResult(request, startedAt, this.dependencies.now(), "failed", "empty-profile-value");
+      }
     }
 
     authorization.actionCount += 1;
@@ -236,7 +315,9 @@ export class PageActionService {
       action: request.intent.kind,
       strategy: "primary",
       ...(expected !== undefined ? { expected } : {}),
-      ...(request.intent.kind === "check" ? { desired: request.intent.desired } : {})
+      ...(expectedRange ? { expectedStart: expectedRange.start, expectedEnd: expectedRange.end } : {}),
+      ...(request.intent.kind === "check" ? { desired: checkDesired(request.intent, profile) } : {}),
+      ...(request.intent.kind === "click" ? { purpose: request.intent.purpose } : {})
     });
     if (primary.verified) {
       return outcomeResult(request, startedAt, this.dependencies.now(), primary, 1);
@@ -273,12 +354,12 @@ function sanitizedOutcome(value: unknown): FixedPageActionOutcome {
   }
   const candidate = value as Partial<FixedPageActionOutcome>;
   const strategies: PageActionStrategy[] = [
-    "none", "native-setter", "native-select", "exact-radio", "exact-check",
+    "none", "native-setter", "native-select", "custom-select", "native-date-range", "repeatable-add", "repeatable-save", "exact-radio", "exact-check",
     "contenteditable-text", "open-control", "keyboard-insert"
   ];
   const reasons: PageActionFailureReason[] = [
     "invalid-authorization", "session-inactive", "origin-changed", "stale-reference",
-    "invalid-profile-path", "empty-profile-value", "unsafe-control", "incompatible-action",
+    "invalid-profile-path", "invalid-profile-range", "empty-profile-value", "unsafe-control", "incompatible-action",
     "disabled-or-readonly", "hidden-control", "option-not-found", "option-ambiguous",
     "unsupported-control", "framework-rejected", "verification-failed", "bridge-failed"
   ];
@@ -362,6 +443,16 @@ export class ChromePageActionExecutor implements PageActionExecutor {
       return { performed: false, verified: false, strategy: "none", reason: "stale-reference" };
     }
     const outcome = await this.call(session.tabId, target, payload);
+    const structuralClick = payload.action === "click" && (
+      payload.purpose === "open-control"
+      || payload.purpose === "add-repeatable-record"
+      || payload.purpose === "save-repeatable-record"
+    );
+    // Open controls intentionally change expanded state; repeatable controls may
+    // disappear or be replaced. Their verification is the orchestrator's bounded
+    // wait/rescan, not survival of the old fingerprint. Pre-action inspection and
+    // the fixed role/label gates still apply.
+    if (structuralClick && outcome.performed && !outcome.reason) return outcome;
     if (!await this.inspect(session, target)) {
       return { performed: outcome.performed, verified: false, strategy: outcome.strategy, reason: "stale-reference" };
     }

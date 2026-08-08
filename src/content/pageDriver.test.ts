@@ -81,6 +81,39 @@ describe("fixed K2 page action registry", () => {
     expect(select.selectedOptions[0]?.textContent).toBe("初始项");
   });
 
+  it("selects one exact custom option and requires synchronous readback", () => {
+    document.body.innerHTML = `
+      <div id="target" role="combobox" aria-expanded="true" aria-label="City"></div>
+      <div role="option" data-value="Beijing">Beijing</div>
+      <div role="option" data-value="Shanghai">Shanghai</div>
+    `;
+    const target = document.getElementById("target")!;
+    const options = Array.from(document.querySelectorAll<HTMLElement>("[role='option']"));
+    options.forEach((option) => option.addEventListener("click", () => {
+      options.forEach((candidate) => candidate.setAttribute("aria-selected", "false"));
+      option.setAttribute("aria-selected", "true");
+      target.setAttribute("aria-valuetext", option.textContent ?? "");
+    }));
+
+    expect(runFixedPageAction.call(target, {
+      action: "select",
+      strategy: "primary",
+      expected: "Shanghai"
+    })).toEqual({ performed: true, verified: true, strategy: "custom-select" });
+    expect(options.map((option) => option.getAttribute("aria-selected"))).toEqual(["false", "true"]);
+
+    expect(runFixedPageAction.call(target, {
+      action: "select",
+      strategy: "primary",
+      expected: "Shenzhen"
+    })).toEqual({
+      performed: false,
+      verified: false,
+      strategy: "custom-select",
+      reason: "option-not-found"
+    });
+  });
+
   it("never moves a radio action to a neighboring option", () => {
     document.body.innerHTML = `
       <label><input id="first" type="radio" name="degree" value="本科">本科</label>
@@ -126,6 +159,50 @@ describe("fixed K2 page action registry", () => {
     });
   });
 
+  it("performs only fixed add/save repeatable buttons and leaves verification to the workflow", () => {
+    document.body.innerHTML = `
+      <button id="add" type="button">Add another project</button>
+      <button id="save" type="button">Save project</button>
+      <button id="submit" type="submit">Submit application</button>
+      <button id="delete" type="button">Delete project</button>
+    `;
+    const add = document.getElementById("add")!;
+    const save = document.getElementById("save")!;
+    const submit = document.getElementById("submit")!;
+    const remove = document.getElementById("delete")!;
+    const addClick = vi.fn();
+    const saveClick = vi.fn();
+    const submitClick = vi.fn();
+    const removeClick = vi.fn();
+    add.addEventListener("click", addClick);
+    save.addEventListener("click", saveClick);
+    submit.addEventListener("click", submitClick);
+    remove.addEventListener("click", removeClick);
+
+    expect(runFixedPageAction.call(add, {
+      action: "click",
+      strategy: "primary",
+      purpose: "add-repeatable-record"
+    })).toEqual({ performed: true, verified: false, strategy: "repeatable-add" });
+    expect(runFixedPageAction.call(save, {
+      action: "click",
+      strategy: "primary",
+      purpose: "save-repeatable-record"
+    })).toEqual({ performed: true, verified: false, strategy: "repeatable-save" });
+    expect(runFixedPageAction.call(submit, {
+      action: "click",
+      strategy: "primary",
+      purpose: "save-repeatable-record"
+    })).toEqual(expect.objectContaining({ performed: false, reason: "incompatible-action" }));
+    expect(runFixedPageAction.call(remove, {
+      action: "click",
+      strategy: "primary",
+      purpose: "add-repeatable-record"
+    })).toEqual(expect.objectContaining({ performed: false, reason: "unsafe-control" }));
+    expect([addClick.mock.calls.length, saveClick.mock.calls.length, submitClick.mock.calls.length, removeClick.mock.calls.length])
+      .toEqual([1, 1, 0, 0]);
+  });
+
   it("supports the standard empty contenteditable attribute", () => {
     document.body.innerHTML = `<div id="editor" contenteditable></div>`;
     const editor = document.getElementById("editor")!;
@@ -135,6 +212,111 @@ describe("fixed K2 page action registry", () => {
       expected: "anonymous rich text"
     })).toEqual({ performed: true, verified: true, strategy: "contenteditable-text" });
     expect(editor.textContent).toBe("anonymous rich text");
+  });
+
+  it("fills and verifies exactly two inputs in a marked date-range group", () => {
+    document.body.innerHTML = `
+      <div data-date-range>
+        <input id="start" type="month" aria-label="Start month" />
+        <input id="end" type="month" aria-label="End month" />
+      </div>
+    `;
+    const start = document.getElementById("start") as HTMLInputElement;
+    const end = document.getElementById("end") as HTMLInputElement;
+    const events: string[] = [];
+    start.addEventListener("input", () => events.push("start"));
+    end.addEventListener("input", () => events.push("end"));
+
+    const result = runFixedPageAction.call(start, {
+      action: "fill-range",
+      strategy: "primary",
+      expectedStart: "2024-09",
+      expectedEnd: "2027-06"
+    });
+
+    expect(result).toEqual({ performed: true, verified: true, strategy: "native-date-range" });
+    expect([start.value, end.value]).toEqual(["2024-09", "2027-06"]);
+    expect(events).toEqual(["start", "end"]);
+    expect(JSON.stringify(result)).not.toMatch(/2024-09|2027-06/);
+  });
+
+  it("fails a date range atomically when the group is ambiguous or beforeinput is rejected", () => {
+    document.body.innerHTML = `
+      <div data-date-range>
+        <input id="start" type="month" value="2020-01" />
+        <input id="end" type="month" value="2021-01" />
+        <input id="extra" type="month" value="2022-01" />
+      </div>
+    `;
+    const start = document.getElementById("start") as HTMLInputElement;
+    expect(runFixedPageAction.call(start, {
+      action: "fill-range",
+      strategy: "primary",
+      expectedStart: "2024-09",
+      expectedEnd: "2027-06"
+    })).toEqual({
+      performed: false,
+      verified: false,
+      strategy: "native-date-range",
+      reason: "incompatible-action"
+    });
+    expect(start.value).toBe("2020-01");
+
+    document.body.innerHTML = `
+      <div data-date-range>
+        <input id="start" type="month" value="2020-01" />
+        <input id="end" type="month" value="2021-01" />
+      </div>
+    `;
+    const rejectedStart = document.getElementById("start") as HTMLInputElement;
+    const rejectedEnd = document.getElementById("end") as HTMLInputElement;
+    rejectedEnd.addEventListener("beforeinput", (event) => event.preventDefault());
+    expect(runFixedPageAction.call(rejectedStart, {
+      action: "fill-range",
+      strategy: "primary",
+      expectedStart: "2024-09",
+      expectedEnd: "2027-06"
+    })).toEqual({
+      performed: false,
+      verified: false,
+      strategy: "native-date-range",
+      reason: "framework-rejected"
+    });
+    expect([rejectedStart.value, rejectedEnd.value]).toEqual(["2020-01", "2021-01"]);
+  });
+
+  it("rolls both date inputs back when framework readback rejects one side", () => {
+    document.body.innerHTML = `
+      <div data-date-range>
+        <input id="start" type="month" value="2020-01" />
+        <input id="end" type="month" value="2021-01" />
+      </div>
+    `;
+    const start = document.getElementById("start") as HTMLInputElement;
+    const end = document.getElementById("end") as HTMLInputElement;
+    let reject = true;
+    end.addEventListener("input", () => {
+      if (reject) {
+        reject = false;
+        end.value = "2021-01";
+      }
+    });
+
+    const result = runFixedPageAction.call(start, {
+      action: "fill-range",
+      strategy: "primary",
+      expectedStart: "2024-09",
+      expectedEnd: "2027-06"
+    });
+
+    expect(result).toEqual({
+      performed: true,
+      verified: false,
+      strategy: "native-date-range",
+      reason: "verification-failed"
+    });
+    expect([start.value, end.value]).toEqual(["2020-01", "2021-01"]);
+    expect(JSON.stringify(result)).not.toMatch(/2020-01|2021-01|2024-09|2027-06/);
   });
 });
 

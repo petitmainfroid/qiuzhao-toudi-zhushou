@@ -1217,3 +1217,321 @@ Run a local field-level audit over the five PDFs to identify missing dates, role
 - Pushed `agent/browser-kernel-k4-evidence` and opened Draft PR #6, `F041：完成 K4 简历上传与隐私证据层`, against the exact stacked base `agent/browser-kernel-k3-workflows`: `https://github.com/petitmainfroid/qiuzhao-toudi-zhushou/pull/6`.
 - F041 is now `done`. The next dependency-unblocked feature is F042 on `agent/browser-kernel-k5-adapters`, based on `agent/browser-kernel-k4-evidence`; it should remove the remaining direct mutation paths only after adapter parity evidence, not combine K5 with this PR.
 - Handoff has no implementation blocker. The ignored local `artifacts/kernel-evidence-report.json` and `artifacts/kernel-evidence.png` remain current and privacy-inspected for review; the repository intentionally does not commit them.
+
+## 2026-08-07 F042 K5 kickoff and cross-worktree boundary
+
+- Reviewed the separate dirty ATS/GT worktree and confirmed that its F079–F081 Feishu family detector, semantic mappings, Ground Truth, anonymous fixtures, and family regression evidence are reusable adaptation assets. Its content-script control adapters, raw repeatable selectors, direct `.click()` lifecycle, active-tab `chrome.scripting` bridge, and legacy attachment path overlap or conflict with K4 and will not be copied into K5.
+- Created isolated worktree `C:\Users\jiangbingjian\qiuzhaozhushou-k5` on `agent/browser-kernel-k5-adapters` from published K4 branch `agent/browser-kernel-k4-evidence` at `29776d7`. The original ATS/GT worktree and its uncommitted files remain untouched.
+- Ran `./init.ps1`. Dependency installation completed; baseline `npm run validate` passed with TypeScript, 36 test files / 285 tests, production build, 13 required distribution files, exact browser-kernel permissions, and forbidden-permission absence. npm reported five dependency advisories; no forced upgrade was applied.
+- Froze the ownership and serial migration plan in `docs/browser-kernel-k5-adapter-plan.md`. F042 is now `in_progress`; K5-A is limited to a declarative adapter SDK, one typed state/find/action/wait/upload boundary, exact-key validation, and compliance tests. No Feishu company rules, real page mutation, final submission, cookies, credentials, or personal values are in scope for this increment.
+
+### F042 K5-A/B verified checkpoint
+
+- Added a versioned declarative SDK under `src/adapter-sdk/`. An adapter can declare HTTPS family detection, technical semantic keys, canonical profile-field/range/saved-resume intent, generic control capabilities, confirmation/exclusion decisions, verification requirements, and bounded repeatable-section semantics. It cannot provide selectors, arbitrary page/profile values, scripts, CDP/DOM ids, callbacks, or browser commands.
+- Added exact-key runtime validation. The validator rejects unknown properties, wildcard hosts, non-canonical profile paths, duplicate ids, automatic writes to sensitive profile paths, file operations outside the saved-resume confirmation gate, and non-verifying automatic writes. The anonymous contract fixture covers text, sensitive select, date range, repeatable education, saved PDF, and an explicitly manual custom question.
+- Added `RecruitmentKernelApi`, a single typed state/find/action/wait/upload boundary over K4. `ChromeRecruitmentKernelApi` checks the caller's pinned session both before and after every operation, including K4 state/find/action-authorization messages that do not carry a session id themselves, so a session replacement cannot return an accepted result.
+- Added a declarative registry and planner. Three anonymous ATS families are detected from trusted HTTPS host/path/marker evidence; suffix lookalikes do not match and tied detection fails closed. Planning returns only opaque control keys, canonical profile intent, confirmation state, capability, and typed skip reasons. Unknown custom questions, unavailable controls, identity/credential/consent/destructive controls, final-submit controls, and incompatible roles never enter the action plan.
+- Added `RecruitmentAdapterOrchestrator`. It scans only through the pinned kernel, executes only user-selected planned fields, requires a separate confirmation bit for `confirm` fields, resolves no arbitrary value, suppresses duplicate selection, and routes PDF exclusively through K4 upload authorization. Current unsupported capabilities (`profile-range`, searchable combobox, toggle, and repeatable actions) return typed skips rather than using the legacy content engine or a blind fallback.
+- Focused `npm test -- --run src/adapter-sdk` passed with 4 files / 19 tests; `npm run typecheck` and `git diff --check` passed, with only line-ending warnings for existing harness files.
+- Full `npm run validate` passed with TypeScript, 40 test files / 304 tests, production build, 13 required distribution files, exact browser-kernel permissions, and forbidden-permission absence. This checkpoint changes no user-visible runtime path, so E2E and a new screenshot were not required.
+
+### F042 checkpoint handoff
+
+- Changed harness/docs: `feature_list.json`, `progress.md`, and `docs/browser-kernel-k5-adapter-plan.md`.
+- Added SDK/runtime files: `src/adapter-sdk/{contracts,kernelApi,chromeKernelApi,manifestValidation,adapterRuntime,orchestrator,index}.ts` and four focused test files.
+- F042 remains `in_progress`. The old content-script scan/fill/repeatable engine remains present because parity has not been proved. The next increment must add kernel-owned searchable-combobox/date-range/repeatable capabilities without accepting raw selectors or values, then route the installed side-panel flow through the orchestrator before legacy removal.
+- The separate dirty ATS/GT worktree remains untouched; no Feishu company rules or real candidate data were copied into K5.
+
+### F042 K5-C searchable-combobox increment
+
+- Extended the fixed K4 action registry with a `custom-select` strategy for ordinary `combobox`/`listbox` targets. The internal executor uses a fixed option locator set, requires one exact normalized option, clicks only that option, and accepts success only after synchronous selected-state/value readback. Missing or duplicate captions fail closed; adapters still cannot provide a selector or candidate value.
+- Added portal-option discovery through allowlisted `aria-controls` and `aria-owns` relationships. The privacy-safe page state exposes only option captions, not `value`/`data-value`, DOM ids, selectors, or existing candidate input values.
+- Added the orchestrated searchable-combobox workflow: open the planned opaque ref, wait for an option list using only the field's technical semantic key, refind exactly one control in a new snapshot, then issue a profile-backed `select`. The wait request never contains the profile value or `optionText`; timeout and ambiguous/missing refind have typed failures.
+- Focused verification passed with 7 files / 44 tests, including SDK contracts, pinned API, planner, orchestrator, page state, fixed action service, and the page-world driver. TypeScript and `git diff --check` passed; line-ending warnings were informational.
+- Final `npm run validate` passed with TypeScript, 40 test files / 307 tests, production build, 13 required distribution files, exact permissions, and forbidden-permission absence.
+- Final serialized `npm run test:e2e` passed 24/24 real-Chrome tests in 2.3 minutes. It covered K1 state/find, K2 fixed actions, K3 workflows, K4 saved-resume/evidence, existing complex controls, repeatable records, resume flows, privacy, and Xiaomi-derived no-submit regression. No real recruitment site or personal value was used.
+- F042 remains `in_progress`: date ranges, kernel-owned repeatable add/save capability, installed side-panel migration, three-family K5 evaluator, and legacy-path removal are still pending. GitHub publication is also pending because `gh auth status` reports that the active `petitmainfroid` keyring token is invalid; no files were staged, committed, or pushed after that failed prerequisite check.
+
+## 2026-08-08 F042 resume and checkpoint publication preflight
+
+- Re-read the repository operating guide, F042 ledger, progress handoff, and the complete long-running harness and GitHub publication instructions. The branch remains `agent/browser-kernel-k5-adapters`; F042 remains `in_progress`.
+- `./init.ps1 -SkipInstall` exited 0 with TypeScript, 40 test files / 307 tests, production build, 13 required distribution files, exact permissions, and forbidden-permission absence.
+- GitHub CLI authentication for `petitmainfroid` is now valid again. The intended checkpoint scope is limited to the K5 harness/plan, `src/adapter-sdk`, and the fixed custom-select/page-state changes listed in the prior handoff. The separate ATS/GT worktree remains excluded.
+
+## 2026-08-08 F042 K5-A/C checkpoint publication
+
+- Staged and audited only the 20 K5-owned harness, SDK, protocol, page-state, page-action, and page-driver files. `git diff --cached --check` passed; suspicious-path and credential-pattern scans reported zero findings. No `.env`, artifact, real resume, profile value, ATS Ground Truth, or separate-worktree file was included.
+- Committed the verified checkpoint as `21d8bdfc312ce768223d2edbcb4c5a9e8583805f` (`建立 K5 适配器 SDK 与自定义下拉内核`) and pushed `agent/browser-kernel-k5-adapters` to origin.
+- Opened Draft PR #7, `F042：建立 K5 适配器 SDK 与自定义下拉内核`, against the exact stacked base `agent/browser-kernel-k4-evidence`: `https://github.com/petitmainfroid/qiuzhao-toudi-zhushou/pull/7`.
+- F042 remains `in_progress`. The next scoped increment is kernel-owned profile date-range filling with exact protocol validation, local profile resolution, fixed page-driver behavior, and readback verification; repeatable add/save, side-panel migration, three-family evaluation, and legacy removal remain later nodes.
+
+## 2026-08-08 F042 K5-C profile date-range increment
+
+### Implementation
+
+- Added the exact `fill-range` action intent. It accepts only a `profile-range` source whose canonical `startDate` and `endDate` paths belong to the same indexed education, work-experience, or project record. Raw dates, selectors, scripts, and arbitrary properties remain invalid at the bridge boundary.
+- The action service resolves both dates from the locally stored profile under the existing user-gesture authorization and pinned-session checks. Empty, malformed, mixed-precision, or reverse-ordered ranges fail before page mutation. Neither paths nor dates appear in action results or evidence logs.
+- Added the fixed `native-date-range` page strategy. It operates only on a recognized date-range group containing exactly two enabled, visible date/month/text inputs, dispatches cancellable `beforeinput` plus framework-compatible committed events, verifies both values, and restores both previous values when either readback is rejected. Ambiguous or unsupported structures fail closed and do not use keyboard fallback.
+- The adapter orchestrator now translates a declarative `date-range`/`profile-range` field into the kernel action. Adapters still receive no candidate values and cannot supply selectors or executable behavior.
+
+### Verification and handoff
+
+- Focused tests passed: 4 files / 35 tests covering exact protocol validation, local two-path resolution, adapter translation, successful two-input writing, ambiguity rejection, cancellation atomicity, readback rollback, and privacy-safe results.
+- `npm run validate` exited 0: TypeScript, 40 test files / 313 tests, production build, 13 required distribution files, exact permissions, and forbidden-permission absence all passed.
+- `npm run test:e2e` exited 0: 24/24 serial real-Chromium regressions passed in 2.3 minutes, including K1-K4, complex controls, saved-resume upload, repeatable records, privacy, and Xiaomi-derived no-submit coverage. This is a full regression result; the dedicated three-family K5 evaluator has not yet been implemented.
+- No installed side-panel behavior changed in this increment, so no new user-visible milestone screenshot was created. F042 remains `in_progress`; the next node is kernel-owned bounded repeatable-section add/save, followed by side-panel migration, three-family K5 evidence, and legacy-path removal.
+
+## 2026-08-08 F042 K5-C bounded repeatable add/save increment
+
+### Implementation
+
+- The adapter planner now converts repeatable declarations into snapshot-scoped evidence: sorted record indexes, safe add-control refs, per-record save-control refs, and the manifest's bounded creation limit. It derives indexes only from declared technical semantic prefixes and excludes unavailable, unsafe, and final-submit controls.
+- Added exact repeatable click intents. An add click carries only an allowlisted collection and bounded record index; the action service permits it only when that exact locally stored profile record exists and contains meaningful data. Save clicks carry no profile value. Raw labels, selectors, scripts, values, or DOM ids remain outside the request protocol.
+- The fixed page driver permits repeatable clicks only on non-submit button controls whose visible/accessibility label matches the kernel-owned add/save vocabulary. Labels containing submit/apply/delete/remove equivalents fail closed. A click is honestly returned as `performed`, not `verified`; the privacy-safe evidence log now supports that intermediate state and also accepts the prior increment's `invalid-profile-range` failure category.
+- Added orchestrated create/save verification. Creation proceeds one record at a time, rescans through the pinned kernel after each click, and accepts only the exact next contiguous index with no removal or multi-row jump. It stops at the adapter limit, missing local profile record, ambiguity, family change, or structure change. Save succeeds only when record indexes are unchanged and the exact save control leaves the active save plan.
+
+### Verification and handoff
+
+- Focused kernel/SDK tests passed: 15 files / 95 tests. Coverage includes strict repeatable protocol bounds, local-record binding, fixed add/save label safety, intermediate `performed` evidence, planned record/control refs, one-at-a-time rescan, empty-profile termination, ambiguous controls, multi-row mutation rejection, and save readback.
+- `npm run validate` exited 0: TypeScript, 40 test files / 318 tests, production build, 13 required distribution files, exact permissions, and forbidden-permission absence all passed.
+- `npm run test:e2e` exited 0: 24/24 serial real-Chromium regressions passed in 2.2 minutes. Existing repeatable, privacy, K1-K4, PDF upload, Xiaomi-derived, and no-submit behavior remained intact.
+- This increment exposes the repeatable capability through the K5 orchestrator but does not yet switch the installed side-panel from the legacy content path. No new user-visible screenshot was required. F042 remains `in_progress`; next is side-panel scan/fill migration, then the three-family `eval:kernel-adapters` evidence and legacy-path removal.
+
+## 2026-08-08 F042 K5-C side-panel compatibility seam
+
+### Implementation
+
+- Added `src/sidepanel/adapterPageBridge.ts`, an injectable compatibility bridge from the existing `PageBridge` UI contract to `RecruitmentAdapterOrchestrator`. Scan uses only the active pinned session and privacy-safe K1 state; local profile values are joined in side-panel memory after planning and are never passed into browser discovery.
+- Extended the adapter plan with the destination origin, templated path, and privacy-safe field label needed to render a side-panel plan and bind the saved-resume target without a second content-script scan.
+- Because K1 intentionally does not expose existing page values, every K5 fill proposal is marked `unreadable` and `requiresConfirmation`; the existing UI therefore preselects zero K5 fields. Legacy saved-field remaps are ignored so they cannot override an ATS family's declarative canonical intent.
+- Selected fills require a fresh action authorization and accept only the exact control ref/profile path pair from the active plan. Profile changes, session changes, unknown refs, and remapped paths fail closed. Results count only kernel `verified` writes as filled.
+- Repeatable UI state is derived from planned record indexes plus meaningful local records. Creation routes through the bounded K5 add/rescan loop. Saved PDF candidates are bound to the plan's sole file control and route only through the K4 upload authorization; the bridge never supplies a filesystem path or performs a direct DOM upload.
+- Generalized the legacy UI-only `RepeatableRecordsScan.adapterId` type from the Xiaomi literal to a family id string. The installed `resolvePageBridge()` default was deliberately not changed because this branch has no production ATS manifests; the old path remains until three-family parity evidence exists.
+
+### Verification and handoff
+
+- Added `src/sidepanel/adapterPageBridge.test.ts` with four compatibility tests covering privacy-safe plan rendering, zero-default confirmation behavior, saved-remap rejection, exact canonical fill routing, repeatable create/rescan, and K4 resume authorization. Focused verification passed: 3 files / 14 tests; `npm run typecheck` also passed.
+- `npm run validate` exited 0: TypeScript, 41 test files / 322 tests, production build, 13 required distribution files, exact kernel permissions, and forbidden-permission absence all passed.
+- No installed or user-visible behavior changed, so this checkpoint did not require a new screenshot or another E2E run; the immediately preceding K5 repeatable checkpoint already recorded 24/24 serialized real-Chromium regressions. No live recruitment site, real profile value, resume, `.env`, cookie, or ATS Ground Truth entered this change.
+- Changed files: `src/adapter-sdk/{contracts,adapterRuntime,adapterRuntime.test}.ts`, `src/content/repeatableRecords.ts`, `src/sidepanel/{adapterPageBridge,adapterPageBridge.test}.ts`, `docs/browser-kernel-k5-adapter-plan.md`, `feature_list.json`, and `progress.md`.
+- F042 remains `in_progress`. Next: register three anonymous ATS manifests/fixtures, add `npm run eval:kernel-adapters` plus allowlisted report/screenshot evidence, then switch the installed resolver and remove the legacy content path only after parity passes.
+
+### Publication evidence
+
+- Scoped diff and credential-pattern audits found only the nine intended K5 files and no secret material. `git diff --cached --check` passed; the only diagnostics were the repository's existing LF-to-CRLF checkout warnings.
+- Committed the compatibility checkpoint as `734ed426ac357b7759d6d82304387244bb956fe2` (`接入 K5 侧边栏兼容桥`) and pushed `agent/browser-kernel-k5-adapters` to origin.
+- Draft PR #7 remains open against `agent/browser-kernel-k4-evidence` and now contains this checkpoint: `https://github.com/petitmainfroid/qiuzhao-toudi-zhushou/pull/7`.
+
+## 2026-08-08 F042 K5-D anonymous three-family evaluator
+
+### Implementation
+
+- Added three synthetic ATS Ground Truth families and real-Chrome pages in `tests/fixtures/kernel-adapters-ground-truth.ts`. Alpha covers text, textarea, native select and date; beta covers contenteditable, searchable combobox, radio, a profile-presence checkbox and a same-origin iframe; gamma covers a two-input date range, open Shadow DOM, bounded repeatable add/save and the saved-resume PDF gate.
+- Added exact `check` protocol support for `profile-presence`. The bridge resolves only whether a canonical local profile path is non-empty, sends no raw value to the adapter, and rejects unknown properties or invalid paths.
+- Extended planned-field evidence with role, tag and boundary so the evaluator can prove its control-family denominator without exposing selectors, DOM ids, existing page values or candidate values.
+- Corrected saved-resume planning to treat the actual K1 `<input type="file">` role as `textbox`, while the upload still routes exclusively through K4's explicit destination authorization and local saved-file gate.
+- Fixed a real-Chrome repeatable lifecycle defect: after a pre-inspected allowlisted add/save button successfully clicks, the executor no longer converts the action to `stale-reference` merely because the framework replaced or removed that button. The orchestrator still requires a bounded rescan and structural verification before accepting create/save success.
+- Added `tests/e2e/kernel-adapters.spec.ts` and `npm run eval:kernel-adapters`. The evaluator loads the real unpacked extension on routed anonymous HTTPS pages, uses `ChromeRecruitmentKernelApi` plus the registry/orchestrator, performs only user-authorized canonical actions, reads back the page in the test harness, and writes an allowlisted JSON report plus Organic summary screenshot.
+
+### Exact evidence
+
+- `npm run eval:kernel-adapters` exited 0: 3/3 synthetic ATS families passed. Planned/mapping fields were 14/14; supported, primary-verified and final-verified writes were 14/14; mapping precision, primary success and final success were each 100%. Wrong-control writes and final-submit actions were 0. Repeatable create/save were 1/1 and saved-resume upload was 1/1.
+- `npm run validate` exited 0 in 39.1 seconds: TypeScript passed, 41 test files / 325 tests passed, production build completed, 13 required distribution files were present, exact browser-kernel permissions passed, and forbidden permissions were absent.
+- The first full E2E attempt reached the outer 120-second command limit and exited 124 without an assertion failure. It was rerun with a 300-second command window. `npm run test:e2e` then exited 0: 25/25 serial real-Chrome tests passed in 2.3 minutes, including the new K5 adapter evaluator and all K1-K4, privacy, resume, repeatable and Xiaomi-derived no-submit regressions.
+- Inspected `artifacts/kernel-adapters-report.json` (3,034 bytes) and `artifacts/kernel-adapters.png` (72,431 bytes), generated 2026-08-08 14:41 Asia/Shanghai. The report declares `syntheticOnly: true`, contains only anonymous family/capability/count/rate/safety fields, and records `gate.pass: true`. The screenshot follows the Organic palette and shows aggregate/family counts only; it contains no profile value, page value, resume filename, cookie, query string or filled recruitment page.
+
+### Handoff
+
+- Changed implementation/tests: `package.json`, `scripts/run-kernel-adapter-eval.mjs`, `src/adapter-sdk/{contracts,adapterRuntime,orchestrator}.ts` and tests, `src/bridge/{protocol,pageActions}.ts` and tests, `src/sidepanel/adapterPageBridge.test.ts`, `tests/fixtures/kernel-adapters-ground-truth.ts`, and `tests/e2e/kernel-adapters.spec.ts`.
+- Changed evidence/harness: `artifacts/kernel-adapters-report.json`, `artifacts/kernel-adapters.png`, `docs/browser-kernel-k5-adapter-plan.md`, `docs/browser-kernel-acceptance.md`, `feature_list.json`, and `progress.md`.
+- F042 remains `in_progress`. The evaluator completes anonymous three-family parity, but this branch still has no production ATS manifests. Next merge only the declarative ATS assets from the separate ATS/GT branch, register them in the production resolver, switch the installed side panel to `AdapterPageBridge`, prove parity again, and then remove the legacy direct mutation path. Do not claim a live recruitment-site result before F043.
+
+### Publication evidence
+
+- Staged only the 20 intended K5 evaluator files. `git diff --cached --check` passed; staged credential-pattern, suspicious-path, and report forbidden-term scans each found zero issues. The two committed artifacts are the inspected anonymous aggregate JSON and screenshot, not a real filled page.
+- Committed the implementation and evidence as `ba48545d9b72a829bece5d292452ab0f82147c4d` (`完成 K5 三家族匿名验收`) and pushed `agent/browser-kernel-k5-adapters` to origin.
+- Draft PR #7 remains open against the exact stacked base `agent/browser-kernel-k4-evidence`: `https://github.com/petitmainfroid/qiuzhao-toudi-zhushou/pull/7`.
+- This publication does not complete F042. The next safe node is production ATS declaration integration and installed-resolver parity; legacy removal must remain last.
+
+## 2026-08-08 F042 Feishu declaration migration checkpoint
+
+### Audit and implementation
+
+- Read the clean `agent/ats-observation-core` worktree at `6042c9e` without modifying it. Its Feishu detector/template covers one family across 小米、MetaApp、蔚来、安克创新 and 禾赛科技, but the repeatable rules include CSS selectors and its old execution path includes direct page operations. Only host/path evidence, stable technical keys, canonical mappings, labels and bounds were re-authored for K5.
+- Added the selector-free production declaration at `src/ats/adapters/feishu/manifest.ts`. Exact detection requires HTTPS, a trusted Feishu/mioffice host suffix, a reviewed resume-application path, and at least two technical markers. Sensitive gender/nationality/hometown fields remain confirmation-required; identity and unsupported multi-city questions are manual; saved resume uses the K4 attachment gate; final submit remains excluded.
+- Found a real integration gap while comparing the K5 K1 contract with the stored ATS observations: Feishu controls often carry no own `name`, while the stable key and label live on an ancestor `data-form-field-name` / `data-form-field-i18n-name`. K1 now inherits only strictly formatted technical keys from at most eight ancestor levels. It does not expose selectors, raw attributes, DOM ids/classes or page values.
+- Found a privacy defect in the historical observation shape: an uploaded-file button could expose a filename and upload time through its text label. K1 semantic sanitization now replaces common document filenames and associated timestamps with `[文件]` and `[时间]`. No historical observation or personal text was copied to this branch.
+- Added a real-Chrome anonymous Feishu canary using a routed `synthetic.jobs.feishu.cn` page. It checks inherited technical metadata, current-value/file-metadata/query redaction, one-family planning, custom-question skipping and zero final submit without performing a write.
+
+### Verification and handoff
+
+- Focused unit verification passed: 2 files / 17 tests for K1 metadata/privacy behavior and the production Feishu manifest's exact contract, five reviewed tenant shapes, canonical mappings, sensitive confirmation, PDF gate, custom-field skip, final-submit skip, and untrusted-location rejection.
+- The first E2E attempt exposed a test-only navigation race with the extension's first-install options tab. After reusing the installed options tab, the second attempt correctly stopped at the product's privacy disclosure because the test had not acknowledged it. The final test adds the same local consent setup used by the existing suite; the product gates were not weakened.
+- `npx playwright test tests/e2e/feishu-manifest.spec.ts --workers=1` then exited 0: 1/1 real-Chrome read-only canary passed in 12.1 seconds, with the test body completing in 5.4 seconds.
+- Final `npm run validate` exited 0 in 66.2 seconds: TypeScript, 42 test files / 336 tests, production build, 13 required distribution files, exact browser-kernel permissions and forbidden-permission absence all passed.
+- Final serialized `npm run test:e2e` exited 0: 26/26 real-Chrome tests passed in 2.8 minutes, including the new Feishu canary and all prior K1–K5, privacy, resume, repeatable, saved-PDF and no-submit regressions.
+- The full suite regenerated `artifacts/kernel-adapters-report.json` at 2026-08-08 15:01 Asia/Shanghai without changing its 3/3 family, 14/14 mapping/write, or zero-submit result. A forbidden-term scan passed, and the current Organic screenshot was visually re-inspected; both remain synthetic aggregate evidence only.
+- Changed files: `src/bridge/{pageState,pageState.test}.ts`, `src/ats/adapters/feishu/{manifest,index,manifest.test}.ts`, `tests/fixtures/feishu-manifest-page.ts`, `tests/e2e/feishu-manifest.spec.ts`, `docs/k5-feishu-manifest-migration.md`, `docs/browser-kernel-k5-adapter-plan.md`, `feature_list.json`, and `progress.md`.
+- F042 remains `in_progress`. Next add a Feishu write-parity fixture for searchable selects, unique composite date-range targeting, bounded repeatable add/save and saved PDF. Register the manifest in the installed resolver only after that passes; do not delete the legacy path until other production ATS families are migrated.
+
+### Publication evidence
+
+- Staged only the 13 intended K1/Feishu declaration, anonymous canary, documentation, harness and regenerated aggregate-report files. `git diff --cached --check`, credential-pattern and suspicious-path scans passed; no `.env`, real observation, personal profile, resume, cookie, trace or `test-results` file was included.
+- Committed the verified checkpoint as `bc8ff36cd8ddb02f6366f51602bf211be8e24bcf` (`迁移 K5 飞书声明与隐私语义`) and pushed `agent/browser-kernel-k5-adapters` to origin.
+- Draft PR #7 remains open against `agent/browser-kernel-k4-evidence`: `https://github.com/petitmainfroid/qiuzhao-toudi-zhushou/pull/7`.
+- This commit deliberately does not register the production manifest or change installed side-panel filling. The next checkpoint must provide write parity first.
+
+## 2026-08-08 F042 Feishu write parity and installed resolver checkpoint
+
+### Implementation
+
+- Added one K1 composite control for a recognized Feishu-style two-input date range. The public state now emits only the container's opaque ref and technical semantic key, suppresses its two child inputs, and exposes no start/end values. Post-action inspection resolves the same composite for fixed two-value readback.
+- Tightened repeatable planning so add controls must match both an exact collection-specific label and the declared section semantic key. Save controls must belong to the current record prefix; a no-key save label is accepted only for a manifest with one repeatable collection. Removed generic “新增/添加” labels from the Feishu declaration.
+- The first real-Chrome write-parity run verified five earlier fields, then exposed a false `stale-reference` after opening the gender combobox: the click correctly changed `aria-expanded`, but the generic post-click fingerprint check treated that expected structural mutation as replacement. `open-control` now uses the same structural-click completion rule as repeatable add/save; the orchestrator still requires bounded wait, refind and selected-option readback before success.
+- Expanded the anonymous Feishu fixture to cover ordinary text, a portal-style searchable combobox, one composite date range, section-scoped project add/save, saved PDF, an unknown enterprise question and final submit. The Ground Truth readback contains only anonymous test values and counters.
+- Added a narrow production URL predicate and `RoutedPageBridge`. Exact trusted Feishu/mioffice HTTPS application URLs use `AdapterPageBridge` with the production manifest. If that K5 scan is unmatched, ambiguous or otherwise fails, the route is cleared and the legacy bridge is never invoked. Non-Feishu pages retain `ChromePageBridge` during the remaining migration.
+- The installed side-panel E2E now connects the anonymous Feishu page, scans through the production resolver, confirms every K5 proposal is initially unselected, performs one user-selected write through the UI, and then verifies the full custom-select/date/repeatable/PDF parity through the same kernel. Final submit remains untouched.
+
+### Exact verification
+
+- Focused unit verification passed 4 files / 33 tests for K1 composite state, repeatable scoping, Feishu route/manifest safety and fail-closed bridge routing. `npm run typecheck` and `npm run build` passed.
+- After the `open-control` fix, `npx playwright test tests/e2e/feishu-manifest.spec.ts tests/e2e/kernel-adapters.spec.ts --workers=1` passed 2/2 in 27.6 seconds. The Feishu case verifies text, searchable selection, composite date range, project create/save, one saved-PDF upload, no custom-question write and zero submit.
+- `npm run eval:kernel-adapters` exited 0 in 15.7 seconds: 3/3 anonymous ATS families, 14/14 correct mappings, 14/14 verified writes, one repeatable create/save, one saved-resume upload, zero wrong-control writes and zero final-submit actions.
+- Final `npm run validate` exited 0 in 60.8 seconds: TypeScript passed, 43 test files / 349 tests passed, production build completed, 13 required distribution files were present, exact permissions passed and forbidden permissions remained absent.
+- `npm run test:e2e` exited 0: 26/26 serial real-Chrome tests passed in 2.1 minutes, including the installed Feishu K5 side-panel route and all prior K1–K5, privacy, repeatable, saved-resume, resume-import and Xiaomi-derived no-submit regressions.
+- Generated and visually inspected `artifacts/feishu-k5-sidepanel.png`. It follows the Organic interface direction and contains only the synthetic Feishu origin plus anonymous profile/file values. The screen shows six confirmation-required proposals, zero default selections and no final-submit control. The regenerated `artifacts/kernel-adapters-report.json` retains 3/3 anonymous families, 14/14 mappings/writes and zero final submits.
+
+### Handoff
+
+- Changed kernel/adapter files: `src/bridge/{pageState,pageState.test,pageActions}.ts`, `src/adapter-sdk/{adapterRuntime,adapterRuntime.test}.ts`, and `src/ats/adapters/feishu/{manifest,manifest.test,index}.ts`.
+- Changed production UI routing: `src/sidepanel/App.tsx`, `src/sidepanel/pageBridge.ts`, `src/sidepanel/routedPageBridge.ts`, and `src/sidepanel/routedPageBridge.test.ts`. The new data attribute contains only a canonical profile path and exists to make the installed side-panel acceptance deterministic.
+- Changed fixtures/evidence/docs: `tests/fixtures/feishu-manifest-page.ts`, `tests/e2e/feishu-manifest.spec.ts`, `artifacts/feishu-k5-sidepanel.png`, `artifacts/kernel-adapters-report.json`, `docs/k5-feishu-manifest-migration.md`, `docs/browser-kernel-k5-adapter-plan.md`, `docs/browser-kernel-acceptance.md`, `feature_list.json`, and `progress.md`.
+- F042 remains `in_progress`. The next recommended feature increment is a second production ATS-family declarative migration and the same anonymous installed-resolver parity. Do not delete `ChromePageBridge` until all intended non-Feishu families have equivalent evidence; do not claim a real company page result before F043.
+
+### Publication evidence
+
+- Staged exactly 21 implementation, test, documentation and anonymous evidence files. `git diff --cached --check` passed; suspicious-path, credential-pattern and aggregate-report forbidden-term scans each found zero issues. The new side-panel screenshot was explicitly allowlisted only after visual privacy inspection.
+- Committed this checkpoint as `dde34d6` (`接入飞书 K5 写入与生产路由`) and pushed `agent/browser-kernel-k5-adapters` to origin.
+- Draft PR #7 remains open against `agent/browser-kernel-k4-evidence`: `https://github.com/petitmainfroid/qiuzhao-toudi-zhushou/pull/7`.
+- This publication is a transitional resolver milestone, not F042 completion: Feishu uses K5, while non-Feishu sites still use the legacy bridge pending their own family parity.
+
+## 2026-08-08 F042 Moka declaration and installed-resolver parity checkpoint
+
+### Evidence boundary and implementation
+
+- Audited the public Moka/Huya contract in the separate `agent/ats-observation-core` worktree without modifying it. The available evidence proves the public candidate-resume route, bundle-level technical field names and the 9-group/41-logical-field schema, but not an authenticated rendered DOM. This checkpoint is therefore L1 anonymous parity evidence, not a claim that a real Huya or Moka application was filled.
+- Added the selector-free Moka declaration at `src/ats/adapters/moka/manifest.ts` and registered it alongside Feishu. Exact routing requires HTTPS, the exact `app.mokahr.com` host, a reviewed `/campus_apply/<tenant>/<siteId>` path and `#/candidateHome/resume` hash. Userinfo, non-default ports, lookalike hosts and unrelated routes fail closed.
+- Conservatively mapped 27 unambiguous fields across basic information, preferences, education, internship, projects, languages, self-evaluation and awards. Moka `practiceInfo` is bound to profile internships. The separate work-experience group, citizen ID, salary fields, summary-only education/company fields, project responsibilities and four-axis language ratings remain manual to avoid guessing or duplicating records.
+- The public Moka evidence says the standard resume page has no attachment block and does not prove the authenticated repeatable add/save control lifecycle. The declaration therefore exposes neither saved-resume upload nor repeatable actions. Page save and final application submit are excluded.
+- Added an anonymous real-Chrome Moka fixture with 27 supported fields, three portal-style searchable comboboxes and explicit traps for work history, identity, custom questions, page save and final submit. The installed side-panel production resolver now selects K5 for exact reviewed Moka routes while retaining the legacy bridge only for not-yet-migrated ATS families.
+
+### Defects found and fixed
+
+- The first manifest test correctly rejected birth date as an ordinary field under the sensitive-decision policy. It was changed to confirmation-required before any browser write evidence was accepted.
+- The first Moka browser run verified 25/27 fields; the degree and language-level controls failed with `stale-reference`. Opening the earlier structural combobox had legitimately changed the page snapshot, while `executeSelected` still reused all refs from the original plan. The orchestrator now rescans after each searchable-combobox workflow and uniquely rebinds later selected fields by rule id, exact semantic key and resolved intent. Ambiguous or missing rebinding fails closed as `workflow-refind-failed`.
+- After that fix, the same two controls timed out because manifest matching intentionally normalizes repeatable indexes while K1 `find` requires the exact indexed technical key. Planning now preserves the exact lowercased semantic key for kernel refind while retaining the normalized key only for rule matching. A focused regression proves two consecutive structural comboboxes and an indexed `candidate.locations[0].current_city` refind.
+
+### Exact verification and handoff
+
+- Focused SDK/Moka verification passed: 3 files / 25 tests. The broader Moka/Feishu/router selection passed 3 files / 35 tests. `npm run typecheck` and `npm run build` passed after the multi-combobox fixes.
+- `npx playwright test tests/e2e/moka-manifest.spec.ts --workers=1` exited 0: 1/1 installed-extension real-Chrome anonymous Moka case passed, with the test body completing in 13.0 seconds. All 27 declared fields were written and read back; unsupported work/identity/custom controls were unchanged; page-save clicks and final-submit clicks were both 0.
+- Final `npm run validate` exited 0 in 39.9 seconds: TypeScript passed, 44 test files / 363 tests passed, the production build completed, required distribution files were present, exact permissions passed and forbidden permissions remained absent.
+- Final serialized `npm run test:e2e` exited 0: 27/27 real-Chrome tests passed in 2.4 minutes, including Feishu and Moka installed-resolver parity, the anonymous three-family evaluator and all existing K1-K4, privacy, repeatable, PDF and no-submit regressions.
+- Generated and visually inspected `artifacts/moka-k5-sidepanel.png`. It follows the Organic interface direction and contains only anonymous Moka values. The screen shows 27 confirmation-required proposals, zero default selections and no submission action. The regenerated aggregate report remains synthetic-only and records the unchanged three-family 14/14 write gate with zero final submissions.
+- Changed runtime/SDK files: `src/adapter-sdk/{adapterRuntime,orchestrator,orchestrator.test}.ts`, `src/ats/adapters/index.ts`, `src/ats/adapters/moka/{manifest,index,manifest.test}.ts`, and `src/sidepanel/pageBridge.ts`.
+- Changed fixture/evidence/docs: `tests/fixtures/moka-manifest-page.ts`, `tests/e2e/moka-manifest.spec.ts`, `artifacts/{moka-k5-sidepanel.png,feishu-k5-sidepanel.png,kernel-adapters-report.json}`, `docs/k5-moka-manifest-migration.md`, `docs/browser-kernel-k5-adapter-plan.md`, `docs/browser-kernel-acceptance.md`, `feature_list.json`, and `progress.md`.
+- F042 remains `in_progress`. Next migrate Lenovo conservatively because its public evidence contains exact technical component names, then evaluate Ctrip. Do not remove the legacy bridge until every intended production family has equivalent declaration, installed-resolver and anonymous write evidence; real-site acceptance remains F043.
+
+### Publication evidence
+
+- Staged exactly the 18 intended Moka/runtime, test, documentation and anonymous-evidence files. `git diff --cached --check` passed; suspicious-path, credential-pattern and aggregate-report forbidden-term scans each found zero issues. The current Moka screenshot was explicitly force-added only after visual privacy inspection.
+- Committed the checkpoint as `e4d573c122c24205665ecc2c4b8c3dd006abc6b7` (`迁移 Moka K5 声明与多下拉重绑`) and pushed `agent/browser-kernel-k5-adapters` to origin.
+- Draft PR #7 remains open against the exact stacked base `agent/browser-kernel-k4-evidence` and now contains this checkpoint: `https://github.com/petitmainfroid/qiuzhao-toudi-zhushou/pull/7`.
+
+## 2026-08-08 F042 Lenovo Talent declaration and installed-resolver parity checkpoint
+
+### Evidence audit and implementation
+
+- Audited the Lenovo Talent public-component Ground Truth in the separate `agent/ats-observation-core` worktree without modifying it. The source proves the exact `https://talent.lenovo.com.cn/account/resume` PC route, Element Plus component contract, 7 groups, 55 logical fields, 2 workflow controls and 15 remote dictionaries. It explicitly does not prove authenticated rendered DOM, candidate values, page writes, upload, save or submission.
+- Added `src/ats/adapters/lenovo/manifest.ts` as a clean-room, selector-free declaration and registered it as the third exact production K5 route. URL routing rejects HTTP, lookalike hosts, userinfo, non-default ports, unrelated paths and SPA hashes; semantic detection then requires at least three public technical markers. An unmatched or ambiguous Lenovo page cannot fall back to the legacy writer.
+- Recorded an explicit decision for all 55 public fields. Fifteen enter the K5 plan: email, phone, four education values, three existing internship values, three existing project values, strengths, self-evaluation and the saved resume. Forty remain manual because the current schema/kernel cannot safely perform full-name splitting, radio-group selection, `YYYY/MM` conversion, remote school search, multi-city selection, conditional record creation, identity/avatar handling or Lenovo-specific answers.
+- Kept `repeatables` empty. Public API families do not prove authenticated add/save button references or state transitions. The anonymous fixture fills only an already-present index 0 record and never clicks the page-level save. The PDF target is the unique `resumeAttachment` file input and still requires the existing local saved-file and K4 destination authorization gates.
+- Added an anonymous Lenovo real-page fixture with Element Plus-style structural comboboxes, private page-value sentinels, a separate image input and explicit save/final-submit traps. The installed side panel routes the exact Lenovo URL to K5, exposes 14 profile suggestions with zero default selections, and presents the saved PDF in its separate confirmation area.
+
+### Exact verification and handoff
+
+- `npx vitest run src/ats/adapters/lenovo/manifest.test.ts` passed 1 file / 14 tests. The combined Feishu/Moka/Lenovo manifest run passed 3 files / 46 tests. `npm run typecheck` and `npm run build` both exited 0.
+- `npx playwright test tests/e2e/lenovo-manifest.spec.ts --workers=1` exited 0: 1/1 installed-extension anonymous Lenovo case passed in 14.6 seconds, with the test body completing in 8.9 seconds. Fourteen profile fields verified by page readback and the saved PDF uploaded once.
+- The same browser readback proved surname, given name, birthday, certificate number, WeChat, remote school, education start month, avatar and enterprise custom question were unchanged. Page-level save clicks and final-submit clicks were both 0. K1 state contained technical keys but none of the private sentinel values or URL query string.
+- Final `npm run validate` exited 0 in 31.7 seconds: TypeScript passed, 45 test files / 377 tests passed, production build and required-file checks passed, exact browser permissions passed and forbidden permissions remained absent.
+- Final serialized `npm run test:e2e` exited 0: 28/28 real-Chrome tests passed in 2.4 minutes, including installed Feishu, Moka and Lenovo routes, the anonymous three-family evaluator and all K1-K4, privacy, repeatable, PDF, resume and zero-submit regressions.
+- Generated and visually inspected `artifacts/lenovo-k5-sidepanel.png`. It follows the Organic palette, contains only anonymous profile/PDF values, shows 14 confirmation-required profile suggestions with zero selected, and displays PDF as a separately confirmed action. Full E2E also regenerated the existing anonymous aggregate report and Feishu screenshot.
+- Changed adapter/runtime files: `src/ats/adapters/index.ts` and `src/ats/adapters/lenovo/{manifest,index,manifest.test}.ts`.
+- Changed fixture/evidence/docs: `tests/fixtures/lenovo-manifest-page.ts`, `tests/e2e/lenovo-manifest.spec.ts`, `artifacts/{lenovo-k5-sidepanel.png,feishu-k5-sidepanel.png,kernel-adapters-report.json}`, `docs/k5-lenovo-manifest-migration.md`, `docs/browser-kernel-k5-adapter-plan.md`, `docs/browser-kernel-acceptance.md`, `feature_list.json`, and `progress.md`.
+- F042 remains `in_progress`. Next audit and conservatively migrate the Ctrip custom family. Do not remove the legacy bridge until every intended Ground Truth family has equivalent exact routing and anonymous parity; real-site read/write acceptance remains F043.
+
+### Publication evidence
+
+- Staged exactly the 14 intended Lenovo adapter, anonymous fixture/E2E, documentation and evidence files. `git diff --cached --check` passed; suspicious-path, credential-pattern and aggregate-report forbidden-term scans each found zero issues. The current Lenovo side-panel screenshot was force-added only after visual privacy inspection.
+- Committed the checkpoint as `48e268d6fb8bcb909c65c33d4f0772668e1de71b` (`迁移 Lenovo Talent K5 声明与 PDF 验收`) and pushed `agent/browser-kernel-k5-adapters` to origin.
+- Draft PR #7 remains open against the exact stacked base `agent/browser-kernel-k4-evidence` and now contains the Lenovo checkpoint: `https://github.com/petitmainfroid/qiuzhao-toudi-zhushou/pull/7`.
+
+## 2026-08-08 F042 Ctrip custom-family declaration and installed-resolver parity checkpoint
+
+### Evidence audit and implementation
+
+- Audited the `ctrip-careers-custom` public-bundle Ground Truth in the separate `agent/ats-observation-core` worktree without modifying it. Ctrip is a company-owned custom ATS rather than a shared vendor family. The public contract proves the authenticated experienced edit-CV hash route, 7 groups, 28 logical controls, 5 repeatable collections, 2 semantically different file inputs and one manual SMS-verification gate; authenticated DOM and candidate APIs remain unobserved.
+- Added a selector-free Ctrip manifest and registered the fourth exact production K5 route. URL routing requires HTTPS, exact `job.ctrip.com`, the root physical path and `#/experienced/personal-homepage/editCV` with an optional numeric tabindex. Lookalike hosts, userinfo, non-default ports, other paths/hashes and nonnumeric tabs fail closed; the K5 manifest still requires at least three public technical markers.
+- Recorded all 28 field decisions: 14 profile fields are mapped across basic information, existing education/work/language record zero and self-evaluation; 14 controls remain manual because of parse/portfolio attachment semantics, remote-or-custom school mode, missing full-date precision, current-job sentinel behavior, absent skill/certificate schema and unproved repeatable lifecycle.
+- Both file controls are deliberately excluded. `resumeImportFile` can parse and replace the current draft, while `PPtFileList` is a portfolio/attachment target rather than an unambiguous resume destination. The saved-resume authorization is therefore not exposed on Ctrip. The SMS code is not a manifest field and remains protected by K1/K2 even when a phone edit makes the manual verification gate visible.
+- The first negative manifest test found that generic `pathPrefixes: ["/"]` matched every same-origin path. Production routing already required the exact hash URL, but the manifest layer was too broad. `adapterRuntime` now treats `/` as an exact root path, with a focused regression proving `/campus` is unmatched.
+- Added an anonymous hash-routed Ctrip fixture with three structural comboboxes, a phone-change SMS prompt counter, protected verification input, both file traps, manual skill/certificate/date controls, page save and final submit. The installed side panel shows 14 profile suggestions with zero defaults and no attachment card.
+
+### Exact verification and handoff
+
+- The initial Ctrip manifest run passed 14/15 tests and correctly failed the root-path negative case; after the generic exact-root fix, `npx vitest run src/ats/adapters/ctrip/manifest.test.ts src/adapter-sdk/adapterRuntime.test.ts` passed 2 files / 19 tests. The combined runtime and four-family manifest run passed 5 files / 65 tests. `npm run typecheck` and `npm run build` exited 0.
+- `npx playwright test tests/e2e/ctrip-manifest.spec.ts --workers=1` exited 0: 1/1 installed-extension anonymous Ctrip case passed in 13.1 seconds, with the test body completing in 8.0 seconds. All 14 profile fields verified by page readback.
+- The same readback recorded one phone-change SMS prompt while the verification value remained unchanged. School, education/work dates, current-job state, skill, certificate, both file inputs, enterprise question, page save and final submit remained untouched; all file/save/submit counters were 0.
+- Final `npm run validate` exited 0 in 37.8 seconds: TypeScript passed, 46 test files / 393 tests passed, the production build and required-file checks passed, exact browser permissions passed and forbidden permissions remained absent.
+- Final serialized `npm run test:e2e` exited 0: 29/29 real-Chrome tests passed in 2.7 minutes, including installed Ctrip, Feishu, Moka and Lenovo routes and all prior K1-K4, privacy, repeatable, PDF, resume and zero-submit regressions.
+- Generated and visually inspected `artifacts/ctrip-k5-sidepanel.png`. It follows the Organic palette, contains only anonymous profile values, shows 14 confirmation-required suggestions with zero selected, and has no attachment action. Full E2E also regenerated the existing anonymous aggregate report and family screenshots.
+- Changed runtime/adapters: `src/adapter-sdk/{adapterRuntime,adapterRuntime.test}.ts`, `src/ats/adapters/index.ts`, and `src/ats/adapters/ctrip/{manifest,index,manifest.test}.ts`.
+- Changed fixture/evidence/docs: `tests/fixtures/ctrip-manifest-page.ts`, `tests/e2e/ctrip-manifest.spec.ts`, `artifacts/{ctrip-k5-sidepanel.png,feishu-k5-sidepanel.png,lenovo-k5-sidepanel.png,kernel-adapters-report.json}`, `docs/k5-ctrip-manifest-migration.md`, `docs/browser-kernel-k5-adapter-plan.md`, `docs/browser-kernel-acceptance.md`, `feature_list.json`, and `progress.md`.
+- F042 remains `in_progress` for one final node: remove the non-K5 legacy mutation route, provide an explicit unsupported-page result, run final regressions and then mark F042 complete. Real-site acceptance remains F043.
+
+### Publication evidence
+
+- Staged exactly the 17 intended Ctrip/runtime, anonymous fixture/E2E, documentation and evidence files. `git diff --cached --check` passed; suspicious-path, credential-pattern and aggregate-report forbidden-term scans each found zero issues. The Ctrip screenshot and regenerated tracked family screenshots were included only after visual privacy inspection.
+- Committed the checkpoint as `85dcd7b2512047ef499e3db15889f72306e34667` (`迁移 Ctrip K5 声明并收紧根路径检测`) and pushed `agent/browser-kernel-k5-adapters` to origin.
+- Draft PR #7 remains open against the exact stacked base `agent/browser-kernel-k4-evidence` and now contains all four production-family migration checkpoints: `https://github.com/petitmainfroid/qiuzhao-toudi-zhushou/pull/7`.
+
+## 2026-08-08 F042 unified K5 production route and legacy removal completion
+
+### Outcome and safety boundary
+
+- Marked F042 complete after routing the production side panel through one `ProductionAdapterPageBridge` over the declarative K5 adapter registry and typed K4 kernel. A successful exact-route scan pins that bridge for later user-selected fill, repeatable and saved-PDF operations; a later failed scan clears the route.
+- Removed `ChromePageBridge`, `RoutedPageBridge`, their tests, the content runtime-message protocol and the content-script entry point. Production code no longer calls `chrome.scripting.executeScript` or `chrome.tabs.sendMessage`, and the build no longer emits `content.js`.
+- Removed the `scripting` Manifest permission. The exact packaged permission set is now `activeTab`, `alarms`, `debugger`, `sidePanel`, `storage`, `tabs` and `webNavigation`, plus the already-reviewed `<all_urls>` host permission used by the pinned browser-session kernel.
+- Unknown URLs are rejected as `ats-adapter-url-unsupported` before adapter state scanning. Unmatched or ambiguous reviewed routes fail closed. The side panel explains that no fields were scanned or filled instead of silently falling back to a second engine.
+- Added an installed-extension anonymous HTTPS regression with a form-value sentinel and input/change/submit counters. The unsupported scan preserved the sentinel, recorded 0 input events, 0 change events and 0 submit events, and produced `artifacts/k5-unsupported-page.png`. The screenshot was visually inspected and contains no personal or real-site data.
+
+### Exact verification
+
+- `npm run validate` exited 0: TypeScript passed, 46 unit/integration test files and 394 tests passed, the clean production build completed, 12 required distribution files were present, the exact seven-permission allowlist passed, forbidden permissions remained absent and `dist/content.js` was absent.
+- `npm run test:e2e` exited 0: 30/30 serialized real-Chrome tests passed in 2.5 minutes. This includes four production-family anonymous installed-resolver cases, the three-family K5 evaluator, saved PDF, repeatable sections, all K1-K4 safety regressions and the new unknown-route zero-mutation case.
+- `npm run eval:kernel-adapters` exited 0: 3/3 anonymous families, 14/14 correct mappings, 14/14 primary and final verified writes, one repeatable add/save, one saved-resume upload, zero wrong-control writes and zero final-submit actions; the safety gate passed.
+- `npm run package` exited 0 after another full validation. The archive contains 228 entries, omits `content.js`, test fixtures, source maps and persisted personal data, and passes `verify:package`.
+- Visually inspected the current anonymous `artifacts/k5-unsupported-page.png`, `artifacts/feishu-k5-sidepanel.png` and `artifacts/lenovo-k5-sidepanel.png`. The regenerated `artifacts/kernel-adapters-report.json` remains marked `syntheticOnly: true` and contains only aggregate capability and safety evidence.
+
+### Handoff
+
+- Changed the production route in `src/sidepanel/{pageBridge,productionAdapterPageBridge,App}.ts` and added focused route/UI tests. Deleted `src/sidepanel/routedPageBridge.ts`, its test, `src/content/index.ts` and `src/shared/messages.ts`.
+- Changed packaging and permission gates in `public/manifest.json`, `scripts/{build,verify-dist,verify-package}.mjs` and `src/foundation.test.ts`. Every build cleans the exact worktree `dist` directory before generating artifacts so a stale legacy bundle cannot survive.
+- Added `tests/e2e/k5-unsupported-page.spec.ts`, updated K5 acceptance/plan documents and synchronized historical F001/F037 notes plus completed F042 reality in `feature_list.json`.
+- No implementation blocker remains for F042. Draft PR #7 is intentionally still draft. The next recommended feature is F043: perform user-authorized L2 read-only and then explicit L3 non-submitting acceptance on three live ATS families, convert every structural defect to an anonymous fixture, and never commit real filled-page data.
+
+### Publication evidence
+
+- Staged exactly 22 implementation, deletion, test, documentation and anonymous-evidence paths. `git diff --cached --check` passed; staged-path, credential-pattern and synthetic-report gates passed. The three changed tracked screenshots and the new unsupported-page screenshot were included only after visual privacy inspection.
+- Committed the F042 completion node as `7193eaf2289d2f7715e0ca9d0d846034f712fd9c` (`完成 K5 生产路由并移除旧写入通道`) and pushed `agent/browser-kernel-k5-adapters` to origin.
+- Draft PR #7 remains open against `agent/browser-kernel-k4-evidence` and now contains the complete F042 result: `https://github.com/petitmainfroid/qiuzhao-toudi-zhushou/pull/7`.

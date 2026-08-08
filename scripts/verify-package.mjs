@@ -29,12 +29,14 @@ const required = [
   "options.html",
   "sidepanel.html",
   "background.js",
-  "content.js",
   "THIRD_PARTY_NOTICES.md",
   "third_party/opencli/LICENSE"
 ];
 for (const file of required) {
   if (!normalizedEntries.includes(file)) throw new Error(`Package is missing ${file}.`);
+}
+if (normalizedEntries.includes("content.js")) {
+  throw new Error("Package includes the removed legacy content.js bundle.");
 }
 
 const forbiddenPatterns = [

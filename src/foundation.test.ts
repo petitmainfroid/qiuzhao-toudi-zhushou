@@ -13,7 +13,6 @@ describe("extension foundation", () => {
       "activeTab",
       "alarms",
       "debugger",
-      "scripting",
       "sidePanel",
       "storage",
       "tabs",
