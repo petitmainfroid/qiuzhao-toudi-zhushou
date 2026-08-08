@@ -1565,3 +1565,9 @@ Run a local field-level audit over the five PDFs to identify missing dates, role
 - Changed adapter/runtime contracts and validation in `src/adapter-sdk/{contracts,manifestValidation,adapterRuntime}.ts`; changed exact label declarations and regressions in `src/ats/adapters/{feishu,moka,ctrip}`; changed strategy counters and stale-scan handling in `src/content/engine.ts` and `src/sidepanel/{adapterPageBridge,App,SidePanel.test}.tsx`; added the allowlisted live report verifier and report artifact.
 - F043 is complete for the current supported ordinary-field denominator. Current limitations are explicit: the live run did not promote ambiguous cross-section fields, custom selects/dates without deterministic structural evidence, repeatable creation, sensitive controls or PDF upload into the denominator.
 - Next recommended feature is F021: turn the remaining typed live skips into additional anonymous fixtures, beginning with section context for company/title/description and exact custom-select/date semantics. Do not broaden label matching or add a live write until each failure has an anonymous regression.
+
+### Publication evidence
+
+- Staged exactly the F043 runtime, adapter, anonymous regression, privacy-safe report, verifier, progress and current synthetic evidence files. `git diff --cached --check`, the staged credential/path scan and `npm run verify:live-acceptance` all passed before commit.
+- Committed the implementation as `e156b1d22418186b3868d0f761a6e88a087eba53` (`完成三家族真实页非提交验收`) and pushed `agent/browser-kernel-real-site-acceptance` to origin.
+- Opened draft PR #8 against the exact stacked base `agent/browser-kernel-k5-adapters`: `https://github.com/petitmainfroid/qiuzhao-toudi-zhushou/pull/8`.
