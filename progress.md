@@ -1596,3 +1596,9 @@ Run a local field-level audit over the five PDFs to identify missing dates, role
 - Main profile/UI changes: `src/domain/profile.ts`, `src/options/{App,SupplementalProfileSections,options.css}`, `src/resume/parseResume.ts`, `src/matching/{catalog,supplementalCatalog,matcher}.ts`, privacy helpers and corresponding unit/E2E tests.
 - Live attachment-target repair: `src/bridge/pageState.ts` and `src/ats/adapters/feishu/manifest.ts`, each with an anonymous regression. The fallback is restricted to unlabeled file inputs and returns only sanitized enclosing semantic text; it is not a generic form-field heuristic.
 - F084 remains `in_progress`. The remaining acceptance action is one explicit user-confirmed live attachment on a recruitment page without an attachment, or an explicit user decision to replace the current Xiaomi attachment. After that action, verify the page shows the new attachment metadata, record only aggregate outcome counters, rerun required checks, mark F084 done and publish `agent/profile-dossier-production` against `agent/browser-kernel-real-site-acceptance`.
+
+### Publication evidence
+
+- Staged 41 scoped implementation, test, anonymous evidence and progress paths. `git diff --cached --check` passed; added-line privacy checks found 0 private absolute paths, 0 full URLs with query strings and 0 resume filename metadata.
+- Committed the implementation checkpoint as `1854540` (`迁移详细档案并修复简历附件识别`) and pushed `agent/profile-dossier-production` to origin.
+- Opened draft PR #9 against the exact stacked base `agent/browser-kernel-real-site-acceptance`: `https://github.com/petitmainfroid/qiuzhao-toudi-zhushou/pull/9`. The PR explicitly leaves F084 in progress until a user-authorized live attachment write is verified.
