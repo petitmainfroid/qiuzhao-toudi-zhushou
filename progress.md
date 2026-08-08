@@ -1498,3 +1498,9 @@ Run a local field-level audit over the five PDFs to identify missing dates, role
 - Changed runtime/adapters: `src/adapter-sdk/{adapterRuntime,adapterRuntime.test}.ts`, `src/ats/adapters/index.ts`, and `src/ats/adapters/ctrip/{manifest,index,manifest.test}.ts`.
 - Changed fixture/evidence/docs: `tests/fixtures/ctrip-manifest-page.ts`, `tests/e2e/ctrip-manifest.spec.ts`, `artifacts/{ctrip-k5-sidepanel.png,feishu-k5-sidepanel.png,lenovo-k5-sidepanel.png,kernel-adapters-report.json}`, `docs/k5-ctrip-manifest-migration.md`, `docs/browser-kernel-k5-adapter-plan.md`, `docs/browser-kernel-acceptance.md`, `feature_list.json`, and `progress.md`.
 - F042 remains `in_progress` for one final node: remove the non-K5 legacy mutation route, provide an explicit unsupported-page result, run final regressions and then mark F042 complete. Real-site acceptance remains F043.
+
+### Publication evidence
+
+- Staged exactly the 17 intended Ctrip/runtime, anonymous fixture/E2E, documentation and evidence files. `git diff --cached --check` passed; suspicious-path, credential-pattern and aggregate-report forbidden-term scans each found zero issues. The Ctrip screenshot and regenerated tracked family screenshots were included only after visual privacy inspection.
+- Committed the checkpoint as `85dcd7b2512047ef499e3db15889f72306e34667` (`迁移 Ctrip K5 声明并收紧根路径检测`) and pushed `agent/browser-kernel-k5-adapters` to origin.
+- Draft PR #7 remains open against the exact stacked base `agent/browser-kernel-k4-evidence` and now contains all four production-family migration checkpoints: `https://github.com/petitmainfroid/qiuzhao-toudi-zhushou/pull/7`.
