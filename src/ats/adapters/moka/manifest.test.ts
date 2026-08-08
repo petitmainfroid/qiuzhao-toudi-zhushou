@@ -61,6 +61,26 @@ function summary(origin = "https://app.mokahr.com", pathTemplate = "/campus_appl
   };
 }
 
+function labelOnlyHuyaSummary(): AtsAdapterPageSummary {
+  return {
+    snapshotKey: "state_moka_huya_label_only",
+    origin: "https://app.mokahr.com",
+    pathTemplate: "/campus_apply/huya/:id",
+    controls: [
+      control("name", "", "姓名"),
+      control("phone", "", "请输入手机号"),
+      control("email", "", "邮箱"),
+      control("school-0", "", "请输入就读学校"),
+      control("school-1", "", "请输入就读学校"),
+      control("major-0", "", "请输入专业名称"),
+      control("major-1", "", "请输入专业名称"),
+      control("company", "", "公司名称"),
+      control("title", "", "职位名称"),
+      control("project", "", "项目名称")
+    ]
+  };
+}
+
 describe("Moka K5 manifest", () => {
   it("is selector-free, field-only, and passes the exact manifest contract", () => {
     expect(validateAtsAdapterManifest(mokaManifest)).toEqual({ ok: true, manifest: mokaManifest });
@@ -104,6 +124,26 @@ describe("Moka K5 manifest", () => {
       { controlKey: "ref_identity_12", reason: "adapter-excluded" },
       { controlKey: "ref_custom_1234", reason: "unknown-field" },
       { controlKey: "ref_submit_1234", reason: "final-submit" }
+    ]));
+  });
+
+  it("maps the reviewed Huya label-only controls and refuses cross-section company guesses", () => {
+    const result = new AtsAdapterRegistry([mokaManifest]).detect(labelOnlyHuyaSummary());
+    expect(result.status).toBe("matched");
+    if (result.status !== "matched") throw new Error("Expected label-only Huya variant to match.");
+    expect(result.plan.fields).toEqual(expect.arrayContaining([
+      expect.objectContaining({ controlKey: "name", intent: { kind: "profile-field", pathPattern: "basic.fullName" } }),
+      expect.objectContaining({ controlKey: "phone", intent: { kind: "profile-field", pathPattern: "basic.phone" } }),
+      expect.objectContaining({ controlKey: "email", intent: { kind: "profile-field", pathPattern: "basic.email" } }),
+      expect.objectContaining({ controlKey: "school-0", intent: { kind: "profile-field", pathPattern: "education.0.school" } }),
+      expect.objectContaining({ controlKey: "school-1", intent: { kind: "profile-field", pathPattern: "education.1.school" } }),
+      expect.objectContaining({ controlKey: "major-0", intent: { kind: "profile-field", pathPattern: "education.0.major" } }),
+      expect.objectContaining({ controlKey: "major-1", intent: { kind: "profile-field", pathPattern: "education.1.major" } }),
+      expect.objectContaining({ controlKey: "project", intent: { kind: "profile-field", pathPattern: "projects.0.name" } })
+    ]));
+    expect(result.plan.skipped).toEqual(expect.arrayContaining([
+      { controlKey: "company", reason: "ambiguous-rule" },
+      { controlKey: "title", reason: "ambiguous-rule" }
     ]));
   });
 

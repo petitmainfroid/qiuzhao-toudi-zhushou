@@ -130,6 +130,22 @@ describe("SidePanel", () => {
     expect(bridge.fill).not.toHaveBeenCalled();
   });
 
+  it("clears stale proposals when a rescan fails on a different page", async () => {
+    const scan = vi.fn()
+      .mockResolvedValueOnce(scanResult())
+      .mockRejectedValueOnce(new Error("ats-adapter-unmatched"));
+    const bridge: PageBridge = { scan, fill: vi.fn() };
+    render(<SidePanel repository={{ load: async () => profileWithValues() }} pageBridge={bridge} />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "扫描当前页面" }));
+    expect(await screen.findByLabelText("选择 姓名")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "重新扫描当前页面" }));
+    expect(await screen.findByText("当前招聘页面的结构与已审核适配规则不一致；没有扫描或填写任何字段。")).toBeInTheDocument();
+    expect(screen.queryByLabelText("选择 姓名")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /填写已选/ })).not.toBeInTheDocument();
+  });
+
   it("restores a saved PDF and still requires destination confirmation", async () => {
     const bytes = new TextEncoder().encode("%PDF-1.4\nrestored unit resume\n%%EOF");
     const file = new File([bytes], "restored-resume.pdf", { type: "application/pdf" });
@@ -175,9 +191,11 @@ describe("SidePanel", () => {
     const bridge: PageBridge = {
       scan: vi.fn(async () => scanResult()),
       fill: vi.fn(async (_profile: CandidateProfile, selections: FillSelection[]) => ({
-        outcomes: selections.map((selection) => ({ ...selection, status: "filled" as const })),
+        outcomes: selections.map((selection) => ({ ...selection, status: "filled" as const, attempts: 1 as const })),
         filledCount: selections.length,
-        skippedCount: 0
+        skippedCount: 0,
+        primaryVerifiedCount: selections.length,
+        fallbackVerifiedCount: 0
       }))
     };
     render(<SidePanel repository={{ load: async () => profile }} pageBridge={bridge} />);
@@ -194,7 +212,7 @@ describe("SidePanel", () => {
     expect(bridge.fill).toHaveBeenCalledWith(profile, [
       { elementId: "name", profilePath: "basic.fullName" }
     ], []);
-    expect(await screen.findByText(/已填写 1 项/)).toBeInTheDocument();
+    expect(await screen.findByText("已填写 1 项（首次成功 1 项，降级成功 0 项）。请在网页中检查后自行提交。")).toBeInTheDocument();
   });
 
   it("allows explicit confirmation selections", async () => {

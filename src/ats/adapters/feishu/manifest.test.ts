@@ -112,6 +112,42 @@ function summary(origin: string, pathTemplate: string): AtsAdapterPageSummary {
   return { snapshotKey: "state_feishu", origin, pathTemplate, controls };
 }
 
+function labelOnlyXiaomiSummary(): AtsAdapterPageSummary {
+  const control = (
+    controlKey: string,
+    label: string,
+    inputType: string = "text"
+  ): AtsAdapterPageSummary["controls"][number] => ({
+    controlKey,
+    role: "textbox",
+    tag: "input",
+    inputType,
+    semantics: { label },
+    disabled: false,
+    readOnly: false,
+    required: true,
+    multiple: false,
+    boundary: "main",
+    safety: "ordinary"
+  });
+  return {
+    snapshotKey: "state_xiaomi_label_only",
+    origin: "https://xiaomi.jobs.f.mioffice.cn",
+    pathTemplate: "/internship/resume/:id/apply",
+    controls: [
+      control("name", "姓名"),
+      control("email", "邮箱", "email"),
+      control("school-0", "学校名称"),
+      control("school-1", "学校名称"),
+      control("major-0", "专业"),
+      control("major-1", "专业"),
+      control("project-0", "项目名称"),
+      control("self-evaluation", "自我评价"),
+      control("custom-description", "描述")
+    ]
+  };
+}
+
 describe("Feishu recruiting K5 manifest", () => {
   it.each([
     "https://xiaomi.jobs.f.mioffice.cn/internship/resume/123456/apply",
@@ -174,6 +210,23 @@ describe("Feishu recruiting K5 manifest", () => {
       { controlKey: "custom", reason: "unknown-field" },
       { controlKey: "submit", reason: "final-submit" }
     ]));
+  });
+
+  it("maps the reviewed Xiaomi label-only variant without guessing an ambiguous description", () => {
+    const resolution = new AtsAdapterRegistry([feishuRecruitingManifest]).detect(labelOnlyXiaomiSummary());
+    expect(resolution.status).toBe("matched");
+    if (resolution.status !== "matched") throw new Error("Expected label-only Xiaomi variant to match.");
+    expect(resolution.plan.fields).toEqual(expect.arrayContaining([
+      expect.objectContaining({ controlKey: "name", intent: { kind: "profile-field", pathPattern: "basic.fullName" } }),
+      expect.objectContaining({ controlKey: "email", intent: { kind: "profile-field", pathPattern: "basic.email" } }),
+      expect.objectContaining({ controlKey: "school-0", intent: { kind: "profile-field", pathPattern: "education.0.school" } }),
+      expect.objectContaining({ controlKey: "school-1", intent: { kind: "profile-field", pathPattern: "education.1.school" } }),
+      expect.objectContaining({ controlKey: "major-0", intent: { kind: "profile-field", pathPattern: "education.0.major" } }),
+      expect.objectContaining({ controlKey: "major-1", intent: { kind: "profile-field", pathPattern: "education.1.major" } }),
+      expect.objectContaining({ controlKey: "project-0", intent: { kind: "profile-field", pathPattern: "projects.0.name" } }),
+      expect.objectContaining({ controlKey: "self-evaluation", intent: { kind: "profile-field", pathPattern: "answers.selfEvaluation" } })
+    ]));
+    expect(resolution.plan.skipped).toContainEqual({ controlKey: "custom-description", reason: "ambiguous-rule" });
   });
 
   it.each([

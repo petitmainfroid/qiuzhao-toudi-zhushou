@@ -1535,3 +1535,33 @@ Run a local field-level audit over the five PDFs to identify missing dates, role
 - Staged exactly 22 implementation, deletion, test, documentation and anonymous-evidence paths. `git diff --cached --check` passed; staged-path, credential-pattern and synthetic-report gates passed. The three changed tracked screenshots and the new unsupported-page screenshot were included only after visual privacy inspection.
 - Committed the F042 completion node as `7193eaf2289d2f7715e0ca9d0d846034f712fd9c` (`完成 K5 生产路由并移除旧写入通道`) and pushed `agent/browser-kernel-k5-adapters` to origin.
 - Draft PR #7 remains open against `agent/browser-kernel-k4-evidence` and now contains the complete F042 result: `https://github.com/petitmainfroid/qiuzhao-toudi-zhushou/pull/7`.
+
+## 2026-08-08 F043 three-family live non-submit acceptance
+
+### Live outcome
+
+- Completed user-authorized L2 read-only inventory followed by L3 non-submitting writes on three already-open authenticated recruitment pages from distinct families: 小米 / `feishu-recruiting`, 虎牙 / `moka`, and 携程 / `ctrip-careers-custom`. The user had been warned that sites may autosave drafts before authorizing the experiment.
+- 小米 planned 7 approved ordinary fields and verified 7/7 on the primary strategy; 虎牙 planned 6 and verified 6/6; 携程 planned 4 and verified 4/4. Aggregate supported approved denominator was 17, primary verified 17, fallback verified 0, final verified 17, and selected skips 0. Per-site primary success and aggregate final success were 100%.
+- No password, CAPTCHA, SMS-verification, identity, consent, destructive, attachment, save, or final-submit control was selected or acted on. The run performed no upload and no application submission. Ambiguous company/title/description labels and unsupported custom controls remained skipped.
+- `artifacts/live-browser-kernel-report.json` records only company/ATS identity, route templates, versions, counts, rates, typed structural failures and zero-action safety counters. It contains no profile value, page value, filename, full URL, query string, opaque control reference, HTML, DOM, Cookie, header, request/response body, screenshot, credential or resume bytes.
+
+### Regressions and implementation
+
+- The first live Xiaomi, Huya and Ctrip scans reproduced one family-wide gap: reviewed routes exposed exact Chinese labels or placeholders but no adapter technical field names. Added an optional declarative `semanticLabels` / `semanticLabelMarkers` contract. Runtime label fallback is exact-normalized, is used only after route/family gating, and preserves technical-key priority. Repeated label-only fields receive deterministic page-order indexes; labels shared by multiple rules remain `ambiguous-rule` and are never guessed.
+- Added anonymous label-only/placeholder-only regressions for the three live variants. They prove scalar mapping, repeated education indexing, confirmation gates and fail-closed cross-section ambiguity without copying real values or DOM.
+- A live cross-tab failure exposed stale Xiaomi suggestions after an unmatched Huya scan. The side panel now clears the prior scan, selections and attachment target on every scan error. The regression first failed with a stale `选择 姓名` checkbox and now passes.
+- Added privacy-safe primary/fallback counters to K5 fill outcomes and the completion message. These counters enabled the final live rerun to prove 17/17 primary verified actions instead of inferring strategy from total success.
+- Added `scripts/verify-live-acceptance-report.mjs` and `npm run verify:live-acceptance`. The verifier enforces an exact report key allowlist, three distinct companies/families, internally consistent denominators/rates, per-site primary success above 90%, aggregate final success at least 98%, zero wrong-control writes, zero protected actions and forbidden-evidence absence.
+
+### Exact verification
+
+- `npm run verify:live-acceptance` -> exit 0. Three companies/families, 17 supported approved fields, 17 primary verified, 0 fallback, 17 final verified, 0 selected skips, 0 wrong-control writes, and all eight protected-action counters at 0; gate passed.
+- `npm run validate` -> exit 0 in 35.3 seconds. TypeScript passed; 46 test files / 398 tests passed; production build and 12-file distribution verification passed; exact permissions remained `activeTab`, `alarms`, `debugger`, `sidePanel`, `storage`, `tabs`, `webNavigation`; `<all_urls>` stayed the only host permission and legacy `content.js` remained absent.
+- `npm run test:e2e` -> exit 0. All 30 serialized real-Chromium tests passed in 2.7 minutes, including production Feishu, Moka, Ctrip and Lenovo manifests, K1-K5, saved PDF, repeatables, privacy and zero-submit regressions.
+- Visually inspected the regenerated anonymous `artifacts/feishu-k5-sidepanel.png`, `artifacts/moka-k5-sidepanel.png` and `artifacts/ctrip-k5-sidepanel.png`. They retain the Organic UI and contain synthetic values only; no real filled-page screenshot was created or committed.
+
+### Handoff
+
+- Changed adapter/runtime contracts and validation in `src/adapter-sdk/{contracts,manifestValidation,adapterRuntime}.ts`; changed exact label declarations and regressions in `src/ats/adapters/{feishu,moka,ctrip}`; changed strategy counters and stale-scan handling in `src/content/engine.ts` and `src/sidepanel/{adapterPageBridge,App,SidePanel.test}.tsx`; added the allowlisted live report verifier and report artifact.
+- F043 is complete for the current supported ordinary-field denominator. Current limitations are explicit: the live run did not promote ambiguous cross-section fields, custom selects/dates without deterministic structural evidence, repeatable creation, sensitive controls or PDF upload into the denominator.
+- Next recommended feature is F021: turn the remaining typed live skips into additional anonymous fixtures, beginning with section context for company/title/description and exact custom-select/date semantics. Do not broaden label matching or add a live write until each failure has an anonymous regression.

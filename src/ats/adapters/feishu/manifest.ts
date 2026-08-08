@@ -42,19 +42,27 @@ export function isFeishuRecruitingApplicationUrl(rawUrl: string): boolean {
 function field(
   id: string,
   semanticKeys: string[],
+  semanticLabels: string[],
   roles: PageControlRole[],
   capability: AtsControlCapability,
   decision: AtsFieldDecision,
   intent: AtsFieldIntent,
   verification: AtsVerificationKind
 ): AtsAdapterFieldRule {
-  return { id, semanticKeys, roles, capability, decision, intent, verification };
+  return { id, semanticKeys, semanticLabels, roles, capability, decision, intent, verification };
 }
 
-function textField(id: string, semanticKey: string, pathPattern: string, decision: AtsFieldDecision = "fill") {
+function textField(
+  id: string,
+  semanticKey: string,
+  semanticLabels: string[],
+  pathPattern: string,
+  decision: AtsFieldDecision = "fill"
+) {
   return field(
     id,
     [semanticKey],
+    semanticLabels,
     ["textbox"],
     "text",
     decision,
@@ -63,10 +71,17 @@ function textField(id: string, semanticKey: string, pathPattern: string, decisio
   );
 }
 
-function searchableField(id: string, semanticKey: string, pathPattern: string, decision: AtsFieldDecision = "fill") {
+function searchableField(
+  id: string,
+  semanticKey: string,
+  semanticLabels: string[],
+  pathPattern: string,
+  decision: AtsFieldDecision = "fill"
+) {
   return field(
     id,
     [semanticKey],
+    semanticLabels,
     ["combobox", "listbox"],
     "searchable-combobox",
     decision,
@@ -75,10 +90,11 @@ function searchableField(id: string, semanticKey: string, pathPattern: string, d
   );
 }
 
-function monthField(id: string, semanticKey: string, pathPattern: string) {
+function monthField(id: string, semanticKey: string, semanticLabels: string[], pathPattern: string) {
   return field(
     id,
     [semanticKey],
+    semanticLabels,
     ["textbox"],
     "month",
     "fill",
@@ -87,10 +103,16 @@ function monthField(id: string, semanticKey: string, pathPattern: string) {
   );
 }
 
-function rangeField(id: string, semanticKey: string, collection: "education" | "workExperiences" | "projects") {
+function rangeField(
+  id: string,
+  semanticKey: string,
+  semanticLabels: string[],
+  collection: "education" | "workExperiences" | "projects"
+) {
   return field(
     id,
     [semanticKey],
+    semanticLabels,
     ["textbox"],
     "date-range",
     "fill",
@@ -103,8 +125,8 @@ function rangeField(id: string, semanticKey: string, collection: "education" | "
   );
 }
 
-function manualField(id: string, semanticKey: string, roles: PageControlRole[]) {
-  return field(id, [semanticKey], roles, "text", "exclude", { kind: "manual" }, "none");
+function manualField(id: string, semanticKey: string, semanticLabels: string[], roles: PageControlRole[]) {
+  return field(id, [semanticKey], semanticLabels, roles, "text", "exclude", { kind: "manual" }, "none");
 }
 
 function repeatable(
@@ -142,54 +164,56 @@ export const feishuRecruitingManifest: AtsAdapterManifest = {
       "education_list[].school",
       "self_evaluation.self_evaluation"
     ],
+    semanticLabelMarkers: ["姓名", "手机号码", "手机号", "邮箱", "学校名称", "项目名称", "自我评价"],
     minimumSemanticMarkers: 2
   },
   fields: [
-    textField("basic-name", "basic_info.name", "basic.fullName"),
-    textField("basic-mobile", "basic_info.mobile", "basic.phone"),
-    textField("basic-email", "basic_info.email", "basic.email"),
-    textField("basic-age", "basic_info.age", "derived.age", "confirm"),
-    searchableField("basic-gender", "basic_info.gender", "basic.gender", "confirm"),
-    searchableField("basic-nationality", "basic_info.nationality", "basic.nationality", "confirm"),
-    searchableField("basic-hometown", "basic_info.hometown_city", "basic.hometown", "confirm"),
-    manualField("basic-identity", "basic_info.identification", ["textbox", "combobox", "listbox"]),
-    manualField("basic-preferred-cities", "basic_info.preferred_city_list", ["textbox", "combobox", "listbox"]),
+    textField("basic-name", "basic_info.name", ["姓名"], "basic.fullName"),
+    textField("basic-mobile", "basic_info.mobile", ["手机号码", "手机号"], "basic.phone"),
+    textField("basic-email", "basic_info.email", ["邮箱"], "basic.email"),
+    textField("basic-age", "basic_info.age", ["年龄"], "derived.age", "confirm"),
+    searchableField("basic-gender", "basic_info.gender", ["性别"], "basic.gender", "confirm"),
+    searchableField("basic-nationality", "basic_info.nationality", ["国籍（地区）", "国籍"], "basic.nationality", "confirm"),
+    searchableField("basic-hometown", "basic_info.hometown_city", ["家乡"], "basic.hometown", "confirm"),
+    manualField("basic-identity", "basic_info.identification", ["个人证件"], ["textbox", "combobox", "listbox"]),
+    manualField("basic-preferred-cities", "basic_info.preferred_city_list", ["期望工作地点"], ["textbox", "combobox", "listbox"]),
 
-    textField("education-school", "education_list[].school", "education.{index}.school"),
-    searchableField("education-degree", "education_list[].degree", "education.{index}.degree"),
-    textField("education-major", "education_list[].field_of_study", "education.{index}.major"),
-    monthField("education-start", "education_list[].start_end_time.start", "education.{index}.startDate"),
-    monthField("education-end", "education_list[].start_end_time.end", "education.{index}.endDate"),
-    rangeField("education-range", "education_list[].start_end_time", "education"),
-    searchableField("education-type", "education_list[].education_type", "education.{index}.educationType"),
+    textField("education-school", "education_list[].school", ["学校名称"], "education.{index}.school"),
+    searchableField("education-degree", "education_list[].degree", ["学历"], "education.{index}.degree"),
+    textField("education-major", "education_list[].field_of_study", ["专业"], "education.{index}.major"),
+    monthField("education-start", "education_list[].start_end_time.start", ["入学时间"], "education.{index}.startDate"),
+    monthField("education-end", "education_list[].start_end_time.end", ["毕业时间"], "education.{index}.endDate"),
+    rangeField("education-range", "education_list[].start_end_time", ["起止时间"], "education"),
+    searchableField("education-type", "education_list[].education_type", ["学历类型"], "education.{index}.educationType"),
 
-    textField("internship-company", "internship_list[].company", "workExperiences.{index}.company"),
-    textField("internship-role", "internship_list[].title", "workExperiences.{index}.role"),
-    monthField("internship-start", "internship_list[].start_end_time.start", "workExperiences.{index}.startDate"),
-    monthField("internship-end", "internship_list[].start_end_time.end", "workExperiences.{index}.endDate"),
-    rangeField("internship-range", "internship_list[].start_end_time", "workExperiences"),
-    textField("internship-description", "internship_list[].desc", "workExperiences.{index}.description"),
+    textField("internship-company", "internship_list[].company", ["公司名称"], "workExperiences.{index}.company"),
+    textField("internship-role", "internship_list[].title", ["职位名称"], "workExperiences.{index}.role"),
+    monthField("internship-start", "internship_list[].start_end_time.start", ["开始时间"], "workExperiences.{index}.startDate"),
+    monthField("internship-end", "internship_list[].start_end_time.end", ["结束时间"], "workExperiences.{index}.endDate"),
+    rangeField("internship-range", "internship_list[].start_end_time", ["起止时间"], "workExperiences"),
+    textField("internship-description", "internship_list[].desc", ["描述"], "workExperiences.{index}.description"),
 
-    textField("works-link", "works_list[].link", "workSamples.{index}.link"),
-    textField("works-description", "works_list[].desc", "workSamples.{index}.description"),
+    textField("works-link", "works_list[].link", ["作品链接"], "workSamples.{index}.link"),
+    textField("works-description", "works_list[].desc", ["描述"], "workSamples.{index}.description"),
 
-    textField("project-name", "project_list[].name", "projects.{index}.name"),
-    textField("project-role", "project_list[].role", "projects.{index}.role"),
-    monthField("project-start", "project_list[].start_end_time.start", "projects.{index}.startDate"),
-    monthField("project-end", "project_list[].start_end_time.end", "projects.{index}.endDate"),
-    rangeField("project-range", "project_list[].start_end_time", "projects"),
-    textField("project-link", "project_list[].link", "projects.{index}.link"),
-    textField("project-description", "project_list[].desc", "projects.{index}.description"),
+    textField("project-name", "project_list[].name", ["项目名称"], "projects.{index}.name"),
+    textField("project-role", "project_list[].role", ["项目角色"], "projects.{index}.role"),
+    monthField("project-start", "project_list[].start_end_time.start", ["开始时间"], "projects.{index}.startDate"),
+    monthField("project-end", "project_list[].start_end_time.end", ["结束时间"], "projects.{index}.endDate"),
+    rangeField("project-range", "project_list[].start_end_time", ["起止时间"], "projects"),
+    textField("project-link", "project_list[].link", ["项目链接"], "projects.{index}.link"),
+    textField("project-description", "project_list[].desc", ["描述"], "projects.{index}.description"),
 
-    textField("award-name", "award_list[].name", "awards.{index}.name"),
-    monthField("award-date", "award_list[].date", "awards.{index}.date"),
-    textField("award-description", "award_list[].desc", "awards.{index}.description"),
-    searchableField("language-name", "language_list[].language", "languages.{index}.language"),
-    searchableField("language-level", "language_list[].proficiency", "languages.{index}.proficiency"),
-    textField("self-evaluation", "self_evaluation.self_evaluation", "answers.selfEvaluation"),
+    textField("award-name", "award_list[].name", ["获奖名称"], "awards.{index}.name"),
+    monthField("award-date", "award_list[].date", ["获奖时间"], "awards.{index}.date"),
+    textField("award-description", "award_list[].desc", ["描述"], "awards.{index}.description"),
+    searchableField("language-name", "language_list[].language", ["语言"], "languages.{index}.language"),
+    searchableField("language-level", "language_list[].proficiency", ["精通程度"], "languages.{index}.proficiency"),
+    textField("self-evaluation", "self_evaluation.self_evaluation", ["自我评价"], "answers.selfEvaluation"),
     field(
       "resume-attachment",
       ["attachment_resume_list.attachment_resume"],
+      ["简历附件"],
       ["textbox"],
       "file-upload",
       "confirm",

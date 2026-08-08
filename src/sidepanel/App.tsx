@@ -376,6 +376,10 @@ export function SidePanel({
       useScanResult(result);
     }
     catch (error) {
+      setScan(null);
+      setSelected(new Set());
+      setAttachmentState(preparedAttachment ? "ready" : "idle");
+      setAttachmentMessage("");
       setState("error");
       const detail = error instanceof Error ? error.message : "未知错误";
       setMessage(scanFailureMessage(detail));
@@ -423,7 +427,10 @@ export function SidePanel({
     setMessage("");
     try {
       const result = await bridge.fill(profile, selections, mappings);
-      setMessage(`已填写 ${result.filledCount} 项${result.skippedCount ? `，跳过 ${result.skippedCount} 项` : ""}。请在网页中检查后自行提交。`);
+      const strategySummary = result.primaryVerifiedCount !== undefined && result.fallbackVerifiedCount !== undefined
+        ? `（首次成功 ${result.primaryVerifiedCount} 项，降级成功 ${result.fallbackVerifiedCount} 项）`
+        : "";
+      setMessage(`已填写 ${result.filledCount} 项${strategySummary}${result.skippedCount ? `，跳过 ${result.skippedCount} 项` : ""}。请在网页中检查后自行提交。`);
       setState("complete");
     }
     catch {

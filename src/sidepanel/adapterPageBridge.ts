@@ -372,6 +372,7 @@ export class AdapterPageBridge implements PageBridge {
           elementId: selection.elementId,
           profilePath: selection.profilePath,
           status: outcome?.status === "verified" ? "filled" : "skipped",
+          ...(outcome ? { attempts: outcome.attempts } : {}),
           ...(outcome?.status === "verified" ? {} : { reason: outcome ? executionReason(outcome) : "missing-outcome" })
         };
       }
@@ -381,7 +382,13 @@ export class AdapterPageBridge implements PageBridge {
     return {
       outcomes: completedOutcomes,
       filledCount: completedOutcomes.filter((outcome) => outcome.status === "filled").length,
-      skippedCount: completedOutcomes.filter((outcome) => outcome.status === "skipped").length
+      skippedCount: completedOutcomes.filter((outcome) => outcome.status === "skipped").length,
+      primaryVerifiedCount: completedOutcomes.filter(
+        (outcome) => outcome.status === "filled" && outcome.attempts === 1
+      ).length,
+      fallbackVerifiedCount: completedOutcomes.filter(
+        (outcome) => outcome.status === "filled" && outcome.attempts === 2
+      ).length
     };
   }
 

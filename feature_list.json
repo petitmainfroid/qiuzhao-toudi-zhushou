@@ -880,7 +880,7 @@
     {
       "id": "F043",
       "title": "Prove three-family real-page non-submitting write acceptance",
-      "status": "todo",
+      "status": "done",
       "depends_on": ["F042"],
       "branch": "agent/browser-kernel-real-site-acceptance",
       "pr_base": "agent/browser-kernel-k5-adapters",
@@ -900,7 +900,7 @@
         "Inspect one current anonymous regression screenshot per ATS family; never commit a screenshot containing real filled values.",
         "Record branch, commit, draft PR, exact denominators, rates, typed failures, blockers, and zero-submit evidence in progress.md."
       ],
-      "notes": "This is the only node that may claim the requested three-real-site result. Candidate sites such as 牛客、实习僧 or an enterprise-owned portal are selected only after terms, login, user consent, control-family coverage, and safe non-submit feasibility are confirmed. A login/CAPTCHA blocker is recorded and replaced by another ATS family rather than bypassed."
+      "notes": "Completed on 2026-08-08 in isolated worktree qiuzhaozhushou-f043. User-authorized live L2/L3 acceptance covered Xiaomi/Feishu, Huya/Moka and Ctrip/custom ATS: 17/17 supported approved ordinary fields verified on the primary strategy, 0 fallback writes, 0 selected skips, 0 wrong-control writes and 0 protected or final-submit actions. Exact label/placeholder fallback is permitted only on reviewed routes when technical names are unavailable; ambiguous cross-section labels still fail closed. The privacy-safe aggregate report is artifacts/live-browser-kernel-report.json."
     }
   ]
 }
