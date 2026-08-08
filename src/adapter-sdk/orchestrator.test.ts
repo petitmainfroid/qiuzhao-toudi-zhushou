@@ -375,6 +375,92 @@ describe("recruitment adapter orchestrator", () => {
     expect(JSON.stringify(vi.mocked(test.api.wait).mock.calls)).not.toContain("optionText");
   });
 
+  it("rescans and rebinds remaining fields after every structural combobox workflow", async () => {
+    const multiManifest = structuredClone(manifest);
+    multiManifest.fields.push({
+      id: "current-city",
+      semanticKeys: ["candidate.locations[].current_city"],
+      roles: ["combobox"],
+      capability: "searchable-combobox",
+      decision: "fill",
+      intent: { kind: "profile-field", pathPattern: "basic.currentCity" },
+      verification: "selected-option"
+    });
+    let generation = 0;
+    const test = kernel();
+    test.api.state = vi.fn(async () => {
+      const current = state();
+      generation += 1;
+      current.snapshotId = `state_generation_${generation}`;
+      current.controls = current.controls.map((control) => ({
+        ...control,
+        ref: `${control.ref}_g${generation}`
+      }));
+      current.controls.push({
+        ref: `ref_current_city_g${generation}`,
+        role: "combobox",
+        tag: "custom",
+        semantics: { name: "candidate.locations[0].current_city", label: "Current city" },
+        disabled: false,
+        readOnly: false,
+        required: false,
+        multiple: false,
+        boundary: "main",
+        safety: "ordinary"
+      });
+      return current;
+    });
+    test.api.wait = vi.fn(async (request) => ({
+      requestId: request.requestId,
+      condition: request.condition.kind,
+      status: "matched" as const,
+      polls: 1,
+      durationBucket: "lt-100ms" as const,
+      result: {
+        snapshotId: `state_wait_${generation}`,
+        query: request.condition.kind === "option-list" ? request.condition.query.text : "",
+        searchedControlCount: 1,
+        matches: [{
+          ref: `ref_open_combo_g${generation}`,
+          role: "combobox" as const,
+          label: "Opened combo",
+          score: 1,
+          reasons: ["exact semantic name"],
+          safety: "ordinary" as const
+        }]
+      }
+    }));
+    const orchestrator = new RecruitmentAdapterOrchestrator(test.api, new AtsAdapterRegistry([multiManifest]));
+    const resolution = await orchestrator.scan(sessionId);
+    if (resolution.status !== "matched") throw new Error("expected adapter match");
+    const preferred = resolution.plan.fields.find((field) => field.ruleId === "preferred-city");
+    const current = resolution.plan.fields.find((field) => field.ruleId === "current-city");
+    if (!preferred || !current) throw new Error("expected two searchable controls");
+
+    const outcomes = await orchestrator.executeSelected({
+      sessionId,
+      authorizationId: "action_authorization_123",
+      plan: resolution.plan,
+      selections: [
+        { controlKey: preferred.controlKey, confirmed: true },
+        { controlKey: current.controlKey, confirmed: true }
+      ]
+    });
+
+    expect(outcomes).toEqual([
+      expect.objectContaining({ controlKey: preferred.controlKey, status: "verified" }),
+      expect.objectContaining({ controlKey: current.controlKey, status: "verified" })
+    ]);
+    expect(test.api.state).toHaveBeenCalledTimes(3);
+    expect(test.action.mock.calls.filter(([call]) => call.intent.kind === "click").map(([call]) => call.ref)).toEqual([
+      expect.stringContaining("_g1"),
+      expect.stringContaining("_g2")
+    ]);
+    expect(vi.mocked(test.api.wait).mock.calls.map(([call]) =>
+      call.condition.kind === "option-list" ? call.condition.query.text : ""
+    )).toEqual(["candidate.preferred_city", "candidate.locations[0].current_city"]);
+  });
+
   it("routes toggle intent as a local profile-presence check", async () => {
     const test = kernel();
     const orchestrator = new RecruitmentAdapterOrchestrator(test.api, new AtsAdapterRegistry([manifest]));

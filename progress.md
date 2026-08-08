@@ -1414,3 +1414,30 @@ Run a local field-level audit over the five PDFs to identify missing dates, role
 - Committed this checkpoint as `dde34d6` (`接入飞书 K5 写入与生产路由`) and pushed `agent/browser-kernel-k5-adapters` to origin.
 - Draft PR #7 remains open against `agent/browser-kernel-k4-evidence`: `https://github.com/petitmainfroid/qiuzhao-toudi-zhushou/pull/7`.
 - This publication is a transitional resolver milestone, not F042 completion: Feishu uses K5, while non-Feishu sites still use the legacy bridge pending their own family parity.
+
+## 2026-08-08 F042 Moka declaration and installed-resolver parity checkpoint
+
+### Evidence boundary and implementation
+
+- Audited the public Moka/Huya contract in the separate `agent/ats-observation-core` worktree without modifying it. The available evidence proves the public candidate-resume route, bundle-level technical field names and the 9-group/41-logical-field schema, but not an authenticated rendered DOM. This checkpoint is therefore L1 anonymous parity evidence, not a claim that a real Huya or Moka application was filled.
+- Added the selector-free Moka declaration at `src/ats/adapters/moka/manifest.ts` and registered it alongside Feishu. Exact routing requires HTTPS, the exact `app.mokahr.com` host, a reviewed `/campus_apply/<tenant>/<siteId>` path and `#/candidateHome/resume` hash. Userinfo, non-default ports, lookalike hosts and unrelated routes fail closed.
+- Conservatively mapped 27 unambiguous fields across basic information, preferences, education, internship, projects, languages, self-evaluation and awards. Moka `practiceInfo` is bound to profile internships. The separate work-experience group, citizen ID, salary fields, summary-only education/company fields, project responsibilities and four-axis language ratings remain manual to avoid guessing or duplicating records.
+- The public Moka evidence says the standard resume page has no attachment block and does not prove the authenticated repeatable add/save control lifecycle. The declaration therefore exposes neither saved-resume upload nor repeatable actions. Page save and final application submit are excluded.
+- Added an anonymous real-Chrome Moka fixture with 27 supported fields, three portal-style searchable comboboxes and explicit traps for work history, identity, custom questions, page save and final submit. The installed side-panel production resolver now selects K5 for exact reviewed Moka routes while retaining the legacy bridge only for not-yet-migrated ATS families.
+
+### Defects found and fixed
+
+- The first manifest test correctly rejected birth date as an ordinary field under the sensitive-decision policy. It was changed to confirmation-required before any browser write evidence was accepted.
+- The first Moka browser run verified 25/27 fields; the degree and language-level controls failed with `stale-reference`. Opening the earlier structural combobox had legitimately changed the page snapshot, while `executeSelected` still reused all refs from the original plan. The orchestrator now rescans after each searchable-combobox workflow and uniquely rebinds later selected fields by rule id, exact semantic key and resolved intent. Ambiguous or missing rebinding fails closed as `workflow-refind-failed`.
+- After that fix, the same two controls timed out because manifest matching intentionally normalizes repeatable indexes while K1 `find` requires the exact indexed technical key. Planning now preserves the exact lowercased semantic key for kernel refind while retaining the normalized key only for rule matching. A focused regression proves two consecutive structural comboboxes and an indexed `candidate.locations[0].current_city` refind.
+
+### Exact verification and handoff
+
+- Focused SDK/Moka verification passed: 3 files / 25 tests. The broader Moka/Feishu/router selection passed 3 files / 35 tests. `npm run typecheck` and `npm run build` passed after the multi-combobox fixes.
+- `npx playwright test tests/e2e/moka-manifest.spec.ts --workers=1` exited 0: 1/1 installed-extension real-Chrome anonymous Moka case passed, with the test body completing in 13.0 seconds. All 27 declared fields were written and read back; unsupported work/identity/custom controls were unchanged; page-save clicks and final-submit clicks were both 0.
+- Final `npm run validate` exited 0 in 39.9 seconds: TypeScript passed, 44 test files / 363 tests passed, the production build completed, required distribution files were present, exact permissions passed and forbidden permissions remained absent.
+- Final serialized `npm run test:e2e` exited 0: 27/27 real-Chrome tests passed in 2.4 minutes, including Feishu and Moka installed-resolver parity, the anonymous three-family evaluator and all existing K1-K4, privacy, repeatable, PDF and no-submit regressions.
+- Generated and visually inspected `artifacts/moka-k5-sidepanel.png`. It follows the Organic interface direction and contains only anonymous Moka values. The screen shows 27 confirmation-required proposals, zero default selections and no submission action. The regenerated aggregate report remains synthetic-only and records the unchanged three-family 14/14 write gate with zero final submissions.
+- Changed runtime/SDK files: `src/adapter-sdk/{adapterRuntime,orchestrator,orchestrator.test}.ts`, `src/ats/adapters/index.ts`, `src/ats/adapters/moka/{manifest,index,manifest.test}.ts`, and `src/sidepanel/pageBridge.ts`.
+- Changed fixture/evidence/docs: `tests/fixtures/moka-manifest-page.ts`, `tests/e2e/moka-manifest.spec.ts`, `artifacts/{moka-k5-sidepanel.png,feishu-k5-sidepanel.png,kernel-adapters-report.json}`, `docs/k5-moka-manifest-migration.md`, `docs/browser-kernel-k5-adapter-plan.md`, `docs/browser-kernel-acceptance.md`, `feature_list.json`, and `progress.md`.
+- F042 remains `in_progress`. Next migrate Lenovo conservatively because its public evidence contains exact technical component names, then evaluate Ctrip. Do not remove the legacy bridge until every intended production family has equivalent declaration, installed-resolver and anonymous write evidence; real-site acceptance remains F043.

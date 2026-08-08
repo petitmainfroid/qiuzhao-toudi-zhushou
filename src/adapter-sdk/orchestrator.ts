@@ -141,6 +141,12 @@ function sameIndexes(left: number[], right: number[]): boolean {
   return left.length === right.length && left.every((value, index) => value === right[index]);
 }
 
+function samePlannedField(left: AtsAdapterPlannedField, right: AtsAdapterPlannedField): boolean {
+  return left.ruleId === right.ruleId
+    && left.semanticKey === right.semanticKey
+    && JSON.stringify(left.intent) === JSON.stringify(right.intent);
+}
+
 export class RecruitmentAdapterOrchestrator {
   constructor(
     private readonly kernel: RecruitmentKernelApi,
@@ -156,17 +162,30 @@ export class RecruitmentAdapterOrchestrator {
     const fields = new Map(request.plan.fields.map((field) => [field.controlKey, field]));
     const seen = new Set<string>();
     const outcomes: AtsFieldExecutionOutcome[] = [];
+    let activePlan: AtsAdapterPlan | null = request.plan;
     for (const selection of request.selections) {
       if (seen.has(selection.controlKey)) {
         outcomes.push(staticOutcome(selection.controlKey, "skipped", "duplicate-selection"));
         continue;
       }
       seen.add(selection.controlKey);
-      const field = fields.get(selection.controlKey);
-      if (!field) {
+      const originalField = fields.get(selection.controlKey);
+      if (!originalField) {
         outcomes.push(staticOutcome(selection.controlKey, "blocked", "not-in-plan"));
         continue;
       }
+      if (!activePlan) {
+        outcomes.push(staticOutcome(selection.controlKey, "blocked", "workflow-refind-failed"));
+        continue;
+      }
+      const rebound = activePlan === request.plan
+        ? [originalField]
+        : activePlan.fields.filter((candidate) => samePlannedField(candidate, originalField));
+      if (rebound.length !== 1) {
+        outcomes.push(staticOutcome(selection.controlKey, "blocked", "workflow-refind-failed"));
+        continue;
+      }
+      const field = rebound[0]!;
       if (field.decision === "confirm" && !selection.confirmed) {
         outcomes.push(staticOutcome(selection.controlKey, "blocked", "confirmation-required"));
         continue;
@@ -176,7 +195,12 @@ export class RecruitmentAdapterOrchestrator {
         continue;
       }
       if (field.capability === "searchable-combobox" && field.intent.kind === "profile-field") {
-        outcomes.push(await this.executeSearchableCombobox(request, field));
+        const outcome = await this.executeSearchableCombobox({ ...request, plan: activePlan }, field);
+        outcomes.push({ ...outcome, controlKey: selection.controlKey });
+        const resolution = await this.scan(request.sessionId);
+        activePlan = resolution.status === "matched" && resolution.plan.familyId === request.plan.familyId
+          ? resolution.plan
+          : null;
         continue;
       }
       const intent = profileAction(field);
@@ -188,11 +212,11 @@ export class RecruitmentAdapterOrchestrator {
         requestId: requestId("adapter_action"),
         authorizationId: request.authorizationId,
         sessionId: request.sessionId,
-        snapshotId: request.plan.snapshotKey,
+        snapshotId: activePlan.snapshotKey,
         ref: field.controlKey,
         intent
       });
-      outcomes.push(outcomeFromAction(result));
+      outcomes.push({ ...outcomeFromAction(result), controlKey: selection.controlKey });
     }
     return outcomes;
   }

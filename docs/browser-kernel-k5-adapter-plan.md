@@ -80,6 +80,14 @@ an unmatched or ambiguous Feishu adapter fails closed without legacy fallback. O
 the legacy bridge during migration. See
 [`k5-feishu-manifest-migration.md`](k5-feishu-manifest-migration.md).
 
+The second registered production family is the conservative Moka standard-resume manifest. It is
+derived from the public 9-group/41-field contract and maps only 27 fields that fit the current
+profile without conflating Moka's separate work and internship collections. It declares no
+attachment or repeatable lifecycle because the public evidence does not prove those logged-in DOM
+controls. Multi-combobox parity also hardened the orchestrator: every structural selection now
+rescans and uniquely rebinds remaining fields with the exact indexed technical key. See
+[`k5-moka-manifest-migration.md`](k5-moka-manifest-migration.md).
+
 ### K5-D — removal and acceptance
 
 - [done] Run three anonymous ATS-family E2E fixtures covering the complete F042 control denominator.
@@ -88,6 +96,8 @@ the legacy bridge during migration. See
 - [done] Register the selector-free production Feishu declaration after anonymous write parity.
 - [done] Route exact reviewed Feishu application URLs through K5 in the installed side panel, with
   no fallback when the Feishu adapter fails.
+- [done] Register the conservative Moka standard-resume declaration and prove 27/27 anonymous
+  installed-side-panel writes with zero save or submit actions.
 - [pending] Migrate additional ATS families, then remove the remaining non-Feishu
   `chrome.scripting`/`tabs.sendMessage` mutation route only after their parity passes.
 - [pending] Run the final full regression and publish the F042 completion checkpoint.

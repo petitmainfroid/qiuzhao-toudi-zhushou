@@ -108,6 +108,10 @@ function controlSemanticKey(control: AtsAdapterControlSummary): string {
   return normalizeSemanticKey(control.semantics.name ?? "");
 }
 
+function exactControlSemanticKey(control: AtsAdapterControlSummary): string {
+  return (control.semantics.name ?? "").trim().toLowerCase();
+}
+
 function recordIndex(control: AtsAdapterControlSummary): number | null {
   const match = /\[(\d+)\]/.exec(control.semantics.name ?? "");
   return match ? Number(match[1]) : null;
@@ -295,7 +299,7 @@ export class AtsAdapterRegistry {
       fields.push({
         controlKey: control.controlKey,
         ruleId: rule.id,
-        semanticKey,
+        semanticKey: exactControlSemanticKey(control) || semanticKey,
         label: control.semantics.label
           ?? control.semantics.ariaLabel
           ?? control.semantics.placeholder

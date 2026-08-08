@@ -20,9 +20,9 @@ import type {
 import type { EmbeddedBridgeRequest, EmbeddedBridgeResponse } from "../bridge/protocol";
 import { AtsAdapterRegistry, ChromeRecruitmentKernelApi } from "../adapter-sdk";
 import {
-  feishuRecruitingManifest,
-  isFeishuRecruitingApplicationUrl
-} from "../ats/adapters/feishu";
+  isProductionRecruitmentAdapterUrl,
+  productionRecruitmentAdapterManifests
+} from "../ats/adapters";
 import { AdapterPageBridge } from "./adapterPageBridge";
 import { ChromePowerSessionBridge } from "./powerSessionBridge";
 import { RoutedPageBridge } from "./routedPageBridge";
@@ -327,15 +327,15 @@ export class PreviewPageBridge implements PageBridge {
 export function resolvePageBridge(): PageBridge {
   if (!extensionRuntimeAvailable()) return new PreviewPageBridge();
   const powerSession = new ChromePowerSessionBridge();
-  const feishuBridge = new AdapterPageBridge(
+  const adapterBridge = new AdapterPageBridge(
     new ChromeRecruitmentKernelApi(),
-    new AtsAdapterRegistry([feishuRecruitingManifest]),
+    new AtsAdapterRegistry(productionRecruitmentAdapterManifests),
     powerSession
   );
   return new RoutedPageBridge(
-    feishuBridge,
+    adapterBridge,
     new ChromePageBridge(),
     activeTabUrl,
-    isFeishuRecruitingApplicationUrl
+    isProductionRecruitmentAdapterUrl
   );
 }
