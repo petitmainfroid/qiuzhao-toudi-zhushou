@@ -9,7 +9,7 @@ import {
 } from "../../src/evaluation/fillQuality";
 
 const genericProfile = {
-  schemaVersion: 2 as const,
+  schemaVersion: 5 as const,
   updatedAt: "",
   basic: {
     fullName: "Synthetic Candidate",
@@ -53,7 +53,7 @@ const genericProfile = {
 };
 
 const xiaomiProfile = {
-  schemaVersion: 2 as const,
+  schemaVersion: 5 as const,
   updatedAt: "",
   basic: {
     fullName: "Synthetic Candidate",

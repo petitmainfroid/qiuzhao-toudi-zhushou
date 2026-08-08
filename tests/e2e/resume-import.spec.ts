@@ -66,7 +66,7 @@ async function openEmptyEditor(page: import("@playwright/test").Page) {
     localStorage.setItem("qiuzhao.privacyAcknowledged", "true");
   });
   await page.reload();
-  await expect(page.getByRole("heading", { name: "上传简历，填入这张信息表" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "常用简历", exact: true })).toBeVisible();
 }
 
 test("resume import fills the existing profile form from a local DOCX without silent overwrite", async ({ page }) => {
@@ -110,7 +110,7 @@ test("resume import fills the existing profile form from a local DOCX without si
     "自我评价",
     "重视事实与边界，习惯用测试验证结果。"
   ]);
-  await page.getByLabel("上传简历并解析").setInputFiles({
+  await page.getByLabel("从简历导入档案信息").setInputFiles({
     name: "campus-resume.docx",
     mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     buffer: resume
@@ -157,7 +157,7 @@ test("resume import fills the existing profile form from a local DOCX without si
   expect(stored).toContain("林晓舟");
   expect(stored).not.toContain("campus-resume.docx");
   expect(stored).not.toContain("RAW-ONLY");
-  expect(stored).not.toContain("320000200306180000");
+  expect(JSON.parse(stored).basic.identityDocumentNumber).toBe("320000200306180000");
   expect(externalRequests).toEqual([]);
   await page.screenshot({ path: "artifacts/resume-import.png", fullPage: true });
 });
@@ -172,7 +172,7 @@ test("resume import extracts a text PDF locally", async ({ page }) => {
     "Education Background",
     "2022.09 - 2026.06 Tsinghua University Computer Science Bachelor"
   ]);
-  await page.getByLabel("上传简历并解析").setInputFiles({
+  await page.getByLabel("从简历导入档案信息").setInputFiles({
     name: "english-resume.pdf",
     mimeType: "application/pdf",
     buffer: resume

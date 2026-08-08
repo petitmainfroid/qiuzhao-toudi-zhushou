@@ -3,10 +3,13 @@ import {
   PROFILE_SCHEMA_VERSION,
   ageFromBirthDate,
   calculateProfileCompletion,
+  createCampusActivityRecord,
+  createCertificateRecord,
   createEmptyProfile,
   createProjectRecord,
   createWorkExperienceRecord,
-  migrateProfile
+  migrateProfile,
+  validateProfile
 } from "./profile";
 
 describe("candidate profile", () => {
@@ -14,12 +17,22 @@ describe("candidate profile", () => {
     const profile = createEmptyProfile();
     expect(profile.schemaVersion).toBe(PROFILE_SCHEMA_VERSION);
     expect(profile.basic.fullName).toBe("");
+    expect(profile.basic.identityDocumentType).toBe("");
+    expect(profile.basic.identityDocumentNumber).toBe("");
     expect(profile.education).toHaveLength(1);
     expect(profile.workExperiences).toEqual([]);
+    expect(profile.employmentExperiences).toEqual([]);
     expect(profile.projects).toEqual([]);
     expect(profile.workSamples).toEqual([]);
     expect(profile.awards).toEqual([]);
     expect(profile.languages).toEqual([]);
+    expect(profile.languageExams).toEqual([]);
+    expect(profile.campusLeadership).toEqual([]);
+    expect(profile.campusActivities).toEqual([]);
+    expect(profile.familyMembers).toEqual([]);
+    expect(profile.certificates).toEqual([]);
+    expect(profile.publications).toEqual([]);
+    expect(profile.patents).toEqual([]);
   });
 
   it("migrates a flat legacy profile into the current structure", () => {
@@ -106,6 +119,99 @@ describe("candidate profile", () => {
     expect(migrated.basic.fullName).toBe("旧版档案");
     expect(migrated.workSamples).toEqual([]);
     expect(migrated.schemaVersion).toBe(PROFILE_SCHEMA_VERSION);
+  });
+
+  it("migrates version 2 profiles and initializes the expanded information groups", () => {
+    const previous = createEmptyProfile() as unknown as Record<string, unknown>;
+    previous.schemaVersion = 2;
+    delete previous.campusLeadership;
+    delete previous.campusActivities;
+    delete previous.familyMembers;
+    delete previous.certificates;
+    delete previous.publications;
+    delete previous.patents;
+    const basic = previous.basic as Record<string, unknown>;
+    basic.fullName = "旧版姓名";
+    delete basic.ethnicity;
+
+    const migrated = migrateProfile(previous);
+    expect(migrated).toMatchObject({
+      schemaVersion: PROFILE_SCHEMA_VERSION,
+      basic: { fullName: "旧版姓名", ethnicity: "" },
+      campusLeadership: [],
+      campusActivities: [],
+      familyMembers: [],
+      certificates: [],
+      publications: [],
+      patents: []
+    });
+  });
+
+  it("migrates version 3 profiles and initializes identity-document fields", () => {
+    const previous = createEmptyProfile() as unknown as Record<string, unknown>;
+    previous.schemaVersion = 3;
+    const basic = previous.basic as Record<string, unknown>;
+    basic.fullName = "三级档案";
+    delete basic.identityDocumentType;
+    delete basic.identityDocumentNumber;
+
+    const migrated = migrateProfile(previous);
+    expect(migrated).toMatchObject({
+      schemaVersion: PROFILE_SCHEMA_VERSION,
+      basic: {
+        fullName: "三级档案",
+        identityDocumentType: "",
+        identityDocumentNumber: ""
+      }
+    });
+  });
+
+  it("migrates legacy language qualifications into independent exam records", () => {
+    const previous = createEmptyProfile() as unknown as Record<string, unknown>;
+    previous.schemaVersion = 4;
+    previous.languages = [{
+      id: "legacy-language",
+      language: "英语",
+      proficiency: "熟练",
+      qualification: "CET-6（六级）",
+      score: "520"
+    }];
+    delete previous.languageExams;
+
+    const migrated = migrateProfile(previous);
+    expect(migrated.languages).toEqual([
+      expect.objectContaining({ language: "英语", proficiency: "熟练" })
+    ]);
+    expect(migrated.languageExams).toEqual([
+      expect.objectContaining({
+        language: "英语",
+        examType: "CET-6（六级）",
+        score: "520"
+      })
+    ]);
+    expect(migrated.languages[0]).not.toHaveProperty("qualification");
+  });
+
+  it("requires identity-document type and number to be saved as a pair", () => {
+    const profile = createEmptyProfile();
+    profile.basic.identityDocumentNumber = "TEST-ID-000042";
+    expect(validateProfile(profile).errors["basic.identityDocumentType"]).toMatch(/选择证件类型/);
+  });
+
+  it("adds checks only after new optional records are started", () => {
+    const profile = createEmptyProfile();
+    const baseline = calculateProfileCompletion(profile);
+    profile.campusActivities!.push(createCampusActivityRecord());
+    profile.certificates!.push(createCertificateRecord());
+    expect(calculateProfileCompletion(profile).total).toBe(baseline.total);
+
+    profile.campusActivities![0].name = "志愿服务";
+    profile.certificates![0].date = "2025-06";
+    const completion = calculateProfileCompletion(profile);
+    expect(completion.missing.map((item) => item.path)).toEqual(expect.arrayContaining([
+      "campusActivities.0.description",
+      "certificates.0.name"
+    ]));
   });
 
   it("derives age from the saved birth date", () => {

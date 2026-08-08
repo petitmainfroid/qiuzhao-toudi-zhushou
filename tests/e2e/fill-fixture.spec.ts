@@ -4,7 +4,7 @@ test("fill fixture changes selected fields and leaves excluded controls untouche
   await page.goto("/fixture.html");
   const result = await page.evaluate(async () => {
     const profile = {
-      schemaVersion: 2 as const,
+      schemaVersion: 5 as const,
       updatedAt: "",
       basic: {
         fullName: "端到端验证",
@@ -74,7 +74,7 @@ test("page comparison keeps raw page values private and blocks stale conflicts",
 
   const result = await page.evaluate(async () => {
     const profile = {
-      schemaVersion: 2 as const,
+      schemaVersion: 5 as const,
       updatedAt: "",
       basic: {
         fullName: "档案中的姓名",
@@ -152,7 +152,7 @@ test("page comparison keeps raw page values private and blocks stale conflicts",
 test("fill fixture discovers dynamic fields without promoting ambiguity", async ({ page }) => {
   await page.goto("/fixture.html");
   const initialCount = await page.evaluate(() => window.__qiuzhaoFixture.scan({
-    schemaVersion: 2,
+    schemaVersion: 5,
     updatedAt: "",
     basic: { fullName: "动态验证", preferredName: "", gender: "", birthDate: "", phone: "", email: "", nationality: "", currentCity: "", hometown: "", politicalStatus: "" },
     education: [],
@@ -167,7 +167,7 @@ test("fill fixture discovers dynamic fields without promoting ambiguity", async 
 
   await page.getByRole("button", { name: "添加补充字段" }).click();
   const dynamic = await page.evaluate(() => window.__qiuzhaoFixture.scan({
-    schemaVersion: 2,
+    schemaVersion: 5,
     updatedAt: "",
     basic: { fullName: "动态验证", preferredName: "", gender: "", birthDate: "", phone: "", email: "", nationality: "", currentCity: "", hometown: "", politicalStatus: "" },
     education: [],
@@ -182,7 +182,7 @@ test("fill fixture discovers dynamic fields without promoting ambiguity", async 
 
   expect(dynamic.summary.total).toBe(initialCount + 2);
   const contact = dynamic.fields.find((field) => field.fieldLabel === "紧急联系人姓名");
-  expect(contact?.confidence).not.toBe("high");
+  expect(contact?.confidence).toBe("high");
   expect(contact?.requiresConfirmation).toBe(true);
   const location = dynamic.fields.find((field) => field.fieldLabel === "所在地");
   expect(location?.confidence).not.toBe("high");

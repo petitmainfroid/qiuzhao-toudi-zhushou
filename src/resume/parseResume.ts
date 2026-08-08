@@ -2,6 +2,7 @@ import {
   createAwardRecord,
   createEducationRecord,
   createEmptyProfile,
+  createLanguageExamRecord,
   createLanguageRecord,
   createProjectRecord,
   createWorkExperienceRecord,
@@ -917,6 +918,38 @@ function parseLanguages(lines: string[]): CandidateProfile["languages"] {
   return records;
 }
 
+const LANGUAGE_EXAM_PATTERNS = [
+  { language: "英语", examType: "CET-4（四级）", pattern: /(?:CET\s*[- ]?\s*4|大学英语四级|英语四级)/i },
+  { language: "英语", examType: "CET-6（六级）", pattern: /(?:CET\s*[- ]?\s*6|大学英语六级|英语六级)/i },
+  { language: "英语", examType: "TEM-4（专四）", pattern: /(?:TEM\s*[- ]?\s*4|英语专业四级|专四)/i },
+  { language: "英语", examType: "TEM-8（专八）", pattern: /(?:TEM\s*[- ]?\s*8|英语专业八级|专八)/i },
+  { language: "英语", examType: "IELTS（雅思）", pattern: /(?:IELTS|雅思)/i },
+  { language: "英语", examType: "TOEFL（托福）", pattern: /(?:TOEFL|托福)/i },
+  { language: "英语", examType: "TOEIC（托业）", pattern: /(?:TOEIC|托业)/i },
+  { language: "日语", examType: "JLPT（日语能力测试）", pattern: /(?:JLPT|日语能力测试)/i },
+  { language: "韩语", examType: "TOPIK（韩语能力考试）", pattern: /(?:TOPIK|韩语能力考试)/i }
+] as const;
+
+function parseLanguageExams(lines: string[]): NonNullable<CandidateProfile["languageExams"]> {
+  const records: NonNullable<CandidateProfile["languageExams"]> = [];
+  for (const line of lines) {
+    if (line === SECTION_BREAK) continue;
+    for (const definition of LANGUAGE_EXAM_PATTERNS) {
+      const match = definition.pattern.exec(line);
+      if (!match) continue;
+      const remainder = line.slice(match.index + match[0].length);
+      const score = /(?:成绩|分数|score)?\s*[：:]?\s*(\d{1,3}(?:\.\d+)?|[A-C][12]?)/i.exec(remainder)?.[1] ?? "";
+      if (records.some((record) => record.examType === definition.examType && record.score === score)) continue;
+      const record = createLanguageExamRecord();
+      record.language = definition.language;
+      record.examType = definition.examType;
+      record.score = score;
+      records.push(record);
+    }
+  }
+  return records;
+}
+
 function meaningfulRecord(record: object): boolean {
   return Object.entries(record).some(([key, value]) => key !== "id" && typeof value === "string" && value.trim());
 }
@@ -937,7 +970,14 @@ function populatedPaths(profile: CandidateProfile): string[] {
     ["projects", profile.projects as unknown as Array<Record<string, string>>],
     ["workSamples", profile.workSamples as unknown as Array<Record<string, string>>],
     ["awards", profile.awards as unknown as Array<Record<string, string>>],
-    ["languages", profile.languages as unknown as Array<Record<string, string>>]
+    ["languages", profile.languages as unknown as Array<Record<string, string>>],
+    ["languageExams", (profile.languageExams ?? []) as unknown as Array<Record<string, string>>],
+    ["campusLeadership", (profile.campusLeadership ?? []) as unknown as Array<Record<string, string>>],
+    ["campusActivities", (profile.campusActivities ?? []) as unknown as Array<Record<string, string>>],
+    ["familyMembers", (profile.familyMembers ?? []) as unknown as Array<Record<string, string>>],
+    ["certificates", (profile.certificates ?? []) as unknown as Array<Record<string, string>>],
+    ["publications", (profile.publications ?? []) as unknown as Array<Record<string, string>>],
+    ["patents", (profile.patents ?? []) as unknown as Array<Record<string, string>>]
   ];
   for (const [prefix, records] of arrays) {
     records.forEach((record, index) => collectObject(`${prefix}.${index}`, Object.fromEntries(Object.entries(record).filter(([key]) => key !== "id"))));
@@ -984,10 +1024,31 @@ export function parseResumeText(text: string): ParsedResume {
   if (!profile.basic.politicalStatus) {
     profile.basic.politicalStatus = /中共预备党员|中共党员|共青团员|群众|民主党派/.exec(header.join("\n"))?.[0] ?? "";
   }
+  profile.basic.identityDocumentType = labelledValueAnywhere(lines, ["证件类型", "身份证件类型", "Identity document type", "ID type"]);
+  profile.basic.identityDocumentNumber = labelledValueAnywhere(lines, ["身份证号", "身份证号码", "证件号码", "护照号码", "Identity number", "ID card number", "Passport number"]);
+  if (!profile.basic.identityDocumentType && profile.basic.identityDocumentNumber) {
+    const identityLabel = lines.find((line) => /(?:身份证号|身份证号码|护照号码)\s*[：:]/i.test(line)) ?? "";
+    profile.basic.identityDocumentType = /护照/.test(identityLabel) ? "护照" : /身份证/.test(identityLabel) ? "居民身份证" : "其他证件";
+  }
+  profile.basic.ethnicity = labelledValue(lines, ["民族", "Ethnicity"]);
+  profile.basic.maritalStatus = labelledValue(lines, ["婚姻状况", "婚姻状态", "Marital status"]);
+  profile.basic.religion = labelledValue(lines, ["宗教信仰", "Religion"]);
+  profile.basic.heightCm = labelledValue(lines, ["身高", "Height"]).replace(/\s*(?:cm|厘米)$/i, "");
+  profile.basic.weightKg = labelledValue(lines, ["体重", "Weight"]).replace(/\s*(?:kg|公斤)$/i, "");
+  profile.basic.homeCity = labelledValue(lines, ["家庭所在城市", "家庭城市"]);
+  profile.basic.homeDistrict = labelledValue(lines, ["家庭所在区县", "家庭区县"]);
+  profile.basic.schoolCity = labelledValue(lines, ["学校所在城市", "院校所在城市"]);
+  profile.basic.schoolDistrict = labelledValue(lines, ["学校所在区县", "院校所在区县"]);
+  profile.basic.hobbies = labelledValueAnywhere(lines, ["兴趣爱好", "个人爱好", "Hobbies"]);
 
   profile.jobPreference.targetRoles = labelledValueAnywhere(lines, ["求职意向", "求职岗位", "目标岗位", "应聘岗位", "Target role"]);
   profile.jobPreference.preferredCities = labelledValueAnywhere(lines, ["意向城市", "期望工作地点", "期望城市", "Preferred cities"]);
   profile.jobPreference.availableDate = findFullDate(labelledValueAnywhere(lines, ["可到岗日期", "到岗日期", "Available date"]));
+  profile.jobPreference.targetIndustries = labelledValueAnywhere(lines, ["期望行业", "意向行业", "Target industry"]);
+  profile.jobPreference.expectedSalary = labelledValueAnywhere(lines, ["期望薪资", "薪资期望", "Expected salary"]);
+  profile.jobPreference.currentSalary = labelledValueAnywhere(lines, ["当前薪资", "目前薪资", "Current salary"]);
+  profile.jobPreference.recruitmentSource = labelledValueAnywhere(lines, ["招聘信息来源", "获知渠道", "Recruitment source"]);
+  profile.jobPreference.workYears = labelledValueAnywhere(lines, ["工作经验", "工作年限", "Years of experience"]);
 
   const education = parseEducation(sections.education);
   profile.education = education.length > 0 ? education : [createEducationRecord()];
@@ -996,6 +1057,7 @@ export function parseResumeText(text: string): ParsedResume {
   profile.workSamples = parseWorkSamples([...sections.works, ...header]);
   profile.awards = parseAwards(sections.awards, lines);
   profile.languages = parseLanguages(lines);
+  profile.languageExams = parseLanguageExams(lines);
   profile.answers.selfIntroduction = meaningfulLines(sections.selfIntroduction).join("\n").trim();
   profile.answers.selfEvaluation = meaningfulLines(sections.selfEvaluation).join("\n").trim();
   profile.answers.strengths = meaningfulLines(sections.skills).join("\n").trim();
@@ -1123,5 +1185,24 @@ export function mergeResumeIntoProfile(existing: CandidateProfile, parsed: Candi
     parsed.languages as unknown as Array<Record<string, string>>,
     "languages", ["language"], result
   );
+  result.profile.languageExams ??= [];
+  result.profile.campusLeadership ??= [];
+  result.profile.campusActivities ??= [];
+  result.profile.familyMembers ??= [];
+  result.profile.certificates ??= [];
+  result.profile.publications ??= [];
+  result.profile.patents ??= [];
+  const optionalArrays: Array<[string, Array<Record<string, string>>, Array<Record<string, string>>, string[]]> = [
+    ["languageExams", result.profile.languageExams as unknown as Array<Record<string, string>>, (parsed.languageExams ?? []) as unknown as Array<Record<string, string>>, ["language", "examType", "score"]],
+    ["campusLeadership", result.profile.campusLeadership as unknown as Array<Record<string, string>>, (parsed.campusLeadership ?? []) as unknown as Array<Record<string, string>>, ["title", "organization", "startDate"]],
+    ["campusActivities", result.profile.campusActivities as unknown as Array<Record<string, string>>, (parsed.campusActivities ?? []) as unknown as Array<Record<string, string>>, ["name", "startDate"]],
+    ["familyMembers", result.profile.familyMembers as unknown as Array<Record<string, string>>, (parsed.familyMembers ?? []) as unknown as Array<Record<string, string>>, ["name", "relationship"]],
+    ["certificates", result.profile.certificates as unknown as Array<Record<string, string>>, (parsed.certificates ?? []) as unknown as Array<Record<string, string>>, ["name", "date"]],
+    ["publications", result.profile.publications as unknown as Array<Record<string, string>>, (parsed.publications ?? []) as unknown as Array<Record<string, string>>, ["title", "journal"]],
+    ["patents", result.profile.patents as unknown as Array<Record<string, string>>, (parsed.patents ?? []) as unknown as Array<Record<string, string>>, ["name", "number"]]
+  ];
+  optionalArrays.forEach(([prefix, target, source, identityKeys]) => {
+    mergeRecordArray(target, source, prefix, identityKeys, result);
+  });
   return result;
 }

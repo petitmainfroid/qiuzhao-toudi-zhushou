@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-08-08T20:46:00+08:00",
+  "syntheticOnly": false,
+  "company": "小米",
+  "atsFamily": "feishu-recruiting",
+  "attachmentTargetCount": 1,
+  "savedResumeAvailable": true,
+  "confirmationControlVisible": true,
+  "uploadPerformed": false,
+  "finalSubmitActions": 0,
+  "outcome": "ready-for-user-confirmation",
+  "blocker": "existing-site-attachment-not-overwritten"
+}

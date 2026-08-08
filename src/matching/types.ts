@@ -56,4 +56,11 @@ export interface MatchResult {
   requiresConfirmation: boolean;
   companionProfilePath?: string;
   excludedReason?: ExclusionReason;
+  atsTemplate?: {
+    familyId: string;
+    templateVersion: string;
+    ruleId: string;
+    driverHint: "native" | "feishu-select" | "feishu-date-range" | "aria-combobox";
+    verification: "normalized-equality" | "selected-option" | "checked-state" | "none";
+  };
 }

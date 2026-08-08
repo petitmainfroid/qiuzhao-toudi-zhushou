@@ -57,6 +57,8 @@ test("privacy controls gate first use and support export import delete", async (
   await expect(page.getByLabel("姓名")).toBeVisible();
 
   await page.getByLabel("姓名").fill("隐私流程验证");
+  await page.getByLabel("证件类型").selectOption("居民身份证");
+  await page.getByLabel("证件号码").fill("TEST-ID-DELETE-0042");
   await page.getByRole("button", { name: "保存档案" }).first().click();
   await expect(page.getByText(/已保存于/)).toBeVisible();
 
@@ -69,9 +71,11 @@ test("privacy controls gate first use and support export import delete", async (
   await expect(page.getByText("确认永久删除？")).toBeVisible();
   await page.getByRole("button", { name: "取消" }).click();
   await expect(page.getByLabel("姓名")).toHaveValue("隐私流程验证");
+  await expect(page.getByLabel("证件号码")).toHaveValue("TEST-ID-DELETE-0042");
   await page.getByRole("button", { name: "删除全部本地数据" }).click();
   await page.getByRole("button", { name: "确认永久删除" }).click();
   await expect(page.getByLabel("姓名")).toHaveValue("");
+  await expect(page.getByLabel("证件号码")).toHaveValue("");
   await expect(page.getByText(/已从本机删除/)).toBeVisible();
 
   await page.getByLabel("导入本地数据").setInputFiles({

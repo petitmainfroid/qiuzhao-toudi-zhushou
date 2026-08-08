@@ -1571,3 +1571,28 @@ Run a local field-level audit over the five PDFs to identify missing dates, role
 - Staged exactly the F043 runtime, adapter, anonymous regression, privacy-safe report, verifier, progress and current synthetic evidence files. `git diff --cached --check`, the staged credential/path scan and `npm run verify:live-acceptance` all passed before commit.
 - Committed the implementation as `e156b1d22418186b3868d0f761a6e88a087eba53` (`完成三家族真实页非提交验收`) and pushed `agent/browser-kernel-real-site-acceptance` to origin.
 - Opened draft PR #8 against the exact stacked base `agent/browser-kernel-k5-adapters`: `https://github.com/petitmainfroid/qiuzhao-toudi-zhushou/pull/8`.
+
+## 2026-08-08 F084 detailed dossier and saved-PDF target recovery
+
+### Outcome and product behavior
+
+- Promoted the selected `design-prototypes/profile-editor/01-dossier.html` direction into the production options page. The page now uses the dossier hero, 14-section navigation, centered editing column, local-status dock and sticky save action while retaining the Organic palette, Epilogue typography, rounded geometry and local-first copy.
+- Expanded schema version 5 with the detailed dossier fields and migration. Language proficiency and language exams are independent record types; education level and academic degree are independent fields; internships and formal employment are independent collections. Existing version-4 language qualification/score values migrate into `languageExams` instead of being discarded.
+- Split the two resume actions. `设置常用简历 PDF` stores one reusable PDF in the local saved-resume repository. `从简历导入档案信息` only parses into an unsaved editable draft and is regression-tested never to call the PDF repository.
+- Preserved sensitive values locally as requested, redacts identity-number previews, and marks explicit identity/family/contact fields confirmation-required. The ambiguous label `个人证件` remains unsupported, while an explicit `身份证号码` may map only behind confirmation.
+- Reproduced the live Xiaomi attachment failure without committing page contents. Its sole hidden file input had no `name`, `label` or `aria-label`; the reviewed `附件简历` heading was outside the nested upload button. Added a privacy-safe file-only ancestor-heading fallback plus the exact Feishu label alias. The installed extension then detected exactly one target, reused the saved local PDF and displayed the per-site confirmation control.
+- Did not click the live attachment confirmation because the Xiaomi page already displayed an existing site attachment. No attachment was overwritten and no save or final-submit control was used. `artifacts/live-saved-resume-detection-report.json` records only company/family, counts, booleans and the typed blocker; it contains no filename, profile value, full URL, query, page screenshot, Cookie or DOM.
+
+### Exact verification
+
+- Focused profile/parser/storage/matching tests passed: 34/34. Focused saved-resume repository, upload kernel, adapter bridge and side-panel tests passed: 23/23. The new nested-file semantic and Feishu attachment regression passed within 33/33 focused tests.
+- `npm run validate` exited 0 after the final change: TypeScript passed, 46 test files / 511 tests passed, the production build completed, 12 required distribution files were present, the exact permission allowlist passed and legacy `content.js` remained absent.
+- `npm run test:e2e` exited 0 after the final change: 30/30 serialized real-Chromium tests passed in 2.8 minutes, including production Feishu, Moka, Ctrip and Lenovo routes, detailed profile editing, local resume import, saved-PDF persistence/reuse/upload, repeatable records and zero-submit regressions.
+- Visually inspected `artifacts/profile-editor.png` and `artifacts/saved-resume-reuse.png`. Both contain synthetic data only. The first shows the production dossier page and the second shows a saved PDF surviving reload with an enabled, explicit destination confirmation.
+- Synced the clean production build into the already-loaded `dist-collector` path, reloaded extension ID `ehhggpjhigpmfkgjpbjampcgeenomifp`, opened the production options page, and verified the dossier sections were present. Existing local extension storage remained available.
+
+### Handoff
+
+- Main profile/UI changes: `src/domain/profile.ts`, `src/options/{App,SupplementalProfileSections,options.css}`, `src/resume/parseResume.ts`, `src/matching/{catalog,supplementalCatalog,matcher}.ts`, privacy helpers and corresponding unit/E2E tests.
+- Live attachment-target repair: `src/bridge/pageState.ts` and `src/ats/adapters/feishu/manifest.ts`, each with an anonymous regression. The fallback is restricted to unlabeled file inputs and returns only sanitized enclosing semantic text; it is not a generic form-field heuristic.
+- F084 remains `in_progress`. The remaining acceptance action is one explicit user-confirmed live attachment on a recruitment page without an attachment, or an explicit user decision to replace the current Xiaomi attachment. After that action, verify the page shows the new attachment metadata, record only aggregate outcome counters, rerun required checks, mark F084 done and publish `agent/profile-dossier-production` against `agent/browser-kernel-real-site-acceptance`.

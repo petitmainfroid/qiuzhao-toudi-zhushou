@@ -4,7 +4,7 @@ test("complex controls are deterministically operated and verified without submi
   await page.goto("/complex-controls.html");
   const result = await page.evaluate(async () => {
     const profile = {
-      schemaVersion: 2 as const,
+      schemaVersion: 5 as const,
       updatedAt: "",
       basic: {
         fullName: "", preferredName: "", gender: "女", birthDate: "", phone: "", email: "",

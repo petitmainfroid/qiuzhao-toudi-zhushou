@@ -213,7 +213,7 @@ export const feishuRecruitingManifest: AtsAdapterManifest = {
     field(
       "resume-attachment",
       ["attachment_resume_list.attachment_resume"],
-      ["简历附件"],
+      ["简历附件", "附件简历"],
       ["textbox"],
       "file-upload",
       "confirm",
