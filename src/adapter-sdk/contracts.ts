@@ -125,6 +125,7 @@ export interface AtsAdapterPlannedField {
   controlKey: string;
   ruleId: string;
   semanticKey: string;
+  label: string;
   capability: AtsControlCapability;
   decision: AtsFieldDecision;
   intent: AtsFieldIntent;
@@ -163,6 +164,8 @@ export interface AtsAdapterPlan {
   familyId: string;
   familyVersion: string;
   snapshotKey: string;
+  origin: string;
+  pathTemplate: string;
   fields: AtsAdapterPlannedField[];
   repeatables: AtsAdapterPlannedRepeatable[];
   skipped: AtsAdapterSkippedControl[];

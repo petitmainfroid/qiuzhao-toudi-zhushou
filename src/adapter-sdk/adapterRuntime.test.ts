@@ -162,9 +162,14 @@ describe("ATS adapter runtime", () => {
     expect(result.status).toBe("matched");
     if (result.status !== "matched") return;
 
+    expect(result.plan).toMatchObject({
+      origin: "https://a.example.test",
+      pathTemplate: "/apply/:id"
+    });
     expect(result.plan.fields).toEqual([
       expect.objectContaining({
         controlKey: "ref_name_12345678",
+        label: "candidate.name",
         intent: { kind: "profile-field", pathPattern: "basic.fullName" }
       }),
       expect.objectContaining({

@@ -1296,3 +1296,22 @@ Run a local field-level audit over the five PDFs to identify missing dates, role
 - `npm run validate` exited 0: TypeScript, 40 test files / 318 tests, production build, 13 required distribution files, exact permissions, and forbidden-permission absence all passed.
 - `npm run test:e2e` exited 0: 24/24 serial real-Chromium regressions passed in 2.2 minutes. Existing repeatable, privacy, K1-K4, PDF upload, Xiaomi-derived, and no-submit behavior remained intact.
 - This increment exposes the repeatable capability through the K5 orchestrator but does not yet switch the installed side-panel from the legacy content path. No new user-visible screenshot was required. F042 remains `in_progress`; next is side-panel scan/fill migration, then the three-family `eval:kernel-adapters` evidence and legacy-path removal.
+
+## 2026-08-08 F042 K5-C side-panel compatibility seam
+
+### Implementation
+
+- Added `src/sidepanel/adapterPageBridge.ts`, an injectable compatibility bridge from the existing `PageBridge` UI contract to `RecruitmentAdapterOrchestrator`. Scan uses only the active pinned session and privacy-safe K1 state; local profile values are joined in side-panel memory after planning and are never passed into browser discovery.
+- Extended the adapter plan with the destination origin, templated path, and privacy-safe field label needed to render a side-panel plan and bind the saved-resume target without a second content-script scan.
+- Because K1 intentionally does not expose existing page values, every K5 fill proposal is marked `unreadable` and `requiresConfirmation`; the existing UI therefore preselects zero K5 fields. Legacy saved-field remaps are ignored so they cannot override an ATS family's declarative canonical intent.
+- Selected fills require a fresh action authorization and accept only the exact control ref/profile path pair from the active plan. Profile changes, session changes, unknown refs, and remapped paths fail closed. Results count only kernel `verified` writes as filled.
+- Repeatable UI state is derived from planned record indexes plus meaningful local records. Creation routes through the bounded K5 add/rescan loop. Saved PDF candidates are bound to the plan's sole file control and route only through the K4 upload authorization; the bridge never supplies a filesystem path or performs a direct DOM upload.
+- Generalized the legacy UI-only `RepeatableRecordsScan.adapterId` type from the Xiaomi literal to a family id string. The installed `resolvePageBridge()` default was deliberately not changed because this branch has no production ATS manifests; the old path remains until three-family parity evidence exists.
+
+### Verification and handoff
+
+- Added `src/sidepanel/adapterPageBridge.test.ts` with four compatibility tests covering privacy-safe plan rendering, zero-default confirmation behavior, saved-remap rejection, exact canonical fill routing, repeatable create/rescan, and K4 resume authorization. Focused verification passed: 3 files / 14 tests; `npm run typecheck` also passed.
+- `npm run validate` exited 0: TypeScript, 41 test files / 322 tests, production build, 13 required distribution files, exact kernel permissions, and forbidden-permission absence all passed.
+- No installed or user-visible behavior changed, so this checkpoint did not require a new screenshot or another E2E run; the immediately preceding K5 repeatable checkpoint already recorded 24/24 serialized real-Chromium regressions. No live recruitment site, real profile value, resume, `.env`, cookie, or ATS Ground Truth entered this change.
+- Changed files: `src/adapter-sdk/{contracts,adapterRuntime,adapterRuntime.test}.ts`, `src/content/repeatableRecords.ts`, `src/sidepanel/{adapterPageBridge,adapterPageBridge.test}.ts`, `docs/browser-kernel-k5-adapter-plan.md`, `feature_list.json`, and `progress.md`.
+- F042 remains `in_progress`. Next: register three anonymous ATS manifests/fixtures, add `npm run eval:kernel-adapters` plus allowlisted report/screenshot evidence, then switch the installed resolver and remove the legacy content path only after parity passes.

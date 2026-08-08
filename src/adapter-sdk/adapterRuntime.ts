@@ -285,6 +285,11 @@ export class AtsAdapterRegistry {
         controlKey: control.controlKey,
         ruleId: rule.id,
         semanticKey,
+        label: control.semantics.label
+          ?? control.semantics.ariaLabel
+          ?? control.semantics.placeholder
+          ?? control.semantics.name
+          ?? semanticKey,
         capability: rule.capability,
         decision: rule.decision,
         intent,
@@ -295,6 +300,8 @@ export class AtsAdapterRegistry {
       familyId: manifest.family.id,
       familyVersion: manifest.family.version,
       snapshotKey: summary.snapshotKey,
+      origin: summary.origin,
+      pathTemplate: summary.pathTemplate,
       fields,
       repeatables: plannedRepeatables(summary, manifest),
       skipped

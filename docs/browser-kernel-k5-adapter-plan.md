@@ -58,6 +58,14 @@ The runtime rejects unknown manifest properties and invalid canonical profile pa
 - Route saved PDF attachment through the existing K4 user-confirmed upload gate.
 - Record parity evidence before removing any old direct mutation path.
 
+Current checkpoint: `AdapterPageBridge` now converts a matched K5 plan into the existing
+side-panel view model. Because K1 deliberately does not expose current page values, every
+fillable proposal is shown as unreadable and confirmation-required; none is preselected.
+The bridge ignores legacy saved remaps, sends only canonical profile paths to kernel actions,
+and routes repeatable creation and saved PDF upload through their K5/K4 authorization gates.
+It remains injectable rather than the production default until ATS-owned manifests are
+registered and the three-family parity evaluator passes.
+
 ### K5-D — removal and acceptance
 
 - Remove the old `chrome.scripting`/`tabs.sendMessage` mutation route and direct content-script writes.

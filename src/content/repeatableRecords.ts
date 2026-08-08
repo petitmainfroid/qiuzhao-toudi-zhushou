@@ -36,7 +36,7 @@ export interface RepeatableGroupScan {
 }
 
 export interface RepeatableRecordsScan {
-  adapterId: "xiaomi-recruitment" | null;
+  adapterId: string | null;
   groups: RepeatableGroupScan[];
 }
 
