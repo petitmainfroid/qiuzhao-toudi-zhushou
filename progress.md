@@ -1469,3 +1469,9 @@ Run a local field-level audit over the five PDFs to identify missing dates, role
 - Changed adapter/runtime files: `src/ats/adapters/index.ts` and `src/ats/adapters/lenovo/{manifest,index,manifest.test}.ts`.
 - Changed fixture/evidence/docs: `tests/fixtures/lenovo-manifest-page.ts`, `tests/e2e/lenovo-manifest.spec.ts`, `artifacts/{lenovo-k5-sidepanel.png,feishu-k5-sidepanel.png,kernel-adapters-report.json}`, `docs/k5-lenovo-manifest-migration.md`, `docs/browser-kernel-k5-adapter-plan.md`, `docs/browser-kernel-acceptance.md`, `feature_list.json`, and `progress.md`.
 - F042 remains `in_progress`. Next audit and conservatively migrate the Ctrip custom family. Do not remove the legacy bridge until every intended Ground Truth family has equivalent exact routing and anonymous parity; real-site read/write acceptance remains F043.
+
+### Publication evidence
+
+- Staged exactly the 14 intended Lenovo adapter, anonymous fixture/E2E, documentation and evidence files. `git diff --cached --check` passed; suspicious-path, credential-pattern and aggregate-report forbidden-term scans each found zero issues. The current Lenovo side-panel screenshot was force-added only after visual privacy inspection.
+- Committed the checkpoint as `48e268d6fb8bcb909c65c33d4f0772668e1de71b` (`迁移 Lenovo Talent K5 声明与 PDF 验收`) and pushed `agent/browser-kernel-k5-adapters` to origin.
+- Draft PR #7 remains open against the exact stacked base `agent/browser-kernel-k4-evidence` and now contains the Lenovo checkpoint: `https://github.com/petitmainfroid/qiuzhao-toudi-zhushou/pull/7`.
