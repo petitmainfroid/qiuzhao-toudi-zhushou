@@ -222,6 +222,34 @@ function nearestFieldMetadata(record: FlatNode): { name: string; label: string }
   return { name: "", label: "" };
 }
 
+function fixedDateRangeRoot(node: CdpDomNode): boolean {
+  if (hasAttribute(node, "data-date-range")) return true;
+  const className = attribute(node, "class") ?? "";
+  return /(?:^|\s)atsx-date-picker-period(?:-month)?(?:\s|$)/.test(className)
+    || /date-picker-period|date-range|daterange/i.test(className);
+}
+
+function fixedDateRangeInputs(record: FlatNode): CdpDomNode[] {
+  if (!fixedDateRangeRoot(record.node) || !nearestFieldMetadata(record).name) return [];
+  const inputs: CdpDomNode[] = [];
+  function collect(node: CdpDomNode): void {
+    if (nodeName(node) === "input") {
+      const type = safeInputType(node);
+      if (
+        typeof node.backendNodeId === "number"
+        && (type === "date" || type === "month" || type === "text")
+        && !hasAttribute(node, "disabled")
+        && !hasAttribute(node, "readonly")
+        && !hasAttribute(node, "hidden")
+        && attribute(node, "aria-hidden") !== "true"
+      ) inputs.push(node);
+    }
+    for (const child of node.children ?? []) collect(child);
+  }
+  collect(record.node);
+  return inputs.length === 2 ? inputs : [];
+}
+
 function nodeName(node: CdpDomNode): string {
   return (node.localName || node.nodeName || "").toLowerCase();
 }
@@ -483,6 +511,8 @@ function inspectControls(flattened: FlattenedDocument): InspectedControlTarget[]
   const recordByNode = new Map(flattened.nodes.map((record) => [record.node, record]));
   const nodesById = new Map<string, CdpDomNode>();
   const labelByFor = new Map<string, string>();
+  const dateRangeRoots = new Map<CdpDomNode, CdpDomNode[]>();
+  const dateRangeInputIds = new Set<number>();
   for (const record of flattened.nodes) {
     const id = attribute(record.node, "id");
     if (id) nodesById.set(id, record.node);
@@ -491,14 +521,48 @@ function inspectControls(flattened: FlattenedDocument): InspectedControlTarget[]
       const text = labelText(record.node);
       if (target && text) labelByFor.set(target, text);
     }
+    const inputs = fixedDateRangeInputs(record);
+    if (inputs.length === 2) {
+      dateRangeRoots.set(record.node, inputs);
+      inputs.forEach((input) => dateRangeInputIds.add(input.backendNodeId!));
+    }
   }
 
   const controls: InspectedControlTarget[] = [];
   for (const record of flattened.nodes) {
     if (controls.length >= MAX_CONTROLS) break;
+    const dateRangeInputs = dateRangeRoots.get(record.node);
+    if (dateRangeInputs) {
+      const backendNodeId = record.node.backendNodeId;
+      if (typeof backendNodeId !== "number") continue;
+      const metadata = nearestFieldMetadata(record);
+      const label = metadata.label || previousSemanticText(record, recordByNode) || metadata.name;
+      const base: Omit<PrivacySafeControl, "ref" | "safety"> = {
+        role: "textbox",
+        tag: "custom",
+        semantics: {
+          ...(label ? { label } : {}),
+          name: metadata.name
+        },
+        disabled: dateRangeInputs.some((input) => hasAttribute(input, "disabled")),
+        readOnly: dateRangeInputs.some((input) => hasAttribute(input, "readonly")),
+        required: dateRangeInputs.some((input) => hasAttribute(input, "required")),
+        multiple: false,
+        boundary: record.boundary
+      };
+      const control = { ...base, safety: classifySafety(base) };
+      controls.push({
+        frameKey: record.frameKey,
+        backendNodeId,
+        fingerprint: fingerprintControl(control),
+        control
+      });
+      continue;
+    }
     const role = implicitRole(record.node);
     const backendNodeId = record.node.backendNodeId;
     if (!role || typeof backendNodeId !== "number") continue;
+    if (dateRangeInputIds.has(backendNodeId)) continue;
     if (hasAttribute(record.node, "hidden") || attribute(record.node, "aria-hidden") === "true") continue;
 
     const id = attribute(record.node, "id");

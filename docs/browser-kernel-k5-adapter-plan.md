@@ -70,28 +70,26 @@ textarea, contenteditable, native and searchable selects, radio, a profile-prese
 single dates, a two-input date range, same-origin iframe, open Shadow DOM, repeatable add/save,
 and the saved-resume gate. Wrong-control writes and final-submit actions are both zero.
 
-The bridge remains injectable rather than the production default because production ATS manifests
-are owned by the separate ATS/GT branch and are not registered here. Anonymous parity removes the
-evaluation blocker; it does not justify a resolver with no production rules. After those declarative
-assets merge, switch the installed resolver, rerun the same evaluator plus full regression, and only
-then remove the legacy direct mutation path.
-
-Migration checkpoint: the selector-free portion of the reviewed Feishu family assets now exists as
-`src/ats/adapters/feishu/manifest.ts`. K1 also inherits strictly formatted
+The selector-free portion of the reviewed Feishu family assets now exists as
+`src/ats/adapters/feishu/manifest.ts`. K1 inherits strictly formatted
 `data-form-field-name`/`data-form-field-i18n-name` metadata from nearby form containers and redacts
-uploaded document names/timestamps from public semantics. A real-Chrome anonymous Feishu canary
-proves read-only detection and planning with zero submit actions. See
-[`k5-feishu-manifest-migration.md`](k5-feishu-manifest-migration.md). Production resolver registration
-remains pending until write parity covers the family-specific composite controls.
+uploaded document names/timestamps from public semantics. Its write-parity fixture now covers a
+unique composite date-range reference, searchable combobox, section-scoped repeatable add/save and
+saved PDF. The installed resolver routes only exact reviewed Feishu HTTPS application URLs to K5;
+an unmatched or ambiguous Feishu adapter fails closed without legacy fallback. Other sites retain
+the legacy bridge during migration. See
+[`k5-feishu-manifest-migration.md`](k5-feishu-manifest-migration.md).
 
 ### K5-D — removal and acceptance
 
 - [done] Run three anonymous ATS-family E2E fixtures covering the complete F042 control denominator.
 - [done] Produce and inspect an anonymous aggregate report and Organic screenshot.
 - [done] Run full validation/E2E and privacy inspection for the anonymous evaluator node.
-- [pending] Register the production ATS declarations from the separate ATS/GT branch.
-- [pending] Switch the installed resolver and remove the old `chrome.scripting`/`tabs.sendMessage`
-  mutation route only after production-rule parity passes.
+- [done] Register the selector-free production Feishu declaration after anonymous write parity.
+- [done] Route exact reviewed Feishu application URLs through K5 in the installed side panel, with
+  no fallback when the Feishu adapter fails.
+- [pending] Migrate additional ATS families, then remove the remaining non-Feishu
+  `chrome.scripting`/`tabs.sendMessage` mutation route only after their parity passes.
 - [pending] Run the final full regression and publish the F042 completion checkpoint.
 
 ## Fixed gates

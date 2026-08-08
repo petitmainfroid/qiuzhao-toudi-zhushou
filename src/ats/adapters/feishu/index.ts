@@ -1,4 +1,5 @@
 export {
   FEISHU_RECRUITING_FAMILY_ID,
-  feishuRecruitingManifest
+  feishuRecruitingManifest,
+  isFeishuRecruitingApplicationUrl
 } from "./manifest";

@@ -148,6 +148,16 @@ describe("ATS adapter runtime", () => {
         tag: "button",
         semantics: { name: "education_list[2].save", label: "Save" }
       }),
+      control("ref_wrong_add_12345", "project_list.add", {
+        role: "button",
+        tag: "button",
+        semantics: { name: "project_list.add", label: "Add education" }
+      }),
+      control("ref_wrong_save_1234", "project_list[2].save", {
+        role: "button",
+        tag: "button",
+        semantics: { name: "project_list[2].save", label: "Save" }
+      }),
       control("ref_custom_123456", "custom.favorite_color"),
       control("ref_identity_1234", "candidate.name", { safety: "identity" }),
       control("ref_submit_123456", "candidate.name", {
@@ -194,6 +204,10 @@ describe("ATS adapter runtime", () => {
       saveControls: [{ controlKey: "ref_save_education_1", recordIndex: 2 }],
       maximumCreatesPerRun: 5
     });
+    expect(result.plan.repeatables[0]?.addControlKeys).not.toContain("ref_wrong_add_12345");
+    expect(result.plan.repeatables[0]?.saveControls).not.toEqual(expect.arrayContaining([
+      expect.objectContaining({ controlKey: "ref_wrong_save_1234" })
+    ]));
   });
 
   it("fails closed when two manifests tie for the same page", () => {

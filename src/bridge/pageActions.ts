@@ -443,12 +443,16 @@ export class ChromePageActionExecutor implements PageActionExecutor {
       return { performed: false, verified: false, strategy: "none", reason: "stale-reference" };
     }
     const outcome = await this.call(session.tabId, target, payload);
-    const structuralRepeatableClick = payload.action === "click"
-      && (payload.purpose === "add-repeatable-record" || payload.purpose === "save-repeatable-record");
-    // Repeatable controls may legitimately disappear or be replaced after a click.
-    // Their verification is the orchestrator's bounded full-page rescan, not survival
-    // of the old backend node. The pre-action inspect and fixed label gate still apply.
-    if (structuralRepeatableClick && outcome.performed && !outcome.reason) return outcome;
+    const structuralClick = payload.action === "click" && (
+      payload.purpose === "open-control"
+      || payload.purpose === "add-repeatable-record"
+      || payload.purpose === "save-repeatable-record"
+    );
+    // Open controls intentionally change expanded state; repeatable controls may
+    // disappear or be replaced. Their verification is the orchestrator's bounded
+    // wait/rescan, not survival of the old fingerprint. Pre-action inspection and
+    // the fixed role/label gates still apply.
+    if (structuralClick && outcome.performed && !outcome.reason) return outcome;
     if (!await this.inspect(session, target)) {
       return { performed: outcome.performed, verified: false, strategy: outcome.strategy, reason: "stale-reference" };
     }

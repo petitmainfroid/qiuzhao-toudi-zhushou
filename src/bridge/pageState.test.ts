@@ -118,6 +118,42 @@ describe("privacy-safe page state", () => {
     expect(JSON.stringify(state)).not.toMatch(/私密姓名|2026-02-25|23:31|13800138000|private value/i);
   });
 
+  it("emits one opaque composite reference for a two-input Feishu date range", () => {
+    backendNodeId = 1;
+    const root: CdpDomNode = {
+      backendNodeId: backendNodeId++,
+      nodeType: 9,
+      nodeName: "#document",
+      frameId: "main-frame",
+      children: [element("html", {}, [element("body", {}, [
+        element("div", {
+          class: "atsx-date-picker-period",
+          "data-form-field-name": "education_list[0].start_end_time",
+          "data-form-field-i18n-name": "起止时间"
+        }, [
+          element("input", { type: "month", value: "2020-09" }),
+          element("input", { type: "month", value: "2024-06" })
+        ])
+      ])])]
+    };
+
+    const registry = new OpaqueReferenceRegistry(() => "rangenonce");
+    const state = buildPrivacySafePageState(root, session, registry);
+    expect(state.controls).toHaveLength(1);
+    expect(state.controls[0]).toEqual(expect.objectContaining({
+      role: "textbox",
+      tag: "custom",
+      semantics: {
+        label: "起止时间",
+        name: "education_list[0].start_end_time"
+      }
+    }));
+    expect(registry.resolve(session.sessionId!, state.snapshotId, state.controls[0]!.ref)).toEqual(
+      expect.objectContaining({ tag: "custom", role: "textbox" })
+    );
+    expect(JSON.stringify(state)).not.toMatch(/2020-09|2024-06/);
+  });
+
   it("associates portal options through aria-controls without returning option values", () => {
     backendNodeId = 1;
     const root: CdpDomNode = {

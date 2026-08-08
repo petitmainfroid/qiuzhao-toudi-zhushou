@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { AtsAdapterRegistry, validateAtsAdapterManifest, type AtsAdapterPageSummary } from "../../../adapter-sdk";
-import { feishuRecruitingManifest } from "./manifest";
+import { feishuRecruitingManifest, isFeishuRecruitingApplicationUrl } from "./manifest";
 
 function summary(origin: string, pathTemplate: string): AtsAdapterPageSummary {
   const controls: AtsAdapterPageSummary["controls"] = [
@@ -113,6 +113,25 @@ function summary(origin: string, pathTemplate: string): AtsAdapterPageSummary {
 }
 
 describe("Feishu recruiting K5 manifest", () => {
+  it.each([
+    "https://xiaomi.jobs.f.mioffice.cn/internship/resume/123456/apply",
+    "https://meta.jobs.feishu.cn/tenant_123/resume/987654/apply?source=campus",
+    "https://kwh0jtf778.jobs.feishu.cn/index/resume/7670064234785491242/apply"
+  ])("routes only a reviewed Feishu application URL: %s", (url) => {
+    expect(isFeishuRecruitingApplicationUrl(url)).toBe(true);
+  });
+
+  it.each([
+    "http://meta.jobs.feishu.cn/index/resume/123/apply",
+    "https://meta.jobs.feishu.cn.evil.test/index/resume/123/apply",
+    "https://user@meta.jobs.feishu.cn/index/resume/123/apply",
+    "https://meta.jobs.feishu.cn/index/position/123/detail",
+    "https://meta.jobs.feishu.cn/index/resume/123/apply/extra",
+    "not-a-url"
+  ])("does not route an untrusted or unrelated URL: %s", (url) => {
+    expect(isFeishuRecruitingApplicationUrl(url)).toBe(false);
+  });
+
   it("is selector-free and passes the exact manifest contract", () => {
     expect(validateAtsAdapterManifest(feishuRecruitingManifest)).toEqual({
       ok: true,

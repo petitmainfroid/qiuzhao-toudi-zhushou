@@ -1380,3 +1380,30 @@ Run a local field-level audit over the five PDFs to identify missing dates, role
 - Committed the verified checkpoint as `bc8ff36cd8ddb02f6366f51602bf211be8e24bcf` (`迁移 K5 飞书声明与隐私语义`) and pushed `agent/browser-kernel-k5-adapters` to origin.
 - Draft PR #7 remains open against `agent/browser-kernel-k4-evidence`: `https://github.com/petitmainfroid/qiuzhao-toudi-zhushou/pull/7`.
 - This commit deliberately does not register the production manifest or change installed side-panel filling. The next checkpoint must provide write parity first.
+
+## 2026-08-08 F042 Feishu write parity and installed resolver checkpoint
+
+### Implementation
+
+- Added one K1 composite control for a recognized Feishu-style two-input date range. The public state now emits only the container's opaque ref and technical semantic key, suppresses its two child inputs, and exposes no start/end values. Post-action inspection resolves the same composite for fixed two-value readback.
+- Tightened repeatable planning so add controls must match both an exact collection-specific label and the declared section semantic key. Save controls must belong to the current record prefix; a no-key save label is accepted only for a manifest with one repeatable collection. Removed generic “新增/添加” labels from the Feishu declaration.
+- The first real-Chrome write-parity run verified five earlier fields, then exposed a false `stale-reference` after opening the gender combobox: the click correctly changed `aria-expanded`, but the generic post-click fingerprint check treated that expected structural mutation as replacement. `open-control` now uses the same structural-click completion rule as repeatable add/save; the orchestrator still requires bounded wait, refind and selected-option readback before success.
+- Expanded the anonymous Feishu fixture to cover ordinary text, a portal-style searchable combobox, one composite date range, section-scoped project add/save, saved PDF, an unknown enterprise question and final submit. The Ground Truth readback contains only anonymous test values and counters.
+- Added a narrow production URL predicate and `RoutedPageBridge`. Exact trusted Feishu/mioffice HTTPS application URLs use `AdapterPageBridge` with the production manifest. If that K5 scan is unmatched, ambiguous or otherwise fails, the route is cleared and the legacy bridge is never invoked. Non-Feishu pages retain `ChromePageBridge` during the remaining migration.
+- The installed side-panel E2E now connects the anonymous Feishu page, scans through the production resolver, confirms every K5 proposal is initially unselected, performs one user-selected write through the UI, and then verifies the full custom-select/date/repeatable/PDF parity through the same kernel. Final submit remains untouched.
+
+### Exact verification
+
+- Focused unit verification passed 4 files / 33 tests for K1 composite state, repeatable scoping, Feishu route/manifest safety and fail-closed bridge routing. `npm run typecheck` and `npm run build` passed.
+- After the `open-control` fix, `npx playwright test tests/e2e/feishu-manifest.spec.ts tests/e2e/kernel-adapters.spec.ts --workers=1` passed 2/2 in 27.6 seconds. The Feishu case verifies text, searchable selection, composite date range, project create/save, one saved-PDF upload, no custom-question write and zero submit.
+- `npm run eval:kernel-adapters` exited 0 in 15.7 seconds: 3/3 anonymous ATS families, 14/14 correct mappings, 14/14 verified writes, one repeatable create/save, one saved-resume upload, zero wrong-control writes and zero final-submit actions.
+- Final `npm run validate` exited 0 in 60.8 seconds: TypeScript passed, 43 test files / 349 tests passed, production build completed, 13 required distribution files were present, exact permissions passed and forbidden permissions remained absent.
+- `npm run test:e2e` exited 0: 26/26 serial real-Chrome tests passed in 2.1 minutes, including the installed Feishu K5 side-panel route and all prior K1–K5, privacy, repeatable, saved-resume, resume-import and Xiaomi-derived no-submit regressions.
+- Generated and visually inspected `artifacts/feishu-k5-sidepanel.png`. It follows the Organic interface direction and contains only the synthetic Feishu origin plus anonymous profile/file values. The screen shows six confirmation-required proposals, zero default selections and no final-submit control. The regenerated `artifacts/kernel-adapters-report.json` retains 3/3 anonymous families, 14/14 mappings/writes and zero final submits.
+
+### Handoff
+
+- Changed kernel/adapter files: `src/bridge/{pageState,pageState.test,pageActions}.ts`, `src/adapter-sdk/{adapterRuntime,adapterRuntime.test}.ts`, and `src/ats/adapters/feishu/{manifest,manifest.test,index}.ts`.
+- Changed production UI routing: `src/sidepanel/App.tsx`, `src/sidepanel/pageBridge.ts`, `src/sidepanel/routedPageBridge.ts`, and `src/sidepanel/routedPageBridge.test.ts`. The new data attribute contains only a canonical profile path and exists to make the installed side-panel acceptance deterministic.
+- Changed fixtures/evidence/docs: `tests/fixtures/feishu-manifest-page.ts`, `tests/e2e/feishu-manifest.spec.ts`, `artifacts/feishu-k5-sidepanel.png`, `artifacts/kernel-adapters-report.json`, `docs/k5-feishu-manifest-migration.md`, `docs/browser-kernel-k5-adapter-plan.md`, `docs/browser-kernel-acceptance.md`, `feature_list.json`, and `progress.md`.
+- F042 remains `in_progress`. The next recommended feature increment is a second production ATS-family declarative migration and the same anonymous installed-resolver parity. Do not delete `ChromePageBridge` until all intended non-Feishu families have equivalent evidence; do not claim a real company page result before F043.

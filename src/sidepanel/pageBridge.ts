@@ -18,6 +18,14 @@ import type {
   ResumeAttachmentResult
 } from "../content/resumeAttachment";
 import type { EmbeddedBridgeRequest, EmbeddedBridgeResponse } from "../bridge/protocol";
+import { AtsAdapterRegistry, ChromeRecruitmentKernelApi } from "../adapter-sdk";
+import {
+  feishuRecruitingManifest,
+  isFeishuRecruitingApplicationUrl
+} from "../ats/adapters/feishu";
+import { AdapterPageBridge } from "./adapterPageBridge";
+import { ChromePowerSessionBridge } from "./powerSessionBridge";
+import { RoutedPageBridge } from "./routedPageBridge";
 
 export interface PageBridge {
   scan(profile: CandidateProfile, mappings?: SavedFieldMapping[]): Promise<ScanResult>;
@@ -40,6 +48,13 @@ async function activeTabId(): Promise<number> {
   const tabId = tabs[0]?.id;
   if (typeof tabId !== "number") throw new Error("没有找到当前活动页面。");
   return tabId;
+}
+
+async function activeTabUrl(): Promise<string> {
+  const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+  const url = tabs[0]?.url;
+  if (!url) throw new Error("active-page-url-unavailable");
+  return url;
 }
 
 async function prepareContentScript(tabId: number): Promise<void> {
@@ -310,5 +325,17 @@ export class PreviewPageBridge implements PageBridge {
 }
 
 export function resolvePageBridge(): PageBridge {
-  return extensionRuntimeAvailable() ? new ChromePageBridge() : new PreviewPageBridge();
+  if (!extensionRuntimeAvailable()) return new PreviewPageBridge();
+  const powerSession = new ChromePowerSessionBridge();
+  const feishuBridge = new AdapterPageBridge(
+    new ChromeRecruitmentKernelApi(),
+    new AtsAdapterRegistry([feishuRecruitingManifest]),
+    powerSession
+  );
+  return new RoutedPageBridge(
+    feishuBridge,
+    new ChromePageBridge(),
+    activeTabUrl,
+    isFeishuRecruitingApplicationUrl
+  );
 }

@@ -134,6 +134,7 @@ function plannedRepeatables(
 ): AtsAdapterPlannedRepeatable[] {
   return manifest.repeatables.map((rule) => {
     const prefixes = rule.recordSemanticPrefixes.map(normalizeSemanticKey);
+    const sectionKeys = rule.sectionSemanticKeys.map(normalizeSemanticKey);
     const recordIndexes = [...new Set(summary.controls.flatMap((control) => {
       const key = controlSemanticKey(control);
       const index = recordIndex(control);
@@ -148,14 +149,24 @@ function plannedRepeatables(
       && !control.readOnly
       && !finalSubmitLabel(control, manifest)
     );
+    const matchesSectionKey = (control: AtsAdapterControlSummary) => {
+      const key = controlSemanticKey(control);
+      return !key || sectionKeys.some((sectionKey) => key === sectionKey || key.startsWith(`${sectionKey}.`));
+    };
+    const matchesRecordKey = (control: AtsAdapterControlSummary) => {
+      const key = controlSemanticKey(control);
+      return prefixes.some((prefix) => key === prefix || key.startsWith(`${prefix}.`));
+    };
     return {
       collection: rule.collection,
       recordIndexes,
       addControlKeys: safeButtons
-        .filter((control) => matchesAnyLabel(control, rule.addControlLabels))
+        .filter((control) => matchesAnyLabel(control, rule.addControlLabels) && matchesSectionKey(control))
         .map((control) => control.controlKey),
       saveControls: safeButtons
         .filter((control) => matchesAnyLabel(control, rule.saveControlLabels))
+        .filter((control) => matchesRecordKey(control)
+          || (!controlSemanticKey(control) && manifest.repeatables.length === 1))
         .map((control) => ({ controlKey: control.controlKey, recordIndex: recordIndex(control) })),
       maximumCreatesPerRun: rule.maximumCreatesPerRun
     };

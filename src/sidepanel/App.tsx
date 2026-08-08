@@ -138,7 +138,10 @@ function ProposalCard({
     unreadable: "无法比较"
   }[proposal.comparisonStatus];
   return (
-    <article className={`proposal-card confidence-${proposal.confidence}`}>
+    <article
+      className={`proposal-card confidence-${proposal.confidence}`}
+      data-profile-path={proposal.profilePath ?? undefined}
+    >
       <label className="proposal-select">
         <input
           type="checkbox"

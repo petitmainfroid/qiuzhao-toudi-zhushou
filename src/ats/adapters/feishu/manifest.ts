@@ -12,6 +12,33 @@ import type { PageControlRole } from "../../../bridge/protocol";
 
 export const FEISHU_RECRUITING_FAMILY_ID = "feishu-recruiting";
 
+const FEISHU_RECRUITING_HOST_SUFFIXES = ["jobs.feishu.cn", "jobs.f.mioffice.cn"] as const;
+const FEISHU_APPLICATION_PATH = /^\/(?:index|internship|[A-Za-z0-9_-]+)\/resume\/[A-Za-z0-9_-]+\/apply\/?$/;
+
+/**
+ * Production routing is intentionally narrower than family detection. It only
+ * opts reviewed Feishu application URLs into K5; the manifest then performs a
+ * second, semantic fail-closed check after the privacy-safe page scan.
+ */
+export function isFeishuRecruitingApplicationUrl(rawUrl: string): boolean {
+  try {
+    const url = new URL(rawUrl);
+    const hostname = url.hostname.toLowerCase();
+    const trustedHost = FEISHU_RECRUITING_HOST_SUFFIXES.some(
+      (suffix) => hostname === suffix || hostname.endsWith(`.${suffix}`)
+    );
+    return url.protocol === "https:"
+      && !url.username
+      && !url.password
+      && (url.port === "" || url.port === "443")
+      && trustedHost
+      && FEISHU_APPLICATION_PATH.test(url.pathname);
+  }
+  catch {
+    return false;
+  }
+}
+
 function field(
   id: string,
   semanticKeys: string[],
@@ -106,7 +133,7 @@ export const feishuRecruitingManifest: AtsAdapterManifest = {
   detection: {
     httpsOnly: true,
     exactHosts: [],
-    hostSuffixes: ["jobs.feishu.cn", "jobs.f.mioffice.cn"],
+    hostSuffixes: [...FEISHU_RECRUITING_HOST_SUFFIXES],
     pathPrefixes: ["/index/resume/", "/internship/resume/", "/:id/resume/"],
     semanticMarkers: [
       "basic_info.name",
@@ -171,12 +198,12 @@ export const feishuRecruitingManifest: AtsAdapterManifest = {
     )
   ],
   repeatables: [
-    repeatable("education", "education_list", ["新增教育经历", "添加教育经历", "添加", "新增"]),
-    repeatable("workExperiences", "internship_list", ["新增实习经历", "添加实习经历", "添加", "新增"]),
-    repeatable("workSamples", "works_list", ["新增作品", "添加作品", "添加", "新增"]),
-    repeatable("projects", "project_list", ["新增项目经历", "添加项目经历", "添加", "新增"]),
-    repeatable("awards", "award_list", ["新增获奖经历", "添加获奖经历", "添加", "新增"]),
-    repeatable("languages", "language_list", ["新增语言能力", "添加语言能力", "添加", "新增"])
+    repeatable("education", "education_list", ["新增教育经历", "添加教育经历"]),
+    repeatable("workExperiences", "internship_list", ["新增实习经历", "添加实习经历"]),
+    repeatable("workSamples", "works_list", ["新增作品", "添加作品"]),
+    repeatable("projects", "project_list", ["新增项目经历", "添加项目经历"]),
+    repeatable("awards", "award_list", ["新增获奖经历", "添加获奖经历"]),
+    repeatable("languages", "language_list", ["新增语言能力", "添加语言能力"])
   ],
   exclusions: {
     finalSubmitLabels: ["提交简历", "提交申请", "确认投递", "立即申请", "最终提交"]
