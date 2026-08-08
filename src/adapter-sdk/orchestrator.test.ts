@@ -67,6 +67,15 @@ const manifest: AtsAdapterManifest = {
       verification: "selected-option"
     },
     {
+      id: "career-plan-present",
+      semanticKeys: ["candidate.has_career_plan"],
+      roles: ["checkbox"],
+      capability: "toggle",
+      decision: "confirm",
+      intent: { kind: "profile-field", pathPattern: "answers.careerPlan" },
+      verification: "checked-state"
+    },
+    {
       id: "project-name",
       semanticKeys: ["project_list[].name"],
       roles: ["textbox"],
@@ -78,7 +87,7 @@ const manifest: AtsAdapterManifest = {
     {
       id: "saved-resume",
       semanticKeys: ["resume.attachment"],
-      roles: ["button"],
+      roles: ["textbox"],
       capability: "file-upload",
       decision: "confirm",
       intent: { kind: "saved-resume" },
@@ -148,8 +157,21 @@ function state(projectCount = 1, includeSave = true): PrivacySafePageState {
       safety: "ordinary"
     },
     {
+      ref: "ref_career_plan_1234",
+      role: "checkbox",
+      tag: "input",
+      inputType: "checkbox",
+      semantics: { name: "candidate.has_career_plan", label: "Career plan provided" },
+      disabled: false,
+      readOnly: false,
+      required: false,
+      multiple: false,
+      boundary: "main",
+      safety: "ordinary"
+    },
+    {
       ref: "ref_resume_123456",
-      role: "button",
+      role: "textbox",
       tag: "input",
       inputType: "file",
       semantics: { name: "resume.attachment", label: "Resume" },
@@ -351,6 +373,26 @@ describe("recruitment adapter orchestrator", () => {
       }
     }));
     expect(JSON.stringify(vi.mocked(test.api.wait).mock.calls)).not.toContain("optionText");
+  });
+
+  it("routes toggle intent as a local profile-presence check", async () => {
+    const test = kernel();
+    const orchestrator = new RecruitmentAdapterOrchestrator(test.api, new AtsAdapterRegistry([manifest]));
+    const resolution = await orchestrator.scan(sessionId);
+    if (resolution.status !== "matched") throw new Error("expected adapter match");
+    const outcomes = await orchestrator.executeSelected({
+      sessionId,
+      authorizationId: "action_authorization_123",
+      plan: resolution.plan,
+      selections: [{ controlKey: "ref_career_plan_1234", confirmed: true }]
+    });
+    expect(outcomes[0]).toEqual(expect.objectContaining({ status: "verified" }));
+    expect(test.action).toHaveBeenCalledWith(expect.objectContaining({
+      intent: {
+        kind: "check",
+        source: { kind: "profile-presence", path: "answers.careerPlan" }
+      }
+    }));
   });
 
   it("creates one bounded repeatable row at a time and verifies every new record by rescanning", async () => {

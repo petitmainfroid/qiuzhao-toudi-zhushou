@@ -99,10 +99,16 @@ function profileAction(field: AtsAdapterPlannedField): PageActionIntent | null {
       : null;
   }
   if (field.intent.kind !== "profile-field") return null;
+  if (field.capability === "toggle") {
+    return {
+      kind: "check",
+      source: { kind: "profile-presence", path: field.intent.pathPattern }
+    };
+  }
   const kind: "fill" | "select" = [
     "single-select", "multi-select", "choice"
   ].includes(field.capability) ? "select" : "fill";
-  if (["searchable-combobox", "toggle", "file-upload"].includes(field.capability)) return null;
+  if (["searchable-combobox", "file-upload"].includes(field.capability)) return null;
   return {
     kind,
     source: { kind: "profile", path: field.intent.pathPattern }

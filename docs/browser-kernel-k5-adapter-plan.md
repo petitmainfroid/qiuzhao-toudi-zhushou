@@ -58,20 +58,33 @@ The runtime rejects unknown manifest properties and invalid canonical profile pa
 - Route saved PDF attachment through the existing K4 user-confirmed upload gate.
 - Record parity evidence before removing any old direct mutation path.
 
-Current checkpoint: `AdapterPageBridge` now converts a matched K5 plan into the existing
-side-panel view model. Because K1 deliberately does not expose current page values, every
-fillable proposal is shown as unreadable and confirmation-required; none is preselected.
-The bridge ignores legacy saved remaps, sends only canonical profile paths to kernel actions,
-and routes repeatable creation and saved PDF upload through their K5/K4 authorization gates.
-It remains injectable rather than the production default until ATS-owned manifests are
-registered and the three-family parity evaluator passes.
+Current checkpoint: `AdapterPageBridge` converts a matched K5 plan into the existing side-panel
+view model. Because K1 deliberately does not expose current page values, every fillable proposal
+is shown as unreadable and confirmation-required; none is preselected. The bridge ignores legacy
+saved remaps, sends only canonical profile paths to kernel actions, and routes repeatable creation
+and saved PDF upload through their K5/K4 authorization gates.
+
+The anonymous three-family evaluator now passes in real Chrome. Its 14 planned Ground Truth
+fields map correctly and all 14 supported actions verify by page readback. Coverage includes text,
+textarea, contenteditable, native and searchable selects, radio, a profile-presence checkbox,
+single dates, a two-input date range, same-origin iframe, open Shadow DOM, repeatable add/save,
+and the saved-resume gate. Wrong-control writes and final-submit actions are both zero.
+
+The bridge remains injectable rather than the production default because production ATS manifests
+are owned by the separate ATS/GT branch and are not registered here. Anonymous parity removes the
+evaluation blocker; it does not justify a resolver with no production rules. After those declarative
+assets merge, switch the installed resolver, rerun the same evaluator plus full regression, and only
+then remove the legacy direct mutation path.
 
 ### K5-D — removal and acceptance
 
-- Remove the old `chrome.scripting`/`tabs.sendMessage` mutation route and direct content-script writes.
-- Run three anonymous ATS-family E2E fixtures covering the complete F042 control denominator.
-- Produce an anonymous aggregate report and Organic screenshot.
-- Run full validation/E2E, privacy inspection, commit, push, and stacked Draft PR.
+- [done] Run three anonymous ATS-family E2E fixtures covering the complete F042 control denominator.
+- [done] Produce and inspect an anonymous aggregate report and Organic screenshot.
+- [done] Run full validation/E2E and privacy inspection for the anonymous evaluator node.
+- [pending] Register the production ATS declarations from the separate ATS/GT branch.
+- [pending] Switch the installed resolver and remove the old `chrome.scripting`/`tabs.sendMessage`
+  mutation route only after production-rule parity passes.
+- [pending] Run the final full regression and publish the F042 completion checkpoint.
 
 ## Fixed gates
 

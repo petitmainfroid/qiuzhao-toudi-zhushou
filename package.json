@@ -20,6 +20,7 @@
     "eval:kernel-actions": "playwright test tests/e2e/kernel-actions.spec.ts",
     "eval:kernel-workflows": "playwright test tests/e2e/kernel-workflows.spec.ts",
     "eval:kernel-evidence": "playwright test tests/e2e/kernel-evidence.spec.ts",
+    "eval:kernel-adapters": "node scripts/run-kernel-adapter-eval.mjs",
     "verify:dist": "node scripts/verify-dist.mjs",
     "verify:package": "node scripts/verify-package.mjs",
     "verify:skill": "node scripts/verify-skill.mjs",

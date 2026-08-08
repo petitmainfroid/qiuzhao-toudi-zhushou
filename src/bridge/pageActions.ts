@@ -92,6 +92,11 @@ function actionValue(intent: PageActionIntent, profile: CandidateProfile): strin
   return getProfileValue(profile, intent.source.path).trim();
 }
 
+function checkDesired(intent: Extract<PageActionIntent, { kind: "check" }>, profile: CandidateProfile) {
+  if ("desired" in intent) return intent.desired;
+  return getProfileValue(profile, intent.source.path).trim() ? "checked" : "unchecked";
+}
+
 function validDateRange(start: string, end: string): boolean {
   const canonicalDate = /^\d{4}-\d{2}(?:-\d{2})?$/;
   return canonicalDate.test(start)
@@ -273,6 +278,11 @@ export class PageActionService {
       && request.intent.kind !== "fill-range"
       && !allowedProfilePath(request.intent.source.path)
     ) return staticResult(request, startedAt, this.dependencies.now(), "blocked", "invalid-profile-path");
+    if (
+      request.intent.kind === "check"
+      && "source" in request.intent
+      && !allowedProfilePath(request.intent.source.path)
+    ) return staticResult(request, startedAt, this.dependencies.now(), "blocked", "invalid-profile-path");
 
     const expected = actionValue(request.intent, profile);
     const expectedRange = request.intent.kind === "fill-range"
@@ -306,7 +316,7 @@ export class PageActionService {
       strategy: "primary",
       ...(expected !== undefined ? { expected } : {}),
       ...(expectedRange ? { expectedStart: expectedRange.start, expectedEnd: expectedRange.end } : {}),
-      ...(request.intent.kind === "check" ? { desired: request.intent.desired } : {}),
+      ...(request.intent.kind === "check" ? { desired: checkDesired(request.intent, profile) } : {}),
       ...(request.intent.kind === "click" ? { purpose: request.intent.purpose } : {})
     });
     if (primary.verified) {
@@ -433,6 +443,12 @@ export class ChromePageActionExecutor implements PageActionExecutor {
       return { performed: false, verified: false, strategy: "none", reason: "stale-reference" };
     }
     const outcome = await this.call(session.tabId, target, payload);
+    const structuralRepeatableClick = payload.action === "click"
+      && (payload.purpose === "add-repeatable-record" || payload.purpose === "save-repeatable-record");
+    // Repeatable controls may legitimately disappear or be replaced after a click.
+    // Their verification is the orchestrator's bounded full-page rescan, not survival
+    // of the old backend node. The pre-action inspect and fixed label gate still apply.
+    if (structuralRepeatableClick && outcome.performed && !outcome.reason) return outcome;
     if (!await this.inspect(session, target)) {
       return { performed: outcome.performed, verified: false, strategy: outcome.strategy, reason: "stale-reference" };
     }

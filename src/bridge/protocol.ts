@@ -163,6 +163,7 @@ export type PageActionIntent =
       source: { kind: "profile-range"; startPath: string; endPath: string };
     }
   | { kind: "check"; desired: "checked" | "unchecked" }
+  | { kind: "check"; source: { kind: "profile-presence"; path: string } }
   | { kind: "click"; purpose: "open-control" }
   | {
       kind: "click";
@@ -450,8 +451,16 @@ function isPageActionIntent(value: unknown): value is PageActionIntent {
       && isProfileDateRange(source.startPath, source.endPath);
   }
   if (intent.kind === "check") {
-    return hasExactKeys(intent, ["kind", "desired"])
-      && (intent.desired === "checked" || intent.desired === "unchecked");
+    if (hasExactKeys(intent, ["kind", "desired"])) {
+      return intent.desired === "checked" || intent.desired === "unchecked";
+    }
+    if (!hasExactKeys(intent, ["kind", "source"]) || !intent.source || typeof intent.source !== "object") {
+      return false;
+    }
+    const source = intent.source as { kind?: unknown; path?: unknown };
+    return hasExactKeys(source, ["kind", "path"])
+      && source.kind === "profile-presence"
+      && isProfilePath(source.path);
   }
   if (intent.kind === "click") {
     if (intent.purpose === "open-control" || intent.purpose === "save-repeatable-record") {

@@ -107,6 +107,27 @@ K2–K5 的节点拆分、堆叠分支、动作策略和三类真实 ATS 验收�
 - 误写、提交、第三次尝试、剪贴板、跨 Origin 动作和证据泄露计数全部为 0。
 - `artifacts/kernel-actions-report.json` 只保存匿名聚合与 case ID；`artifacts/kernel-actions.png` 展示无值的 Organic 验收摘要。
 
+## K5（F042）匿名三家族验收证据
+
+### 覆盖范围
+
+1. `anonymous-ats-alpha` 覆盖普通文本、textarea、原生 select 和单日期。
+2. `anonymous-ats-beta` 覆盖 contenteditable、可搜索下拉、radio、由档案字段是否存在驱动的 checkbox，以及同源 iframe。
+3. `anonymous-ats-gamma` 覆盖双输入日期区间、开放 Shadow DOM、重复记录新增/保存和已保存简历 PDF 上传。
+4. 未知企业自定义题保持手动；密码、验证码、身份、同意条款、破坏性动作和最终投递不进入可执行计划。
+
+### 自动化证据
+
+- `npm run eval:kernel-adapters` 在真实 Chrome 中通过 3/3 匿名 ATS 家族。
+- Ground Truth 计划与映射为 14/14，映射精度 100%；支持写入 14/14，主策略和最终回读验证均为 100%。
+- 重复记录新增 1 次、保存 1 次，已保存简历上传 1 次；错误控件写入和最终投递动作均为 0。
+- `npm run validate` 通过 41 个测试文件、325 个测试、生产构建和权限审计；`npm run test:e2e` 通过 25/25 个串行真实 Chrome 用例。
+- `artifacts/kernel-adapters-report.json` 只包含匿名家族、能力、计数、比率和安全标志；`artifacts/kernel-adapters.png` 是 Organic 风格的无个人值验收摘要。
+
+### 尚未完成
+
+匿名三家族证据只证明统一内核和 Adapter 契约可行。生产 ATS 声明仍在独立 ATS/GT 分支，当前安装版侧栏尚未切换默认解析器，旧直接填写路径也尚未删除。完成这两项并重跑全部证据前，F042 保持 `in_progress`；真实招聘网站声明仍只属于 F043。
+
 ## 真实网页验收梯度
 
 - L0：单元测试；无浏览器。

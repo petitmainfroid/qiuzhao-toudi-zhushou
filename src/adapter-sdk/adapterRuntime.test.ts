@@ -50,7 +50,7 @@ function manifest(id: string, hostSuffix: string, marker: string): AtsAdapterMan
       {
         id: "saved-resume",
         semanticKeys: ["resume.attachment"],
-        roles: ["button"],
+        roles: ["textbox"],
         capability: "file-upload",
         decision: "confirm",
         intent: { kind: "saved-resume" },
@@ -137,7 +137,7 @@ describe("ATS adapter runtime", () => {
       control("ref_name_12345678", "candidate.name"),
       control("ref_school_123456", "education_list[2].school"),
       control("ref_gender_123456", "candidate.gender", { role: "combobox", tag: "custom" }),
-      control("ref_resume_123456", "resume.attachment", { role: "button", tag: "button", safety: "file" }),
+      control("ref_resume_123456", "resume.attachment", { inputType: "file", safety: "file" }),
       control("ref_add_education_12", "education_list.add", {
         role: "button",
         tag: "button",
@@ -170,6 +170,9 @@ describe("ATS adapter runtime", () => {
       expect.objectContaining({
         controlKey: "ref_name_12345678",
         label: "candidate.name",
+        role: "textbox",
+        tag: "input",
+        boundary: "main",
         intent: { kind: "profile-field", pathPattern: "basic.fullName" }
       }),
       expect.objectContaining({

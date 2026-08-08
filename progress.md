@@ -1321,3 +1321,27 @@ Run a local field-level audit over the five PDFs to identify missing dates, role
 - Scoped diff and credential-pattern audits found only the nine intended K5 files and no secret material. `git diff --cached --check` passed; the only diagnostics were the repository's existing LF-to-CRLF checkout warnings.
 - Committed the compatibility checkpoint as `734ed426ac357b7759d6d82304387244bb956fe2` (`接入 K5 侧边栏兼容桥`) and pushed `agent/browser-kernel-k5-adapters` to origin.
 - Draft PR #7 remains open against `agent/browser-kernel-k4-evidence` and now contains this checkpoint: `https://github.com/petitmainfroid/qiuzhao-toudi-zhushou/pull/7`.
+
+## 2026-08-08 F042 K5-D anonymous three-family evaluator
+
+### Implementation
+
+- Added three synthetic ATS Ground Truth families and real-Chrome pages in `tests/fixtures/kernel-adapters-ground-truth.ts`. Alpha covers text, textarea, native select and date; beta covers contenteditable, searchable combobox, radio, a profile-presence checkbox and a same-origin iframe; gamma covers a two-input date range, open Shadow DOM, bounded repeatable add/save and the saved-resume PDF gate.
+- Added exact `check` protocol support for `profile-presence`. The bridge resolves only whether a canonical local profile path is non-empty, sends no raw value to the adapter, and rejects unknown properties or invalid paths.
+- Extended planned-field evidence with role, tag and boundary so the evaluator can prove its control-family denominator without exposing selectors, DOM ids, existing page values or candidate values.
+- Corrected saved-resume planning to treat the actual K1 `<input type="file">` role as `textbox`, while the upload still routes exclusively through K4's explicit destination authorization and local saved-file gate.
+- Fixed a real-Chrome repeatable lifecycle defect: after a pre-inspected allowlisted add/save button successfully clicks, the executor no longer converts the action to `stale-reference` merely because the framework replaced or removed that button. The orchestrator still requires a bounded rescan and structural verification before accepting create/save success.
+- Added `tests/e2e/kernel-adapters.spec.ts` and `npm run eval:kernel-adapters`. The evaluator loads the real unpacked extension on routed anonymous HTTPS pages, uses `ChromeRecruitmentKernelApi` plus the registry/orchestrator, performs only user-authorized canonical actions, reads back the page in the test harness, and writes an allowlisted JSON report plus Organic summary screenshot.
+
+### Exact evidence
+
+- `npm run eval:kernel-adapters` exited 0: 3/3 synthetic ATS families passed. Planned/mapping fields were 14/14; supported, primary-verified and final-verified writes were 14/14; mapping precision, primary success and final success were each 100%. Wrong-control writes and final-submit actions were 0. Repeatable create/save were 1/1 and saved-resume upload was 1/1.
+- `npm run validate` exited 0 in 39.1 seconds: TypeScript passed, 41 test files / 325 tests passed, production build completed, 13 required distribution files were present, exact browser-kernel permissions passed, and forbidden permissions were absent.
+- The first full E2E attempt reached the outer 120-second command limit and exited 124 without an assertion failure. It was rerun with a 300-second command window. `npm run test:e2e` then exited 0: 25/25 serial real-Chrome tests passed in 2.3 minutes, including the new K5 adapter evaluator and all K1-K4, privacy, resume, repeatable and Xiaomi-derived no-submit regressions.
+- Inspected `artifacts/kernel-adapters-report.json` (3,034 bytes) and `artifacts/kernel-adapters.png` (72,431 bytes), generated 2026-08-08 14:41 Asia/Shanghai. The report declares `syntheticOnly: true`, contains only anonymous family/capability/count/rate/safety fields, and records `gate.pass: true`. The screenshot follows the Organic palette and shows aggregate/family counts only; it contains no profile value, page value, resume filename, cookie, query string or filled recruitment page.
+
+### Handoff
+
+- Changed implementation/tests: `package.json`, `scripts/run-kernel-adapter-eval.mjs`, `src/adapter-sdk/{contracts,adapterRuntime,orchestrator}.ts` and tests, `src/bridge/{protocol,pageActions}.ts` and tests, `src/sidepanel/adapterPageBridge.test.ts`, `tests/fixtures/kernel-adapters-ground-truth.ts`, and `tests/e2e/kernel-adapters.spec.ts`.
+- Changed evidence/harness: `artifacts/kernel-adapters-report.json`, `artifacts/kernel-adapters.png`, `docs/browser-kernel-k5-adapter-plan.md`, `docs/browser-kernel-acceptance.md`, `feature_list.json`, and `progress.md`.
+- F042 remains `in_progress`. The evaluator completes anonymous three-family parity, but this branch still has no production ATS manifests. Next merge only the declarative ATS assets from the separate ATS/GT branch, register them in the production resolver, switch the installed side panel to `AdapterPageBridge`, prove parity again, and then remove the legacy direct mutation path. Do not claim a live recruitment-site result before F043.

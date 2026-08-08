@@ -132,6 +132,30 @@ describe("embedded bridge protocol validation", () => {
     })).toBe(false);
   });
 
+  it("accepts a profile-backed presence check without accepting a raw boolean or value", () => {
+    const base = {
+      type: "POWER_PAGE_ACTION",
+      requestId: "request_check_1234",
+      authorizationId: "authorization_check_1234",
+      sessionId: "power_session_1234",
+      snapshotId: "state_snapshot_1234",
+      ref: "control_reference_1234",
+      intent: {
+        kind: "check",
+        source: { kind: "profile-presence", path: "answers.careerPlan" }
+      }
+    };
+    expect(isEmbeddedBridgeRequest(base)).toBe(true);
+    expect(isEmbeddedBridgeRequest({
+      ...base,
+      intent: { ...base.intent, desired: "checked" }
+    })).toBe(false);
+    expect(isEmbeddedBridgeRequest({
+      ...base,
+      intent: { ...base.intent, source: { ...base.intent.source, value: true } }
+    })).toBe(false);
+  });
+
   it("accepts only bounded semantic wait conditions", () => {
     const base = {
       type: "POWER_PAGE_WAIT",

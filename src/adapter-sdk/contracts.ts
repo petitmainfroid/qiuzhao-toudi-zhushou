@@ -126,6 +126,9 @@ export interface AtsAdapterPlannedField {
   ruleId: string;
   semanticKey: string;
   label: string;
+  role: PageControlRole;
+  tag: AtsAdapterControlSummary["tag"];
+  boundary: PageControlBoundary;
   capability: AtsControlCapability;
   decision: AtsFieldDecision;
   intent: AtsFieldIntent;

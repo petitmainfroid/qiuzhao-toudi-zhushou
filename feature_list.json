@@ -875,7 +875,7 @@
         "npm run test:e2e",
         "Review docs/browser-kernel-acceptance.md K5 evidence and inspect artifacts/kernel-adapters.png."
       ],
-      "notes": "K5 is in progress in the isolated qiuzhaozhushou-k5 worktree and Draft PR #7. The declarative SDK, pinned orchestration, searchable combobox, date range, repeatable add/save, and an injectable side-panel compatibility bridge are implemented. The installed side panel still defaults to the legacy engine because no production ATS manifests are registered on this branch; do not remove that path before three-family parity evidence. ATS adapters may not carry selectors, arbitrary values, scripts, DOM/CDP ids, or page-action code. The separate ATS/GT worktree remains untouched, and F043 alone owns real-site acceptance claims."
+      "notes": "K5 is in progress in the isolated qiuzhaozhushou-k5 worktree and Draft PR #7. The declarative SDK, pinned orchestration, searchable combobox, date range, profile-backed toggles, repeatable add/save, saved-resume routing, and an injectable side-panel compatibility bridge are implemented. Three synthetic ATS families pass the anonymous real-Chrome evaluator at 14/14 correct mappings and 14/14 verified writes with zero wrong-control writes and zero final-submit actions. The installed side panel still defaults to the legacy engine because production ATS manifests remain owned by the separate ATS/GT branch; merge those declarations before switching the resolver and removing the old direct path. ATS adapters may not carry selectors, arbitrary values, scripts, DOM/CDP ids, or page-action code. F043 alone owns real-site acceptance claims."
     },
     {
       "id": "F043",

@@ -63,7 +63,7 @@ const manifest: AtsAdapterManifest = {
     {
       id: "saved-resume",
       semanticKeys: ["resume.attachment"],
-      roles: ["button"],
+      roles: ["textbox"],
       capability: "file-upload",
       decision: "confirm",
       intent: { kind: "saved-resume" },
@@ -111,7 +111,6 @@ function pageState(projectCount = 1): PrivacySafePageState {
       options: ["Female", "Male"]
     }),
     control("ref_resume_123456", "resume.attachment", {
-      role: "button",
       inputType: "file",
       safety: "file",
       semantics: { name: "resume.attachment", label: "Resume PDF" }

@@ -24,6 +24,7 @@ function profile(): CandidateProfile {
   value.basic.fullName = "Anonymous Candidate";
   value.education[0]!.startDate = "2024-09";
   value.education[0]!.endDate = "2027-06";
+  value.answers.careerPlan = "Anonymous career plan";
   value.projects = [{ ...createProjectRecord(), id: "project-0", name: "Anonymous Project" }];
   return value;
 }
@@ -190,6 +191,32 @@ describe("page action service", () => {
     );
     expect(JSON.stringify(result)).not.toMatch(/2024-09|2027-06|startDate|endDate/);
     expect(executor.keyboardFallback).not.toHaveBeenCalled();
+  });
+
+  it("derives a checkbox target from local profile presence without exposing the value", async () => {
+    vi.mocked(executor.execute).mockResolvedValue({
+      performed: true,
+      verified: true,
+      strategy: "exact-check"
+    });
+    const service = new PageActionService(dependencies);
+    const control = target(registry, { role: "checkbox", tag: "input", inputType: "checkbox" });
+    const authorization = await service.authorize(session, true);
+    const result = await service.act(
+      request(authorization.authorizationId, control.ref, control.snapshotId, {
+        kind: "check",
+        source: { kind: "profile-presence", path: "answers.careerPlan" }
+      }),
+      session
+    );
+
+    expect(result).toEqual(expect.objectContaining({ status: "verified", strategy: "exact-check" }));
+    expect(executor.execute).toHaveBeenCalledWith(
+      session,
+      expect.objectContaining({ backendNodeId: 101 }),
+      { action: "check", strategy: "primary", desired: "checked" }
+    );
+    expect(JSON.stringify(result)).not.toContain(currentProfile.answers.careerPlan);
   });
 
   it("blocks invalid or incomplete profile ranges before executing", async () => {

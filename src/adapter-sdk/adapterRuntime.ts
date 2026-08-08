@@ -290,6 +290,9 @@ export class AtsAdapterRegistry {
           ?? control.semantics.placeholder
           ?? control.semantics.name
           ?? semanticKey,
+        role: control.role,
+        tag: control.tag,
+        boundary: control.boundary,
         capability: rule.capability,
         decision: rule.decision,
         intent,
