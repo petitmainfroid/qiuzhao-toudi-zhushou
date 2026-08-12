@@ -2358,3 +2358,12 @@ No commit or push was performed. There is no blocker for F079–F081. The reposi
 - 集成分支：`agent/zeroext-mvp-base`；运行时 base：`4d39144`；计划 checkpoint：根分支 `16cd189`。下一步从本基线并行启动 F086 Node CDP runtime、F098 AI planner/policy、F100 Independent Annotation/Judge；真实浏览器仍只允许一个执行者串行占用。
 - F097 checkpoint commit 为 `5e87ae4a4cf18f068b68474ba5d4f0e6c2b5fb0a`，已推送至 `origin/agent/zeroext-mvp-base`；Draft PR #10：`https://github.com/petitmainfroid/qiuzhao-toudi-zhushou/pull/10`，base 为已发布的 `agent/ats-observation-core`。PR 保持 Draft，未合并或标 ready。
 - 已从 `5e87ae4` 创建三个干净独立 worktree：F086 `agent/zeroext-f086-runtime` / `C:\Users\jiangbingjian\qiuzhaozhushou-f086`，F098 `agent/zeroext-f098-planner` / `C:\Users\jiangbingjian\qiuzhaozhushou-f098`，F100 `agent/zeroext-f100-evals` / `C:\Users\jiangbingjian\qiuzhaozhushou-f100`；三项状态同步为 `in_progress`，共同 `pr_base=agent/zeroext-mvp-base`。
+
+## 2026-08-12 - Wave 1 F086/F098/F100 集成检查点
+
+- 三个独立 Agent/worktree 分别实现 browser runtime、AI planner/policy 与 real-page Judge；根 Agent 在时间门后中断继续扩写，独立复核并串行 cherry-pick，避免未验证代码直接接触真实页。
+- F086 最小 runtime commit `67f3a5c`（来源 `9b15d3d`）：专属 `packages/browser-runtime` 5/5 测试通过，覆盖动态 loopback、错误 capability、默认 profile 拒绝、URL query/fragment 脱敏、断开/重连 capability 轮换和干净停止。公开 API 无 cookie、credential、selector、任意 JavaScript、raw CDP、upload/save/delete/consent/submit。
+- F098 commit `2e21531`（来源 `56de0eb`）：semantic planner 与 policy compiler 37/37 专属结构化对象测试通过；每个 ref 唯一 decision、完整性、未知 profile path、任意值/selector/脚本/raw CDP/文件/凭证/受保护动作、恶意页面文本、stale epoch、lease 和 deterministic plan id 均覆盖。根 `npm run typecheck` 通过。
+- F100 commit `5b1f370`（来源 `2fb05a8`）：real-page allowlist/Judge 16/16 测试通过，registry/schema verifier 确认严格 8 站、3 schemas、历史 243 定义只作 provenance；localhost、fixture、copied/branded simulation、unknown/ninth site、query identifiers、annotation tampering 和 executor 自报 pass 均拒绝。
+- 真正启动了 Chrome 151.0.7922.75，使用独立 profile `AppData/Local/qiuzhao-workbench/browser-profiles/chrome`、动态 CDP `127.0.0.1:52052` 和独立 runtime capability。打开并规范化真实小米 URL 为 origin `https://xiaomi.jobs.f.mioffice.cn`、path `/internship/resume/:id/apply`；当前停在 `/internship/login`，状态 `login-needed`。未安装本项目扩展、未使用默认 profile、未读取候选人字段值、未写页面、未提交。
+- F098 与 F100 标记 `done`；F086 保持 `in_progress`，因为真实小米 E2 登录后页面识别尚等待用户在专用 Chrome 完成人工登录。后续只读 E3 盘点和 E4 写入不能在登录完成前开始，也不能以模拟页替代。

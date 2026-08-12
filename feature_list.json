@@ -2238,7 +2238,7 @@
     {
       "id": "F098",
       "title": "Build the template-independent AI field planner and local policy compiler",
-      "status": "in_progress",
+      "status": "done",
       "depends_on": [
         "F097"
       ],
@@ -2256,7 +2256,8 @@
       ],
       "notes": "AI/Application Agent owns packages/semantic-planner and packages/policy-compiler. It must not connect to or write a real recruitment page and must not edit browser-runtime, the independent annotation denominator, or shared ledger.",
       "branch": "agent/zeroext-f098-planner",
-      "pr_base": "agent/zeroext-mvp-base"
+      "pr_base": "agent/zeroext-mvp-base",
+      "commit": "2e21531"
     },
     {
       "id": "F099",
@@ -2283,7 +2284,7 @@
     {
       "id": "F100",
       "title": "Build an independent real-page annotation and Judge harness for the eight retained pages",
-      "status": "in_progress",
+      "status": "done",
       "depends_on": [
         "F097"
       ],
@@ -2301,7 +2302,8 @@
       ],
       "notes": "Independent Annotation/Judge Agent owns evals/real-pages and evaluation scripts, never browser or mapping code. Actual E3 annotation requires the user login window and final user review; actual E4 writes remain serial and are not part of this scaffold node.",
       "branch": "agent/zeroext-f100-evals",
-      "pr_base": "agent/zeroext-mvp-base"
+      "pr_base": "agent/zeroext-mvp-base",
+      "commit": "5b1f370"
     }
   ]
 }
