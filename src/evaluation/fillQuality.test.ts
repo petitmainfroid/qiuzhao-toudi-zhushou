@@ -28,13 +28,24 @@ function artifact(): FillQualityObservationArtifact {
         },
         {
           evidenceId: "field-2",
-          fieldKey: "identity",
+          fieldKey: "password",
           expectedAction: "exclude",
           expectedPath: null,
           actualPath: null,
           confidence: "none",
           excludedReason: "sensitive-unsupported",
           actualOutcome: "excluded",
+          valueExact: null
+        },
+        {
+          evidenceId: "field-3",
+          fieldKey: "identity",
+          expectedAction: "confirm",
+          expectedPath: "basic.identityDocumentNumber",
+          actualPath: "basic.identityDocumentNumber",
+          confidence: "high",
+          excludedReason: null,
+          actualOutcome: "confirmation-required",
           valueExact: null
         }
       ],
@@ -73,6 +84,7 @@ describe("fill quality evaluation", () => {
       matching: { precision: 1, recall: 1, f1: 1 },
       filling: { exactRate: 1 },
       exclusions: { correctRate: 1 },
+      confirmations: { correctRate: 1 },
       repeatableCoverage: 1,
       attachmentTargeting: 1,
       safety: { pass: true },
@@ -86,7 +98,7 @@ describe("fill quality evaluation", () => {
     failing.cases[0].fields[0].actualOutcome = "filled";
     failing.cases[0].safety.submitClicks = 1;
     const report = buildFillQualityReport(failing);
-    expect(report.matching).toMatchObject({ truePositive: 0, falsePositive: 1, falseNegative: 1 });
+    expect(report.matching).toMatchObject({ truePositive: 1, falsePositive: 1, falseNegative: 1 });
     expect(report.safety).toEqual({ violationCount: 1, pass: false });
     expect(report.gate.failures).toEqual(expect.arrayContaining([
       "matching-precision",

@@ -1,5 +1,5 @@
-export type ExpectedFieldAction = "fill" | "exclude";
-export type ObservedFieldOutcome = "filled" | "excluded" | "missing" | "unprotected" | "skipped";
+export type ExpectedFieldAction = "fill" | "confirm" | "exclude";
+export type ObservedFieldOutcome = "filled" | "confirmation-required" | "excluded" | "missing" | "unprotected" | "skipped";
 
 export interface FillQualityFieldObservation {
   evidenceId: string;
@@ -81,6 +81,11 @@ export interface FillQualityReport {
     correct: number;
     correctRate: number;
   };
+  confirmations: {
+    expected: number;
+    correct: number;
+    correctRate: number;
+  };
   repeatableCoverage: number;
   attachmentTargeting: number;
   duplicateProposalCount: number;
@@ -147,6 +152,8 @@ export function buildFillQualityReport(input: FillQualityObservationArtifact): F
   let exactFill = 0;
   let expectedExclusions = 0;
   let correctExclusions = 0;
+  let expectedConfirmations = 0;
+  let correctConfirmations = 0;
   let duplicateProposalCount = 0;
   let safetyViolationCount = 0;
 
@@ -154,18 +161,28 @@ export function buildFillQualityReport(input: FillQualityObservationArtifact): F
     duplicateProposalCount += testCase.duplicateProposalCount;
     safetyViolationCount += Object.values(testCase.safety).reduce((sum, count) => sum + count, 0);
     for (const field of testCase.fields) {
-      if (field.expectedAction === "fill") {
-        expectedFill += 1;
+      if (field.expectedAction === "fill" || field.expectedAction === "confirm") {
         if (field.actualPath === field.expectedPath) truePositive += 1;
         else {
           falseNegative += 1;
           if (field.actualPath) falsePositive += 1;
         }
-        if (
+        if (field.expectedAction === "fill") {
+          expectedFill += 1;
+        }
+        if (field.expectedAction === "fill" &&
           field.actualPath === field.expectedPath
           && field.actualOutcome === "filled"
           && field.valueExact === true
-        ) exactFill += 1;
+        ) {
+          exactFill += 1;
+        }
+        if (field.expectedAction === "confirm") {
+          expectedConfirmations += 1;
+          if (field.actualPath === field.expectedPath && field.actualOutcome === "confirmation-required") {
+            correctConfirmations += 1;
+          }
+        }
       }
       else {
         expectedExclusions += 1;
@@ -194,6 +211,7 @@ export function buildFillQualityReport(input: FillQualityObservationArtifact): F
   if (recall < 1) failures.push("matching-recall");
   if (exactFill < expectedFill) failures.push("fill-exactness");
   if (correctExclusions < expectedExclusions) failures.push("unsafe-or-unexplained-exclusion");
+  if (correctConfirmations < expectedConfirmations) failures.push("missing-required-confirmation");
   if (!repeatableChecks.every(Boolean)) failures.push("repeatable-coverage");
   if (!attachmentChecks.every(Boolean)) failures.push("attachment-targeting");
   if (duplicateProposalCount > 0) failures.push("duplicate-proposals");
@@ -221,6 +239,11 @@ export function buildFillQualityReport(input: FillQualityObservationArtifact): F
       expected: expectedExclusions,
       correct: correctExclusions,
       correctRate: ratio(correctExclusions, expectedExclusions)
+    },
+    confirmations: {
+      expected: expectedConfirmations,
+      correct: correctConfirmations,
+      correctRate: ratio(correctConfirmations, expectedConfirmations)
     },
     repeatableCoverage: ratio(repeatableChecks.filter(Boolean).length, repeatableChecks.length),
     attachmentTargeting: ratio(attachmentChecks.filter(Boolean).length, attachmentChecks.length),

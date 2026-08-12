@@ -1,0 +1,198 @@
+{
+  "sourceUrl": "https://talent.lenovo.com.cn/account/resume",
+  "capturedAt": "2026-08-07",
+  "frontendBuild": "v0.0.2",
+  "surface": "PC Element Plus resume editor",
+  "evidenceBoundary": "Ground truth is derived from credential-free production JavaScript components, their validation rules and the public GET /gateway/sysDict/all response. The authenticated rendered DOM was not observed, and no login, candidate-value read, form write, upload, save, or application submission was performed.",
+  "denominators": {
+    "groups": 7,
+    "profileFields": 55,
+    "workflowControls": 2,
+    "referencedRemoteOptionSets": 15,
+    "staticOptionSets": 1
+  },
+  "groups": [
+    {
+      "group": "上传简历",
+      "fieldName": "resume_upload",
+      "required": false,
+      "repeatable": false,
+      "apiMarkers": ["/resumeOther/upload", "/resumeOther/upload/image"],
+      "fields": [
+        {
+          "label": "简历附件",
+          "fieldName": "resumeAttachment",
+          "type": "attachment",
+          "required": true,
+          "requiredScope": "when this optional editor is saved",
+          "accept": [".doc", ".docx", ".pdf"],
+          "limit": 1,
+          "maxBytes": 10485760,
+          "evidenceMarker": ".doc,.docx,.pdf"
+        },
+        {
+          "label": "照片（建议比例：295*413像素）",
+          "fieldName": "resumeAvatar",
+          "displayNameField": "avatarName",
+          "type": "image_attachment",
+          "required": false,
+          "accept": [".jpg", ".png"],
+          "maxBytes": 10485760,
+          "evidenceMarker": "avatarNameLabel"
+        }
+      ],
+      "workflowControls": [
+        {
+          "label": "解析简历并自动填充(自动填充的信息可进行手工调整)",
+          "fieldName": "confirmAnalysis",
+          "type": "checkbox",
+          "required": false,
+          "effect": "requests server-side resume parsing after upload"
+        },
+        {
+          "label": "确认",
+          "fieldName": "confirmBtn",
+          "type": "checkbox",
+          "required": true,
+          "requiredScope": "when this optional editor is saved"
+        }
+      ]
+    },
+    {
+      "group": "个人信息",
+      "fieldName": "resume_info",
+      "required": true,
+      "repeatable": false,
+      "apiMarkers": ["/resume/get", "/resume/update"],
+      "fields": [
+        { "label": "姓", "fieldName": "surname", "evidenceModel": "surname", "type": "text", "required": true },
+        { "label": "名", "fieldName": "givenName", "evidenceModel": "givenName", "type": "text", "required": true },
+        { "label": "性别", "fieldName": "gender", "evidenceModel": "gender", "type": "radio", "required": true, "optionSet": "Gender" },
+        { "label": "出生日期", "fieldName": "birthday", "evidenceModel": "birthday", "type": "month", "required": true, "valueFormat": "YYYY/MM" },
+        { "label": "国家/地区", "fieldName": "country", "evidenceModel": "countryName", "type": "select", "required": true, "optionSet": "country", "desktopMultipleAttribute": true, "mobileComponentMultiple": false },
+        { "label": "证件类型", "fieldName": "certificateType", "evidenceModel": "certificateType", "type": "select", "required": true, "optionSet": "nationalId", "compositeLabel": "个人证件", "requiredEvidence": "composite certificate validator" },
+        { "label": "证件号码", "fieldName": "certificateNo", "evidenceModel": "certificateNo", "type": "text", "required": true, "sensitive": true, "confirmationRequired": true, "compositeLabel": "个人证件", "variants": ["certificateNoNew", "certificateTypeNew"] },
+        { "label": "期望工作地点", "renderedLabel": "期望工作地点（可多选，最多可选择3个城市）", "fieldName": "expectWorkplaceName", "evidenceModel": "expectWorkplaceName", "type": "select", "required": true, "optionSet": "city_portal", "multiple": true, "maxSelections": 3 },
+        { "label": "电子邮箱", "fieldName": "email", "evidenceModel": "email", "type": "email", "required": true },
+        { "label": "手机号", "fieldName": "phone", "evidenceModel": "phone", "type": "text", "required": true },
+        { "label": "微信号", "fieldName": "wechat", "evidenceModel": "wechat", "type": "text", "required": false },
+        { "label": "是否接受岗位调剂", "fieldName": "adjustJob", "evidenceModel": "adjustJob", "type": "radio", "required": true, "optionSet": "yes_no" },
+        { "label": "可接受的岗位类型1", "fieldName": "adjustJobType1", "evidenceModel": "adjustJobType1", "type": "select", "required": true, "optionSet": "jobType", "condition": { "field": "adjustJob", "equals": 1 } },
+        { "label": "可接受的岗位类型2", "fieldName": "adjustJobType2", "evidenceModel": "adjustJobType2", "type": "select", "required": false, "optionSet": "jobType", "condition": { "field": "adjustJob", "equals": 1 } },
+        { "label": "是否曾在联想实习过", "fieldName": "lenovoPractice", "evidenceModel": "lenovoPractice", "type": "radio", "required": true, "optionSet": "yes_no" },
+        { "label": "是否有亲属在联想或联想电讯盈科企业方案工作", "fieldName": "lenovoRelativesFlag", "evidenceModel": "lenovoRelativesFlag", "type": "radio", "required": true, "optionSet": "yes_no" },
+        { "label": "是否参加过联想校园大使", "fieldName": "lenovoCampusAmbassador", "evidenceModel": "lenovoCampusAmbassador", "type": "select", "required": true, "optionSet": "lenovoCampus" }
+      ]
+    },
+    {
+      "group": "教育经历",
+      "fieldName": "educationExperiences",
+      "required": true,
+      "repeatable": true,
+      "apiMarkers": ["/resumeEducation/list", "/resumeEducation/add", "/resumeEducation/update", "/resumeEducation/delete"],
+      "sectionConstraints": ["Fill from undergraduate degree through the highest degree", "A bachelor record is required before higher-degree-only records can satisfy validation"],
+      "fields": [
+        { "label": "学历（请从本科学历填写至最高学历）", "fieldName": "degree", "evidenceModel": "degree", "type": "select", "required": true, "optionSet": "education" },
+        { "label": "培养方式", "fieldName": "cultivationMethod", "evidenceModel": "cultivationMethod", "type": "select", "required": true, "optionSet": "cultivationMethod" },
+        { "label": "学校名称", "fieldName": "university", "evidenceModel": "universityName", "type": "remote_select", "required": true, "optionSet": "school_search" },
+        { "label": "入学时间", "fieldName": "enrollmentTime", "evidenceModel": "enrollmentTime", "type": "month", "required": true, "valueFormat": "YYYY/MM" },
+        { "label": "毕业时间", "fieldName": "graduateTime", "evidenceModel": "graduateTime", "type": "month", "required": true, "valueFormat": "YYYY/MM", "minField": "enrollmentTime" },
+        { "label": "院系", "fieldName": "department", "evidenceModel": "department", "type": "text", "required": true },
+        { "label": "专业", "fieldName": "major", "evidenceModel": "major", "type": "text", "required": true },
+        { "label": "研究方向", "fieldName": "researchArea", "evidenceModel": "researchArea", "type": "text", "required": false },
+        { "label": "年级排名", "fieldName": "ranking", "evidenceModel": "ranking", "type": "select", "required": false, "optionSet": "rank" }
+      ]
+    },
+    {
+      "group": "实习经历",
+      "fieldName": "internExperiences",
+      "required": true,
+      "repeatable": true,
+      "apiMarkers": ["/resumeInternship/list", "/resumeInternship/add", "/resumeInternship/update", "/resumeInternship/delete"],
+      "fields": [
+        { "label": "是否有实习经验", "fieldName": "hasInternship", "evidenceModel": "hasInternship", "type": "select", "required": true, "optionSet": "yes_no" },
+        { "label": "工作单位", "fieldName": "company", "evidenceModel": "company", "type": "text", "required": true, "condition": { "field": "hasInternship", "equals": 1 } },
+        { "label": "行业类别", "fieldName": "industry", "evidenceModel": "industry", "type": "select", "required": true, "optionSet": "industry", "condition": { "field": "hasInternship", "equals": 1 } },
+        { "label": "入职时间", "fieldName": "entryTime", "evidenceModel": "entryTime", "type": "month", "required": true, "valueFormat": "YYYY/MM", "condition": { "field": "hasInternship", "equals": 1 } },
+        { "label": "离职时间", "fieldName": "depatureDate", "evidenceModel": "depatureDate", "type": "month", "required": true, "valueFormat": "YYYY/MM", "minField": "entryTime", "observedSpelling": "depatureDate", "condition": { "field": "hasInternship", "equals": 1 } },
+        { "label": "职位", "fieldName": "position", "evidenceModel": "position", "type": "text", "required": true, "condition": { "field": "hasInternship", "equals": 1 } },
+        { "label": "工作描述", "fieldName": "roleResponsibility", "evidenceModel": "roleResponsibility", "type": "long_text", "required": true, "condition": { "field": "hasInternship", "equals": 1 } }
+      ]
+    },
+    {
+      "group": "项目经验",
+      "fieldName": "projectExperiences",
+      "required": true,
+      "repeatable": true,
+      "apiMarkers": ["/resumeProject/list", "/resumeProject/add", "/resumeProject/update", "/resumeProject/delete"],
+      "fields": [
+        { "label": "是否有项目经验", "fieldName": "hasProject", "evidenceModel": "hasProject", "type": "select", "required": true, "optionSet": "yes_no" },
+        { "label": "项目名称", "fieldName": "projectName", "evidenceModel": "projectName", "type": "text", "required": true, "condition": { "field": "hasProject", "equals": 1 } },
+        { "label": "项目开始时间", "fieldName": "startTime", "evidenceModel": "startTime", "type": "month", "required": true, "valueFormat": "YYYY/MM", "condition": { "field": "hasProject", "equals": 1 } },
+        { "label": "项目结束时间", "fieldName": "endTime", "evidenceModel": "endTime", "type": "month", "required": true, "valueFormat": "YYYY/MM", "minField": "startTime", "condition": { "field": "hasProject", "equals": 1 } },
+        { "label": "项目职责", "fieldName": "roleResponsibility", "evidenceModel": "roleResponsibility", "type": "text", "required": true, "condition": { "field": "hasProject", "equals": 1 } },
+        { "label": "项目描述", "fieldName": "projectIntrodution", "evidenceModel": "projectIntrodution", "type": "long_text", "required": true, "observedSpelling": "projectIntrodution", "condition": { "field": "hasProject", "equals": 1 } }
+      ]
+    },
+    {
+      "group": "技能/爱好",
+      "fieldName": "skillsAndHobbies",
+      "required": true,
+      "repeatable": false,
+      "apiMarkers": ["/resumeSkill/get", "/resumeSkill/update"],
+      "fields": [
+        { "label": "英语等级", "fieldName": "englishLevel", "evidenceModel": "englishLevel", "type": "select", "required": true, "optionSet": "level" },
+        { "label": "英语分数", "fieldName": "englishScore", "evidenceModel": "englishScore", "type": "text", "required": true },
+        { "label": "其他语言", "fieldName": "languageList[].otherLanguage", "evidenceModel": "otherLanguage", "type": "select", "required": false, "repeatableWithinGroup": true, "optionSet": "language" },
+        { "label": "听说能力", "fieldName": "languageList[].listenAndSpeak", "evidenceModel": "listenAndSpeak", "type": "select", "required": false, "repeatableWithinGroup": true, "optionSet": "Proficiency" },
+        { "label": "读写能力", "fieldName": "languageList[].readAndWrite", "evidenceModel": "readAndWrite", "type": "select", "required": false, "repeatableWithinGroup": true, "optionSet": "Proficiency" },
+        { "label": "编程能力", "fieldName": "programmingList[].programAbility", "evidenceModel": "programAbility", "type": "select", "required": false, "repeatableWithinGroup": true, "optionSet": "programming" },
+        { "label": "熟练程度", "fieldName": "programmingList[].proficiencyLevel", "evidenceModel": "proficiencyLevel", "type": "select", "required": false, "repeatableWithinGroup": true, "optionSet": "Proficiency", "occurrence": 1 },
+        { "label": "IT技能", "fieldName": "itList[].itSkills", "evidenceModel": "itSkills", "type": "text", "required": false, "repeatableWithinGroup": true },
+        { "label": "熟练程度", "fieldName": "itList[].proficiencyLevel", "evidenceModel": "proficiencyLevel", "type": "select", "required": false, "repeatableWithinGroup": true, "optionSet": "Proficiency", "occurrence": 2 },
+        { "label": "特长和爱好", "fieldName": "strengthHobby", "evidenceModel": "strengthHobby", "type": "long_text", "required": false }
+      ]
+    },
+    {
+      "group": "其他",
+      "fieldName": "resumeOther",
+      "required": true,
+      "repeatable": false,
+      "apiMarkers": ["/resumeOther/get", "/resumeOther/add", "/resumeOther/update", "/resumeOther/removeInfo"],
+      "fields": [
+        { "label": "从哪儿获知此招聘信息", "fieldName": "informationChannell", "evidenceModel": "informationChannell", "type": "select", "required": true, "optionSet": "InformationChannel", "observedSpelling": "informationChannell" },
+        { "label": "内推码", "fieldName": "referrerItCode", "evidenceModel": "referrerItCode", "type": "text", "required": false },
+        { "label": "其他来源说明", "fieldName": "inputMsg", "evidenceModel": "inputMsg", "type": "text", "required": false, "renderedLabel": "", "condition": { "field": "informationChannell", "equals": 18, "optionLabel": "其他" } },
+        { "label": "自我评价", "fieldName": "selfEvaluation", "evidenceModel": "selfEvaluation", "type": "long_text", "required": false }
+      ]
+    }
+  ],
+  "staticOptionSets": [
+    {
+      "id": "yes_no",
+      "count": 2,
+      "sha256": "5223666a4d20e6d44179d75cd68d488a4b54bdec8397d65076112bc3bdc32517",
+      "options": [
+        { "label": "是", "enLabel": "YES", "value": 1 },
+        { "label": "否", "enLabel": "NO", "value": 0 }
+      ]
+    }
+  ],
+  "remoteOptionSets": [
+    { "dictCode": "level", "count": 11, "sha256": "70ab648c5353e69bd7ed8de61585e20b256ca4ee92555b7fbff52856370f9833", "first": "CET4", "last": "其他" },
+    { "dictCode": "Gender", "count": 2, "sha256": "6222af6c2613c08e798ec15df140b88b72461406fc3705744d8d4ee849eca21f", "first": "男", "last": "女" },
+    { "dictCode": "country", "count": 195, "sha256": "a8f61b1c4cd729c2a41a1e2cc4f309f86888ef46812f280b6a98723f79ae7f5b", "first": "中国大陆", "last": "赞比亚" },
+    { "dictCode": "nationalId", "count": 3, "sha256": "e59391b130c2b2d16590c53c56443ff311c615329df93bcae1548e2614c03e62", "first": "身份证", "last": "护照" },
+    { "dictCode": "city_portal", "count": 19, "sha256": "975551c4d3809afc778f9c169a06773b4cdd70f328ee21127c798182db93d29f", "first": "北京", "last": "海口" },
+    { "dictCode": "jobType", "count": 6, "sha256": "a23c5e8e25af7f4eb4c6e2379acb9b01a2e71dab04fb70bfe3e627cc218fe1b2", "first": "技术方向", "last": "供应链方向" },
+    { "dictCode": "lenovoCampus", "count": 4, "sha256": "6f349ff1ddeeaaacb760cd4a7d064f9d4436ab82f176d396e7664e37b985be7c", "first": "无", "last": "LGC联络官" },
+    { "dictCode": "education", "count": 5, "sha256": "4d9b39f676443a212f177b34d9f10a7add9a98d3a9699587d755a762510afa23", "first": "专科", "last": "博士研究生" },
+    { "dictCode": "cultivationMethod", "count": 5, "sha256": "14b0c498c70671a05a5fb64177eabbed7d49c5373fb7427de7036208119b5bfd", "first": "全日制", "last": "非全日制-广播电视大学（国家开放大学）" },
+    { "dictCode": "rank", "count": 5, "sha256": "49e57c8fb2d1309077af53f8a8c8160bf6e2622f65a532fc37b6e4ada1d5968a", "first": "前5%", "last": "其他" },
+    { "dictCode": "industry", "count": 9, "sha256": "beae671256294105ea938b6afb38c1f5eea1ae10eceec022c1a4c3b31a3adf62", "first": "IT/互联网", "last": "其他" },
+    { "dictCode": "programming", "count": 11, "sha256": "ac5335815bd806636675b017f018ee7a2bc5e8c6d03c618df4326bb7dd74f26a", "first": "JAVA", "last": "golang" },
+    { "dictCode": "Proficiency", "count": 4, "sha256": "148c7dd3be02fc478e4a307dcf9a1d6e04f5e92f00b5fca93b438c1d63ff0c4d", "first": "一般", "last": "精通" },
+    { "dictCode": "language", "count": 9, "sha256": "f08ce127d304aa7b0beb2248bf8ccc77098766b916bad4d75a51369f23e7d317", "first": "日语", "last": "意大利语" },
+    { "dictCode": "InformationChannel", "count": 12, "sha256": "610754dac21b8c1fea805d00c9b25a64dcb445b505909d3d60ef6349c62009cc", "first": "联想校园招聘官网", "last": "其他" }
+  ]
+}

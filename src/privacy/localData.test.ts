@@ -6,6 +6,8 @@ describe("local data portability", () => {
   it("round-trips a versioned profile and mapping bundle", () => {
     const profile = createEmptyProfile();
     profile.basic.fullName = "导入导出验证";
+    profile.basic.identityDocumentType = "居民身份证";
+    profile.basic.identityDocumentNumber = "TEST-ID-000042";
     const serialized = serializeLocalData(profile, [{
       site: "https://jobs.example",
       fingerprint: "text|name",
@@ -15,6 +17,7 @@ describe("local data portability", () => {
     }]);
     const parsed = parseLocalData(serialized);
     expect(parsed.profile.basic.fullName).toBe("导入导出验证");
+    expect(parsed.profile.basic.identityDocumentNumber).toBe("TEST-ID-000042");
     expect(parsed.mappings).toHaveLength(1);
   });
 

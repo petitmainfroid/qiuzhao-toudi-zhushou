@@ -1,0 +1,122 @@
+{
+  "schemaVersion": 1,
+  "id": "nio-feishu-senior-llm-algorithm-application-v1",
+  "company": {
+    "id": "nio",
+    "name": "蔚来",
+    "englishName": "NIO"
+  },
+  "source": {
+    "originPattern": "https://nio.jobs.feishu.cn",
+    "pathTemplate": "/index/resume/:id/apply",
+    "language": "zh-CN",
+    "pageType": "application",
+    "atsFamily": "feishu-recruiting"
+  },
+  "evidence": {
+    "capturedAt": "2026-08-07",
+    "source": "public server-rendered js-websiteInfo.website_info.resume_form_schema",
+    "resumeFormSchemaVersion": 1,
+    "jobTitle": "资深大语言模型算法（上海）",
+    "boundary": "Public server-schema structure only; authenticated rendered-DOM behavior was not observed. No candidate values, authentication data, page write, upload, save, or application submission entered this artifact."
+  },
+  "denominators": {
+    "groups": 7,
+    "logicalFields": 27,
+    "customFields": 7,
+    "configuredYesNoSelects": 3
+  },
+  "groups": [
+    {
+      "label": "简历",
+      "fieldName": "attachment_resume_list",
+      "customized": false,
+      "required": true,
+      "repeatable": false,
+      "fields": [
+        { "label": "简历附件", "fieldName": "attachment_resume", "type": "attachment", "customized": false, "required": true }
+      ]
+    },
+    {
+      "label": "基本信息",
+      "fieldName": "basic_info",
+      "customized": false,
+      "required": true,
+      "repeatable": false,
+      "fields": [
+        { "label": "姓名", "fieldName": "name", "type": "text", "customized": false, "required": true },
+        { "label": "手机号码", "fieldName": "mobile", "type": "text", "customized": false, "required": true },
+        { "label": "邮箱", "fieldName": "email", "type": "text", "customized": false, "required": true },
+        { "label": "工作年限", "fieldName": "experience_years", "type": "number", "customized": false, "required": true },
+        { "label": "所在地点", "fieldName": "current_city", "type": "select", "customized": false, "required": true },
+        { "label": "期望工作地点", "fieldName": "preferred_city_list", "type": "multi_select", "customized": false, "required": true },
+        { "label": "预计入职时间", "fieldName": null, "normalizedKey": "custom.expected_start_date", "type": "text", "customized": true, "required": false }
+      ]
+    },
+    {
+      "label": "教育经历",
+      "fieldName": "education_list",
+      "customized": false,
+      "required": true,
+      "repeatable": true,
+      "fields": [
+        { "label": "学校名称", "fieldName": "school", "type": "text", "customized": false, "required": true },
+        { "label": "学历", "fieldName": "degree", "type": "select", "customized": false, "required": true },
+        { "label": "专业", "fieldName": "field_of_study", "type": "text", "customized": false, "required": true },
+        { "label": "起止时间", "fieldName": "start_end_time", "type": "date_range", "customized": false, "required": true }
+      ]
+    },
+    {
+      "label": "工作经历",
+      "fieldName": "career_list",
+      "customized": false,
+      "required": false,
+      "repeatable": true,
+      "fields": [
+        { "label": "公司名称", "fieldName": "company", "type": "text", "customized": false, "required": true },
+        { "label": "职位名称", "fieldName": "title", "type": "text", "customized": false, "required": true },
+        { "label": "起止时间", "fieldName": "start_end_time", "type": "date_range", "customized": false, "required": true },
+        { "label": "描述", "fieldName": "desc", "type": "long_text", "customized": false, "required": false }
+      ]
+    },
+    {
+      "label": "项目经历",
+      "fieldName": "project_list",
+      "customized": false,
+      "required": false,
+      "repeatable": true,
+      "fields": [
+        { "label": "项目名称", "fieldName": "name", "type": "text", "customized": false, "required": false },
+        { "label": "项目角色", "fieldName": "role", "type": "text", "customized": false, "required": false },
+        { "label": "起止时间", "fieldName": "start_end_time", "type": "date_range", "customized": false, "required": false },
+        { "label": "项目链接", "fieldName": "link", "type": "link", "customized": false, "required": false },
+        { "label": "描述", "fieldName": "desc", "type": "long_text", "customized": false, "required": false }
+      ]
+    },
+    {
+      "label": "自我评价",
+      "fieldName": "self_evaluation",
+      "customized": true,
+      "required": false,
+      "repeatable": false,
+      "fields": [
+        { "label": "自我评价", "fieldName": "self_evaluation", "type": "long_text", "customized": true, "required": false }
+      ]
+    },
+    {
+      "label": "申请信息",
+      "fieldName": null,
+      "normalizedKey": "custom.application_information",
+      "customized": true,
+      "required": false,
+      "repeatable": true,
+      "fields": [
+        { "label": "期望年薪", "fieldName": null, "normalizedKey": "custom.expected_annual_salary", "type": "text", "customized": true, "required": false },
+        { "label": "是否面试过其他NIO岗位（近6个月内）", "fieldName": null, "normalizedKey": "custom.interviewed_nio_last_6_months", "type": "select", "customized": true, "required": false, "options": ["是", "否"] },
+        { "label": "是否曾经就职于NIO", "fieldName": null, "normalizedKey": "custom.former_nio_employee", "type": "select", "customized": true, "required": false, "options": ["是", "否"] },
+        { "label": "如上述问题选择\"是\", 请具体描述", "fieldName": null, "normalizedKey": "custom.former_nio_employee_detail", "type": "long_text", "customized": true, "required": false },
+        { "label": "是否有亲属（包括但不限于直系亲属）就职于NIO", "fieldName": null, "normalizedKey": "custom.relative_at_nio", "type": "select", "customized": true, "required": false, "options": ["是", "否"] }
+      ]
+    }
+  ]
+}

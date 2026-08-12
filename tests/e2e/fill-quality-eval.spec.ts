@@ -9,7 +9,7 @@ import {
 } from "../../src/evaluation/fillQuality";
 
 const genericProfile = {
-  schemaVersion: 2 as const,
+  schemaVersion: 4 as const,
   updatedAt: "",
   basic: {
     fullName: "Synthetic Candidate",
@@ -53,7 +53,7 @@ const genericProfile = {
 };
 
 const xiaomiProfile = {
-  schemaVersion: 2 as const,
+  schemaVersion: 4 as const,
   updatedAt: "",
   basic: {
     fullName: "Synthetic Candidate",
@@ -86,7 +86,7 @@ async function observePage(
   fixtureName: "__qiuzhaoFixture" | "__xiaomiFixture",
   caseId: string,
   profile: typeof genericProfile | typeof xiaomiProfile,
-  specs: Array<{ fieldKey: string; expectedPath: string | null; expectedAction: "fill" | "exclude" }>
+  specs: Array<{ fieldKey: string; expectedPath: string | null; expectedAction: "fill" | "confirm" | "exclude" }>
 ): Promise<{ observation: FillQualityCaseObservation; attachment?: { status: string; candidateCount: number } }> {
   await page.goto(pagePath);
   const result = await page.evaluate(async ({ fixtureName, caseId, profile, specs }) => {
@@ -130,7 +130,11 @@ async function observePage(
         confidence: actual?.confidence ?? "none",
         excludedReason: actual?.excludedReason ?? null,
         actualOutcome: actual
-          ? spec.expectedAction === "exclude" && actual.excludedReason ? "excluded" : "skipped"
+          ? spec.expectedAction === "exclude" && actual.excludedReason
+            ? "excluded"
+            : spec.expectedAction === "confirm" && actual.profilePath && actual.requiresConfirmation
+              ? "confirmation-required"
+              : "skipped"
           : "missing",
         fillReason: null,
         valueExact: null,
@@ -213,7 +217,7 @@ test("fill quality evaluation records synthetic browser ground truth", async ({ 
     "__qiuzhaoFixture",
     "generic-form",
     genericProfile,
-    suite.cases.generic as Array<{ fieldKey: string; expectedPath: string | null; expectedAction: "fill" | "exclude" }>
+    suite.cases.generic as Array<{ fieldKey: string; expectedPath: string | null; expectedAction: "fill" | "confirm" | "exclude" }>
   );
   const xiaomi = await observePage(
     page,
@@ -221,7 +225,7 @@ test("fill quality evaluation records synthetic browser ground truth", async ({ 
     "__xiaomiFixture",
     "xiaomi-form",
     xiaomiProfile,
-    suite.cases.xiaomi as Array<{ fieldKey: string; expectedPath: string | null; expectedAction: "fill" | "exclude" }>
+    suite.cases.xiaomi as Array<{ fieldKey: string; expectedPath: string | null; expectedAction: "fill" | "confirm" | "exclude" }>
   );
 
   await page.goto("/repeatable-fixture.html");
@@ -304,6 +308,7 @@ test("fill quality evaluation records synthetic browser ground truth", async ({ 
   expect(report.matching.recall).toBe(1);
   expect(report.filling.exactRate).toBe(1);
   expect(report.exclusions.correctRate).toBe(1);
+  expect(report.confirmations.correctRate).toBe(1);
   expect(report.repeatableCoverage).toBe(1);
   expect(report.attachmentTargeting).toBe(1);
   expect(report.safety.pass).toBe(true);

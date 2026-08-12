@@ -1,5 +1,5 @@
 {
-  "project_goal": "Build a local-first Chrome/Edge extension where a job seeker maintains one structured profile and can safely preview and fill matching fields on recruitment websites without automatic submission.",
+  "project_goal": "Build a fully local recruitment workbench whose typed MCP/CLI/Web entry points let Codex or another authorized Agent understand, fill, and audit real recruitment pages through an isolated Chrome/Edge CDP session without installing an extension or submitting an application.",
   "features": [
     {
       "id": "F000",
@@ -21,10 +21,12 @@
       "id": "F001",
       "title": "Establish Manifest V3 build and test foundation",
       "status": "done",
-      "depends_on": ["F000"],
+      "depends_on": [
+        "F000"
+      ],
       "acceptance": [
-        "The initial F001 build produced a loadable dist/ with manifest.json, options.html, sidepanel.html, background.js, and content.js; F042 later removed the superseded content.js mutation bundle.",
-        "The initial MVP manifest requested only storage, activeTab, scripting, and sidePanel permissions; F037 expanded the embedded-kernel surface and F042 later removed scripting after K5 parity.",
+        "npm run build produces a loadable dist/ with manifest.json, options.html, sidepanel.html, background.js, and content.js.",
+        "The initial MVP manifest requested only storage, activeTab, scripting, and sidePanel permissions; later F037 may expand this baseline through its own explicit acceptance and privacy review.",
         "Type checking and a smoke unit test pass."
       ],
       "verification": [
@@ -33,13 +35,15 @@
         "npm run build",
         "npm run verify:dist"
       ],
-      "notes": "Use Vite for React pages and esbuild for the isolated background bundle. F042 removed the legacy content-script entry point and cleans dist before every build so stale content.js cannot ship. Keep the extension free of remote runtime code."
+      "notes": "Use Vite for React pages and esbuild for isolated background/content bundles. Keep the extension free of remote runtime code."
     },
     {
       "id": "F002",
       "title": "Define profile schema and local repository",
       "status": "done",
-      "depends_on": ["F001"],
+      "depends_on": [
+        "F001"
+      ],
       "acceptance": [
         "The profile schema covers basic information, education, work experience, projects, job preferences, and reusable self-introduction.",
         "Users can add multiple education, work, and project records.",
@@ -56,7 +60,9 @@
       "id": "F003",
       "title": "Build structured profile editor",
       "status": "done",
-      "depends_on": ["F002"],
+      "depends_on": [
+        "F002"
+      ],
       "acceptance": [
         "The options page edits all MVP profile sections and supports adding/removing repeatable records.",
         "Saving, unsaved state, validation errors, and last-saved feedback are visible.",
@@ -74,7 +80,9 @@
       "id": "F004",
       "title": "Implement deterministic field discovery and matching",
       "status": "done",
-      "depends_on": ["F002"],
+      "depends_on": [
+        "F002"
+      ],
       "acceptance": [
         "The matcher handles input, textarea, select, radio, and contenteditable controls using labels, ARIA text, placeholder, name, id, and nearby context.",
         "Aliases map common Chinese and English recruitment-field names to canonical profile paths.",
@@ -92,7 +100,9 @@
       "id": "F005",
       "title": "Implement safe page scanning and filling",
       "status": "done",
-      "depends_on": ["F004"],
+      "depends_on": [
+        "F004"
+      ],
       "acceptance": [
         "A content script scans the active page only after a user action and returns a preview without changing the form.",
         "Filling supports native controls and dispatches input/change/blur events compatible with controlled web forms.",
@@ -110,7 +120,10 @@
       "id": "F006",
       "title": "Build side-panel preview and fill workflow",
       "status": "done",
-      "depends_on": ["F003", "F005"],
+      "depends_on": [
+        "F003",
+        "F005"
+      ],
       "acceptance": [
         "The side panel shows profile readiness, page scan status, matched/unmatched counts, and confidence groups.",
         "Users can inspect and deselect each proposed fill before applying changes.",
@@ -128,7 +141,9 @@
       "id": "F007",
       "title": "Add correction memory and privacy controls",
       "status": "done",
-      "depends_on": ["F006"],
+      "depends_on": [
+        "F006"
+      ],
       "acceptance": [
         "A user can override a suggested canonical field and reuse that mapping for the same site and field fingerprint.",
         "Users can export, import, and permanently delete locally stored profile and mapping data.",
@@ -145,7 +160,11 @@
       "id": "F008",
       "title": "Create representative recruitment-form fixture and end-to-end evidence",
       "status": "done",
-      "depends_on": ["F005", "F006", "F007"],
+      "depends_on": [
+        "F005",
+        "F006",
+        "F007"
+      ],
       "acceptance": [
         "A local fixture includes ordinary inputs, custom-looking selects, radio choices, dynamic fields, ambiguous labels, a file input, a password trap, and a submit button.",
         "End-to-end tests exercise profile save, preview, selective fill, correction memory, and deletion.",
@@ -162,7 +181,9 @@
       "id": "F009",
       "title": "Package MVP and write operator documentation",
       "status": "done",
-      "depends_on": ["F008"],
+      "depends_on": [
+        "F008"
+      ],
       "acceptance": [
         "README documents setup, development, unpacked installation, use, privacy boundaries, limitations, and troubleshooting.",
         "npm run package creates a distributable zip from a freshly verified build.",
@@ -179,7 +200,9 @@
       "id": "F010",
       "title": "Harden field coverage against the Xiaomi internship application form",
       "status": "done",
-      "depends_on": ["F009"],
+      "depends_on": [
+        "F009"
+      ],
       "acceptance": [
         "A traceable inventory records the Xiaomi form labels, control types, required state, dynamic sections, and login boundary observed from the supplied real URL.",
         "The profile schema and deterministic matcher cover the reusable Xiaomi fields that are safe and technically fillable, while files, verification, identity-sensitive, and final-submit controls remain confirmation-required or excluded.",
@@ -198,7 +221,10 @@
       "id": "F011",
       "title": "Parse an uploaded resume into the existing profile form",
       "status": "done",
-      "depends_on": ["F003", "F010"],
+      "depends_on": [
+        "F003",
+        "F010"
+      ],
       "acceptance": [
         "The existing profile editor has one clearly labelled resume-upload control that accepts PDF and DOCX files, rejects unsupported or oversized files, and parses only after the user's file-selection gesture.",
         "PDF and DOCX text extraction runs entirely in the extension page without network calls; the resume file, raw extracted text, site passwords, and authentication cookies are never persisted.",
@@ -220,7 +246,9 @@
       "id": "F012",
       "title": "Harden internship and project parsing against real local resumes",
       "status": "done",
-      "depends_on": ["F011"],
+      "depends_on": [
+        "F011"
+      ],
       "acceptance": [
         "A privacy-safe audit covers all five resume-like PDF files currently present in the user's Downloads folder, identifying samples only by short content digest and never copying source files, filenames, raw text, or personal values into the repository.",
         "For every audited sample whose extracted text visibly contains internship/work or project section evidence, the parser returns the manually verified number of corresponding records instead of silently returning an empty array.",
@@ -241,8 +269,10 @@
     {
       "id": "F013",
       "title": "Verify field-level resume completeness and profile-form placement",
-        "status": "done",
-      "depends_on": ["F012"],
+      "status": "done",
+      "depends_on": [
+        "F012"
+      ],
       "acceptance": [
         "A visual field inventory is defined for all five digest-identified local resumes, covering every clearly present field supported by the profile schema rather than only counting work and project records.",
         "Every expected work and project record is checked field by field for evidence-backed organization/name, role when present, start/end dates when present at month precision, and non-empty description without neighboring-section leakage.",
@@ -265,7 +295,10 @@
       "id": "F014",
       "title": "Establish real-page acceptance for Agent Reach and OpenCLI control",
       "status": "blocked",
-      "depends_on": ["F010", "F013"],
+      "depends_on": [
+        "F010",
+        "F013"
+      ],
       "acceptance": [
         "A source-bound validation document separates evidence from the live Xiaomi public schema, an authenticated real-tab read-only scan, a user-confirmed real-tab selective fill, and the Xiaomi-derived local regression; local fixtures never count as proof that the live page worked.",
         "An executable preflight reports the installed OpenCLI version, daemon availability, Browser Bridge connection, exact target URL eligibility, and this extension's permission boundary without starting a daemon, installing software, reading cookies, reading page values, or mutating a browser profile.",
@@ -290,7 +323,11 @@
       "id": "F015",
       "title": "Compare the local profile with current page values without leaking them",
       "status": "done",
-      "depends_on": ["F005", "F006", "F013"],
+      "depends_on": [
+        "F005",
+        "F006",
+        "F013"
+      ],
       "acceptance": [
         "A user-triggered scan classifies every mapped readable control as empty, equal, conflicting, or unreadable using deterministic field-aware normalization.",
         "The scan result, agent protocol, logs, tests, and screenshots expose the comparison class but never return, persist, or record the current webpage value.",
@@ -310,7 +347,9 @@
       "id": "F016",
       "title": "Build a traceable all-source field coverage matrix",
       "status": "done",
-      "depends_on": ["F015"],
+      "depends_on": [
+        "F015"
+      ],
       "acceptance": [
         "A durable matrix records the union of evidence-backed fields from the structured profile, resume parser, and audited recruitment pages, with source, sensitivity, control kind, normalization, and support state.",
         "The profile schema and editor add only fields proven by a resume or audited page; missing facts are never fabricated and migrations preserve existing local data.",
@@ -328,7 +367,9 @@
       "id": "F017",
       "title": "Create missing repeatable form records before filling",
       "status": "done",
-      "depends_on": ["F016"],
+      "depends_on": [
+        "F016"
+      ],
       "acceptance": [
         "The assistant compares profile record counts with visible education, work, project, award, language, and work-sample groups.",
         "It can invoke only section-local, high-confidence add controls to create missing rows, with a strict count bound and a rescan after each structural change.",
@@ -346,7 +387,10 @@
       "id": "F018",
       "title": "Harden complex recruitment controls and verified writes",
       "status": "done",
-      "depends_on": ["F016", "F017"],
+      "depends_on": [
+        "F016",
+        "F017"
+      ],
       "acceptance": [
         "Deterministic adapters cover audited date ranges, searchable and cascading selects, radio groups, multi-selects, and rich-text fields.",
         "Every write dispatches framework-compatible events and is verified by rereading the control state without exposing its raw value outside the page context.",
@@ -364,7 +408,9 @@
       "id": "F019",
       "title": "Prove a safe architecture for resume PDF attachment",
       "status": "done",
-      "depends_on": ["F015"],
+      "depends_on": [
+        "F015"
+      ],
       "acceptance": [
         "A threat model and executable prototype compare an extension-memory File flow with a narrowly scoped OpenCLI/DevTools attachment token without adding broad permissions to the assistant.",
         "The chosen path requires a user-selected PDF, validates MIME type, size, and digest, retains no arbitrary filesystem path, and keeps bytes out of logs and persistent extension storage.",
@@ -382,7 +428,9 @@
       "id": "F020",
       "title": "Implement user-confirmed resume PDF attachment",
       "status": "done",
-      "depends_on": ["F019"],
+      "depends_on": [
+        "F019"
+      ],
       "acceptance": [
         "The user selects one PDF for the current session and sees filename, size, digest prefix, destination site, and matched resume control before approval.",
         "One action-time confirmation authorizes one page-bound attachment attempt for one exact file digest and expires within one minute.",
@@ -401,7 +449,12 @@
       "id": "F021",
       "title": "Turn real-page failures into privacy-safe regression improvements",
       "status": "todo",
-      "depends_on": ["F015", "F017", "F018", "F020"],
+      "depends_on": [
+        "F015",
+        "F017",
+        "F018",
+        "F020"
+      ],
       "acceptance": [
         "Each run emits only structural counters and failure codes for matching, comparison, add-row, control, permission, attachment, and navigation failures.",
         "A documented workflow converts a real failure into an anonymized local fixture, one scoped repair, targeted tests, full validation, and a progress handoff.",
@@ -419,7 +472,10 @@
       "id": "F022",
       "title": "Complete multi-site non-submitting acceptance and package the workflow",
       "status": "todo",
-      "depends_on": ["F014", "F021"],
+      "depends_on": [
+        "F014",
+        "F021"
+      ],
       "acceptance": [
         "At least three structurally different recruitment systems complete scan, redacted comparison, selected fill, repeatable-row, and supported attachment gates with exact evidence.",
         "Every real-site run proves zero final-submit clicks and zero application-submission requests, with sensitive and conflicting fields left unchanged unless individually approved.",
@@ -438,7 +494,10 @@
       "id": "F023",
       "title": "Expand resume extraction with the current local resume corpus",
       "status": "done",
-      "depends_on": ["F013", "F017"],
+      "depends_on": [
+        "F013",
+        "F017"
+      ],
       "acceptance": [
         "A privacy-safe inventory covers every resume-like PDF/DOCX currently found in the user's Downloads folder, identifies real samples only by short content digest in repository evidence, and never commits filenames, source files, raw text, or personal values.",
         "Every newly discovered layout is visually reviewed and audited field by field against the supported profile schema, including basic information, education, work/internships, projects, awards, languages, skills, and descriptions.",
@@ -458,7 +517,10 @@
       "id": "F024",
       "title": "Publish a Chinese operator guide and installable Codex skill",
       "status": "done",
-      "depends_on": ["F009", "F023"],
+      "depends_on": [
+        "F009",
+        "F023"
+      ],
       "acceptance": [
         "The public README gives Chinese end users a release-download path, unpacked Chrome/Edge loading steps, first-use workflow, activeTab recovery, privacy boundaries, and contributor commands.",
         "A repository-local Codex skill can guide safe installation, build, page authorization, resume import, preview, selective filling, and troubleshooting without exposing a final-submit, verification-bypass, credential, cookie, or arbitrary-file action.",
@@ -479,7 +541,9 @@
       "id": "F025",
       "title": "Complete real-machine recruitment-site resume attachment acceptance",
       "status": "blocked",
-      "depends_on": ["F020"],
+      "depends_on": [
+        "F020"
+      ],
       "acceptance": [
         "The unpacked extension is refreshed in the user's ordinary Chrome or Edge profile, the authenticated recruitment tab receives activeTab from a physical toolbar click, and the side panel discovers exactly one high-confidence resume PDF control on the expected HTTPS Origin.",
         "Before confirmation, a 30-second observation proves no attachment request and the target input remains empty; the UI shows only the exact user-selected PDF filename, size, digest prefix, HTTPS Origin, and matched control.",
@@ -498,7 +562,11 @@
       "id": "F026",
       "title": "Build a privacy-safe fill-quality evaluation harness",
       "status": "done",
-      "depends_on": ["F015", "F017", "F020"],
+      "depends_on": [
+        "F015",
+        "F017",
+        "F020"
+      ],
       "acceptance": [
         "A versioned synthetic browser suite measures field-match precision and recall, selected-fill exactness, repeatable-record coverage, attachment targeting, and critical safety invariants against explicit ground truth rather than an LLM opinion.",
         "The evaluation artifact contains only synthetic labels, canonical profile paths, confidence/reason codes, boolean outcomes, aggregate metrics, and safety counters; it contains no resume text, personal value, raw page value, HTML, screenshot, path, cookie, token, or authentication data.",
@@ -518,7 +586,9 @@
       "id": "F027",
       "title": "Calibrate DeepSeek V4 Flash as a shadow fill-quality reviewer",
       "status": "done",
-      "depends_on": ["F026"],
+      "depends_on": [
+        "F026"
+      ],
       "acceptance": [
         "The configured model is called only through a verified HTTPS endpoint using temperature zero and a bounded structured-output prompt over the synthetic evaluation artifact.",
         "Calibration examples include known-good behavior, an incorrect field match, a missed fill, and a critical unsafe mutation; judge detection is scored independently from product accuracy.",
@@ -537,7 +607,10 @@
       "id": "F028",
       "title": "Promote one evidence-backed fill-quality improvement",
       "status": "todo",
-      "depends_on": ["F026", "F027"],
+      "depends_on": [
+        "F026",
+        "F027"
+      ],
       "acceptance": [
         "The highest-impact reproducible failure is reduced to one anonymized fixture and one narrowly scoped deterministic matcher, parser, control-adapter, or workflow candidate change.",
         "Baseline-versus-candidate evaluation shows the target failure fixed, no precision or critical-safety regression, and an explicit rollback commit or patch.",
@@ -557,7 +630,10 @@
       "id": "F029",
       "title": "Audit resume extraction completeness and correctness with DeepSeek",
       "status": "done",
-      "depends_on": ["F023", "F027"],
+      "depends_on": [
+        "F023",
+        "F027"
+      ],
       "acceptance": [
         "A development-only browser audit reads the current local PDF/DOCX resume corpus, identifies samples only by short digest, and compares numbered redacted source lines with the deterministic parsed profile without changing the extension runtime.",
         "Direct identifiers including names, phone numbers, email addresses, identity numbers, URLs, street addresses, filenames, and filesystem paths are removed before any HTTPS request; the API key, cookies, authentication data, raw files, and unredacted resume text are never persisted or logged.",
@@ -578,7 +654,9 @@
       "id": "F030",
       "title": "Promote one evidence-backed maximum-coverage resume extraction improvement",
       "status": "done",
-      "depends_on": ["F029"],
+      "depends_on": [
+        "F029"
+      ],
       "acceptance": [
         "The highest-impact DeepSeek candidate is verified against local source structure and reduced to one synthetic fixture containing no personal values.",
         "A narrowly scoped deterministic parser or schema change increases supported-field recall on the fixture and affected digest while preserving no-fabrication, conflict-preserving merge behavior, and neighboring-section isolation.",
@@ -599,7 +677,9 @@
       "id": "F031",
       "title": "Prevent contact headers and activities from leaking into structured records",
       "status": "todo",
-      "depends_on": ["F030"],
+      "depends_on": [
+        "F030"
+      ],
       "acceptance": [
         "A contact header containing email, phone, portfolio URL, and social account may create an evidenced link but never becomes a work-sample description or another narrative field.",
         "A dated team, club, or extracurricular role outside an award section does not become an award or education record, while explicit competition results remain extractable as awards.",
@@ -620,7 +700,9 @@
       "id": "F032",
       "title": "Recover substantive project titles and wrapped project content",
       "status": "todo",
-      "depends_on": ["F030"],
+      "depends_on": [
+        "F030"
+      ],
       "acceptance": [
         "Generic labels such as paper/project ordinals are replaced by an explicitly evidenced substantive title when present on the same source record.",
         "Wrapped title, description, outcome, role, and date lines stay on the correct project without creating body-text projects or crossing section boundaries.",
@@ -640,7 +722,9 @@
       "id": "F033",
       "title": "Associate education metrics and records without award leakage",
       "status": "todo",
-      "depends_on": ["F030"],
+      "depends_on": [
+        "F030"
+      ],
       "acceptance": [
         "GPA and ranking lines attach to the evidenced education record rather than a later admission or award line.",
         "Award prose mentioning a university, GPA, or rank cannot create a new education record without a school-and-date education header.",
@@ -660,7 +744,9 @@
       "id": "F034",
       "title": "Persist one reusable PDF resume locally",
       "status": "done",
-      "depends_on": ["F025"],
+      "depends_on": [
+        "F025"
+      ],
       "acceptance": [
         "Selecting a valid PDF in the profile editor stores one reusable copy in extension-local IndexedDB with filename, MIME type, byte length, SHA-256 digest, and save time; selecting a new PDF replaces the previous copy.",
         "The saved PDF is restored after the options page or side panel is reopened, and can be attached to a uniquely identified recruitment-page resume control without reopening the operating-system file picker.",
@@ -680,7 +766,9 @@
       "id": "F035",
       "title": "Recognize the saved-resume target on a real ATS upload wrapper",
       "status": "done",
-      "depends_on": ["F034"],
+      "depends_on": [
+        "F034"
+      ],
       "acceptance": [
         "A bound authenticated Xiaomi application tab is audited read-only and records only the exact HTTPS Origin/path pattern, file-control counts, non-personal structural attributes, accepted extensions, resume/forbidden signal booleans, and submit-control count; it never reads input values, filenames, cookies, tokens, or personal page text.",
         "The deterministic attachment scanner recognizes the real Xiaomi shape where the file input has no label, name, id, ARIA text, placeholder, or form-field attribute and the resume signal exists only in the nearest `.atsx-upload-btn`/`.atsx-upload-drag` wrapper.",
@@ -701,7 +789,9 @@
       "id": "F036",
       "title": "Confirm one saved PDF attachment on an authenticated real recruitment page",
       "status": "blocked",
-      "depends_on": ["F035"],
+      "depends_on": [
+        "F035"
+      ],
       "acceptance": [
         "The user grants activeTab from the exact authenticated recruitment tab and the installed extension shows the already-saved PDF plus the exact HTTPS destination and unique resume control without reopening the operating-system picker.",
         "Before confirmation, the page file control and attachment network count remain unchanged; after the user's explicit confirmation, exactly one intended resume attachment attempt occurs and the page reports accepted or a bounded server rejection.",
@@ -720,11 +810,14 @@
       "id": "F037",
       "title": "Build the embedded browser-session kernel",
       "status": "done",
-      "depends_on": ["F018", "F035"],
+      "depends_on": [
+        "F018",
+        "F035"
+      ],
       "acceptance": [
         "Users install only the autumn-recruitment assistant; no OpenCLI CLI, daemon, Browser Bridge, local service, or second extension is required for persistent browser access.",
         "The extension embeds an Apache-2.0-attributed CDP transport and a user-gesture-created session that pins one HTTPS recruitment tab, survives same-Origin navigation, expires, detaches, and fails closed on an Origin change or debugger conflict.",
-        "The K0 manifest permission surface was exact, documented, and tested: debugger, tabs, webNavigation, alarms, activeTab, scripting, sidePanel, storage, and <all_urls>; F042 later removed scripting with the legacy mutation route while preserving the embedded kernel.",
+        "The expanded manifest permission surface is exact, documented, and tested: debugger, tabs, webNavigation, alarms, activeTab, scripting, sidePanel, storage, and <all_urls>; cookies, downloads, tabGroups, arbitrary eval, password/CAPTCHA/identity automation, and final submission remain absent.",
         "The bridge status exposes only the pinned Origin/path, lifecycle timestamps, interactive-control count, frame count, and typed reason; raw page values, cookies, credentials, and resume bytes never enter status or logs.",
         "A browser E2E launches only the built assistant, starts and stops an embedded session on an anonymous HTTPS page, verifies CDP structural state and same-Origin continuity, and proves a cross-Origin transition or final-submit attempt is not silently executed."
       ],
@@ -735,13 +828,15 @@
         "Inspect a current artifacts/embedded-bridge.png screenshot and confirm the visible session status does not contain page values or credentials.",
         "Review THIRD_PARTY_NOTICES.md and third_party/opencli/LICENSE."
       ],
-      "notes": "Completed on 2026-08-06 as K0 in docs/browser-kernel-acceptance.md. The one-extension CDP session pins one credential-free HTTPS Origin for 10 minutes, exposes only Origin/path/counts, survives same-Origin navigation, and detaches on cross-Origin, expiry, close, or conflict. Apache-2.0 attribution and license ship in dist/package. Final validation passed 28 files / 233 tests; full Chrome E2E passed 20/20 including a real debugger session on an anonymous HTTPS page with same-Origin continuity, cross-Origin pause, and zero final submissions; artifacts/embedded-bridge.png was visually inspected. F042 later removed the scripting permission and content-script mutation channel; the typed debugger-backed kernel remains the only production page-operation route. The Node CLI/daemon, second extension, raw evaluation, cookies, network capture, downloads, arbitrary path upload, CAPTCHA/identity automation, and final submission are absent."
+      "notes": "Completed on 2026-08-06 as K0 in docs/browser-kernel-acceptance.md. The one-extension CDP session pins one credential-free HTTPS Origin for 10 minutes, exposes only Origin/path/counts, survives same-Origin navigation, and detaches on cross-Origin, expiry, close, or conflict. Apache-2.0 attribution and license ship in dist/package. Final validation passed 28 files / 233 tests; full Chrome E2E passed 20/20 including a real debugger session on an anonymous HTTPS page with same-Origin continuity, cross-Origin pause, and zero final submissions; artifacts/embedded-bridge.png was visually inspected. The Node CLI/daemon, second extension, raw evaluation, cookies, network capture, downloads, arbitrary path upload, CAPTCHA/identity automation, and final submission are absent."
     },
     {
       "id": "F038",
       "title": "Implement privacy-safe page state and semantic find",
       "status": "done",
-      "depends_on": ["F037"],
+      "depends_on": [
+        "F037"
+      ],
       "acceptance": [
         "The kernel returns a privacy-safe accessibility/DOM structure with opaque stable references and never returns current input values.",
         "Find locates controls by role, label, name, placeholder, and nearby text across supported frames and open shadow roots.",
@@ -758,7 +853,9 @@
       "id": "F039",
       "title": "Implement verified browser action primitives",
       "status": "done",
-      "depends_on": ["F038"],
+      "depends_on": [
+        "F038"
+      ],
       "branch": "agent/browser-kernel-k2-actions",
       "pr_base": "agent/browser-kernel-k1-baseline",
       "acceptance": [
@@ -813,7 +910,9 @@
       "id": "F040",
       "title": "Add waits, same-Origin navigation, and idempotent workflow control",
       "status": "done",
-      "depends_on": ["F039"],
+      "depends_on": [
+        "F039"
+      ],
       "branch": "agent/browser-kernel-k3-workflows",
       "pr_base": "agent/browser-kernel-k2-actions",
       "acceptance": [
@@ -824,20 +923,22 @@
         "The fixed anonymous HTTPS/real-Chrome denominator contains 12 successful waits/workflow transitions, 6 bounded timeout or safety failures, and 4 idempotency cases. All 12 positives and all 10 negative/idempotency gates must pass; duplicate side effects, cross-Origin continuation, infinite waits, stale-reference writes, arbitrary selectors, third attempts, final submissions, and forbidden evidence leaks are zero."
       ],
       "verification": [
-                             "npm run eval:kernel-workflows",
-                             "npm test -- --run src/bridge src/background src/content/pageDriver.test.ts",
-                             "Run dynamic-form, timeout, duplicate-command, conflicting-request, and service-worker-restart recovery cases.",
-                             "npm run validate",
-                             "npm run test:e2e",
-                             "Inspect artifacts/kernel-workflows.png and the idempotency report."
-                         ],
+        "npm run eval:kernel-workflows",
+        "npm test -- --run src/bridge src/background src/content/pageDriver.test.ts",
+        "Run dynamic-form, timeout, duplicate-command, conflicting-request, and service-worker-restart recovery cases.",
+        "npm run validate",
+        "npm run test:e2e",
+        "Inspect artifacts/kernel-workflows.png and the idempotency report."
+      ],
       "notes": "K3 completed 2026-08-07 on agent/browser-kernel-k3-workflows. Implementation commit 4294bf8e8515a70859d7f015a723a85a840f3447 is pushed and Draft PR #5 targets agent/browser-kernel-k2-actions. The fixed real-Chrome result is 12/12 positive, 6/6 bounded failure, 4/4 idempotency, with all RED counts zero; validate passed 33 files/270 tests and full E2E passed 23/23. Infinite waits, cross-Origin continuation, cookies, network bodies, arbitrary navigation, clipboard fallback, final submission, and unbounded recovery remain excluded."
     },
     {
       "id": "F041",
       "title": "Add user-confirmed upload, screenshots, logs, and typed errors",
       "status": "done",
-      "depends_on": ["F040"],
+      "depends_on": [
+        "F040"
+      ],
       "branch": "agent/browser-kernel-k4-evidence",
       "pr_base": "agent/browser-kernel-k3-workflows",
       "acceptance": [
@@ -859,7 +960,9 @@
       "id": "F042",
       "title": "Expose a stable kernel API for recruitment adapters",
       "status": "done",
-      "depends_on": ["F041"],
+      "depends_on": [
+        "F041"
+      ],
       "branch": "agent/browser-kernel-k5-adapters",
       "pr_base": "agent/browser-kernel-k4-evidence",
       "acceptance": [
@@ -881,7 +984,9 @@
       "id": "F043",
       "title": "Prove three-family real-page non-submitting write acceptance",
       "status": "done",
-      "depends_on": ["F042"],
+      "depends_on": [
+        "F042"
+      ],
       "branch": "agent/browser-kernel-real-site-acceptance",
       "pr_base": "agent/browser-kernel-k5-adapters",
       "acceptance": [
@@ -901,6 +1006,1296 @@
         "Record branch, commit, draft PR, exact denominators, rates, typed failures, blockers, and zero-submit evidence in progress.md."
       ],
       "notes": "Completed on 2026-08-08 in isolated worktree qiuzhaozhushou-f043. User-authorized live L2/L3 acceptance covered Xiaomi/Feishu, Huya/Moka and Ctrip/custom ATS: 17/17 supported approved ordinary fields verified on the primary strategy, 0 fallback writes, 0 selected skips, 0 wrong-control writes and 0 protected or final-submit actions. Exact label/placeholder fallback is permitted only on reviewed routes when technical names are unavailable; ambiguous cross-section labels still fail closed. The privacy-safe aggregate report is artifacts/live-browser-kernel-report.json."
+    },
+    {
+      "id": "F044",
+      "title": "Build the privacy-safe ATS observation core",
+      "status": "done",
+      "depends_on": [
+        "F038"
+      ],
+      "branch": "agent/ats-observation-core",
+      "pr_base": "agent/browser-kernel-k1-baseline",
+      "acceptance": [
+        "A standalone src/ats module exposes versioned ATS observation, family-detection, and human ground-truth contracts without importing UI, storage, chrome.debugger, arbitrary DOM selectors, or page-action code.",
+        "The module converts an existing PrivacySafePageState into a shareable observation using an allowlist: session snapshot IDs and opaque references are removed; HTTPS Origin is credential-free; path IDs and tokens are templated; semantic text, technical names, and option captions are bounded and redacted.",
+        "A deterministic family registry accepts only privacy-safe detection context, validates detector IDs, versions, confidence, and bounded evidence, resolves ties deterministically, and returns an explicit generic-html fallback when no detector clears the threshold.",
+        "A fail-closed audit rejects forbidden keys or payloads including current values, selected/checked state, raw HTML, selectors, DOM/CDP IDs, query values, cookies, credentials, headers, bodies, file metadata, local paths, base64 payloads, personal email/phone/identity values, inconsistent summaries, and duplicate control keys.",
+        "Unit tests prove successful anonymous export, malicious-input redaction, deterministic family selection and fallback, and rejection of forbidden or structurally inconsistent reports; no site-specific adapter, page mutation, new browser permission, network call, telemetry, upload, or final-submit capability is added."
+      ],
+      "verification": [
+        "npm test -- --run src/ats",
+        "npm run typecheck",
+        "npm run validate",
+        "Parse feature_list.json and run git diff --check."
+      ],
+      "notes": "Completed on agent/ats-observation-core. Targeted ATS tests passed (3 files / 8 tests), typecheck passed, and full validation passed (33 Vitest files / 247 tests, production build, 13-file distribution audit, permissions unchanged). Production static review found no executable browser, DOM, network, storage, action, upload, telemetry, or submit capability. This remains a read-only foundation; concrete ATS detectors, export UI, corpus persistence, and site adapters require separate accepted features. F039 remains isolated on agent/browser-kernel-k2-actions and was not modified by this branch."
+    },
+    {
+      "id": "F045",
+      "title": "Establish the privacy-safe ATS corpus and deterministic importer",
+      "status": "done",
+      "depends_on": [
+        "F044"
+      ],
+      "branch": "agent/ats-observation-core",
+      "acceptance": [
+        "A repository-owned ats-corpus directory defines a versioned, exact JSON Schema for privacy-safe observations plus developer annotations for reviewed family, canonical field, section, expected action/driver/verification, and allowlisted control behaviors.",
+        "A local development command accepts one explicitly selected JSON file, enforces a bounded file size, parses raw F044 observations or corpus envelopes, validates the exact schema and cross-field invariants, and runs a fail-closed privacy audit before any repository write.",
+        "Successful imports use a normalized allowlisted family directory and a deterministic page-type plus structural-digest filename; capture time does not create duplicates, duplicate imports are idempotent, and an existing conflicting file is never overwritten.",
+        "A corpus verification command checks every committed sample for schema, privacy, annotation/control-key consistency, deterministic directory and filename placement, duplicate structural digests, and bounded corpus size; the command is part of npm run validate.",
+        "Documentation explains the collect-download-import-review lifecycle and prohibits real field values, credentials, cookies, headers/bodies, query values, local paths, filenames, resume content, raw HTML, selectors, DOM/CDP/session IDs, encoded payloads, automatic upload, and final-submit behavior.",
+        "Unit tests prove valid import, raw-observation wrapping, deterministic duplicate handling, malformed/schema-invalid rejection, annotation mismatch rejection, sensitive-content rejection, and conflict refusal; this node adds no developer UI, live ATS sample, site detector/template, network call, telemetry, browser permission, page mutation, upload, or submission capability."
+      ],
+      "verification": [
+        "npm test -- --run src/ats/corpusImport.test.ts",
+        "npm run verify:corpus",
+        "npm run typecheck",
+        "npm run validate",
+        "Parse feature_list.json, run git diff --check, and statically inspect production and corpus tooling for excluded browser/network/page-action capabilities."
+      ],
+      "notes": "Completed on agent/ats-observation-core without commit/push. The exact v1 Schema, bounded fail-closed importer, deterministic structural digest/placement, duplicate and overwrite protection, whole-corpus verifier, documentation, and 8 focused tests are implemented. Final validation passed with 34 Vitest files / 255 tests, empty-corpus verification, production build, 13-file distribution audit, unchanged permissions, and no production corpus/collector code. Ajv is pinned to the advisory-fixed 8.20.0 development dependency. F039 remains isolated; F046 may now add a compile-time-excluded developer collector."
+    },
+    {
+      "id": "F046",
+      "title": "Build a development-only ATS collector with Xiaomi acceptance",
+      "status": "done",
+      "depends_on": [
+        "F045"
+      ],
+      "branch": "agent/ats-observation-core",
+      "acceptance": [
+        "A dedicated collector entry and UI exist only in an explicitly requested collector build; the normal development server and production build do not import, render, or ship the collector module, marker, strings, or chunks, and production distribution verification proves their absence.",
+        "The developer must click one explicit control before the collector starts or reuses a bounded browser session and reads PrivacySafePageState; there is no automatic page scan, polling, content-script injection, page mutation, form fill, file upload, navigation, login, CAPTCHA/SMS handling, or final-submit action.",
+        "The collector converts only PrivacySafePageState through the audited F044 observation core, shows a privacy/result preview before download, and downloads one JSON Blob only after a second explicit click without downloads permission, extension storage, filesystem access, network upload, telemetry, or clipboard use.",
+        "A Xiaomi-derived anonymous HTTPS fixture represents all nine current public schema groups and at least 34 field controls across text/number, native and custom select/multi-select, textarea, date/date-range, repeatable records, file gates, identity, and final-submit safety classes; the collected observation contains the structural labels/types/requirements needed for later annotation.",
+        "Xiaomi fixture evidence proves zero current-value, email, phone, identity-value, query, raw job id, snapshot/ref, selector, DOM/CDP id, filename/path, cookie/credential, raw HTML, encoded payload, or submit leakage; the real final-submit counter remains zero and the downloaded JSON passes the F045 importer in dry-run mode.",
+        "Current live Xiaomi evidence is read-only and separate: npm run audit:xiaomi confirms the public application schema remains nine groups and 34 visible fields, while unauthenticated page reading confirms the login boundary; no authenticated page capture or real sample is committed by F046.",
+        "The collector build retains the exact existing Manifest permissions, production packaging excludes the collector build directory, focused component/build tests pass, a real-Chrome collector E2E passes, and artifacts/xiaomi-ats-collector.png contains only the anonymous fixture preview."
+      ],
+      "verification": [
+        "npm run audit:xiaomi",
+        "npm test -- --run src/devtools/ats-collector src/foundation.test.ts",
+        "npm run build:collector && npm run verify:collector",
+        "npm run validate",
+        "npm run test:e2e",
+        "Inspect artifacts/xiaomi-ats-collector.png and verify the downloaded anonymous JSON through the corpus importer dry run.",
+        "Parse feature_list.json, run git diff --check, and statically confirm no collector marker/import in dist or production source and no new Manifest permission/network/page-action path."
+      ],
+      "notes": "Xiaomi acceptance target researched read-only on 2026-08-06: https://xiaomi.jobs.f.mioffice.cn/internship and the existing public application schema audit confirm a login boundary plus 9 groups / 34 visible fields. The agent-reach CLI and Exa backend were unavailable, so the skill's Jina Reader fallback and the repository's direct read-only audit supplied current evidence. F046 does not claim a Xiaomi/Feishu detector or authenticated live capture. No commit/push is authorized; F039 remains isolated."
+    },
+    {
+      "id": "F047",
+      "title": "Harden real Xiaomi observation privacy and independent coverage auditing",
+      "status": "done",
+      "depends_on": [
+        "F046"
+      ],
+      "branch": "agent/ats-observation-core",
+      "acceptance": [
+        "An independent Xiaomi observation audit uses the current public 9-group/34-field schema snapshot as ground truth rather than treating the K1 scanner's own count as proof of completeness; it reports raw-control preservation separately from logical-section and logical-field coverage.",
+        "The live downloaded observation remains outside the repository. Only synthetic failure shapes reproduce upload filename/status text, selected date text, unlabeled custom controls, missing required/options metadata, and an ordinary-classified final-submit button in automated tests.",
+        "K1 structural extraction reads allowlisted Feishu form-item metadata and stable section headings/technical prefixes without reading current values, filenames, cookies, credentials, selectors, DOM/CDP IDs, or raw HTML; observations retain bounded section evidence and normalized technical names needed to compare against ground truth.",
+        "Dynamic filename/upload-status/timestamp/date-only display text is removed or rejected before preview/download, final submit labels including 提交简历 are classified as final-submit, and the corpus importer fail-closes on the previously missed file-metadata/current-display patterns.",
+        "The developer collector shows independent Xiaomi section/field coverage, semantic-label coverage, and blocking privacy/safety findings before enabling download; an incomplete or privacy-rejected observation cannot be downloaded or imported merely because its raw control count matches K1.",
+        "A new anonymous Xiaomi-derived browser regression proves all nine sections, at least the 34 public logical fields, zero synthetic values/file metadata, correct final-submit blocking, zero page mutation/submission, dry-run importer acceptance, and current screenshot evidence; production still excludes the collector and permissions remain unchanged.",
+        "Completion requires one new private real-page recapture by the developer: the local audit must reject the legacy sample, accept the new sample, reconcile K1 and export raw counts, and report 9/9 sections plus explain any logical-field gaps without committing the sample or personal evidence."
+      ],
+      "verification": [
+        "npm run audit:xiaomi",
+        "npm test -- --run src/bridge/pageState.test.ts src/ats src/devtools/ats-collector",
+        "npm run audit:xiaomi-observation -- <local-json> --k1-controls <count> --dry-run",
+        "npm run build:collector && npm run verify:collector",
+        "npm run validate",
+        "npm run test:e2e",
+        "Inspect artifacts/xiaomi-ats-collector.png, parse feature_list.json, run git diff --check, and confirm no live observation/personal filename/date value, new permission, network upload, or page-action path entered the repository."
+      ],
+      "notes": "Started 2026-08-07 after the first private real Xiaomi export preserved all 57 K1 controls but exposed a filename/upload timestamp and selected date display text, left 19 controls unnamed, marked all controls non-required, omitted custom options/section evidence, and classified 提交简历 as ordinary. The existing importer incorrectly accepted it in dry-run. Computer Use was unavailable, so implementation uses the private file only as non-committed diagnostic evidence. The first post-hardening real recapture correctly fail-closed on two missing sections and sub-75% semantic coverage; a second bounded pass now recognizes allowlisted div/span section headings and form-item semantics nested up to 20 levels. Automated browser acceptance, production isolation, and legacy rejection pass; F047 intentionally remains in_progress until the next user-click real-page recapture passes the independent local audit."
+    },
+    {
+      "id": "F048",
+      "title": "Remove confirmed repository waste without disturbing active prototypes",
+      "status": "done",
+      "depends_on": [],
+      "branch": "agent/ats-observation-core",
+      "acceptance": [
+        "Only confirmed waste is removed: three ignored stale release ZIPs, the ignored Playwright test-results directory, the unreferenced src/ats/index.ts barrel, and the unused describeControl import in resumeAttachment.ts.",
+        "The active dist-collector, production dist, node_modules, artifacts, private environment file, two browser profiles, ATS corpus, current verification/evaluation/package scripts, and the decision-dependent src/agent prototype remain untouched.",
+        "A repository-wide reference scan still finds no reference to the removed ATS barrel, TypeScript with noUnusedLocals/noUnusedParameters reports no unused declarations, and the generated ZIP/test-results targets are absent after cleanup.",
+        "npm run validate and npm run test:e2e pass after cleanup; feature state and progress record exact deletions, retained uncertain candidates, and no commit or push."
+      ],
+      "verification": [
+        "npx tsc --noEmit --noUnusedLocals --noUnusedParameters",
+        "npm run validate",
+        "npm run test:e2e",
+        "Parse feature_list.json, run git diff --check, verify the exact deleted targets are absent, and confirm protected directories/files remain present."
+      ],
+      "notes": "Completed 2026-08-07 as a user-authorized conservative cleanup after a read-only repository audit. Old OpenCLI validation scripts and the detached src/agent prototype are intentionally retained pending an explicit architecture decision. The stale archives and test-results were sent to the Windows Recycle Bin so they remain recoverable."
+    },
+    {
+      "id": "F049",
+      "title": "Complete the reusable personal-information editor from a public reference inventory",
+      "status": "done",
+      "depends_on": [
+        "F003",
+        "F016"
+      ],
+      "acceptance": [
+        "A source-bound comparison of the public OfferLink myResume page and the existing profile identifies reusable missing fields without copying the reference implementation or visual design.",
+        "The local profile and editor cover detailed basic information, education, work, projects, campus experience, awards, languages, certificates, publications, patents, job preferences, reusable answers, and optional family contacts; identity-document numbers, passwords, verification codes, CAPTCHA data, cookies, and final submission remain excluded.",
+        "Existing schema-v1/v2 profiles migrate without losing values, new repeatable records start blank, and optional blank records do not reduce the baseline completion score.",
+        "Every newly supported webpage-fill field has a deterministic canonical path, bounded aliases, supported control kinds, and sensitive/confirmation-required classification where applicable.",
+        "The options page preserves the Organic design system, gives sensitive third-party contact data a visible warning, remains keyboard accessible, and saves/reloads all new fields locally.",
+        "Unit, component, full validation, and real-Chrome E2E checks pass; artifacts/profile-editor.png is current and contains synthetic data only."
+      ],
+      "verification": [
+        "npm test -- --run src/domain/profile.test.ts src/matching/catalog-coverage.test.ts src/options/ProfileEditor.test.tsx",
+        "npm run validate",
+        "npm run test:e2e",
+        "Inspect artifacts/profile-editor.png and confirm the new sections are reachable, editable, and contain no real personal data.",
+        "Parse feature_list.json and run git diff --check."
+      ],
+      "notes": "Completed 2026-08-07. Reference reviewed read-only from https://offerlink.tech/myResume; the field inventory is evidence, not copied source code or visual design. High-risk identity-document values remain deliberately unsupported; family/emergency contact values are local-only and confirmation-required. Full validation passed with 36 files / 335 tests, browser E2E passed 22/22, and artifacts/profile-editor.png was visually inspected with synthetic data only."
+    },
+    {
+      "id": "F050",
+      "title": "Persist identity-document data for zero-repeat recruitment form entry",
+      "status": "done",
+      "depends_on": [
+        "F049"
+      ],
+      "acceptance": [
+        "The local profile stores identity-document type and number after an explicit profile save, visibly warns that the current storage is local but not yet encrypted, masks the number in the editor and fill preview, and deletes it through the existing local-data deletion flow.",
+        "Schema-v1/v2/v3 profiles migrate to schema v4 without data loss; explicitly labelled identity data can be imported from a user-selected local resume into the editable draft but is never inferred from an unlabelled number.",
+        "Deterministic matching supports identity-document type and number with bounded aliases, always marks both confirmation-required, and no identity value is selected by the default safe-fill path.",
+        "An explicitly selected identity field can be written and verified without final submission; page scanning/comparison does not expose the current page value and UI previews never show the full saved document number.",
+        "Recruitment-site passwords, SMS/email verification codes, OTP, CAPTCHA values, authentication cookies, identity-document attachments, and final submission remain unpersisted and unsupported.",
+        "Focused tests, npm run validate, npm run test:e2e, and a current synthetic artifacts/profile-editor.png pass before completion."
+      ],
+      "verification": [
+        "npm test -- --run src/domain/profile.test.ts src/resume/parseResume.test.ts src/matching src/content/engine.test.ts src/options/ProfileEditor.test.tsx",
+        "npm run validate",
+        "npm run test:e2e",
+        "Inspect artifacts/profile-editor.png for the plaintext-storage warning, masked synthetic identity field, and absence of real personal data.",
+        "Parse feature_list.json and run git diff --check."
+      ],
+      "notes": "Completed 2026-08-07 after the user requested zero repeat typing and explicitly accepted temporary local persistence before at-rest encryption. Schema v4 stores identity-document type and number locally, labelled resume import can populate the editable draft, editor/fill previews mask the number, and webpage writes remain confirmation-required. Passwords, one-time verification material, CAPTCHA, cookies, identity attachments, and final submission remain outside scope. Final validation passed with 37 files / 348 tests, full browser E2E passed 22/22, the deletion flow passed, and artifacts/profile-editor.png was visually inspected with synthetic masked data."
+    },
+    {
+      "id": "F051",
+      "title": "Replace the scan-preview-fill funnel with one-click automatic filling",
+      "status": "done",
+      "depends_on": [
+        "F015",
+        "F017",
+        "F018",
+        "F020",
+        "F049"
+      ],
+      "acceptance": [
+        "The production side panel exposes one primary action, 自动填写当前页面, and no user-facing scan, State/Find, connection, per-safe-field selection, or separate fill button in the default workflow.",
+        "One explicit user gesture internally scans the active page, creates uniquely identified missing repeatable records where the existing safe adapter permits it, rescans, builds a deterministic plan, and immediately writes and verifies safe high-confidence empty fields when no confirmation is needed.",
+        "Sensitive, conflicting, unreadable, and non-high-confidence proposals pause the workflow in one concentrated confirmation surface; they are never preselected, raw current page values remain absent, and continuing fills the safe plan plus only explicitly selected exceptions.",
+        "Resume attachment remains a separate file-and-destination confirmation, unsupported fields are summarized behind progressive disclosure, and no path clicks or exposes a final application submission action.",
+        "The workflow reports bounded stages and a final filled/skipped/equal/unsupported summary with an actionable retry path, while preserving saved site corrections and verified-write behavior.",
+        "The implementation is a clean-room reimplementation of the observed OfferLink interaction and module boundaries; it imports no OfferLink bundle, private API, branding, assets, selectors, or first-party code.",
+        "Focused unit/component tests, npm run validate, npm run test:e2e, and a current artifacts/one-click-autofill.png prove the user-visible milestone."
+      ],
+      "verification": [
+        "npm test -- --run src/sidepanel/autoFillWorkflow.test.ts src/sidepanel/SidePanel.test.tsx src/sidepanel/SidePanel.repeatable.test.tsx",
+        "npm run validate",
+        "npm run test:e2e",
+        "Inspect artifacts/one-click-autofill.png for one primary action, one concentrated confirmation surface, Organic styling, and synthetic data only.",
+        "Parse feature_list.json, run git diff --check, confirm the production panel has no scan/State/Find action, and confirm no OfferLink bundle path, remote API, final-submit action, or new permission entered the implementation."
+      ],
+      "notes": "Completed 2026-08-07 as a clean-room interaction migration. The production panel now exposes one automatic-fill action; internal scan, safe repeatable preparation, deterministic planning, verified writes, centralized unselected exceptions, saved remapping, separate resume attachment authorization, and final no-submit guidance are covered by 11 focused tests, 348 full tests, 22 Chrome E2E scenarios, and artifacts/one-click-autofill.png. No reference bundle, private endpoint, branding, selector data, remote dependency, permission, or submission action was copied or added. F052-F055 remain separate follow-up modules."
+    },
+    {
+      "id": "F052",
+      "title": "Load deterministic ATS family templates behind the one-click workflow",
+      "status": "done",
+      "depends_on": [
+        "F045",
+        "F051"
+      ],
+      "acceptance": [
+        "A typed local template contract separates family detection, canonical mappings, section behavior, control-driver hints, repeatable lifecycle rules, and final-submit exclusions.",
+        "The one-click orchestrator selects a reviewed family template before generic matching and applies saved site corrections as a higher-priority local override.",
+        "Templates contain no profile values, credentials, authentication state, raw HTML, remote code, or final-submit action and are covered by schema and regression tests."
+      ],
+      "verification": [
+        "npm test -- --run src/ats src/sidepanel/autoFillWorkflow.test.ts",
+        "npm run validate",
+        "Run the ATS template privacy/static audit documented for the feature."
+      ],
+      "notes": "Completed 2026-08-07. A validated local template contract and registry now separate family detection, exact semantic mappings, sections, driver hints, repeatable rules, verification modes, and final-submit exclusions. The content engine selects the template before generic matching and saved site corrections still override it. The first concrete template is intentionally limited to the independently reviewed Xiaomi Feishu deployment; it is not a general Feishu, Moka, or Beisen claim. Validation passed 39 files / 355 tests plus three focused browser regressions with no permission change or reference-extension code/configuration."
+    },
+    {
+      "id": "F053",
+      "title": "Modularize verified page writes into framework control adapters",
+      "status": "done",
+      "depends_on": [
+        "F051"
+      ],
+      "acceptance": [
+        "Native, Feishu/UD, Ant, Element, and generic ARIA controls are routed through deterministic canHandle/read/write/verify adapters with bounded waits.",
+        "Unsupported or ambiguous controls fail closed and are reported without clicking submit-like controls or weakening readback verification.",
+        "Existing native/custom-select/date-range fixtures remain passing and new adapter fixtures isolate framework-specific behavior."
+      ],
+      "verification": [
+        "npm test -- --run src/content",
+        "npm run validate",
+        "npm run test:e2e -- --grep \"complex controls|Xiaomi\""
+      ],
+      "notes": "Completed 2026-08-07 as a clean-room refactor of the repository's existing verified page driver. A deterministic registry now routes Feishu date ranges, Feishu/UD, Ant, Element, generic ARIA, and native controls through explicit canHandle/read/write/verify adapters. Unsafe controls fail before routing, waits/attempts are bounded, and exact readback remains mandatory. Validation passed 39 files / 362 tests and three focused Chrome regressions without submission or permission changes."
+    },
+    {
+      "id": "F054",
+      "title": "Complete repeatable-section add-fill-save-verify lifecycles",
+      "status": "done",
+      "depends_on": [
+        "F052",
+        "F053"
+      ],
+      "acceptance": [
+        "Reviewed ATS adapters can add, wait for, fill, locally save, and verify education/work/project records idempotently within one user-started workflow.",
+        "Every mutation has a bounded wait, structure fingerprint, retry limit, navigation guard, and typed stop reason.",
+        "No lifecycle rule can target or activate a final application submission control."
+      ],
+      "verification": [
+        "npm test -- --run src/content/repeatableRecords.test.ts",
+        "npm run validate",
+        "npm run test:e2e -- --grep \"repeatable records\""
+      ],
+      "notes": "Completed 2026-08-07 for the reviewed Xiaomi recruitment adapter and synthetic fixture. The one-click flow now composes bounded add/rescan, verified field writes, one unique record-local save, saved-state mutation wait, and post-save readback for education, internship/work, and project cards. Generic sites receive no guessed save clicks. Validation passed 40 files / 366 tests and the repeatable Chrome lifecycle saved seven records idempotently with zero delete or final-submit clicks."
+    },
+    {
+      "id": "F055",
+      "title": "Add focused-field manual recovery from the local profile preview",
+      "status": "done",
+      "depends_on": [
+        "F051",
+        "F053"
+      ],
+      "acceptance": [
+        "After an automatic-fill miss, the user can explicitly focus one ordinary recruitment field and choose one local profile value to write and verify without exposing unrelated values.",
+        "Single-item recovery refuses passwords, CAPTCHA/OTP, files, hidden controls, submit-like controls, stale focus, page navigation, and sensitive values without concentrated confirmation.",
+        "The recovery surface is secondary to one-click filling and reports copy/write success or a typed actionable failure."
+      ],
+      "verification": [
+        "npm test -- --run src/sidepanel src/content",
+        "npm run validate",
+        "npm run test:e2e -- --grep \"manual recovery\""
+      ],
+      "notes": "Completed 2026-08-07 as a secondary, clean-room focused-field recovery path. After one-click autofill, an explicit trusted page focus plus a single-use 60-second authorization can write and verify exactly one selected non-sensitive local value. Password/file/hidden/submit-like, CAPTCHA/OTP, sensitive, non-empty, stale, changed, or navigated targets fail closed. Validation passed 41 files / 370 tests and all 28 Chrome scenarios; artifacts/manual-recovery.png records the Organic labels-only UI."
+    },
+    {
+      "id": "F056",
+      "title": "Explore five OfferLink-structured Organic profile-editor directions",
+      "status": "done",
+      "depends_on": [
+        "F050"
+      ],
+      "acceptance": [
+        "A comparison page links to five independent HTML profile-editor prototypes that share the same realistic blank field inventory and preserve a familiar top navigation, section navigation, primary editor, profile switcher, and persistent save area.",
+        "The five directions are visually and interactionally distinct while remaining within the repository Organic tokens, Epilogue typography, rounded geometry, gentle motion, and non-decorative content rules.",
+        "Prototype data stays in a dedicated browser-local key, never reads or overwrites the production extension profile, never persists selected file bytes, and exposes no recruitment-site submission action.",
+        "Sensitive identity and family-contact fields are visibly marked, identity values are masked by default, and all synthetic design pages are keyboard accessible and responsive.",
+        "Real-Chrome checks cover every prototype, local draft persistence, guided navigation, and current screenshots in artifacts before presenting the choices to the user."
+      ],
+      "verification": [
+        "npm run test:e2e -- tests/e2e/profile-design-prototypes.spec.ts",
+        "npm run validate",
+        "npm run test:e2e",
+        "Inspect artifacts/profile-design-gallery.png and all five profile-design-*.png screenshots for distinct directions, Organic design fidelity, responsive form structure, and synthetic or blank content only.",
+        "Parse feature_list.json and run git diff --check."
+      ],
+      "notes": "Completed 2026-08-07 after the user selected https://offerlink.tech/index as a structural reference. Read-only inspection of the public index and myResume pages informed only the familiar top-nav/section-nav/editor/profile-dock/save-bar skeleton; no OfferLink source, branding, assets, colors, or implementation code was copied. Five Organic variants, a selector, isolated local draft persistence including repeatable records, desktop/mobile screenshots, 4 focused Chrome checks, 362 full tests, and 26 full Chrome E2E checks pass. Production options UI remains unchanged until the user chooses a direction."
+    },
+    {
+      "id": "F057",
+      "title": "Refine the selected dossier prototype into an accurate profile information model",
+      "status": "done",
+      "depends_on": [
+        "F056"
+      ],
+      "acceptance": [
+        "The selected dossier direction keeps its existing Organic visual hierarchy while its shared form inventory is corrected against the production CandidateProfile and the user's detailed information-model review.",
+        "Language skills and language examinations are separate repeatable groups; a user can save one language with multiple independent examinations, scores, dates, and validity dates.",
+        "Internships and employment, campus leadership and campus activities, publications and patents, and reusable PDF attachment versus resume-data import are visibly separate concepts without forcing extra top-level navigation clutter.",
+        "Production-supported field paths use the existing canonical names where possible; new prototype-only paths are explicit future schema candidates rather than incompatible accidental aliases.",
+        "Basic, education, preferences, awards, work samples, certificates, family contacts, and reusable answers include the reviewed missing fields, contextual values are labelled as application-specific, and completion excludes optional empty sensitive or not-applicable groups.",
+        "Focused and full Chrome checks pass with a current artifacts/profile-design-01-dossier.png showing the refined blank form and no real personal data."
+      ],
+      "verification": [
+        "npm run test:e2e -- tests/e2e/profile-design-prototypes.spec.ts",
+        "npm run validate",
+        "npm run test:e2e",
+        "Inspect artifacts/profile-design-01-dossier.png and profile-design-mobile-guided.png for corrected labels, group structure, Organic fidelity, and blank or synthetic-only content.",
+        "Parse feature_list.json, run node --check on prototype.js, and run git diff --check."
+      ],
+      "notes": "Completed 2026-08-07 after the user chose the dossier visual direction and identified the language/examination conflation. A shared, explicit 14-section schema now separates language skills from language exams; internships from employment; campus leadership from campus activities; publications from patents; and reusable PDF attachment from resume-data import. It adds reviewed missing basic, education, preference, award, work-sample, certificate, family-contact, and reusable-answer fields while marking contextual and sensitive values. Completion counts only core applicable controls, selected file metadata is never serialized, and production canonical paths are reused where supported. Focused Chrome checks passed 5/5, full validation passed 41 files / 370 tests, full Chrome E2E passed 29/29, and current desktop/language/mobile screenshots were visually inspected. The production React/domain migration remains a separate user-visible feature after design approval."
+    },
+    {
+      "id": "F058",
+      "title": "Capture independent MetaApp Feishu application ground truth",
+      "status": "done",
+      "depends_on": [
+        "F045",
+        "F047"
+      ],
+      "acceptance": [
+        "A source-bound snapshot records only the public, currently visible MetaApp application groups and logical fields from js-websiteInfo.resume_form_schema, including labels, technical names, control types, required state, and repeatability.",
+        "A normalized ground-truth file uses a credential-free origin and templated application path, contains no candidate values, cookies, authentication artifacts, raw HTML, query values, filenames, or final-submit action.",
+        "An executable read-only audit fetches the supplied public application URL, independently compares the live schema with the reviewed snapshot, verifies the public job title, and performs no login, form write, upload, or application submission.",
+        "The result explicitly separates public-schema evidence from authenticated rendered-DOM evidence and does not claim a general Feishu family detector or template from one second-company sample."
+      ],
+      "verification": [
+        "npm run audit:metaapp",
+        "npm run verify:corpus",
+        "npm run validate",
+        "Parse feature_list.json, run git diff --check, and inspect the MetaApp snapshot and ground-truth files for prohibited personal or authentication data."
+      ],
+      "notes": "Completed 2026-08-07 from the user-supplied public MetaApp application URL. The reviewed public resume_form_schema v8 snapshot contains 4 visible groups and 13 logical fields for the software engineer application. The normalized ground truth uses a templated path and contains no raw job id or candidate/authentication data. The GET-only live audit, corpus verification, JSON/privacy checks, git diff check, and full validation all passed; authenticated rendered-DOM behavior remains explicitly outside this evidence."
+    },
+    {
+      "id": "F059",
+      "title": "Harden the ATS scanner against the MetaApp Feishu application",
+      "status": "done",
+      "depends_on": [
+        "F047",
+        "F058"
+      ],
+      "acceptance": [
+        "A synthetic, privacy-safe MetaApp failure shape reproduces the downloaded observation's missing basic-section binding, nested field wrapper labels, custom date ranges, required markers, standalone option nodes, and protected final-submit control without copying personal values or raw page HTML.",
+        "The read-only scanner assigns all 13 reviewed MetaApp logical fields to the correct 4 groups using bounded deterministic DOM evidence, including 手机号码 and both 起止时间 fields, and recovers required state from structural markers without reading current values.",
+        "The developer collector distinguishes raw interactive nodes from logical-field coverage, reports standalone option nodes separately, and does not count those option nodes as missing or additional logical fields.",
+        "A MetaApp-specific independent quality gate blocks download unless the 4 groups, 13 logical fields, required-field evidence, semantic coverage, raw-count consistency, and final-submit protection pass; unrelated sites retain the existing privacy-only generic path.",
+        "The collector remains development-only, requests no new permissions, performs no login, page write, upload, telemetry, or final submission, and production build verification proves it is absent from dist."
+      ],
+      "verification": [
+        "npm test -- --run src/bridge/pageState.test.ts src/ats/observation.test.ts src/devtools/ats-collector",
+        "npm run build:collector && npm run verify:collector",
+        "npm run validate",
+        "npm run test:e2e -- --grep \"MetaApp|collector\"",
+        "Inspect artifacts/metaapp-ats-collector.png, parse feature_list.json, run git diff --check, and confirm no personal value, raw job id, filename, cookie, new permission, network upload, or page-action path entered the change."
+      ],
+      "notes": "Completed 2026-08-07 from the private downloaded MetaApp observation, used read-only and left outside the repository. The scanner now uses bounded field and section evidence to recover all 4 groups / 13 reviewed logical fields, including phone, both date ranges, and structural required markers. The developer-only quality gate separates option nodes from logical controls and blocks incomplete MetaApp downloads. Focused 12/12 tests, collector build verification, full validation with 42 files / 373 tests, and full browser regression with 29/29 scenarios passed; the current screenshot was inspected. No permissions, page write, upload, login, telemetry, or final submission were added."
+    },
+    {
+      "id": "F060",
+      "title": "Capture Lenovo Talent resume component ground truth",
+      "status": "done",
+      "depends_on": [
+        "F045",
+        "F047"
+      ],
+      "acceptance": [
+        "A source-bound snapshot records the Lenovo Talent PC resume editor's section order, logical fields, technical model names, control families, required state, repeatability, conditional dependencies, attachment constraints, and option-set sources from public production assets.",
+        "The evidence independently verifies every referenced public dictionary by count and digest, distinguishes profile fields from workflow confirmation controls, and preserves observed spelling or component anomalies instead of silently correcting them.",
+        "The normalized ground truth contains no candidate values, cookies, tokens, authentication state, raw HTML, filenames, identity numbers, or form-write and final-submit action.",
+        "The result explicitly separates public compiled-component and dictionary evidence from authenticated rendered-DOM evidence; unavailable browser access is not presented as a real-page observation."
+      ],
+      "verification": [
+        "npm run audit:lenovo",
+        "npm run verify:corpus",
+        "npm run validate",
+        "npm run test:e2e",
+        "Parse feature_list.json, run git diff --check, and scan Lenovo artifacts for personal, authentication, raw-HTML, upload, and submit data."
+      ],
+      "notes": "Completed 2026-08-07 from the user-supplied Lenovo Talent resume URL. The normalized public-component ground truth records 7 PC Element Plus sections, 55 profile fields, 2 workflow controls, 15 remote option sets and one static yes/no set. The GET-only audit refetched versioned production chunks, parsed controls and required rules, verified section API markers, and matched all option counts/digests. Full validation passed 42 files / 373 tests and full Chrome E2E passed 29/29. Public reading reaches only the login shell and no connected browser was available, so authenticated rendered-DOM behavior remains explicitly outside this evidence."
+    },
+    {
+      "id": "F061",
+      "title": "Establish evidence-derived ATS family support levels and release gates",
+      "status": "done",
+      "depends_on": [
+        "F052",
+        "F058",
+        "F059",
+        "F060"
+      ],
+      "acceptance": [
+        "A typed, deterministic policy derives planned, observed, fixture-verified, and real-page-verified support from explicit evidence records rather than company-directory size or manually assigned marketing ratings.",
+        "The policy requires at least 90% eligible-field coverage, at least 95% verified-write success, zero incorrect writes, zero unsafe actions, zero final-submit activations, zero unexpected navigation, zero duplicate repeatable records, and zero network requests in standard mode.",
+        "Real-page-verified requires at least three distinct company sites for one ATS family, including text, choice, date, and repeatable-record evidence; synthetic fixtures or public schemas alone can never produce that status.",
+        "Evidence records contain only family/site identifiers, bounded aggregate metrics, source kind, verification date, and artifact references; they reject page values, raw HTML, cookies, tokens, query values, filenames, selectors from private observations, and user profile data.",
+        "A durable validation document records the F061-F069 architecture, per-node checks, real-page matrix, privacy boundary, and promotion rules so later sessions can resume without chat history."
+      ],
+      "verification": [
+        "npm test -- --run src/ats/supportPolicy.test.ts src/ats/supportEvidence.test.ts",
+        "npm run validate",
+        "Parse feature_list.json, run git diff --check, and inspect docs/ats-family-expansion-plan.md for exact metrics, evidence stages, family order, and prohibited data."
+      ],
+      "notes": "Completed 2026-08-07 after a read-only audit of OfferLink's public support directory and released extension showed that most catalog entries cluster into Zhiye, Moka, Hotjob, and Feishu families. A pure typed policy now derives planned, observed, fixture-verified, and real-page-verified status from privacy-attested evidence. It requires an independent same-site denominator, 90% eligible-field coverage, 95% verified writes, three distinct real sites, all four required control families, and zero incorrect/unsafe/submit/navigation/duplicate/network outcomes. Bundled evidence honestly reports Feishu as observed from Xiaomi and MetaApp while Zhiye, Moka, and Hotjob remain planned. Focused tests passed 8/8 and full validation passed 44 files / 381 tests with unchanged runtime, permissions, network behavior, and UI. No OfferLink code, selector configuration, private endpoint, asset, or rating claim was imported."
+    },
+    {
+      "id": "F062",
+      "title": "Generalize the Feishu family from Xiaomi and MetaApp evidence",
+      "status": "todo",
+      "depends_on": [
+        "F061"
+      ],
+      "acceptance": [
+        "A Feishu family detector combines reviewed origin, path, semantic-marker, and control-structure evidence; it recognizes Xiaomi and MetaApp application forms without claiming unrelated Feishu pages.",
+        "Shared Feishu field and section rules are separated from Xiaomi-specific overrides, and MetaApp's independent 4-group/13-field ground truth is added without weakening Xiaomi's reviewed 9-group/34-field behavior.",
+        "Feishu control adapters cover text, exact single/multi-select, date ranges, and repeatable add-fill-save-verify flows with mandatory readback and bounded waits.",
+        "Synthetic fixtures prove both reviewed shapes, generic fallback, idempotent repeat runs, and zero delete, navigation, or final submission.",
+        "The family remains fixture-verified until at least three distinct real company pages pass F069."
+      ],
+      "verification": [
+        "npm test -- --run src/ats src/content",
+        "npm run audit:metaapp",
+        "npm run validate",
+        "npm run test:e2e -- --grep \"Feishu|Xiaomi|MetaApp|repeatable\""
+      ],
+      "notes": "Reuse the existing privacy-safe Xiaomi/MetaApp evidence and the current Feishu select/date adapters. Do not generalize from hostname alone and do not read page values during detection."
+    },
+    {
+      "id": "F063",
+      "title": "Add the Zhiye ATS family with old and new component variants",
+      "status": "todo",
+      "depends_on": [
+        "F061"
+      ],
+      "acceptance": [
+        "At least three independently reviewed Zhiye company pages establish old/new component ground truth before a broad detector or template is enabled.",
+        "The Zhiye family supports native and Phoenix-style text, select, radio, month/date, upload discovery, and repeatable education/work/project records without targeting final submission.",
+        "Company-specific differences are expressed as bounded host overrides rather than forks of the entire family implementation.",
+        "Synthetic family fixtures and private real observations contain no current values, raw HTML, filenames, credentials, cookies, or authentication state.",
+        "The family reaches real-page-verified only through the F069 three-company gate."
+      ],
+      "verification": [
+        "npm test -- --run src/ats src/content",
+        "npm run verify:corpus",
+        "npm run validate",
+        "npm run test:e2e -- --grep \"Zhiye\""
+      ],
+      "notes": "Prioritize because the audited public directory grouped 1,152 records under zhiye.com, but treat that count only as prioritization evidence, never as proof that 1,152 sites work."
+    },
+    {
+      "id": "F064",
+      "title": "Add the Moka ATS family across campus application routes",
+      "status": "todo",
+      "depends_on": [
+        "F061"
+      ],
+      "acceptance": [
+        "At least three Moka company routes with distinct resume schemas establish reviewed ground truth while sharing the app.mokahr.com host safely.",
+        "Detection uses route and structural evidence in addition to hostname so non-application Moka pages stay on generic or unsupported paths.",
+        "The family supports verified text, choice, date, address, attachment discovery, and repeatable records with bounded waits and idempotent reruns.",
+        "A route-scoped override can represent company differences without storing job ids, query values, authentication data, or executable remote code.",
+        "The family reaches real-page-verified only through the F069 three-company gate."
+      ],
+      "verification": [
+        "npm test -- --run src/ats src/content",
+        "npm run verify:corpus",
+        "npm run validate",
+        "npm run test:e2e -- --grep \"Moka\""
+      ],
+      "notes": "The audited directory contained 947 Moka entries but most share one hostname, so path templating and structural evidence are required to avoid false family claims."
+    },
+    {
+      "id": "F065",
+      "title": "Add the Hotjob ATS family with Ant-style control coverage",
+      "status": "todo",
+      "depends_on": [
+        "F061"
+      ],
+      "acceptance": [
+        "At least three independently reviewed Hotjob company pages establish common and divergent form structures before broad family support is enabled.",
+        "The family routes exact Ant/native controls through existing verified adapters and adds only evidence-backed behavior for dates, cascading selections, uploads, and repeatable records.",
+        "Host-specific layout differences remain declarative overrides and cannot introduce page scripts, network calls, final-submit labels, or unbounded selectors.",
+        "Synthetic and real acceptance proves idempotent writes, bounded asynchronous option handling, and zero delete, navigation, or final submission.",
+        "The family reaches real-page-verified only through the F069 three-company gate."
+      ],
+      "verification": [
+        "npm test -- --run src/ats src/content",
+        "npm run verify:corpus",
+        "npm run validate",
+        "npm run test:e2e -- --grep \"Hotjob\""
+      ],
+      "notes": "Use the existing Ant adapter as a control primitive, not as proof of Hotjob family support. The audited public directory count of 370 is prioritization context only."
+    },
+    {
+      "id": "F066",
+      "title": "Add versioned local host overrides above ATS family templates",
+      "status": "todo",
+      "depends_on": [
+        "F062",
+        "F063",
+        "F064",
+        "F065"
+      ],
+      "acceptance": [
+        "A schema-validated, data-only host override format can narrow path patterns, semantic aliases, section markers, driver hints, and repeatable controls without embedding executable code.",
+        "Precedence is explicit and tested: saved user correction, reviewed host override, ATS family template, then generic matcher; no layer can remove password, CAPTCHA, verification, sensitive-confirmation, or final-submit protections.",
+        "Overrides are bundled and versioned locally by default, fail closed when stale or invalid, and expose typed diagnostics without page values.",
+        "One bad override cannot break another host or generic fallback, and every override names its ground-truth evidence and last verification date.",
+        "No OfferLink selector data or private configuration is copied into the repository."
+      ],
+      "verification": [
+        "npm test -- --run src/ats src/mapping src/content",
+        "npm run validate",
+        "npm run test:e2e -- --grep \"host override|site correction|final submit\"",
+        "Run the override schema privacy/static audit documented for the feature."
+      ],
+      "notes": "Keep updates in extension releases first. A signed remote rule channel is a separate future decision and is not required for the MVP."
+    },
+    {
+      "id": "F067",
+      "title": "Add an explicit privacy-safe AI proposal fallback for unknown forms",
+      "status": "todo",
+      "depends_on": [
+        "F061",
+        "F066"
+      ],
+      "acceptance": [
+        "Standard mode remains deterministic and zero-network; AI fallback is off by default and requires a fresh per-page user gesture plus a clear description of what structural data will leave the device.",
+        "The request contains only bounded labels, technical names, roles, control types, option labels, section names, and anonymous structural ids; it never contains raw HTML, current values, profile values, cookies, tokens, URLs with query values, filenames, screenshots, or browser identifiers.",
+        "The model returns proposals only; every proposal is schema-validated, confidence-gated, compiled through the same safety policy, shown for confirmation when required, written through existing adapters, and accepted only after readback verification.",
+        "The provider adapter supports a user-configured endpoint/key without bundling a secret, and logs expose aggregate outcomes rather than prompts or values.",
+        "Network interception tests prove prohibited data absence and final-submit controls remain unreachable even with malicious or malformed model output."
+      ],
+      "verification": [
+        "npm test -- --run src/ai src/privacy src/content",
+        "npm run validate",
+        "npm run test:e2e -- --grep \"AI fallback|privacy|final submit\"",
+        "Inspect a captured synthetic request and response audit with secret and value leakage checks."
+      ],
+      "notes": "This deliberately rejects OfferLink's released unknown-page pattern of sending cleaned page HTML. AI is a late proposal source, never a page driver or source of truth."
+    },
+    {
+      "id": "F068",
+      "title": "Expose an evidence-derived supported-site catalog",
+      "status": "todo",
+      "depends_on": [
+        "F061",
+        "F062",
+        "F063",
+        "F064",
+        "F065",
+        "F066"
+      ],
+      "acceptance": [
+        "The user-facing catalog is generated from reviewed evidence and shows ATS family, support level, covered controls, last verified date, known limitations, and evidence count.",
+        "A company or family cannot appear as verified from a marketing list, hostname match, public schema, synthetic fixture, or inherited ATS count alone.",
+        "Filters distinguish observed, fixture-verified, and real-page-verified support and link failures to typed, privacy-safe diagnostics.",
+        "The Organic interface remains keyboard accessible, responsive, local-first, and contains no external tracking or application submission action.",
+        "Chrome E2E and screenshots prove current status rendering without real candidate data."
+      ],
+      "verification": [
+        "npm test -- --run src/ats src/options",
+        "npm run validate",
+        "npm run test:e2e -- --grep \"support catalog\"",
+        "Inspect artifacts/ats-support-catalog.png for accurate evidence-derived status and synthetic-only content."
+      ],
+      "notes": "This is the honest counterpart to a large marketing directory: support claims are computed from tests and evidence, not manually assigned."
+    },
+    {
+      "id": "F069",
+      "title": "Prove four-family real-page non-submitting release acceptance",
+      "status": "todo",
+      "depends_on": [
+        "F062",
+        "F063",
+        "F064",
+        "F065",
+        "F066",
+        "F068"
+      ],
+      "acceptance": [
+        "A minimum of 12 real recruitment pages cover at least three distinct companies in each of Feishu, Zhiye, Moka, and Hotjob, with independent field denominators and private value-redacted observations.",
+        "Every site achieves at least 90% eligible-field coverage and 95% verified-write success across text, choice, date, and applicable repeatable controls, with zero incorrect writes.",
+        "Across all runs there are zero password, CAPTCHA, OTP, cookie, final-submit, delete, unexpected navigation, duplicate-record, or unconfirmed sensitive-field actions.",
+        "Standard-mode runs make zero network requests from matching/filling logic; if F067 is implemented, AI-mode acceptance is reported separately, proves the structural request allowlist, and cannot compensate for a failed standard-mode site.",
+        "Evidence includes exact commands, aggregate metrics, private real-page logs kept outside the repository, synthetic screenshots where needed, and a support-registry promotion only after all gates pass."
+      ],
+      "verification": [
+        "npm run validate",
+        "npm run test:e2e",
+        "Run the documented private real-page acceptance command for all 12 pages and audit each result against its independent ground truth.",
+        "Parse feature_list.json, run git diff --check, and verify support statuses match the recorded evidence."
+      ],
+      "notes": "This is the release gate, not an initial implementation task. Authentication, CAPTCHA, SMS verification, identity checks, and final application submission remain manual user responsibilities."
+    },
+    {
+      "id": "F070",
+      "title": "Capture NIO Feishu application ground truth",
+      "status": "done",
+      "depends_on": [
+        "F058",
+        "F059",
+        "F061"
+      ],
+      "acceptance": [
+        "A company-explicit NIO/蔚来 ground-truth artifact records the user-supplied Feishu application form's visible group order, logical fields, technical names, control types, required state, repeatability, customization status, and bounded configured option labels from independent public server schema evidence.",
+        "The normalized ground truth identifies 蔚来（NIO） in both its filename and structured company metadata, uses a templated application path, and contains no candidate values, cookies, tokens, authentication state, filenames, raw HTML, private observation selectors, or application write action.",
+        "A reviewed source snapshot and GET-only audit independently verify the current public schema version, exact visible group/field denominator, company/job identity, custom yes/no option sets, and schema drift without login, upload, save, or final submission.",
+        "Documentation distinguishes public server-schema ground truth from authenticated rendered-DOM observation and does not promote Feishu or NIO beyond the evidence-derived support level."
+      ],
+      "verification": [
+        "npm run audit:nio",
+        "npm run verify:corpus",
+        "npm run validate",
+        "Parse feature_list.json, run git diff --check, and inspect NIO artifacts for company clarity plus prohibited personal, authentication, raw-HTML, upload, and submit data."
+      ],
+      "notes": "Completed 2026-08-07 from the user-supplied public NIO Feishu application URL. The company-explicit nio-feishu ground truth records resume_form_schema version 1 with 7 visible groups / 27 logical fields / 7 customized fields for 资深大语言模型算法（上海）, including three exact yes/no custom selects. The GET-only drift audit, JSON/privacy checks, corpus verification, git diff check, and full validation with 44 test files / 381 tests passed. No authenticated DOM observation, login, candidate value, upload, save, or final submission was performed."
+    },
+    {
+      "id": "F071",
+      "title": "Capture Hesai Technology Feishu application ground truth",
+      "status": "done",
+      "depends_on": [
+        "F058",
+        "F059",
+        "F061"
+      ],
+      "acceptance": [
+        "A company-explicit ground-truth artifact records the user-supplied Feishu application form's visible group order, logical fields, technical names, control types, required state, repeatability, customization status, and bounded configured option labels from independent public server-schema evidence.",
+        "The filename, documentation, and structured company metadata state 禾赛科技 and 上海禾赛科技有限公司 in plaintext, use a templated application path, and contain no candidate values, cookies, tokens, authentication state, filenames, raw HTML, private observation selectors, or application write action.",
+        "A reviewed source snapshot and GET-only audit independently verify the current public schema version, exact visible group/field denominator, company branding, job title, and schema drift without login, upload, save, or final submission.",
+        "Documentation distinguishes public server-schema ground truth from authenticated rendered-DOM observation and does not promote Feishu or 禾赛科技 beyond the evidence-derived support level."
+      ],
+      "verification": [
+        "npm run audit:hesai",
+        "npm run verify:corpus",
+        "npm run validate",
+        "Parse feature_list.json, run git diff --check, and inspect Hesai artifacts for company clarity plus prohibited personal, authentication, raw-HTML, upload, and submit data."
+      ],
+      "notes": "Completed 2026-08-07 from the user-supplied public 禾赛科技 Feishu application URL. The company-explicit artifact states 禾赛科技 and 上海禾赛科技有限公司 in plaintext and records resume_form_schema version 1 with 10 visible groups / 30 logical fields / 1 customized field for 设备工程师（嘉定）. The GET-only company/schema/job drift audit, normalized-path/privacy checks, corpus verification, git diff check, and full validation with 44 test files / 381 tests passed. No authenticated DOM observation, login, candidate value, upload, save, or final submission was performed."
+    },
+    {
+      "id": "F072",
+      "title": "Organize downloaded ATS observations by explicit company identity",
+      "status": "done",
+      "depends_on": [
+        "F047",
+        "F059",
+        "F070"
+      ],
+      "acceptance": [
+        "Every downloaded ATS observation is classified from its credential-free origin and copied unchanged into a company-explicit staging directory whose path and filename identify the company, ATS family, page type, and capture timestamp.",
+        "A human-readable index identifies 蔚来（NIO）, MetaApp, and 小米, records origin/path/count/status/ground-truth linkage, and distinguishes current-schema validated observations from legacy exports without upgrading evidence by assumption.",
+        "The original Downloads files remain untouched, copied files have identical SHA-256 digests, and no observation contains current values, selected state, cookies, tokens, raw ids in paths, recruitment upload filenames, local paths, emails, phone numbers, or DOM/session identifiers.",
+        "The staging directory is explicitly non-production and is not consumed as reviewed training data until corpus import and annotation pass."
+      ],
+      "verification": [
+        "Run the observation privacy audit and compare source/copy SHA-256 digests.",
+        "Dry-run the current-schema observations through corpus:import and document the legacy Xiaomi schema gap.",
+        "npm run verify:corpus",
+        "Parse feature_list.json and all staged JSON, run git diff --check, and inspect the company index."
+      ],
+      "notes": "Completed 2026-08-07. Three developer-downloaded observations were copied byte-for-byte into company-explicit Feishu-family staging paths for 蔚来（NIO）, MetaApp, and 小米, with a readable index, provenance hashes, privacy status, validation status, and independent ground-truth links. Source/copy SHA-256 digests matched and the Downloads originals remained untouched. NIO and MetaApp passed current-schema corpus-import dry runs; Xiaomi was honestly retained as a legacy export because it lacks required sections/sectionCount. Privacy inspection, staged JSON parsing, corpus verification, git diff check, and full validation with 44 test files / 381 tests passed. The staging tree is non-production and is not consumed as reviewed training data."
+    },
+    {
+      "id": "F073",
+      "title": "Capture Anker Innovations Feishu application ground truth",
+      "status": "done",
+      "depends_on": [
+        "F058",
+        "F059",
+        "F061"
+      ],
+      "acceptance": [
+        "A company-explicit ground-truth artifact records the user-supplied Anker Innovations Feishu application's visible group order, logical fields, technical names, control types, required state, repeatability, customization status, and bounded configured option labels from independent public server-schema evidence.",
+        "The filename, documentation, and structured metadata state 安克创新 and 安克创新科技股份有限公司 in plaintext, use templated position/application paths, and contain no candidate values, cookies, tokens, authentication state, filenames, raw HTML, private selectors, or application write action.",
+        "A reviewed source snapshot and GET-only audit independently verify the public schema version, exact visible group/field denominator, company branding, job title, detail-to-application schema equivalence, and schema drift without login, upload, save, or final submission.",
+        "Documentation distinguishes public server-schema ground truth from authenticated rendered-DOM observation and does not promote Feishu or 安克创新 beyond the evidence-derived support level."
+      ],
+      "verification": [
+        "npm run audit:anker",
+        "npm run verify:corpus",
+        "npm run validate",
+        "Parse feature_list.json, run git diff --check, and inspect Anker artifacts for company clarity plus prohibited personal, authentication, raw-HTML, upload, and submit data."
+      ],
+      "notes": "Completed 2026-08-07 from the user-supplied public Anker Innovations Feishu job-detail URL. The company-explicit artifact states 安克创新, 安克创新科技股份有限公司, and Anker Innovations in plaintext and records resume_form_schema version 1 with 5 visible groups / 15 logical fields / 0 customized fields for AI 业务工程师 — Agent 交付方向 AI Business Engineer (Forward Deployed). The GET-only audit verified company/job identity, exact detail/application schema equivalence, normalized-path/privacy constraints, corpus integrity, and full validation with 44 test files / 381 tests. No authenticated DOM observation, login, candidate value, upload, save, or final submission was performed."
+    },
+    {
+      "id": "F074",
+      "title": "Capture and classify Ctrip experienced-resume editor ground truth",
+      "status": "done",
+      "depends_on": [
+        "F044",
+        "F059",
+        "F061"
+      ],
+      "acceptance": [
+        "A company-explicit 携程集团/Trip.com Group artifact is classified under the company-owned ctrip-careers-custom family and stored below a family/company ground-truth path rather than being mislabeled as a shared third-party ATS.",
+        "The public-bundle contract records the experienced edit-CV route's visible section order, 28 logical controls, technical model names, control types, required state, five repeatable collections, bounded configured options, two attachment behaviors, current-job behavior, and manual SMS verification gate without using an authenticated candidate response.",
+        "A reviewed snapshot and GET-only audit resolve the current public HTML, Chinese i18n dictionary, authenticated hash route, main asset, personal-homepage chunk, field contract, option labels, file constraints, and read/write endpoint boundaries without calling any authenticated resume, upload, parse, update, or verification endpoint.",
+        "Documentation and metadata state that bundle-derived ground truth does not prove authenticated rendered-DOM coverage, values, successful filling, or site support; all paths are templated and no candidate values, cookies, tokens, filenames, raw HTML, selectors, or session identifiers are stored."
+      ],
+      "verification": [
+        "npm run audit:ctrip",
+        "npm run verify:corpus",
+        "npm run validate",
+        "Parse feature_list.json and Ctrip JSON artifacts, run git diff --check, and inspect the family/company classification plus prohibited personal/authentication/raw-HTML/file/selector data."
+      ],
+      "notes": "Completed 2026-08-07 from the user-supplied authenticated hash route. Credential-free public HTML identifies 携程集团/Trip.com Group and exposes the Chinese i18n dictionary; the current public main/personal-homepage bundles define a social-recruitment edit-CV contract with 7 visible sections / 28 logical controls / 5 repeatable collections / 2 attachment controls. npm run audit:ctrip and npm run validate pass. Authenticated candidate data and rendered-DOM behavior remain out of scope."
+    },
+    {
+      "id": "F075",
+      "title": "Migrate legacy Xiaomi, MetaApp, and Lenovo ground truths into company-classified paths",
+      "status": "done",
+      "depends_on": [
+        "F047",
+        "F058",
+        "F060",
+        "F072",
+        "F074"
+      ],
+      "acceptance": [
+        "The Xiaomi, MetaApp, and Lenovo normalized ground truths move from flat legacy filenames into ground-truth/<ats-family>/<company>/<company>__<page>__v1.json paths matching the repository's current company-classified convention.",
+        "Each migrated artifact preserves its stable dataset id and complete field inventory while adding explicit company identity, ATS-family metadata, and exact reviewed denominators without inventing unsupported legal names or changing support status.",
+        "All runtime imports, audits, support evidence, observation indexes, and current documentation resolve only the new paths; historical progress remains append-only and records the migration mapping.",
+        "JSON parsing, focused Xiaomi/MetaApp/Lenovo audits, corpus verification, TypeScript/tests, production build, and privacy/path checks pass with no candidate values, authentication data, browser operation, or application mutation."
+      ],
+      "verification": [
+        "npm run audit:xiaomi && npm run audit:metaapp && npm run audit:lenovo",
+        "npm test -- --run src/ats/xiaomiObservationAudit.test.ts src/devtools/ats-collector src/ats/supportEvidence.test.ts",
+        "npm run verify:corpus",
+        "npm run validate",
+        "Parse feature_list.json and migrated artifacts, run git diff --check, and prove the three old filesystem paths are absent outside append-only progress history."
+      ],
+      "notes": "Completed 2026-08-07. Xiaomi, MetaApp, and Lenovo now use the company-classified family/company paths; each retains its stable id and exact 9/34, 4/13, or 7/55 field inventory while adding explicit company, ATS-family, and denominator metadata. All active code, audit, evidence, observation-index, and documentation references use the new paths. The three GET-only live audits, focused 4-file/10-test regression, path/privacy checks, corpus verification, and full validation with 44 test files / 381 tests passed. No support level, page behavior, candidate data, browser state, or application action changed."
+    },
+    {
+      "id": "F076",
+      "title": "Capture Huya campus Moka resume ground truth",
+      "status": "done",
+      "depends_on": [
+        "F045",
+        "F059",
+        "F061"
+      ],
+      "acceptance": [
+        "A company-explicit 虎牙/huya artifact is classified under the shared Moka ATS family and stored below a moka/huya family/company ground-truth path with the supplied campaign id removed from normalized paths.",
+        "Independent credential-free evidence records the candidate-home resume route's available group/field contract, technical identifiers, control types, required state, repeatability, configured options, and authentication boundary without using a candidate response or scanner output as the source of truth.",
+        "A reviewed source snapshot and GET-only audit verify the live public Moka shell, tenant/campaign identity, route and schema evidence, exact independently observable denominator, and read/write endpoint boundaries without login, upload, field mutation, save, or final application submission.",
+        "Documentation clearly distinguishes public configuration or bundle evidence from authenticated rendered-DOM coverage and successful filling; normalized artifacts contain no candidate values, cookies, tokens, filenames, raw HTML, private selectors, campaign-specific session data, or write actions."
+      ],
+      "verification": [
+        "npm run audit:huya-moka",
+        "npm run verify:corpus",
+        "npm run validate",
+        "Parse feature_list.json and Huya/Moka JSON artifacts, run git diff --check, and inspect classification, normalized paths, evidence boundary, and prohibited personal/authentication/raw-page data."
+      ],
+      "notes": "Completed 2026-08-07 from the user-supplied 虎牙直播 Moka campus candidate-resume route. Public tenant-shell and applyWeb bundle evidence independently establish a 9-group / 41-field standard resume contract with 1 required field, 6 repeatable groups, 7 configured-option fields, and no upload block. npm run audit:huya-moka and npm run validate pass. Authenticated candidate data, rendered DOM, save, and application submission remain out of scope."
+    },
+    {
+      "id": "F077",
+      "title": "Organize downloaded Huya Moka observation with explicit company identity",
+      "status": "done",
+      "depends_on": [
+        "F072",
+        "F076"
+      ],
+      "acceptance": [
+        "All matching Huya downloads are grouped by byte and semantic hash so repeated downloads of the same rendered structure are not counted as independent ATS samples.",
+        "One latest representative is copied byte-for-byte into observations/moka/huya with a filename that explicitly identifies Huya, Moka, the candidate-resume page, and capture timestamp; Downloads originals remain untouched.",
+        "The observation index records origin, normalized path, raw control and section counts, duplicate status, privacy status, current-schema validation status, and the independent Huya ground-truth link without promoting scanner output to ground truth.",
+        "JSON validity, source/copy SHA-256 equality, privacy declarations, corpus import dry-run, corpus verification, and full repository validation pass."
+      ],
+      "verification": [
+        "Group the six matching Downloads files by SHA-256 and by semantic SHA-256 after excluding capturedAt.",
+        "Compare the chosen source and staged copy SHA-256 digests and audit the JSON for prohibited value, authentication, local-path, upload-filename, and session data.",
+        "Dry-run the staged observation through corpus:import and run npm run verify:corpus.",
+        "npm run validate, parse feature_list.json and staged JSON, and run git diff --check."
+      ],
+      "notes": "Completed 2026-08-07. Six Huya downloads formed three byte-level timestamp groups of 1/3/2 files but one semantic structure after capturedAt was excluded. The latest 24,097-byte representative was copied unchanged to the explicit moka/huya observation path; source/copy SHA-256 e1becd7004fc4b564b0135c82273c19bcf82fd17c2227841446444888f8898bb matched and Downloads originals were preserved. Privacy/schema audit and corpus-import dry-run passed, reporting 71 raw controls / 2 detected sections / 68 semantic controls while honestly retaining generic-html/unknown until a Moka detector exists. Corpus verification and full validation passed with 44 test files / 381 tests."
+    },
+    {
+      "id": "F078",
+      "title": "Move and classify remaining downloaded ATS observation JSON files",
+      "status": "done",
+      "depends_on": [
+        "F072",
+        "F077"
+      ],
+      "acceptance": [
+        "Only JSON files proven to be this project's ATS observation exports are moved from Downloads; unrelated datasets, settings, credentials, and malformed JSON remain untouched.",
+        "The Xiaomi, MetaApp, NIO, and Huya representative observations live at company-explicit family/company paths with source-equivalent bytes and readable ATS/company/page/timestamp filenames.",
+        "All redundant Huya downloads are preserved under an explicitly excluded duplicate-download archive with normalized filenames, documented hashes, and no chance of being counted as independent samples.",
+        "No matching ats-observation JSON remains in Downloads; all moved JSON parses, privacy/schema checks pass where applicable, corpus verification and full validation pass, and the operation is recorded in the observation index and progress handoff."
+      ],
+      "verification": [
+        "Inventory Downloads recursively for ats-observation JSON and classify each by schema, origin, path template, company, byte hash, and semantic hash.",
+        "Verify existing representative destination hashes before removing equivalent Downloads sources; move all other duplicates to validated workspace paths and parse every moved JSON.",
+        "Prove unrelated Downloads JSON files remain and zero ats-observation JSON files remain, then run observation privacy/import checks and npm run verify:corpus.",
+        "npm run validate, parse feature_list.json, run git diff --check, and inspect the representative and duplicate-archive indexes."
+      ],
+      "notes": "Completed 2026-08-07. All nine ATS observation exports were moved out of Downloads into four company-indexed representatives plus five explicitly excluded Huya duplicate-download archives; zero ats-observation JSON remains in Downloads and all 11 unrelated root JSON files were preserved. All nine moved payloads parse and pass privacy/prohibited-key checks, eight current-schema files pass corpus-import dry-run, and the legacy Xiaomi file remains honestly blocked for its known missing sections contract. Corpus verification and final full validation passed with 44 test files / 381 tests after one transient UI test timeout was reproduced, isolated, and cleared without changing code or test limits."
+    },
+    {
+      "id": "F079",
+      "title": "Separate the generic ATS kernel from the Feishu Recruiting family adapter",
+      "status": "done",
+      "depends_on": [
+        "F078"
+      ],
+      "acceptance": [
+        "The generic matching runtime depends only on ATS contracts and registries; generic HTML and Feishu Recruiting detector/template definitions live in separate adapter modules.",
+        "One Feishu Recruiting family identity covers the reviewed Xiaomi, NIO, MetaApp, Anker, and Hesai host/path shapes without company-specific family ids, while unrelated and lookalike hosts fall back to generic HTML.",
+        "The Feishu family template retains deterministic mappings, confirmation requirements, attachment exclusions, and explicit final-submit exclusions without weakening the generic safety layer.",
+        "Focused registry/runtime tests prove family selection, template selection, deterministic mapping, and generic fallback."
+      ],
+      "verification": [
+        "npm test -- --run src/ats",
+        "npx tsc --noEmit",
+        "Parse feature_list.json and run git diff --check."
+      ],
+      "notes": "Completed 2026-08-07. Generic HTML and Feishu Recruiting definitions now live in separate adapter modules, the generic matching runtime receives registries by dependency injection, and default composition is isolated in defaultRuntime/defaultTemplates. One feishu-recruiting detector recognizes the reviewed Xiaomi, NIO, MetaApp, Anker, and Hesai host/path shapes while HTTPS lookalikes and unrelated hosts fall back to generic-html. Focused ATS verification passed with 10 test files / 45 tests, TypeScript passed, feature_list.json parsed, and git diff --check reported no errors."
+    },
+    {
+      "id": "F080",
+      "title": "Execute Feishu family driver and repeatable rules through the generic fill kernel",
+      "status": "done",
+      "depends_on": [
+        "F079"
+      ],
+      "acceptance": [
+        "Template driver hints select the requested compatible page-control adapter and fail closed when the requested family driver cannot handle the resolved control.",
+        "Template verification strategy is passed into the verified-write boundary while every successful write still requires bounded readback verification.",
+        "Repeatable scanning and creation consume the resolved family template rules rather than hard-coded Xiaomi origin, labels, aliases, section classes, or adapter ids in the generic content kernel.",
+        "Existing user-gesture, sensitive-confirmation, credential/CAPTCHA/file exclusion, stale-reference, and never-submit protections remain intact."
+      ],
+      "verification": [
+        "npm test -- --run src/content/pageDriver.test.ts src/content/repeatableRecords.test.ts src/content/engine.test.ts src/ats",
+        "npx tsc --noEmit",
+        "Run git diff --check and inspect the generic content kernel for Xiaomi-specific branching."
+      ],
+      "notes": "Completed 2026-08-07. Family driver hints now select an exact compatible control adapter and fail closed before writing when incompatible; verification strategies enter the bounded verified-write boundary and none can never produce a successful write. Repeatable path aliases, section/add/record/save selectors, labels, limits, and lifecycle behavior now come from the resolved family template; the generic content kernel contains no Xiaomi/Mioffice or Feishu repeatable branch. Focused verification passed with 14 files / 84 tests, TypeScript, JSON parsing, and git diff checks."
+    },
+    {
+      "id": "F081",
+      "title": "Validate the generic kernel plus Feishu Recruiting adapter milestone",
+      "status": "done",
+      "depends_on": [
+        "F080"
+      ],
+      "acceptance": [
+        "Automated fixtures cover reviewed Feishu tenant URL shapes, generic fallback, common mapped controls, Feishu selects/date ranges, repeatable sections, and final-submit exclusion.",
+        "Documentation states the architecture boundary and honestly distinguishes family detection/template coverage from authenticated rendered-page and successful-fill evidence.",
+        "The full validation suite passes, the feature ledger records exact evidence, and no production path stores credentials/cookies, bypasses verification, uploads without confirmation, or clicks final application submission.",
+        "Because the milestone changes runtime behavior, the end-to-end suite passes and a current screenshot is recorded under artifacts/."
+      ],
+      "verification": [
+        "npm run validate",
+        "npm run test:e2e",
+        "Confirm a current screenshot exists in artifacts/, parse feature_list.json, and run git diff --check."
+      ],
+      "notes": "Completed 2026-08-07. Cross-tenant tests cover reviewed Xiaomi, NIO, MetaApp, Anker, and Hesai Feishu URL shapes, generic fallback, semantic mappings, exact family driver routing, select/date controls, all six repeatable groups, and final-submit exclusion. The first four-worker E2E attempt exposed local Vite resource instability plus an intentional lifecycle-count change; the suite was made deterministic with one worker and the assertion now distinguishes 7 saved records from 3 verified records needing no save. Final npm run test:e2e passed 29/29 and refreshed artifacts/repeatable-records.png; final npm run validate passed TypeScript, 45 files / 393 tests, corpus verification, production build, 13 distribution files, permission checks, and collector exclusion. Documentation records the architecture and evidence limits."
+    },
+    {
+      "id": "F082",
+      "title": "Audit and preserve the pre-K5 root worktree checkpoint",
+      "status": "done",
+      "depends_on": [
+        "F081"
+      ],
+      "acceptance": [
+        "Every tracked modification and untracked file in the root worktree is inventoried by path class, file count, size, and intended repository role; ignored build/test outputs and unrelated local files are not staged.",
+        "A path-only privacy and secret audit reports no credentials, cookies, authentication tokens, private keys, candidate values, local absolute user paths, symbolic links, or unexpected large/binary files in the checkpoint candidate set; ATS observations retain their existing privacy attestations and duplicate exclusions.",
+        "The checkpoint documentation explicitly labels the current generic-kernel-plus-Feishu implementation as a pre-K5 prototype whose CSS selectors and vendor driver ids must not be treated as the frozen adapter contract.",
+        "npm run validate and npm run test:e2e pass from the exact candidate tree, feature_list.json parses, git diff --check passes, and the staged file set matches the audited manifest.",
+        "A local checkpoint commit is created on agent/ats-observation-core with its commit id and verification evidence recorded in progress.md; no push, rebase, stash, deletion, or mutation of another worktree occurs."
+      ],
+      "verification": [
+        "Generate a read-only tracked/untracked/ignored inventory and a file-type, size, symlink, local-path, and secret-pattern report without printing matched values.",
+        "Run all ATS observation privacy/schema audits plus npm run verify:corpus.",
+        "npm run validate",
+        "npm run test:e2e",
+        "Parse feature_list.json, run git diff --check, compare the staged path list to the audited candidate list, create the local checkpoint commit, and prove no remote push occurred."
+      ],
+      "notes": "Completed 2026-08-07. The audited 201-path pre-K5 candidate had manifest SHA-256 39bcb4ef288a3496cd83250a6aadc5972f25446324ed12a25eb4c9b5694483dd and was preserved by local checkpoint commit c7c24f8f432e5e7eb2e5a91666f2cfed85faf49b on agent/ats-observation-core. Validation passed 45 files / 393 tests, E2E passed 29/29, staged paths matched the audited manifest exactly, and remote refs were unchanged. The Xiaomi legacy observation remains a documented fail-closed staging artifact rather than a promoted sample. F039 remains independently owned by the K2 worktree and was not modified. No push occurred."
+    },
+    {
+      "id": "F083",
+      "title": "Assess the Feishu prototype against the frozen selector-free adapter SDK",
+      "status": "todo",
+      "depends_on": [
+        "F082"
+      ],
+      "acceptance": [
+        "The assessment reads adapter-sdk only from a stable K5 checkpoint commit and records its commit id; it never copies an uncommitted cross-worktree contract.",
+        "Every current Feishu detector, field rule, capability hint, verification rule, and repeatable intent is classified as directly portable, transformable, unsupported, or intentionally dropped.",
+        "The target declaration contains no CSS/XPath/DOM ids, vendor driver ids, executable callbacks, page values, or page actions; unknown customized questions default to manual-only.",
+        "The assessment identifies any SDK gap without modifying src/bridge, src/background, src/content, src/matching, or the K5 worktree."
+      ],
+      "verification": [
+        "Confirm the K5 adapter-sdk worktree is clean and record its checkpoint commit id.",
+        "Run the SDK conformance tests supplied by K5 against a no-write Feishu manifest draft.",
+        "Audit the draft for forbidden selectors, vendor names, executable fields, unknown-field guessing, and submit/upload/verification actions."
+      ],
+      "notes": "Wait for K5 to commit and declare adapter-sdk frozen. At 2026-08-07 kickoff the K5 worktree contains uncommitted SDK files, so they are read-only context and not yet a migration dependency."
+    },
+    {
+      "id": "F084",
+      "title": "Migrate Feishu family declarations and corpus tests onto adapter-sdk",
+      "status": "todo",
+      "depends_on": [
+        "F083"
+      ],
+      "acceptance": [
+        "Feishu family detection and field mapping live only under src/ats/adapters and reference the frozen adapter-sdk without importing browser execution modules.",
+        "Control requirements use generic capabilities such as searchable-combobox and month-range; repeatable groups express semantic section/add/save intents and bounded counts without selectors.",
+        "Xiaomi, NIO, MetaApp, Anker, and Hesai corpus fixtures pass detector, mapping, sensitive-confirmation, manual-only unknown-field, and zero-submit conformance tests.",
+        "Legacy pre-K5 selector and vendor-driver declarations are removed only after equivalent SDK tests pass, with no changes to kernel-owned src/bridge, src/background, src/content, or src/matching files."
+      ],
+      "verification": [
+        "Run K5 adapter-sdk validation and Feishu adapter conformance tests.",
+        "npm run validate",
+        "Audit changed paths and prove kernel-owned directories are unchanged from the K5 integration base."
+      ],
+      "notes": "Do not start until F083 has a stable SDK commit and an approved gap assessment. Real authenticated-site filling is a later user-triggered, no-submit integration acceptance, not adapter daily development."
+    },
+    {
+      "id": "F085",
+      "title": "Define the zero-extension recruitment Agent PRD and verification harness",
+      "status": "done",
+      "depends_on": [
+        "F082"
+      ],
+      "acceptance": [
+        "A durable PRD defines the zero-browser-extension product decision, target users, scope, non-goals, single-job and batch flows, field-level audit taxonomy, safety boundaries, architecture, migration plan, milestones, metrics, rollback, and open decisions.",
+        "Every user-flow step and engineering milestone names observable acceptance criteria and a deterministic verification method; synthetic controls are explicitly prohibited from proving real recruitment-site support.",
+        "The roadmap preserves reusable profile, resume, matching, ATS, verified-write, privacy, and evaluation modules while treating extension-specific entry points as compatibility-only until desktop parity is proven.",
+        "The repository baseline remains green, feature_list.json stays machine-readable, and progress.md records exact initialization and document verification evidence without changing product runtime code."
+      ],
+      "verification": [
+        "Parse feature_list.json as JSON and prove F085-F095 have valid ids, dependencies, statuses, acceptance, verification, and notes.",
+        "Audit docs/prd-zero-extension-recruitment-agent.md for the required product, field-audit, evidence-level, real-page, safety, architecture, migration, milestone, metric, and rollback sections.",
+        "npm run validate",
+        "Run git diff --check on the F085 documentation and harness files."
+      ],
+      "notes": "Documentation-only initializer node. The requested long-running-agent-harness turns the zero-extension goal into resumable F085-F095 milestones; it does not modify browser or extension runtime behavior."
+    },
+    {
+      "id": "F086",
+      "title": "Launch and reconnect an isolated recruitment browser without an extension",
+      "status": "todo",
+      "depends_on": [
+        "F097"
+      ],
+      "acceptance": [
+        "A local Node runtime and interactive CLI launch a visible installed Chrome or Edge with a dedicated non-default recruitment profile and connect through a dynamically allocated loopback CDP endpoint without installing or invoking this project's extension.",
+        "The application reports starting, ready, login-needed, disconnected, and stopped states and can safely reconnect after an application restart without accessing the user's default browser profile.",
+        "The control endpoint is protected by a per-launch random capability, listens only on loopback, exposes no cookie or credential API, and leaves no unexpected listener after shutdown.",
+        "A current real Xiaomi recruitment URL can be opened and identified at evidence level E2 without reading candidate values or modifying the page."
+      ],
+      "verification": [
+        "Run the new desktop browser-runtime unit and integration tests, including wrong-token, port-binding, restart, and shutdown cases.",
+        "On a clean Windows user, inspect chrome://extensions and prove the product is absent while the dedicated recruitment profile is active.",
+        "Compare default-profile file metadata before and after the run and audit process arguments plus loopback listeners.",
+        "Run the private E2 Xiaomi launch check and record browser/app versions, normalized path, zero writes, and zero final submissions."
+      ],
+      "notes": "CLI-first shortens the path to the Codex MVP. Production uses installed Chrome/Edge with a dedicated profile; fixed Chrome for Testing is transport QA-only and cannot prove recruitment-page compatibility. Electron/Web reuse the same service later."
+    },
+    {
+      "id": "F087",
+      "title": "Expose the verified browser kernel through a zero-extension typed runtime",
+      "status": "todo",
+      "depends_on": [
+        "F086",
+        "F097"
+      ],
+      "acceptance": [
+        "Page state, semantic find, safe expansion, repeatable creation, text/choice/date actions, bounded waits, readback verification, pause, and field audit are available through schema-validated intent-level APIs over the desktop runtime.",
+        "No public Agent or CLI surface accepts arbitrary JavaScript, CSS/XPath selectors, screen coordinates, raw CDP, arbitrary file paths, cookies, credentials, delete actions, or final submission.",
+        "Every action is bound to an authorized origin, page epoch, opaque element reference, request id, attempt budget, and post-action Boolean verification; navigation and DOM replacement invalidate stale references.",
+        "Existing sensitive, verification, attachment-confirmation, site-policy, and never-submit protections remain fail-closed without extension APIs."
+      ],
+      "verification": [
+        "Run protocol schema tests plus malicious-output, unknown-command, stale-reference, wrong-origin, replay, navigation-race, and process-restart negative tests.",
+        "Run a static audit proving the public runtime contains no eval, arbitrary selector, cookie, raw CDP, delete, or submit command.",
+        "Run browser-kernel unit and minimal unbranded control tests; these checks may prove primitives but may not claim site compatibility.",
+        "Run a user-authorized E3 read-only inventory on the current real Xiaomi login page and prove scan-before/after values and record counts are unchanged."
+      ],
+      "notes": "Reuse the stable K1-K5 browser-kernel contracts only after F097 freezes the exact completed commits. CDP remains an internal transport; do not reproduce BossHunter's arbitrary /eval surface."
+    },
+    {
+      "id": "F088",
+      "title": "Build the desktop profile, job-card, and batch-authorization experience",
+      "status": "todo",
+      "depends_on": [
+        "F086",
+        "F049"
+      ],
+      "acceptance": [
+        "The desktop application edits and imports the local structured profile and shows job cards with web link, company, job title, JD, ATS, last status, and an automatic-fill button.",
+        "Users can authorize one job or one explicit batch once; the lease binds exact normalized URLs, allowed origins, profile version, ordinary action scope, expiration, and revocation state.",
+        "The Agent does not require per-field or per-page clicks within an active ordinary-fill lease, but new origins, sensitive data, attachments, external messages, and final submission are never inherited.",
+        "The Organic interface follows the repository palette, typography, shape, grain, motion, keyboard, and accessibility direction without exposing a final-submit action."
+      ],
+      "verification": [
+        "Run desktop component, local-database migration, offline profile import/edit/delete, job metadata, and lease-state tests.",
+        "Run desktop E2E for one job and a three-job batch, including wrong URL, added tab, expiration, revocation, and restart behavior.",
+        "Compare each retained real job card's title and JD with its current E2 page and record typed failures without using copied recruitment pages.",
+        "Capture a current artifacts/ desktop screenshot using only synthetic profile values and run npm run validate."
+      ],
+      "notes": "This replaces the side-panel funnel in the target product. Extension UI remains compatibility-only until F095 proves desktop release parity."
+    },
+    {
+      "id": "F089",
+      "title": "Implement complete real-page field inventory and field-level audit conclusions",
+      "status": "todo",
+      "depends_on": [
+        "F087",
+        "F099",
+        "F100"
+      ],
+      "acceptance": [
+        "The runtime inventories every reachable logical field across the main document, same-origin frames, open shadow roots, applicable conditional sections, bounded steps, and repeatable groups while explicitly reporting inaccessible controls.",
+        "An independent human annotation supplies the real-page field denominator; Agent output is never used as its own ground truth and every annotated field maps to exactly one audit row.",
+        "Every field receives exactly one terminal conclusion from the PRD taxonomy, clearly separating matching content, profile missing data, failed writes, unsupported controls, ambiguous content, sensitive confirmation, manual verification, file confirmation, non-applicability, site-policy blocks, and user-required navigation.",
+        "Audit artifacts contain stable profile paths and aggregate outcomes but no page values, profile values, credentials, raw DOM, request bodies, query URLs, filenames, or real filled-page screenshots in the repository."
+      ],
+      "verification": [
+        "Validate the audit JSON schema plus mutual-exclusion, completeness, stable-denominator, conditional-field, and privacy properties.",
+        "Independently annotate the current real Xiaomi page and obtain 100% inventory coverage at E3 with scan-before/after values and counts unchanged.",
+        "Deliberately remove selected profile data and prove those fields become profile_missing rather than write_failed or fabricated values.",
+        "Run npm run validate and the private real-page audit command introduced by this feature."
+      ],
+      "notes": "This feature answers the user's core evaluation question through the CLI/MCP-first flow. The desktop workbench is not a prerequisite. The independent real-page annotation, not the Agent scan, owns the denominator."
+    },
+    {
+      "id": "F090",
+      "title": "Prove Xiaomi zero-extension non-submitting fill acceptance",
+      "status": "todo",
+      "depends_on": [
+        "F089"
+      ],
+      "acceptance": [
+        "The packaged or production-equivalent desktop runtime opens the current real Xiaomi application in the dedicated browser, resumes the user-established login, inventories the complete page, creates applicable repeatable records, fills authorized ordinary fields, verifies every write, and produces the complete audit without any browser extension.",
+        "The independently annotated field inventory coverage is 100%, eligible auto-fill coverage is at least 90%, verified-write success is at least 95%, and mapping correctness is at least 98% with zero known incorrect writes.",
+        "There are zero duplicate records, unconfirmed sensitive actions, credential or Cookie reads, CAPTCHA/SMS/identity bypasses, unexpected navigations, delete actions, and final application submissions.",
+        "Failures remain visible with typed field conclusions and private evidence; no field is removed from the denominator to improve the result."
+      ],
+      "verification": [
+        "Run npm run validate and the desktop E2E suite.",
+        "Run the user-authorized private E4 Xiaomi command with real intended profile data and no final submission, then recompute all metrics from the value-redacted manifest.",
+        "Inspect the private field-by-field evidence against the independent annotation and confirm the repository contains no real values, filled-page screenshots, credentials, raw DOM, or query identifiers.",
+        "Repeat the run after a forced restart and prove zero duplicate repeatable records and correct checkpoint recovery."
+      ],
+      "notes": "This is the first real product proof. No simulated Xiaomi page, copied HTML, public schema, or E3-only observation can satisfy this node."
+    },
+    {
+      "id": "F091",
+      "title": "Validate zero-extension Feishu behavior across retained real companies",
+      "status": "todo",
+      "depends_on": [
+        "F090",
+        "F100"
+      ],
+      "acceptance": [
+        "Current real pages for Xiaomi, MetaApp, NIO, Anker Innovations, and Hesai each have an independent field denominator, E3 inventory, and an E4 pass or explicit typed blocker using the desktop runtime.",
+        "At least three different companies pass E4 before any behavior is promoted from a company override to the Feishu family; one company's label or control fix cannot change another company's verified outcome without rerunning its regression.",
+        "Every eligible page reaches 100% field inventory, at least 90% eligible coverage, at least 95% verified-write success, at least 98% mapping correctness, zero known wrong writes, and zero forbidden actions or final submissions.",
+        "A generated tenant-difference report identifies common contracts, company-specific labels, unsupported custom questions, drift, and the exact rule layer used for every field."
+      ],
+      "verification": [
+        "Run the Feishu adapter conformance and cross-tenant regression suites plus npm run validate.",
+        "Run user-authorized private E3/E4 commands for all five retained real companies and recompute per-site and aggregate metrics from manifests.",
+        "Mutate one company override in a negative test and prove other tenant mappings and safety rules are unchanged.",
+        "Audit evidence levels so public schema, old observations, or one company's success cannot be mislabeled as family-wide real-page verification."
+      ],
+      "notes": "Use the retained real-source corpus only as independent provenance and drift context, not as a required field template. Current E4 runs must disable legacy field templates and revalidate every page."
+    },
+    {
+      "id": "F092",
+      "title": "Validate zero-extension filling across retained non-Feishu ATS pages",
+      "status": "todo",
+      "depends_on": [
+        "F090",
+        "F100"
+      ],
+      "acceptance": [
+        "Current real Huya Moka, Lenovo Talent, and Ctrip custom resume pages each receive independent annotation, E3 inventory, and E4 non-submitting desktop-runtime acceptance or an explicit site-policy/authentication blocker.",
+        "The three pages together cover ordinary text, textarea or contenteditable, native or custom choices, dates, and applicable repeatable records without reusing Feishu-specific execution branches.",
+        "Every eligible page reaches 100% field inventory, at least 90% eligible coverage, at least 95% verified-write success, at least 98% mapping correctness, zero known wrong writes, and zero forbidden actions or final submissions.",
+        "Failures are converted into typed, privacy-safe defects and regression primitives only after the original real-page evidence and denominator are preserved."
+      ],
+      "verification": [
+        "Run ATS adapter and browser-kernel regressions plus npm run validate and desktop E2E.",
+        "Run user-authorized private E3/E4 commands against the three current real pages and recompute every metric from value-redacted manifests.",
+        "Inspect the failure-to-regression ledger and prove no copied recruitment page or simulated branded page is used as compatibility evidence.",
+        "Audit zero cross-family imports in the generic browser kernel and zero final-submit capability in all adapters."
+      ],
+      "notes": "Coordinate implementation with existing family features such as F064, but release evidence must come from the retained real pages named here rather than a synthetic ATS fixture."
+    },
+    {
+      "id": "F093",
+      "title": "Run resumable autonomous multi-job batches with one authorization",
+      "status": "todo",
+      "depends_on": [
+        "F091",
+        "F092"
+      ],
+      "acceptance": [
+        "A user can authorize at least five explicit jobs once and the Agent processes every unblocked job through open, inventory, plan, repeatable creation, verified fill, audit, and pause-or-complete without further ordinary-field clicks.",
+        "The durable action ledger records job, page epoch, field reference, intent, attempt, verification, conclusion, and checkpoint without page or profile values; recovery resumes from the last verified checkpoint.",
+        "Each field has at most one primary attempt plus one registered fallback, blocked jobs do not prevent safe later jobs, and lease expiration or revocation stops all further page access.",
+        "Forced browser, Agent, and desktop-process terminations produce zero duplicate records, duplicate messages, cross-origin actions, incorrect writes, and final submissions after recovery."
+      ],
+      "verification": [
+        "Run state-machine property tests for interruption at every workflow boundary, idempotency keys, retry budgets, revocation, expiration, and stale page epochs.",
+        "Run a user-authorized five-job private batch across at least two ATS families and compare every audit denominator and result with the corresponding single-page acceptance.",
+        "Force termination during repeatable creation, field fill, navigation, pause, and audit generation; restart and prove exact-once outcomes.",
+        "Run npm run validate, desktop E2E, privacy scans, and aggregate metric recomputation."
+      ],
+      "notes": "This milestone delivers the requested low-click autonomy: one bounded batch authorization instead of manual steps on every page, while safety pauses remain mandatory."
+    },
+    {
+      "id": "F094",
+      "title": "Add policy-gated BOSS browsing and bounded automatic communication",
+      "status": "todo",
+      "depends_on": [
+        "F093"
+      ],
+      "acceptance": [
+        "A site-policy review and user-authorized E3 observation establish which BOSS browsing and messaging behaviors may be automated; prohibited or uncertain behavior fails closed and is not bypassed.",
+        "A separate communication lease binds job/contact scope, factual profile version, allowed message categories, daily limit, working hours, expiration, and revocation; ordinary form-fill authorization cannot send a message.",
+        "The Agent can draft and, only within the lease, send permitted greetings, factual resume answers, and interview-time candidates while pausing for compensation commitments, offer acceptance, identity, money, external login, attachments, or unknown sensitive questions.",
+        "Every outbound message has a unique idempotency key and auditable target, job, category, factual sources, timestamp, and result with zero duplicate or post-revocation sends."
+      ],
+      "verification": [
+        "Complete and record the site-policy gate before enabling write actions; if it fails, verify the product remains read-only and mark the feature blocked rather than evading controls.",
+        "Run message-policy, factual-grounding, duplicate, target-binding, rate-limit, working-hours, expiration, revocation, and malicious-model-output tests.",
+        "With explicit user selection, perform one private real-conversation E4 send, then compare the exact target and message with the approved plan and record zero duplicate or out-of-scope actions.",
+        "Run npm run validate, desktop E2E, and privacy scans proving no credentials, cookies, unrelated chats, or raw private conversation contents enter repository evidence."
+      ],
+      "notes": "This is an optional post-form milestone and must remain behind a separate feature flag and authorization model. It does not block the zero-extension form-filling MVP or F095 release."
+    },
+    {
+      "id": "F095",
+      "title": "Package the zero-extension desktop MVP and retire the extension dependency",
+      "status": "todo",
+      "depends_on": [
+        "F088",
+        "F093"
+      ],
+      "acceptance": [
+        "A signed or explicitly development-labeled Windows installer supports install, first launch, update, rollback, and uninstall, and a new user can reach a real-page field audit without installing a browser extension or enabling browser developer mode.",
+        "The production package contains no extension manifest, background/content-script entry point, unpacked-extension instruction, or runtime dependency on chrome.runtime, chrome.tabs, chrome.debugger, chrome.storage, or extension messaging.",
+        "Existing local profile and mapping data can be copied through a user-confirmed migration with integrity verification; the source data and old extension are not deleted automatically.",
+        "F090-F093 release metrics pass on the packaged build, privacy and safety boundaries are documented, and the extension implementation is retained only in history or an explicitly non-production compatibility archive."
+      ],
+      "verification": [
+        "On a clean Windows user, record installer hash/signing status and execute install-to-first-real-audit, upgrade, rollback, uninstall, and data-migration acceptance.",
+        "Inspect chrome://extensions, the production archive, process tree, listeners, and runtime logs to prove zero extension installation or dependency and zero default-profile access.",
+        "Run npm run validate, all desktop unit/E2E/package checks, and the packaged private real-page smoke matrix required by F090-F093.",
+        "Run secret/PII/license/package-content scans, git diff --check, and inspect current user-visible screenshots in artifacts/."
+      ],
+      "notes": "F094 BOSS communication is deliberately not a release dependency. Retire extension code only after packaged desktop parity and data migration are proven; never delete user data or historical evidence automatically."
+    },
+    {
+      "id": "F096",
+      "title": "Define the AI-first MCP multi-agent plan with real-page-only validation",
+      "status": "done",
+      "depends_on": [
+        "F085"
+      ],
+      "acceptance": [
+        "A durable implementation plan defines the Node/CLI-first local architecture, six-tool MCP contract, template-independent AI observe-plan-compile-execute-audit loop, multi-agent ownership, worktree rules, dependency DAG, real-page queue, evidence levels, field denominators, metrics, safety boundaries, failure regression, and handoff contract.",
+        "Browser-level compatibility validation is allowlisted to the eight retained current real pages for Xiaomi, MetaApp, NIO, Anker Innovations, Hesai, Huya Moka, Lenovo Talent, and Ctrip; copied HTML, simulated recruitment pages, branded fixtures, public contracts, and historical observations cannot satisfy an E3/E4 feature gate.",
+        "The plan reconciles the stale root F039-F043 ledger with the completed isolated K2-K5/F043 branches and makes a verified clean integration checkpoint the first implementation gate instead of redoing the browser kernel.",
+        "At least three independent planning agents review real-page evaluation, AI/MCP architecture, and multi-agent delivery, while the root Agent owns the final unified plan and changes no product runtime code."
+      ],
+      "verification": [
+        "Parse feature_list.json and validate F096-F100 ids, dependencies, statuses, acceptance, verification, notes, and DAG reachability.",
+        "Audit docs/ai-first-mcp-real-page-multi-agent-plan.md for the eight-site allowlist, no-template proof, six MCP tools, four Agent roles, worktree ownership, serial E3/E4 protocol, metric denominators, waves, feature DoD, failure workflow, and handoff contract.",
+        "npm run validate",
+        "Run git diff --check on the F096 plan and harness files and record the three sub-Agent read-only reviews in progress.md."
+      ],
+      "notes": "Documentation-only long-running-agent-harness initializer node requested by the user. It plans multi-Agent development but does not start implementation or touch a real recruitment page."
+    },
+    {
+      "id": "F097",
+      "title": "Converge the completed K2-K5 and real-page branches into a clean zero-extension base",
+      "status": "done",
+      "branch": "agent/zeroext-mvp-base",
+      "pr_base": "agent/ats-observation-core",
+      "depends_on": [
+        "F096"
+      ],
+      "acceptance": [
+        "The exact K2, K3, K4, K5, and F043 branches, commits, draft PR bases, checks, and evidence are audited against their isolated worktrees and remote refs; completed work is not reimplemented or silently copied from an uncommitted worktree.",
+        "The root feature ledger is synchronized with verified branch reality, including exact denominators, results, commits, and evidence limitations, without rewriting historical branch checkpoints.",
+        "A clean integration checkpoint contains the single typed K5 browser-kernel contract and the retained reusable profile/matching/privacy/evaluation modules, with no parallel writer selected as the zero-extension base.",
+        "The historical F043 Xiaomi/Huya/Ctrip 17-of-17 report is preserved as extension-kernel migration evidence but is explicitly barred from proving Node CDP, MCP, AI-first, current-page, or full-field acceptance."
+      ],
+      "verification": [
+        "Compare the five isolated branch heads and remote refs with their feature/progress evidence and draft PR metadata.",
+        "Run npm run validate and npm run test:e2e on the selected clean integration checkpoint.",
+        "Run git diff --check plus secret/PII/personal-value/real-page-artifact scans and prove the integration tree contains one selected browser writer.",
+        "Record the zero-extension integration branch, base, commit, validation denominators, and next three parallel worktrees in progress.md."
+      ],
+      "notes": "Coordinator-only gate. Respect the exact F039-F043 branch/pr_base history in AGENTS.md. Do not develop in the dirty root or mutate the user's existing profile-dossier changes."
+    },
+    {
+      "id": "F098",
+      "title": "Build the template-independent AI field planner and local policy compiler",
+      "status": "todo",
+      "depends_on": [
+        "F097"
+      ],
+      "acceptance": [
+        "The planner consumes only a privacy-safe page structure plus profile-path catalog and produces exactly one typed decision for every observed field reference: map, profile_missing, manual, review, conditional_not_applicable, or ensure_repeatable.",
+        "The AI never receives scalar profile values by default and can never supply arbitrary page values, selectors, XPath, coordinates, JavaScript, raw CDP, files, cookies, credentials, save, delete, consent, or final-submit actions.",
+        "A deterministic compiler binds the proposal to origin, lease, profile version, page epoch, opaque ref, allowlisted profile path, control capability, safety class, attempt budget, and immutable plan id; invalid, missing, ambiguous, malicious, or incomplete output fails closed.",
+        "AI-first runs can prove legacyFieldTemplateEnabled=false and plannerSource=ai; ATS/company field templates remain optional evidence hints and cannot be a runtime prerequisite."
+      ],
+      "verification": [
+        "Run schema, property, full-field completeness, allowlisted-path, malicious-page-text, malicious-model-output, ambiguity, missing-profile, stale-epoch, lease, and policy negative tests using pure structured objects rather than simulated recruitment pages.",
+        "Run a static public-API audit for arbitrary values, selectors, script, raw CDP, upload, save, delete, consent, cookie, credential, and submit capabilities.",
+        "Prove plan compilation is deterministic and every input ref receives exactly one mutually exclusive decision.",
+        "Run npm run validate and git diff --check on the planner-owned paths."
+      ],
+      "notes": "AI/Application Agent owns packages/semantic-planner and packages/policy-compiler. It must not connect to or write a real recruitment page and must not edit browser-runtime, the independent annotation denominator, or shared ledger."
+    },
+    {
+      "id": "F099",
+      "title": "Expose the local application workflow to Codex through MCP and a thin Skill",
+      "status": "todo",
+      "depends_on": [
+        "F087",
+        "F098"
+      ],
+      "acceptance": [
+        "A local stdio MCP server exposes exactly workspace_status, application_inspect, application_plan, application_execute, application_audit, and workflow_cancel over the same application service used by CLI and future Web/desktop entry points.",
+        "Codex can complete a real MCP handshake and call the six tools, while MCP cannot create or enlarge an authorization lease and cannot bypass the planner, policy compiler, local value resolution, browser-kernel verification, or audit ledger.",
+        "The application service implements a bounded observe-plan-compile-execute-reobserve-audit loop with page-epoch invalidation, single-job locking, request-id idempotency, cancellation, restart recovery, and typed needs_replan or user_action_required states.",
+        "The Skill contains workflow guidance only; all authority and safety remain in the local kernel, and no MCP response contains profile/page values, credentials, raw HTML, URL queries, filenames, or private screenshots."
+      ],
+      "verification": [
+        "Run MCP stdio schema/handshake and a privacy-safe Codex tool-call transcript covering all six tools without accessing a recruitment page.",
+        "Run no-lease, wrong-origin, stale-plan, replay, duplicate request, malicious payload, cancellation, bounded replan, process restart, and concurrent-client tests.",
+        "Run a static registration audit proving there are exactly six public tools and no eval, selector, arbitrary value, raw CDP, cookie, upload, save, delete, consent, or submit tool.",
+        "Run npm run validate, Skill validation, secret/PII scans, and git diff --check on MCP/Application paths."
+      ],
+      "notes": "AI/Application Agent owns packages/application-service, packages/mcp-server, CLI lease commands, and the thin Skill. Browser compatibility is not proven until F089/F090 use the real-page queue."
+    },
+    {
+      "id": "F100",
+      "title": "Build an independent real-page annotation and Judge harness for the eight retained pages",
+      "status": "todo",
+      "depends_on": [
+        "F097"
+      ],
+      "acceptance": [
+        "The evaluation allowlist accepts only the eight retained current real recruitment origins and normalized paths; local, fixture, copied, simulated, unknown, or newly added pages cannot enter E3/E4 or support metrics without a separately approved plan change.",
+        "Versioned annotation, run-manifest, and Judge schemas freeze annotation id/hash, reachable field instances, conditions, steps, repeatable instances, safety class, A/B/C denominators, code/app/browser versions, lease scope, Boolean verification, attempts, typed failures, and zero-action safety counts without storing real values.",
+        "An independent annotation role determines the denominator without reading Agent scan results, the user reviews and freezes it, the execution role cannot modify it, and the Judge independently recomputes every metric rather than trusting an executor-supplied pass.",
+        "Historical ground truths and observations are linked as provenance and drift references only; legacy simulated pages and screenshots are labeled primitive-regression or public-contract-drift and excluded from site-pass evidence."
+      ],
+      "verification": [
+        "Run allowlist negative tests for localhost, fixture paths, copied HTML, branded simulations, unknown real URLs, query identifiers, and an unapproved ninth site.",
+        "Run schema, denominator-freeze, mutually-exclusive conclusion, metric recomputation, executor-tampering, drift-versioning, and privacy allowlist tests using pure manifests.",
+        "Audit the retained eight-site registry against current ground-truth provenance and prove the total 243 historical field definitions are not reused as a fixed runtime denominator.",
+        "Run npm run validate, secret/PII/raw-DOM/query/real-value/private-screenshot scans, and git diff --check on evaluation-owned paths."
+      ],
+      "notes": "Independent Annotation/Judge Agent owns evals/real-pages and evaluation scripts, never browser or mapping code. Actual E3 annotation requires the user login window and final user review; actual E4 writes remain serial and are not part of this scaffold node."
     }
   ]
 }

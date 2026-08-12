@@ -1,0 +1,59 @@
+{
+  "sourceUrl": "https://meta.jobs.feishu.cn/140297/resume/7667451369407023396/apply",
+  "capturedAt": "2026-08-07",
+  "job": {
+    "id": "7667451369407023396",
+    "title": "软件研发工程师"
+  },
+  "websitePath": "140297",
+  "language": "zh-CN",
+  "schemaVersion": 8,
+  "evidenceBoundary": "Ground truth is derived from the public server-rendered js-websiteInfo resume_form_schema. Authenticated rendered-DOM coverage was not observed, and no login, form write, upload, or submission was performed.",
+  "groups": [
+    {
+      "group": "简历",
+      "fieldName": "attachment_resume_list",
+      "required": true,
+      "repeatable": false,
+      "children": [
+        { "label": "简历附件", "fieldName": "attachment_resume", "type": "attachment", "required": true }
+      ]
+    },
+    {
+      "group": "基本信息",
+      "fieldName": "basic_info",
+      "required": true,
+      "repeatable": false,
+      "children": [
+        { "label": "姓名", "fieldName": "name", "type": "text", "required": true },
+        { "label": "手机号码", "fieldName": "mobile", "type": "text", "required": true },
+        { "label": "邮箱", "fieldName": "email", "type": "text", "required": true },
+        { "label": "国籍（地区）", "fieldName": "nationality", "type": "select", "required": false }
+      ]
+    },
+    {
+      "group": "教育经历",
+      "fieldName": "education_list",
+      "required": true,
+      "repeatable": true,
+      "children": [
+        { "label": "学校名称", "fieldName": "school", "type": "text", "required": false },
+        { "label": "学历", "fieldName": "degree", "type": "select", "required": false },
+        { "label": "专业", "fieldName": "field_of_study", "type": "text", "required": false },
+        { "label": "起止时间", "fieldName": "start_end_time", "type": "date_range", "required": false }
+      ]
+    },
+    {
+      "group": "实习经历",
+      "fieldName": "internship_list",
+      "required": false,
+      "repeatable": true,
+      "children": [
+        { "label": "公司名称", "fieldName": "company", "type": "text", "required": false },
+        { "label": "职位名称", "fieldName": "title", "type": "text", "required": false },
+        { "label": "起止时间", "fieldName": "start_end_time", "type": "date_range", "required": false },
+        { "label": "描述", "fieldName": "desc", "type": "long_text", "required": false }
+      ]
+    }
+  ]
+}

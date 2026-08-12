@@ -16,16 +16,8 @@ interface ScoredCandidate {
 const unsupportedKinds = new Set(["file", "password", "hidden", "button", "checkbox"]);
 const verificationPatterns = ["验证码", "短信验证", "图形验证", "captcha", "verificationcode", "smscode"];
 const unsupportedSensitivePatterns = [
-  "身份证号",
-  "身份证号码",
-  "个人证件",
-  "证件号码",
-  "护照号码",
   "银行卡号",
   "社会保障号",
-  "idcardnumber",
-  "identitynumber",
-  "passportnumber",
   "bankcardnumber",
   "socialsecuritynumber"
 ];

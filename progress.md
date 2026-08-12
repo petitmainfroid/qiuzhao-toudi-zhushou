@@ -1571,3 +1571,788 @@ Run a local field-level audit over the five PDFs to identify missing dates, role
 - Staged exactly the F043 runtime, adapter, anonymous regression, privacy-safe report, verifier, progress and current synthetic evidence files. `git diff --cached --check`, the staged credential/path scan and `npm run verify:live-acceptance` all passed before commit.
 - Committed the implementation as `e156b1d22418186b3868d0f761a6e88a087eba53` (`完成三家族真实页非提交验收`) and pushed `agent/browser-kernel-real-site-acceptance` to origin.
 - Opened draft PR #8 against the exact stacked base `agent/browser-kernel-k5-adapters`: `https://github.com/petitmainfroid/qiuzhao-toudi-zhushou/pull/8`.
+
+<!-- ROOT-ATS-AND-ZEROEXT-HANDOFF-FROM-16cd189 -->
+
+## 2026-08-06 - F044 ATS observation core kickoff
+
+- Applied the user-requested `long-running-agent-harness` and restored the repository from `AGENTS.md`, `feature_list.json`, `progress.md`, and the existing browser-kernel checkpoint plan before changing code.
+- The initial `./init.ps1 -SkipInstall` baseline on `agent/browser-kernel-k2-actions` exited 0: TypeScript passed, 30 Vitest files / 239 tests passed, the production build and 13-file distribution audit succeeded, exact browser-kernel permissions remained unchanged, and forbidden permissions were absent.
+- F039 is already in progress on its required K2 branch and explicitly excludes ATS adapter work. To avoid contaminating Draft PR #4, created `agent/ats-observation-core` from `agent/browser-kernel-k1-baseline` and registered independent F044 with that baseline as `pr_base`.
+- F044 is intentionally narrower than F042: it provides a read-only `src/ats` observation contract, generic detector registry, normalization/redaction, shareability audit, and ground-truth types. It adds no concrete ATS family, UI, page action, arbitrary selector, network call, permission, telemetry, upload, or submission capability.
+- Privacy gate: shareable output must omit session snapshots and opaque references, template path identifiers, bound semantic text and options, and fail closed on values, selected/checked state, raw HTML, selectors, DOM/CDP IDs, query values, credentials, file metadata, local paths, encoded payloads, or personal identifiers.
+- F044 is `in_progress`. Next action: implement only the isolated module and its unit tests, then run targeted tests, type checking, full validation, feature-plan parsing, and whitespace/privacy review before deciding completion.
+
+### F044 implementation and acceptance evidence
+
+- Added the independent `src/ats` module with versioned observation and human-ground-truth contracts, a deterministic detector registry, bounded normalization/redaction, a fail-closed shareability audit, and a single conversion entry point from `PrivacySafePageState`. The production module removes snapshot IDs and opaque control references and emits sequential anonymous control keys instead.
+- Added `docs/ats-observation-acceptance.md` as the executable acceptance boundary. The module intentionally contains no concrete ATS-family adapter, user interface, extension storage, Chrome/debugger call, DOM selector, network/telemetry path, page action, upload, or submission behavior.
+- The first targeted test run exposed missing explicit Vitest imports in the three new test files (`describe is not defined`). This was test scaffolding only; adding the imports resolved it. The final targeted run `npm test -- --run src/ats` exited 0 with 3 files / 8 tests passed.
+- `npm run typecheck` exited 0. The final `npm run validate` exited 0: TypeScript passed, 33 Vitest files / 247 tests passed, the production build succeeded, 13 required distribution files were verified, permissions remained unchanged, and forbidden permissions were absent.
+- The tests cover anonymous observation export, malicious email/phone/URL/query/local-path redaction, path templating, snapshot/reference removal, unsafe source rejection, forbidden-key and personal-data rejection, duplicate control keys, inconsistent summaries, invalid union members, deterministic family selection, tie resolution, sanitized evidence, invalid detector registration, and the generic fallback.
+- A production-only static capability review covered `audit.ts`, `contracts.ts`, `familyRegistry.ts`, `index.ts`, `observation.ts`, and `sanitize.ts`. It found zero executable references to Chrome APIs, debugger commands, DOM querying, `fetch`, XHR, WebSocket, click/dispatch, `DataTransfer`, extension messaging, local storage, or IndexedDB. Production imports are local except for type-only `PrivacySafePageState`/`PrivacySafeControl` imports from `src/bridge/protocol.ts`.
+- Harness audit passed: `feature_list.json` parsed with 45 features and the expected F044 branch/base metadata; `git diff --check` reported no whitespace errors (only Windows LF/CRLF notices on existing tracked files).
+
+### F044 changed files and handoff
+
+- Module: `src/ats/contracts.ts`, `src/ats/sanitize.ts`, `src/ats/familyRegistry.ts`, `src/ats/audit.ts`, `src/ats/observation.ts`, `src/ats/index.ts`, and `src/ats/README.md`.
+- Tests: `src/ats/familyRegistry.test.ts`, `src/ats/observation.test.ts`, and `src/ats/audit.test.ts`.
+- Harness and acceptance: `docs/ats-observation-acceptance.md`, `feature_list.json`, and `progress.md`.
+- F044 is complete with no code blocker. The next logical ATS-corpus node is a separately accepted, user-reviewed local export workflow followed by concrete family detectors and anonymous regression fixtures; those are not implemented here. F039 remains isolated on `agent/browser-kernel-k2-actions`, and its branch was not modified by this work.
+
+## 2026-08-06 - F045 privacy-safe ATS corpus kickoff
+
+- Applied the user-requested `long-running-agent-harness`, reread the repository operating guide and durable state, and selected independent F045 after completed F044. No commit or push is authorized, so the node continues on `agent/ats-observation-core`; the separate F039 browser-action work remains untouched.
+- Baseline `./init.ps1 -SkipInstall` exited 0 before F045 edits: TypeScript passed, 33 Vitest files / 247 tests passed, production build succeeded, 13 required distribution files passed, exact permissions remained unchanged, and forbidden permissions were absent.
+- F045 is `in_progress`. Scope is limited to a versioned repository corpus contract, developer annotations, a bounded fail-closed local importer, deterministic naming/deduplication, whole-corpus verification, tests, and operator documentation.
+- The importer may write only a validated anonymous sample beneath the repository-owned `ats-corpus/samples/<family>/` hierarchy. It must not overwrite conflicts or collect from a browser. F045 adds no UI, live ATS data, detector/template, network/telemetry path, browser permission, page action, file upload, or final submission behavior.
+- Next action: implement the exact schema and safe import/verification core, then run the listed targeted and full checks before recording completion evidence.
+
+### F045 implementation and acceptance evidence
+
+- Added the repository-owned `ats-corpus/` hierarchy with an exact JSON Schema 2020-12 contract. The envelope contains the complete F044 observation plus bounded annotations for review state/time, reviewed family, canonical profile field, section, allowlisted control behaviors, expected action, fixed driver, verification method, and notes. Empty `samples`, `fixtures`, and `templates` areas are documented; no live ATS sample or template was added.
+- Added `scripts/ats-corpus/core.mjs`, `import.mjs`, and `verify.mjs`. The importer accepts one explicit JSON file up to 1,000,000 bytes, wraps a raw F044 observation as unreviewed, validates through Ajv, rechecks privacy and cross-field invariants, computes an anonymous structural SHA-256, searches the bounded corpus for duplicates, and only then writes with exclusive `wx` semantics beneath `samples/<family>/`. Capture time/tool version do not create duplicates; an annotation conflict or existing target is never overwritten.
+- Added `npm run corpus:import -- <file> [--dry-run]` and `npm run verify:corpus`. Whole-corpus verification checks at most 2,000 JSON samples / 20,000,000 bytes for schema, privacy, one-to-one annotations, summary consistency, deterministic placement, structural duplicates, unexpected family contents, nested directories, and symbolic links. `npm run validate` now includes this gate.
+- Added `docs/ats-corpus-acceptance.md` and corpus operator READMEs. They define the collect-download-import-review lifecycle and prohibit personal/page values, credentials, Cookie/header/body data, query values, local paths, filenames, resume content, raw HTML, selectors, DOM/CDP/session identifiers, encoded payloads, automatic upload, and final submission.
+- Targeted final run `npm test -- --run src/ats/corpusImport.test.ts` exited 0 with 1 file / 8 tests passed. Coverage proves raw wrapping, reviewed annotations, the non-writing CLI dry run, deterministic duplicate handling across capture time/tool versions, malformed/schema-invalid rejection, annotation mismatch rejection, personal/local-path rejection, conflict refusal, and placement verification.
+- Final `npm run verify:corpus` exited 0 with `samples=0 bytes=0 families=none`; this node intentionally seeds no real or fabricated ATS corpus record. Final `npm run typecheck` exited 0.
+- Ajv 8.17.1 was initially selected, then `npm audit` identified its `$data` ReDoS advisory range. The dependency was upgraded to Ajv 8.20.0 before final acceptance; the Ajv finding disappeared. The remaining five audit findings are in the repository's existing Vitest/Vite/esbuild development toolchain and require a separate major-version maintenance decision; F045 does not run the affected Vitest UI server.
+- The first full validation after the dependency upgrade reached 34/34 test files, 255/255 tests, corpus verification, and a successful production build, then exited 1 before printing the distribution step. Standalone `npm run verify:dist` immediately exited 0. A clean full rerun of `npm run validate` then exited 0 end to end: TypeScript passed, 34 Vitest files / 255 tests passed, the empty corpus verified, production build succeeded, 13 required distribution files passed, exact permissions remained unchanged, and forbidden permissions were absent.
+- Final static gates passed: `feature_list.json` parsed with 46 features; `git diff --check` reported no whitespace errors (only Windows LF/CRLF notices); production source has no import of corpus tooling; the built `dist` contains no corpus/import/collector marker; Manifest has no diff; and corpus executables contain no Chrome/debugger, DOM query, browser messaging, network/telemetry, click/dispatch, upload, or submit capability.
+
+### F045 changed files and handoff
+
+- Corpus contract and guidance: `ats-corpus/schema/ats-corpus-sample-v1.schema.json`, `ats-corpus/README.md`, `ats-corpus/samples/README.md`, `ats-corpus/fixtures/README.md`, and `ats-corpus/templates/README.md`.
+- Import/verification tooling: `scripts/ats-corpus/core.mjs`, `scripts/ats-corpus/core.d.mts`, `scripts/ats-corpus/import.mjs`, `scripts/ats-corpus/verify.mjs`, and `scripts/validate.mjs`.
+- Tests and documentation: `src/ats/corpusImport.test.ts`, `src/ats/README.md`, and `docs/ats-corpus-acceptance.md`.
+- Harness/dependencies: `feature_list.json`, `progress.md`, `package.json`, and `package-lock.json`; Ajv 8.20.0 is development-only.
+- F045 is complete with no code blocker and no user-visible milestone, so no E2E screenshot was required. No commit or push was performed. The next recommended feature is F046: a development-build-only collector with an explicit gesture, privacy preview, JSON download, and a distribution proof that the collector is absent from production. Moka/Beisen samples and detectors remain later nodes.
+
+## 2026-08-06 - F046 Xiaomi-based developer collector kickoff
+
+- Applied the user-requested `long-running-agent-harness` and the required `agent-reach` internet-routing skill. The `agent-reach` executable was unavailable and the documented Exa MCP backend was not configured, so research followed the skill's Jina Reader fallback plus the repository's existing direct read-only Xiaomi schema audit; no external file was written during research.
+- Baseline `./init.ps1 -SkipInstall` exited 0 before F046 edits: TypeScript passed, 34 Vitest files / 255 tests passed, the empty ATS corpus verified, production build succeeded, 13 required distribution files passed, exact permissions remained unchanged, and forbidden permissions were absent.
+- Current public evidence on 2026-08-06: Jina Reader returned the Xiaomi internship site at `xiaomi.jobs.f.mioffice.cn` and the application title/login boundary; `npm run audit:xiaomi` exited 0 and confirmed the existing public application schema still has 9 groups / 34 visible fields with no application submission. Unauthenticated application rendering exposes the login route, so F046 will not attempt login or authenticated collection.
+- F046 is `in_progress`. It will add one compile-time-isolated collector build, an explicit-gesture privacy preview/download flow, production exclusion checks, focused tests, and a real-Chrome anonymous Xiaomi-derived acceptance artifact. It will not add a Xiaomi/Feishu family detector, real corpus sample, page write, upload, network feedback, permission, or submission capability.
+- The anonymous fixture, not the live page, owns reproducible field and privacy denominators. Live Xiaomi evidence remains read-only schema freshness only; any future authenticated capture requires a separate user-authorized node and must never commit real values or filled screenshots.
+
+### F046 implementation and Xiaomi acceptance evidence
+
+- Added a developer-only ATS collector card behind a compile-time Vite alias. `npm run build:collector` emits `dist-collector`, while the normal development/production entry resolves to an empty developer-tools component. The collector marker, UI strings, CSS, and implementation are absent from the production dependency graph and distribution.
+- The collector performs no work before the developer clicks `采集匿名结构`. That gesture starts or reuses the bounded K0/K1 session, reads one `PrivacySafePageState`, and passes it only through the audited F044 observation conversion. It displays the anonymous result before a separate `下载匿名 JSON` click creates a local Blob download.
+- The collector has no extension storage, filesystem, clipboard, telemetry, network-upload, polling, login, CAPTCHA/SMS, page mutation, form-fill, file-upload, navigation, or submit path. The Manifest is unchanged; the collector build retains exactly `activeTab`, `alarms`, `debugger`, `scripting`, `sidePanel`, `storage`, `tabs`, and `webNavigation` plus the existing `<all_urls>` host permission, without a `downloads` permission.
+- Added a Xiaomi-derived anonymous HTTPS browser fixture covering the nine current public schema groups and 38 controls. It exercises ordinary text/number controls, native and custom selects/multi-selects, textareas, month ranges, repeatable records, resume-file gates, identity restrictions, and a final-submit control.
+- The E2E proves the exported path is templated as `/internship/resume/:id/apply`; values, synthetic name/email/phone/identity data, query token, raw job ID, snapshots, opaque refs, DOM/CDP IDs, selectors, raw HTML, file metadata, Cookie text, and encoded page payloads are absent. The real fixture submit counter remains zero, and the downloaded observation passes the F045 corpus importer with `dryRun: true`.
+
+### F046 verification results
+
+- `npm test -- --run src/devtools/ats-collector src/foundation.test.ts` -> exit 0; 2 files / 3 tests passed. The tests prove explicit gesture ordering, preview-before-download, anonymous conversion, safe generic failure text, and no download on an inactive/error path.
+- `npm run typecheck` -> exit 0. `npm run build:collector` -> exit 0. `npm run verify:collector` -> exit 0 and proved the collector marker/UI are present only in `dist-collector` with the exact unchanged permission set.
+- The first collector-build verifier run correctly failed because an HTML transform did not actually change the Vite entry and the marker was missing. The final design uses a compile-time `@developer-tools` alias instead; the developer build contains the collector and the production build resolves to a null component.
+- Focused `npx playwright test tests/e2e/ats-collector.spec.ts` -> final exit 0; 1/1 real-Chrome test passed. The initial full parallel suite exposed the extension's documented first-install options-page navigation racing the fixture navigation. The test now waits for and reuses the completed install page; the focused rerun passed.
+- `npm run audit:xiaomi` -> exit 0: the current public Xiaomi A96028 schema remains 9 groups / 34 visible fields, with no application submission. The unauthenticated application still presents a login boundary; F046 did not authenticate or collect a live sample.
+- Final `npm run validate` -> exit 0: TypeScript passed, 35 Vitest files / 257 tests passed, the empty corpus verified, production built successfully, 13 distribution files passed, exact permissions remained unchanged, forbidden permissions were absent, and production collector-absence verification passed.
+- Final `npm run test:e2e` -> exit 0; 22/22 real-Chrome tests passed in four workers, including the Xiaomi collector, existing Xiaomi fill fixture, K0/K1 bridge, profile, resume import/OCR, privacy, attachment, repeatable-record, complex-control, and fill-quality regressions.
+- `artifacts/xiaomi-ats-collector.png` was visually inspected. It contains only the anonymous fixture origin/path, generic-family result, 38-control / 5-restricted summary, structural field labels, and the download control; it contains no personal value or filled recruitment screenshot.
+- Final static gates: `feature_list.json` parsed with 47 features; `git diff --check` found no whitespace errors (only Windows LF/CRLF notices); production source/distribution contain no collector marker or direct collector import; the Manifest has no diff; and collector source has no executable network, storage, clipboard, DOM selector, raw Runtime evaluation, upload, or submission capability.
+
+### F046 changed files and handoff
+
+- Collector module: `src/devtools/entry.tsx`, `src/devtools/ats-collector/entry.tsx`, `AtsCollectorCard.tsx`, `AtsCollectorCard.test.tsx`, and `collector.css`.
+- Compile-time isolation and packaging: `src/sidepanel/main.tsx`, `src/sidepanel/App.tsx`, `vite.config.ts`, `tsconfig.json`, `scripts/build.mjs`, `scripts/verify-collector-build.mjs`, `scripts/verify-dist.mjs`, `package.json`, and `.gitignore`.
+- Acceptance and browser evidence: `docs/xiaomi-ats-collector-acceptance.md`, `ats-corpus/README.md`, `tests/e2e/ats-collector.spec.ts`, and `artifacts/xiaomi-ats-collector.png`.
+- Harness state: `feature_list.json` and this handoff. No real Xiaomi sample, Xiaomi/Feishu detector, family template, commit, or push was added.
+- F046 is complete with no code blocker. The next recommended node is a developer-operated, user-authorized real Xiaomi capture: load `dist-collector`, manually complete any login/verification, explicitly collect one value-free observation, review it locally, and run the F045 importer. After two or three independently reviewed Feishu-recruitment structures exist, implement the family detector and default template from evidence rather than from one site.
+
+## 2026-08-07 - F047 real Xiaomi ground-truth and privacy hardening kickoff
+
+- Reapplied `long-running-agent-harness`, reread `AGENTS.md`, `feature_list.json`, and `progress.md`, and ran `./init.ps1 -SkipInstall` before edits. Baseline exited 0: TypeScript passed, 35 Vitest files / 257 tests passed, the empty corpus verified, production built, 13 distribution files passed, exact permissions remained unchanged, and the production collector-absence check passed.
+- Attempted the applicable `computer-use` initialization to inspect the already-authenticated Chrome tab independently. Its required native Windows pipe was unavailable (`os error 2`), so no browser UI action occurred. The current private download and repository public-schema snapshot are the only real evidence used in this node; the live file will not be copied into the repository.
+- Private diagnostic comparison: K1 reported 57 controls / 4 frames and the JSON contained 57 controls, proving export preservation only. It did not independently prove page completeness. The observation had 19 controls without any label/ARIA/placeholder/name/nearby text, all 57 controls reported `required=false`, custom comboboxes lacked observed options, frame-bound control count was zero, and the final `提交简历` control was incorrectly ordinary.
+- The private file also contained the uploaded resume filename/status timestamp and selected date display text. `npm run corpus:import -- <private-file> --dry-run` incorrectly exited 0, proving that F044/F045 privacy checks missed filename and current-display patterns. The filename/value text is intentionally not repeated here and the private observation remains only in the user's Downloads directory.
+- Registered F047 as `in_progress`. The independent denominator is the existing current public Xiaomi snapshot: 9 logical groups / 34 visible schema fields. K1 raw-node preservation, logical field recall, section recall, semantic naming, required/options evidence, safety classification, and privacy are separate metrics; none may validate itself using only the scanner's own count.
+
+### F047 implementation and verification evidence
+
+- Added the repository-owned, value-free ground truth `ats-corpus/ground-truth/xiaomi-internship-application-v1.json`. It contains only the Xiaomi internship application path template, nine public group labels, and 34 public logical field definitions; it contains no job ID, application ID, capture timestamp, company-specific filled value, or live observation.
+- Extended K1 page state and the ATS observation contract with bounded `sections` and `sectionCount`. Extraction now reads only allowlisted `data-form-field-name`, `data-form-field-i18n-name`, native/ARIA required markers, stable section headings, and known Feishu resume section class/technical prefixes. It normalizes repeatable indices and does not add selectors, raw HTML, current values, cookies, credentials, or DOM/CDP identifiers.
+- Added fail-closed semantic filtering for filename-like text, upload-status text, timestamps, and date-only/date-range display values in both page-state conversion and shareable observation conversion. The observation audit and corpus importer independently reject those patterns. Final labels including `提交简历` and `投递简历` are now required to carry `final-submit` safety.
+- Added `npm run audit:xiaomi-observation -- <file> --k1-controls <count> --dry-run`. It validates the privacy/schema contract before computing aggregate-only evidence and reports K1/export/summary raw counts separately from 9-section coverage, 34-field logical coverage, semantic naming coverage, and final-submit protection. It never prints captured semantic values on rejection.
+- The developer-only collector now shows the independent section, logical-field, semantic-naming, and final-submit metrics. On a Xiaomi application page it hides the download control when any section is missing, raw counts disagree, fewer than 75% of controls have field semantics, or the final-submit boundary is not proven. Missing logical fields remain visible as public-schema gaps because collapsed optional repeatable groups may legitimately have no current controls.
+- Added synthetic failure-shape regression coverage for Feishu metadata-backed custom comboboxes, inherited required markers, nine section roots including empty optional groups, upload filename/status text, selected date text, file inputs, and an ordinary-looking `提交简历` button. No private value from the developer's real sample was copied into a fixture or source file.
+- The old private observation was checked only in place. `npm run audit:xiaomi-observation -- <private-file> --k1-controls 57 --dry-run` exited 1 with `schema-invalid`, and `npm run corpus:import -- <private-file> --dry-run` exited 1 with `schema-invalid`; neither command printed captured field values. The live file remains outside the repository.
+- `npm run audit:xiaomi` exited 0 and reconfirmed the current public Xiaomi application schema at 9 groups / 34 visible fields with no application submission. `npm run build:collector` and `npm run verify:collector` exited 0 with the exact unchanged permission set.
+- Targeted `npm run typecheck` exited 0. Targeted `npm test -- --run src/bridge/pageState.test.ts src/ats src/devtools/ats-collector` exited 0 with 7 files / 28 tests passed.
+- Final `npm run validate` exited 0: TypeScript passed, 36 Vitest files / 264 tests passed, the empty corpus verified, production built, 13 required distribution files passed, exact permissions remained unchanged, forbidden permissions were absent, and the developer collector remained absent from production.
+- The first full E2E run after integrating the independent audit had 21/22 passes; the collector case correctly returned `passed=false` because the synthetic page used a non-Xiaomi test Origin while the local audit accepts the real Xiaomi Origin only. The route was changed to intercept the real Origin with local synthetic HTML. Focused rerun passed, and the final `npm run test:e2e` exited 0 with 22/22 browser tests passed.
+- The final collector browser regression proves 9/9 sections, 34/34 logical fields, consistent K1/export raw counts, privacy-audit acceptance, protected final submit, successful dry-run corpus import, zero fixture submission, and absence of synthetic name/email/phone/identity/file/timestamp/query/DOM data. `artifacts/xiaomi-ats-collector.png` was refreshed and visually inspected; it shows 38 controls, 9/9 sections, 34/34 logical fields, 37/38 semantic labels, and final-submit protection with no filled personal value.
+- Static gates passed: `feature_list.json` parses with 48 features and F047 remains `in_progress`; `git diff --check` found no whitespace errors (only Windows LF/CRLF notices); no downloaded `ats-observation*.json` exists in the repository; the Manifest has no diff; collector markers are absent from production `dist`; and the new local audit/quality modules contain no network, extension-storage/message, or submission path.
+
+### F047 changed files and handoff
+
+- Ground truth and acceptance: `ats-corpus/ground-truth/xiaomi-internship-application-v1.json`, `docs/xiaomi-observation-ground-truth-acceptance.md`, `feature_list.json`, and `progress.md`.
+- K1 and observation contract: `src/bridge/protocol.ts`, `src/bridge/pageState.ts`, `src/ats/contracts.ts`, `src/ats/sanitize.ts`, `src/ats/observation.ts`, `src/ats/audit.ts`, and the ATS corpus JSON Schema/core validator.
+- Developer quality gate and audit: `src/devtools/ats-collector/xiaomiQuality.ts`, `AtsCollectorCard.tsx`, `collector.css`, `scripts/ats-corpus/xiaomi-observation-audit.mjs`, its type declaration, `scripts/audit-xiaomi-observation.mjs`, and `package.json`.
+- Regressions and evidence: page-state/observation/audit/importer/collector tests, `src/ats/xiaomiObservationAudit.test.ts`, `tests/e2e/ats-collector.spec.ts`, updated protocol fixture tests, and `artifacts/xiaomi-ats-collector.png`.
+- F047 remains `in_progress` by design. The only unmet acceptance item is one new private authenticated Xiaomi recapture. Next action: reload the freshly built `dist-collector`, reconnect the real application tab, click `采集匿名结构`, confirm the collector shows `分组 9 / 9` and `最终投递 已识别并保护`, download the new JSON, note the K1 control count, and run `npm run audit:xiaomi-observation -- <new-json> --k1-controls <count> --dry-run`. Do not commit the downloaded JSON. If the audit passes, record only aggregate results and then mark F047 done; if the download button remains hidden, report the public missing-section names and aggregate counts without sharing values.
+- No commit or push was performed.
+
+## 2026-08-07 - F078 kickoff: move remaining downloaded ATS JSON
+
+- Set `F078` to `in_progress` and inventoried the Downloads root plus recursively named `ats-observation-*.json` files.
+- Exactly nine project observation exports were identified by schema: one Xiaomi, one MetaApp, one NIO, and six Huya files. All expose the observation schema rather than arbitrary JSON shapes.
+- Explicitly excluded unrelated Downloads JSON, including FinQA/CFLUE datasets, tool/settings files, malformed large JSONL-like files, and a Google OAuth client-secret file; none will be copied, renamed, inspected for values, or moved into this repository.
+- Planned organization: retain the four existing company-explicit representatives, remove their hash-identical generic-named Downloads copies only after verification, and move the five redundant Huya exports into a clearly excluded duplicate-download archive with readable names so no data is lost or counted as independent corpus evidence.
+
+## 2026-08-07 - F078 completed: remaining ATS JSON moved and classified
+
+- Verified the generic Downloads sources against the four existing representative destinations before moving: Xiaomi SHA-256 `1c8173e03f10eaea0cff6b6ef8eec45ebb058e8c8fe54a55212c8bc4495aa0c9`, MetaApp `8a86994740f2cf5a3814371e62ae181aaf25e25b60ff6c5deb2f12b1c5071fb7`, NIO `592f2c6d455927d38182f701a8581ef1925a281607aa7ec16c642fe0ca0e0cb1`, and Huya `e1becd7004fc4b564b0135c82273c19bcf82fd17c2227841446444888f8898bb`; source and destination bytes matched in every case.
+- Moved all nine generic-named exports out of Downloads. The active staging index retains four representatives under explicit Feishu-family or Moka family/company paths. Five redundant Huya files moved to `ats-corpus/observations/_duplicate-downloads/moka/huya/` with normalized company/ATS/page/timestamp/duplicate names.
+- Added `_duplicate-downloads/README.md` with hashes and exclusion rules. These files are preserved for auditability but cannot be counted as sites, observations, training samples, coverage, or corpus inputs. All six Huya payloads still resolve to exactly one semantic structure after `capturedAt` is excluded.
+- Updated the main observation index to reflect that the generic Downloads sources were moved rather than retained, while preserving the original byte-provenance evidence and the Xiaomi legacy-schema boundary.
+- Final inventory: zero `ats-observation-*.json` files remain in the Downloads root, 11 unrelated root JSON files remain untouched, four active representatives exist, and five duplicate files are archived. No unrelated dataset, configuration, credential, or malformed JSON file was moved into the repository.
+- All nine moved observation JSON files parse, all four privacy declarations are false in each, and the prohibited-key scan passed. Eight current-schema observations passed corpus-import dry-run; Xiaomi remains intentionally blocked because its legacy export lacks top-level `sections` and `summary.sectionCount`.
+- `npm run verify:corpus` exited 0. The first concurrent full validation and the first focused retry hit the existing 5-second timing limit in one ProfileEditor UI test without an assertion failure. The isolated test then passed in 3.16 seconds without code or timeout changes, and the required final isolated `npm run validate` exited 0 with 44 test files / 381 tests, corpus verification, production build, distribution checks, permission checks, and developer-collector exclusion.
+
+### F078 changed files and handoff
+
+- Moved/retained representatives: the existing Xiaomi, MetaApp, NIO, and Huya files indexed by `ats-corpus/observations/README.md`.
+- Added duplicate archive: `ats-corpus/observations/_duplicate-downloads/README.md` and five normalized Huya JSON files below `_duplicate-downloads/moka/huya/`.
+- Updated index and harness state: `ats-corpus/observations/README.md`, `feature_list.json`, and `progress.md`.
+- F078 is complete. This is developer-data organization only, with no user-visible extension change, so E2E and a new screenshot were not required. No commit or push was performed.
+
+### 2026-08-07 - F047 first real recapture rejection and second hardening pass
+
+- The developer reloaded the first hardened collector and reported only its aggregate fail-closed message: two of nine page groups were missing and fewer than 75% of controls had identifying field semantics. No JSON was downloaded, no personal value was shared, and the gate correctly prevented an incomplete sample from entering the corpus.
+- Added exact synthetic regressions for the remaining structural shapes: collapsed section names rendered only as nested ordinary `div/span` text with no recognized section class, and a custom combobox nested 12 levels below its stable form-item label, required marker, and sibling hidden technical field name.
+- K1 now recognizes section evidence only when direct text exactly matches one of the nine public Xiaomi section labels. This allowlist can recover empty/collapsed groups without exporting arbitrary nearby page text. Form-item context lookup is bounded to 20 ancestors and reads only stable label classes, `data-form-field-*` metadata, native `name`, and required/ARIA markers; it still does not read `value`, filenames, cookies, raw HTML, selectors, or DOM/CDP IDs.
+- Final targeted `npm test -- --run src/bridge/pageState.test.ts src/devtools/ats-collector` exited 0 with 2 files / 7 tests passed; `npm run typecheck` exited 0. The freshly rebuilt `dist-collector` and `npm run verify:collector` exited 0 with unchanged permissions.
+- Final `npm run validate` exited 0 with 36 test files / 264 tests passed, empty-corpus verification, production build, 13 distribution files, exact permission checks, forbidden-permission absence, and production collector isolation. Final `npm run test:e2e` exited 0 with 22/22 browser tests passed; submission protections remained intact.
+- F047 remains `in_progress`. Next live check: reload the newly rebuilt `dist-collector` once, rescan the already-open Xiaomi application, and report only `缺少分组`, `分组 x / 9`, and `语义命名 x / y`. Download is expected to remain hidden unless the independent gates pass. No commit or push was performed.
+
+## 2026-08-07 - F048 conservative repository cleanup kickoff
+
+- The user authorized deletion after a read-only inventory. Registered F048 as `in_progress` with a deliberately narrow scope: three stale ignored release ZIPs, ignored Playwright `test-results`, one zero-reference ATS barrel, and one TypeScript-confirmed unused import.
+- Baseline `./init.ps1 -SkipInstall` exited 0 before deletion: TypeScript passed, 36 Vitest files / 264 tests passed, the empty ATS corpus verified, production built, 13 distribution files passed, exact permissions remained unchanged, forbidden permissions were absent, and the developer collector remained absent from production.
+- Protected from this cleanup: `dist-collector` needed for the current Xiaomi recapture, `dist`, `node_modules`, `artifacts`, `.env`, both browser profiles, corpus/evaluation/package tooling, the current ATS worktree, old OpenCLI validators, and the test-only `src/agent` prototype. The latter two groups need an explicit architecture decision rather than being inferred as disposable.
+
+### F048 cleanup and acceptance evidence
+
+- Sent the three ignored stale release archives to the Windows Recycle Bin: `qiuzhao-profile-assistant.zip`, `qiuzhao-toudi-assistant-bundle.zip`, and `qiuzhao-toudi-assistant-skill.zip`. They totaled 11.11 MiB and predated the active ATS/F047 code. Removed ignored `test-results`; after E2E regenerated its 45-byte last-run marker, sent that directory to the Recycle Bin again.
+- Deleted the zero-reference `src/ats/index.ts` barrel and removed the unused `describeControl` import from `src/content/resumeAttachment.ts`. A repository reference search found no remaining reference to the barrel path. `npx tsc --noEmit --noUnusedLocals --noUnusedParameters` exited 0 with no unused declaration diagnostics.
+- Preserved every scoped protection target: `dist`, `dist-collector`, `node_modules`, `artifacts`, `.env`, `.chrome-autofill-profile`, `.chromium-autofill-profile`, `src/agent`, and `ats-corpus` all remained present. No old OpenCLI audit, Agent prototype, current corpus/evaluation/package script, private environment file, browser login state, screenshot, or active ATS file was deleted.
+- `npm run validate` exited 0 after cleanup: TypeScript passed, 36 test files / 264 tests passed, empty-corpus verification passed, production built, 13 distribution files passed, exact permissions remained unchanged, forbidden permissions were absent, and the collector remained excluded from production.
+- The first default full E2E run had 21/22 passes because the embedded-bridge status refresh missed its five-second assertion window; its focused rerun passed. A second default full run again had 21/22 passes because the extension's first-install `options.html` navigation interrupted the synthetic recruitment navigation. This was an existing parallel initialization race unrelated to deleted code.
+- Stabilized only the E2E harness in `tests/e2e/embedded-bridge.spec.ts`: it now waits for and reuses the first-install options page, matching the already proven collector test pattern, and waits for the synthetic `/apply/2` page before refreshing status. The focused rerun passed 1/1 and the final default `npm run test:e2e` passed 22/22 in four workers; no production source or submission behavior changed.
+- F048 is `done`. Cleanup targets are absent, protected targets are present, and all deleted generated artifacts remain recoverable from the Windows Recycle Bin. No commit or push was performed. F047 remains independently `in_progress` pending the next user-click Xiaomi recapture.
+
+## 2026-08-07 - F049 reusable personal-information editor completion
+
+- Followed the repository resume protocol: read `feature_list.json` and `progress.md`, then ran `./init.ps1 -SkipInstall`. The pre-change baseline exited 0 with TypeScript, 36 Vitest files / 264 tests, corpus verification, production build, distribution verification, unchanged permissions, and production collector isolation all passing.
+- Reviewed the public OfferLink `myResume` inventory read-only and recorded the source-bound comparison in `docs/profile-field-reference-comparison.md`. The implementation uses only public field labels as product evidence; it does not copy the reference implementation, authenticated data, or visual design.
+- Expanded schema v3 and migration coverage for detailed basic information, education, internship, project, campus leadership/activity, family contacts, awards, languages, certificates, publications, patents, job preferences, and reusable answers. Existing v1/v2 data migrates forward, blank optional records do not lower the baseline completion score, and resume merges preserve the new arrays.
+- Added deterministic canonical field metadata and bounded aliases for all new fillable values. Emergency/family data and other sensitive demographic/contact values are marked confirmation-required. Identity-document numbers, passwords, verification codes, CAPTCHA data, cookies, recruitment authentication, certificate attachments, and final application submission remain unsupported.
+- Expanded the Organic options interface with locally saved repeatable sections, a scrollable section navigator, and a visible third-party privacy warning. Renamed the always-present emergency-contact label to avoid an accessible-name collision with the primary name field discovered by browser E2E.
+- Focused tests passed: `npm test -- --run src/domain/profile.test.ts src/matching/catalog-coverage.test.ts src/options/ProfileEditor.test.tsx` exited 0 with 3 files / 131 tests. Broader matching/profile/parser checks also passed after removing an overly broad family birth-date alias.
+- Final `npm run validate` exited 0: TypeScript passed, 36 test files / 335 tests passed, the corpus verified, production built, all 13 required distribution files verified, exact permissions remained unchanged, forbidden permissions were absent, and the development collector remained excluded from production.
+- The first full E2E run exposed the accessible-name collision and an obsolete expectation that emergency-contact name was unknown. After the scoped fixes and rebuilding the unpacked extension, final `npm run test:e2e` exited 0 with 22/22 browser tests passing.
+- `artifacts/profile-editor.png` was refreshed at 2026-08-07 14:08 local time and visually inspected. It shows all new sections in the Organic layout, the sensitive-data warning, and synthetic values only; no real personal information is present.
+- Static gates passed: `feature_list.json` parses, `git diff --check` reports no whitespace errors (only Windows LF/CRLF notices), and F049 is `done`.
+
+### F049 changed files and handoff
+
+- Profile/domain/import: `src/domain/profile.ts`, `src/domain/profile.test.ts`, `src/resume/parseResume.ts`, `src/storage/profileRepository.test.ts`, and schema-version literals in five E2E fixtures.
+- Deterministic matching: `src/matching/catalog.ts`, `src/matching/supplementalCatalog.ts`, and `src/matching/catalog-coverage.test.ts`.
+- Interface and browser evidence: `src/options/App.tsx`, `src/options/SupplementalProfileSections.tsx`, `src/options/options.css`, `src/options/ProfileEditor.test.tsx`, `tests/e2e/profile-editor.spec.ts`, `tests/e2e/fill-fixture.spec.ts`, and `artifacts/profile-editor.png`.
+- Product evidence/harness: `docs/profile-field-reference-comparison.md`, `feature_list.json`, and this handoff.
+- No code blocker remains for F049, and no commit or push was performed. The next recommended profile node is to add source-bound extraction rules and fixtures for the newly modeled optional fields; F047 remains independently `in_progress` pending the separate user-click real Xiaomi recapture.
+
+## 2026-08-07 - F050 local identity-document persistence and confirmed fill
+
+- Followed the repository resume protocol, reread `feature_list.json` and `progress.md`, and ran `./init.ps1 -SkipInstall`. Baseline exited 0 with TypeScript, 36 test files / 335 tests, corpus verification, production build, distribution verification, unchanged permissions, and production collector isolation passing.
+- Scoped the user's zero-repeat-entry request to reusable identity-document profile data. Recruitment-site passwords, SMS/email/OTP codes, CAPTCHA values, authentication cookies/tokens, identity attachments, and final submission remain unpersisted and unsupported. Identity writes still require a user selection under the repository safety contract.
+- Upgraded the profile to schema v4 with optional `basic.identityDocumentType` and `basic.identityDocumentNumber`. v1/v2/v3 migration initializes the fields without losing prior values; paired-field and bounded-length validation prevents incomplete records.
+- Added an Organic basic-information warning that the current local identity storage is not yet encrypted. The number uses a masked editor control, JSON-export copy warns that backups contain the original value, and the existing delete-all flow clears the number. `PRIVACY.md`, `README.md`, the field matrix, and OfferLink comparison now describe the actual behavior.
+- Resume parsing imports only explicitly labelled identity values such as `身份证号` or `护照号码`, infers a bounded document type from that label, and never promotes an unlabelled long number. Parsed values enter the editable draft and are persisted only after the existing explicit save action.
+- Deterministic matching now maps document type/number through bounded aliases and marks both sensitive. The full number is replaced by a fixed masked preview ending in four characters. Scan does not mutate the page; default safe selection excludes identity, while an explicitly selected identity proposal writes and verifies successfully without submission.
+- Extended the fill-quality contract with an explicit `confirm` ground-truth action. Xiaomi `identification` is now evaluated as a correct deterministic match that must remain unwritten until confirmation, rather than as either an unsafe automatic fill or an unsupported field.
+- Focused model/matcher/parser/editor/engine tests exited 0 with 8 files / 236 tests before final integration. A focused identity browser fixture proved the field was blank before confirmation, displayed only `••••••0042` in preview, then filled `TEST-ID-000042` after explicit selection; the submit counter stayed zero.
+- During integration, an independent one-click sidepanel worktree update completed between test starts. Two existing tests needed only integration-safe typing/shape tolerance: `FillSelection` annotations in `SidePanel.test.tsx` and `toMatchObject` for the expanded embedded page-state object. No sidepanel product behavior was changed by F050.
+- Final `npm run validate` exited 0: TypeScript passed, 37 test files / 348 tests passed, the corpus verified, production built, 13 required distribution files verified, exact permissions remained unchanged, forbidden permissions were absent, and the development collector remained absent from production.
+- Final `npm run test:e2e` exited 0 with 22/22 real-Chrome tests passing. A subsequent focused privacy E2E passed 1/1 and proved cancellation preserves the saved synthetic identity number while permanent local-data deletion clears it.
+- `artifacts/profile-editor.png` was refreshed and visually inspected. It shows the unencrypted-local-storage warning and a masked synthetic password-style identity input; it contains no real personal data. The fill-quality artifacts report matching, filling, exclusions, confirmation handling, repeatable coverage, attachment targeting, and safety at their passing gates.
+
+### F050 changed files and handoff
+
+- Profile and storage behavior: `src/domain/profile.ts`, `src/domain/profile.test.ts`, `src/storage/profileRepository.test.ts`, `src/privacy/localData.test.ts`, and `src/privacy/sensitivePreview.ts`.
+- Interface and policy: `src/options/App.tsx`, `src/options/SupplementalProfileSections.tsx`, `src/options/options.css`, `src/options/ProfileEditor.test.tsx`, `README.md`, `PRIVACY.md`, `docs/profile-field-reference-comparison.md`, `docs/field-coverage-matrix.md`, and `docs/xiaomi-internship-field-audit.md`.
+- Extraction/matching/fill: `src/resume/parseResume.ts`, `src/resume/parseResume.test.ts`, `src/matching/supplementalCatalog.ts`, `src/matching/matcher.ts`, matcher/catalog tests, `src/content/engine.ts`, `src/content/engine.test.ts`, and `src/sidepanel/pageBridge.ts`.
+- Evaluation/browser evidence: `src/evaluation/fillQuality.ts`, its unit test, `evals/fill-quality-suite.json`, relevant E2E schema fixtures, `fixture.html`, `tests/e2e/fill-fixture.spec.ts`, `profile-editor.spec.ts`, `privacy-controls.spec.ts`, `resume-import.spec.ts`, `xiaomi-fixture.spec.ts`, `fill-quality-eval.spec.ts`, and current artifacts.
+- F050 is `done` with no code blocker. The next security node should add authenticated at-rest encryption plus recovery/key-rotation semantics before marketing identity storage as encrypted. No commit or push was performed; F047 remains independently `in_progress` pending its user-click Xiaomi recapture.
+
+## 2026-08-07 - F051 one-click automatic-fill migration kickoff
+
+- Applied the user-requested `long-running-agent-harness`, reread `AGENTS.md`, `feature_list.json`, `progress.md`, and the complete skill instructions, then ran `./init.ps1 -SkipInstall` before edits. The baseline exited 0: TypeScript passed, 36 Vitest files / 335 tests passed, the ATS corpus verified, production built, 13 distribution files passed, exact permissions remained unchanged, forbidden permissions were absent, and the development collector remained excluded from production.
+- Registered F051-F055 as the durable clean-room migration sequence derived from a read-only review of the locally installed OfferLink 1.8.1 distribution. The sequence covers the one-click orchestrator, ATS template runtime, modular control adapters, repeatable add-fill-save-verify lifecycles, and focused-field recovery. No OfferLink bundle, first-party code, selector object, brand asset, private API, cloud/account/quota module, or application-tracker implementation will be copied.
+- F051 is the only new implementation scope in progress for this node. It removes the user-visible scan/State/Find/per-safe-field funnel while retaining deterministic scanning internally, folds safe repeatable creation and verified filling behind one explicit gesture, pauses once for concentrated exception confirmation, keeps resume attachment separately confirmed, and never submits an application.
+- Existing unrelated worktree changes and the independently in-progress F039, F047, and F050 streams are preserved. No commit or push is authorized.
+- Next action: implement and unit-test a side-panel `startAutoFill` workflow module, replace the production primary panel interaction, update the affected browser tests and acceptance documentation, then run the full user-visible verification contract before deciding F051 completion.
+
+### F051 implementation and acceptance evidence
+
+- Added `src/sidepanel/autoFillWorkflow.ts` as a clean-room orchestration boundary. One user-started operation now performs the internal scan, attempts each uniquely supported missing repeatable group once, rescans after every attempted page mutation, builds a deterministic safe/exception plan, and uses the existing verified fill gateway. Safe high-confidence empty fields fill immediately when no exception exists.
+- Replaced the production scan-preview-select-fill funnel in `src/sidepanel/App.tsx` with the single `自动填写当前页面` action and bounded analyzing/preparing/filling stages. Sensitive, conflicting, unreadable, and non-high-confidence proposals pause in one centralized sheet, start unselected, and only explicitly selected exceptions join the safe plan. Saved field corrections rerun the same workflow.
+- Kept resume PDF attachment behind its existing separate filename/digest/destination confirmation. Unsupported and already-equal controls remain in progressive disclosure, the result reports filled/skipped/equal/unsupported/repeatable-created counts, and all completion copy tells the user to inspect and submit personally.
+- Removed the K0/K1 connection and State/Find card from the ordinary production panel without deleting its underlying privacy-safe developer/browser-kernel services. Their E2E checks now start and inspect the extension session directly through the typed internal protocol, so backend privacy and origin-pinning regressions remain covered without reintroducing a user-facing connection step.
+- Added the acceptance contract `docs/one-click-autofill-acceptance.md`, four workflow unit tests, an updated six-case side-panel component suite, repeatable-record orchestration coverage, and a browser scenario proving one-click planning plus concentrated exception confirmation. Updated the saved-resume browser flow to enter through the same one-click action.
+- Focused verification `npm test -- --run src/sidepanel/autoFillWorkflow.test.ts src/sidepanel/SidePanel.test.tsx src/sidepanel/SidePanel.repeatable.test.tsx` exited 0 with 3 files / 11 tests passed. `npm run typecheck` exited 0.
+- `npm run validate` exited 0: TypeScript passed, 37 test files / 348 tests passed, the ATS corpus verified, production built, all 13 required distribution files passed, the exact existing permission set remained unchanged, forbidden permissions were absent, and the developer collector remained excluded from production.
+- The first full browser run exposed an overly exact page-state object assertion and a transient parallel fill-quality observation. The assertion was narrowed to the intended count fields; both affected E2E files then passed 2/2 in isolation. The final complete `npm run test:e2e` exited 0 with 22/22 Chrome tests passed, including browser-kernel privacy, complex controls, repeatable records, Xiaomi-derived filling, attachment authorization, and zero final submission.
+- `artifacts/one-click-autofill.png` was refreshed on 2026-08-07 and visually inspected. It contains synthetic data only and shows the Organic sand/sage/clay interface, one concentrated two-exception confirmation surface with exceptions unselected by default, one explicitly selected conflict, separate PDF authorization, progressive details, and no scan/State/Find/connection/final-submit action.
+- Static gates passed: `feature_list.json` parses; `git diff --check` found no whitespace error (only Windows LF/CRLF notices); production `App.tsx` contains no user-facing scan/State/Find/connection action; production verification found no added permission; and implementation files contain no OfferLink bundle path, private API, branding asset, selector data, remote call, or final-submit action.
+
+### F051 changed files and handoff
+
+- Workflow and UI: `src/sidepanel/autoFillWorkflow.ts`, `src/sidepanel/App.tsx`, and `src/sidepanel/sidepanel.css`.
+- Tests: `src/sidepanel/autoFillWorkflow.test.ts`, `src/sidepanel/SidePanel.test.tsx`, `src/sidepanel/SidePanel.repeatable.test.tsx`, `tests/e2e/sidepanel-preview.spec.ts`, `tests/e2e/resume-attachment-flow.spec.ts`, `tests/e2e/embedded-bridge.spec.ts`, and `tests/e2e/page-state-find.spec.ts`.
+- Harness and evidence: `docs/one-click-autofill-acceptance.md`, `feature_list.json`, this `progress.md` handoff, and ignored `artifacts/one-click-autofill.png`.
+- F051 is complete. F052-F055 remain intentionally separate: ATS family template loading, framework control-driver modularization, full add-fill-save-verify repeatable lifecycles, and focused-field manual recovery. The next unblocked module is F052, using independently reviewed ATS evidence rather than reference-extension configuration. No commit or push was performed.
+
+## 2026-08-07 - F052 deterministic ATS template runtime kickoff
+
+- Continued the accepted `long-running-agent-harness` feature graph after F051 passed. Marked only F052 `in_progress`; F053-F055 remain pending.
+- Scope: define a typed local family-template contract, select it from independently owned family detection, apply reviewed default mappings before generic matching, and preserve saved site mappings as the highest-priority local override.
+- Privacy boundary: templates may contain stable ATS-family evidence, canonical paths, labels, control hints, repeatable behavior, and explicit final-submit exclusions only. They may not contain profile values, raw HTML, credentials, cookies, authenticated state, remote code/endpoints, or copied reference-extension configuration.
+
+### F052 implementation and acceptance evidence
+
+- Added a typed and fail-closed family-template contract for exact semantic field rules, actions, canonical path patterns, optional date-range companions, framework driver hints, readback modes, sections, repeatable lifecycle metadata, and mandatory final-submit exclusions. The registry rejects duplicate ids, invalid/unbounded rules, raw HTML, URL-like configuration values, email-like text, and long digit sequences.
+- Added a local matching runtime that parameterizes path identifiers, builds detection markers only from stable field names, selects a reviewed template, maps repeatable indices, and falls back to the generic deterministic matcher. It sends no query value, current field value, Cookie, credential, raw HTML, or DOM selector into detection.
+- Integrated the runtime into both `scanPage` and the pre-write `fillPage` revalidation. Hard safety exclusions remain first; saved origin/fingerprint corrections remain higher priority than a family rule; an exact template mapping is next; generic deterministic matching remains the fallback. Scan results expose only bounded family/template metadata.
+- Added one concrete `xiaomi-feishu` deployment detector/template from repository-owned Xiaomi ground truth and synthetic regressions. It is restricted to the exact Xiaomi jobs origin and reviewed internship application path/semantic markers. Its mapping inventory covers the reviewed basic, education, internship, works, project, award, language and self-evaluation keys, including confirm-only identity/demographic values and explicit attachment/final-submit exclusions. It is deliberately not labeled as a general Feishu family template.
+- Added `docs/ats-template-runtime-acceptance.md`, template validation tests, runtime detection/indexing/safety/fallback tests, a complete no-profile-data mapping audit over every Xiaomi rule, and an engine test proving a saved site correction overrides a family rule through verified fill.
+- Focused `npm test -- --run src/ats src/sidepanel/autoFillWorkflow.test.ts` exited 0 with 8 files / 31 tests. The final template/runtime focus exited 0 with 2 files / 7 tests, and the forbidden capability search returned no match for fetch, XHR, WebSocket, eval, Cookie, browser storage, or Chrome API access in template/runtime modules.
+- Final `npm run validate` exited 0: TypeScript passed, 39 test files / 355 tests passed, corpus verification passed, production built, 13 distribution files passed, exact existing permissions remained unchanged, forbidden permissions were absent, and the developer collector remained absent from production.
+- Focused browser regression `npm run test:e2e -- --grep "fill quality evaluation|Xiaomi-derived fixture|complex controls"` exited 0 with 3/3 Chrome tests. Deterministic matching/filling remained exact and no submission occurred.
+
+### F052 changed files and handoff
+
+- Contracts/registry/templates: `src/ats/templateContracts.ts`, `src/ats/templateRegistry.ts`, and `src/ats/defaultTemplates.ts`.
+- Runtime integration: `src/ats/matchingRuntime.ts`, `src/matching/types.ts`, and `src/content/engine.ts`.
+- Verification: `src/ats/templateRegistry.test.ts`, `src/ats/matchingRuntime.test.ts`, and `docs/ats-template-runtime-acceptance.md`.
+- F052 is complete. The next migration node is F053, which will route existing native, Feishu/UD, Ant, Element and generic ARIA writes through explicit canHandle/read/write/verify adapters without changing the public one-click flow. No commit or push was performed.
+
+## 2026-08-07 - F053 verified control-adapter modularization kickoff
+
+- Marked only F053 `in_progress` after F052 passed. The public one-click workflow and content-message protocol remain unchanged.
+- Scope: reorganize the existing verified page-driver behavior behind deterministic adapters with explicit `canHandle`, `read`, `write`, and `verify` boundaries; add framework-specific routing and isolated fixtures while preserving bounded waits and fail-closed outcomes.
+- Safety boundary: no adapter may accept password, hidden, file, CAPTCHA/verification, disabled/read-only, or submit-like controls; no adapter may weaken readback verification, navigate, delete data, or trigger final application submission.
+
+### F053 implementation and acceptance evidence
+
+- Replaced the monolithic page-write branching with a deterministic adapter registry. Every adapter now exposes `canHandle`, `read`, `write`, and `verify`; routing order is Feishu date range, Feishu/UD select, Ant select, Element select, generic ARIA combobox, then native controls.
+- Moved shared bounded waits, native setter/event dispatch, exact option matching, multi-value normalization, visibility checks and pre-routing safety checks into dedicated adapter support modules. The public `readControlCandidates` and `writeControlVerified` API remains compatible with the content engine.
+- Added fail-closed pre-routing rejection for detached, hidden, disabled/read-only, password, file, hidden-input, checkbox, submit/reset/button/image, button-contained, ARIA-disabled and semantic final-submit controls. Missing options return `option-not-found`; rejected page values are never included in results.
+- Framework selection requires an exact normalized option and an explicit selected marker/ARIA selected value. Typed search text alone is not accepted as success. Date ranges still require both the hidden structured value and visible start/end months. All writes remain limited to two attempts with bounded option and verification waits.
+- Added isolated routing and verified-write fixtures for ATSX, UD, Ant, Element and generic ARIA selects, plus missing-option and pre-routing safety tests. Existing native text/select/multi-select/radio/contenteditable, framework rejection and date-range verification tests remain passing.
+- `npm test -- --run src/content` exited 0 with 4 files / 38 tests. The page-driver/engine focus exited 0 with 2 files / 25 tests.
+- Final `npm run validate` exited 0: TypeScript passed, 39 test files / 362 tests passed, corpus verification passed, production built, all 13 distribution files passed, exact permissions remained unchanged, forbidden permissions were absent, and the developer collector remained absent from production.
+- `npm run test:e2e -- --grep "complex controls|Xiaomi"` exited 0 with 3/3 Chrome tests: complex verified writes, Xiaomi-derived form filling, and the developer collector all passed with zero final submission.
+
+### F053 changed files and handoff
+
+- Adapter contract and registry: `src/content/controlAdapters/contracts.ts` and `registry.ts`.
+- Implementations/support: `shared.ts`, `nativeAdapter.ts`, `frameworkSelectAdapters.ts`, and `dateRangeAdapter.ts` in the same directory.
+- Integration and verification: `src/content/pageDriver.ts`, `src/content/pageDriver.test.ts`, and `docs/control-adapter-acceptance.md`.
+- F053 is complete. F054 can now build the repeatable add-fill-save-verify lifecycle on top of explicit template metadata and verified control adapters. No OfferLink handler, selector configuration, private API, asset, commit, or push was added.
+
+## 2026-08-07 - F054 repeatable add-fill-save-verify lifecycle
+
+- Marked F054 in progress only after F052/F053 were complete, then extended the existing reviewed Xiaomi repeatable adapter without changing the ordinary one-click entry point.
+- Added `repeatableLifecycle.ts`: successful education, internship/work and project writes are grouped by record-local root, read back, and allowed to resolve at most one exact local `保存` or `完成` control. The lifecycle fingerprints the control/record structure, clicks once, waits for a bounded saved-state mutation, checks navigation, and reads every field again.
+- The lifecycle refuses ambiguous, disabled, changed, submit-type, final-container, page-global or submit/application/delivery-labeled controls. Generic sites do not enter the lifecycle; only the real reviewed Xiaomi page shape and its explicitly marked local synthetic fixture can activate it.
+- Added typed statuses and stop reasons for no-save-required, ambiguous/changed/disabled save, navigation change, mutation timeout and failed readback. `FillResult` carries per-record results, and the side panel summarizes saved records or records requiring manual save inspection without exposing page values.
+- Preserved the existing add side of the state machine: missing cards are created one at a time, count/index/fingerprint/navigation guarded, and rescanned before field planning. A second workflow sees equal values and does not write or save again.
+- Added four lifecycle unit tests for successful save/readback, idempotent no-save pages, ambiguous/final-submit rejection and bounded timeout. Moved comparable-value normalization into a cycle-free shared module. Enhanced the synthetic repeatable fixture with record-local saves and counters for the three supported groups.
+- Focused `npm test -- --run src/content/repeatableRecords.test.ts src/content/repeatableLifecycle.test.ts src/content/engine.test.ts` exited 0 with 3 files / 23 tests. `npm run typecheck` passed.
+- `npm run test:e2e -- --grep "repeatable records"` exited 0. One Chrome scenario added eight missing cards, filled at least 28 fields, saved exactly seven education/internship/project cards, reran idempotently with zero second-pass fills/saves, and kept delete and final-submit counters at zero.
+- `artifacts/repeatable-records.png` was refreshed and visually inspected. It shows filled education, internship and project cards marked `已保存`, the untouched visible final-submit control, and only synthetic values.
+- Final `npm run validate` exited 0: TypeScript passed, 40 test files / 366 tests passed, corpus verification passed, production built, all 13 distribution files passed, exact permissions remained unchanged, forbidden permissions were absent, and the developer collector remained absent from production.
+
+### F054 changed files and handoff
+
+- Lifecycle/runtime: `src/content/repeatableLifecycle.ts`, `src/content/valueNormalization.ts`, `src/content/engine.ts`, `src/content/repeatableRecords.ts`, and `src/sidepanel/App.tsx`.
+- Verification/fixture: `src/content/repeatableLifecycle.test.ts`, `src/fixture/repeatable-main.ts`, `tests/e2e/repeatable-records.spec.ts`, `docs/repeatable-lifecycle-acceptance.md`, and ignored `artifacts/repeatable-records.png`.
+- F054 is complete. The final migration node is F055: a secondary, user-gesture-driven focused-field recovery path for ordinary missed fields, with explicit refusal of sensitive or unsafe targets. No commit or push was performed.
+
+## 2026-08-07 - F056 five Organic profile-editor design directions
+
+- Followed the repository resume protocol for this user-visible design exploration: reviewed `feature_list.json` and `progress.md`, ran `./init.ps1 -SkipInstall`, and confirmed the starting validation passed before changing any files.
+- Used the `frontend-design` skill to keep the repository's single Organic anchor while producing five genuinely different interaction directions: a numbered dossier, a visual bento overview, a one-section-at-a-time guide, a low-noise quiet canvas, and a high-density application workbench.
+- Used the `agent-reach` public-page reader plus a temporary local Chrome screenshot to inspect `https://offerlink.tech/index` and `https://offerlink.tech/myResume` read-only. Only the information-architecture pattern was retained: a fixed top navigation, section directory, primary editor, profile-status dock, and persistent save area. No OfferLink source, bundle, brand, asset, blue palette, selector, private API, or implementation code entered the repository.
+- Added `design-prototypes/profile-editor/index.html` as the comparison entry and five independent HTML pages. They share one realistic 13-section blank field inventory covering reusable resume, basic information, job preferences, education, work, projects, campus experience, family contacts, awards, languages, certificates, research outputs, and common answers.
+- Added prototype-only local draft persistence under `qiuzhao.profile-design-prototype.v1`. Values and repeatable record counts survive switching designs, while the production extension profile is never read or modified. The selected resume file name is displayed for interaction review but file bytes and file metadata are not serialized.
+- Kept identity-number inputs masked by default, marked identity and family-contact controls as confirmation-required, provided no recruitment-site submission action, and made all five directions responsive with a narrow-screen horizontal section navigator. Three local Epilogue font files keep the standalone HTML previews visually stable without a network dependency.
+- The first screenshot review found and fixed a false 1% completion state from a default identity type, initial guided-view auto-scrolling, low contrast in the dark workbench, and repeatable-record restoration. The final gallery and six desktop/mobile screenshots contain only blank UI; synthetic persistence values are cleared inside the test before completion.
+- Focused `npm run test:e2e -- tests/e2e/profile-design-prototypes.spec.ts` exited 0 with 4/4 Chrome checks. It proves all five pages render the same 13 sections, no submit control exists, ordinary and newly added education records persist across directions, the guided flow advances one section at a time, and all five have no horizontal overflow at 390px.
+- Final `npm run validate` exited 0 with TypeScript, 39 test files / 362 tests, corpus verification, production build, 13 required distribution files, unchanged permissions, forbidden-permission absence, and collector exclusion all passing. Final `npm run test:e2e` exited 0 with 26/26 Chrome tests, including the four prototype checks and all existing extension safety/fill/PDF scenarios.
+- `git diff --check` exited 0 with only the repository's existing LF-to-CRLF notices. `feature_list.json` parses with 57 features and F056 is `done`. No commit or push was performed, and the production options page remains unchanged until the user selects a direction.
+
+### F056 changed files and handoff
+
+- Comparison and variants: `design-prototypes/profile-editor/index.html`, `01-dossier.html`, `02-bento.html`, `03-guided.html`, `04-quiet.html`, and `05-compact.html`.
+- Shared prototype implementation: `design-prototypes/profile-editor/prototype.css`, `prototype.js`, and `assets/epilogue-{400,600,700}.woff2`.
+- Browser verification: `tests/e2e/profile-design-prototypes.spec.ts`; current ignored screenshots are `artifacts/profile-design-gallery.png`, `profile-design-01-dossier.png` through `profile-design-05-compact.png`, and `profile-design-mobile-guided.png`.
+- Harness state: `feature_list.json` and this `progress.md` handoff. F056 is complete; the next design action is intentionally user-selected refinement of one direction, followed by a separate feature that ports the chosen structure into the production React options editor.
+
+## 2026-08-07 - F055 focused-field manual recovery kickoff
+
+- Marked only F055 `in_progress` after F051 and F053 were complete. This remains a secondary escape hatch after the normal one-click workflow; it does not add a scan button or replace automatic filling.
+- Scope: remember the last explicitly focused ordinary recruitment control, expose only its bounded structural label, let the user select one non-sensitive local profile field by label, then revalidate and write that one value with the existing verified control adapters.
+- Safety boundary: reject stale focus, page navigation, changed structure, non-empty controls, sensitive profile paths or sensitive targets, password/file/hidden/CAPTCHA/OTP/disabled/read-only/submit-like controls, and never expose unrelated profile values or activate final application submission.
+
+### F055 implementation and acceptance evidence
+
+- Added a content-side, single-use focused-field authorization. Only a trusted pointer focus or keyboard Tab focus is remembered; programmatic focus from the automatic writer is not accepted as the user's recovery gesture. The snapshot retains an element reference, opaque id, bounded structural fingerprint, page URL and timestamp, but never reads or stores the field's raw value.
+- Target inspection fails closed for missing/expired focus, navigation, detached or changed controls, existing page content, unsupported adapters, date ranges, password/file/hidden/button/checkbox, disabled/read-only/hidden, CAPTCHA/SMS/OTP, sensitive target semantics and submit-like controls. A successful authorization expires after 60 seconds and can be consumed once.
+- The recovery message carries only `{ token, profilePath, value }` for the one user-selected field, not `CandidateProfile` or unrelated values. Content rechecks the target immediately before writing, refuses unknown/empty/sensitive profile fields, uses the existing bounded control adapters, and returns only labels plus status after readback verification.
+- Added the secondary “某个字段没填上？” fold below the normal one-click result. It is absent before automatic filling, explains the required page click, lists only non-sensitive non-empty profile field labels, never previews their values, and reports localized actionable failure reasons. The primary automatic-fill and concentrated-confirmation surfaces remain unchanged.
+- Added `docs/focused-recovery-acceptance.md`, three content safety/lifecycle tests, a side-panel privacy/protocol test, a real DOM browser write/refusal scenario, and a user-visible side-panel browser scenario.
+- Focused `npm test -- --run src/sidepanel src/content` exited 0 with 10 files / 59 tests. `npm run test:e2e -- --grep "manual recovery"` exited 0 with 2/2 Chrome scenarios.
+- Final `npm run validate` exited 0: TypeScript passed, 41 test files / 370 tests passed, corpus verification passed, production built, all 13 required distribution files passed, exact permissions remained unchanged, forbidden permissions were absent, and the developer collector remained absent from production.
+- Final complete `npm run test:e2e` exited 0 with 28/28 Chrome scenarios, including one-click filling, concentrated confirmation, verified complex controls, repeatable saves, attachment authorization, browser privacy, focused recovery and zero final submission.
+- `artifacts/manual-recovery.png` was refreshed and visually inspected. It contains synthetic data only and shows the Organic secondary recovery card, one locked field, labels-only selector, intact concentrated-confirmation flow, and no submission action.
+- Static gates passed: `feature_list.json` parses; `git diff --check` reported no whitespace error (only Windows LF/CRLF notices); the focused request contract contains no full profile; focused runtime/bridge contain no fetch, XHR, WebSocket, Cookie or eval capability; production permissions did not change.
+
+### F055 changed files and handoff
+
+- Runtime/protocol: `src/content/focusedRecovery.ts`, `src/content/index.ts`, `src/shared/messages.ts`, and `src/sidepanel/pageBridge.ts`.
+- Interface: `src/sidepanel/App.tsx` and `src/sidepanel/sidepanel.css`.
+- Verification: `src/content/focusedRecovery.test.ts`, `src/sidepanel/SidePanel.test.tsx`, `src/fixture/main.ts`, `tests/e2e/manual-recovery.spec.ts`, `docs/focused-recovery-acceptance.md`, and ignored `artifacts/manual-recovery.png`.
+- F051-F055 are now complete: one-click automatic filling, deterministic ATS templates, modular verified control adapters, repeatable add-fill-save-verify lifecycles, and a secondary focused-field recovery path. No OfferLink code, bundle, private endpoint, brand asset, selector configuration, commit or push was added or performed.
+
+## 2026-08-07 - F057 selected dossier information-model refinement
+
+- Followed the repository resume protocol, retained the user-selected numbered dossier as the Organic visual anchor, and limited the implementation to the isolated HTML prototypes plus their browser test. No production profile data or recruitment page was read or changed.
+- Added design-prototypes/profile-editor/profile-schema.js as the shared, explicit field inventory for all five prototype directions. The schema now has 14 top-level sections while related distinctions remain nested, so the navigation stays manageable.
+- Split language ability from language examinations. One language record stores language and four proficiency dimensions; independent examination records store the corresponding language, exam type, score, exam date, validity date, and certificate number. CET, IELTS and TOEFL are no longer presented as languages.
+- Split internships from formal employment, campus leadership from campus activities, and publications from patents. Added dedicated work samples plus reviewed missing education, location, compensation, award, certificate, family-contact and reusable-answer fields.
+- Split “设置常用简历 PDF” from “从简历导入档案信息” into two independent file actions. Prototype file inputs only display the current selection; neither filename nor file bytes enter the local draft JSON.
+- Reused production field paths where the current CandidateProfile already supports them and named prototype-only future candidates explicitly. Context-specific fields are marked “投递时确认”; sensitive fields retain confirmation markers and masked identity-number controls.
+- Changed completion from “all rendered controls” to core applicable controls. Empty optional repeatable groups do not reduce completion, while the first baseline education record remains included.
+- Refactored the shared renderer to support nested groups, multiple upload actions, repeatable group restoration, contextual guidance, and group-aware completion. Removed the obsolete embedded field list so the schema is the only field-model source of truth.
+- Focused npm run test:e2e -- tests/e2e/profile-design-prototypes.spec.ts exited 0 with 5/5 Chrome checks. It verifies the five variants, isolated persistence, guided navigation, separate language/exam records, the two resume actions, nested concept separation, file-metadata non-persistence, and narrow viewport behavior.
+- Final npm run validate exited 0: TypeScript passed, 41 test files / 370 tests passed, corpus verification passed, production built, all 13 required distribution files passed, permissions remained exact, and forbidden permissions remained absent.
+- Final npm run test:e2e exited 0 with 29/29 Chrome scenarios. node --check passed for profile-schema.js and prototype.js; legacy field-path and mojibake searches returned no match; git diff --check reported no whitespace errors beyond existing Windows line-ending notices.
+- Refreshed and visually inspected artifacts/profile-design-01-dossier.png, profile-design-01-language.png, and profile-design-mobile-guided.png. They contain only blank prototype UI and show the corrected resume actions, language grouping, Organic hierarchy, and responsive layout.
+
+### F057 changed files and handoff
+
+- Field model: design-prototypes/profile-editor/profile-schema.js.
+- Shared renderer and styling: design-prototypes/profile-editor/prototype.js and prototype.css.
+- Prototype entry pages: 01-dossier.html, 02-bento.html, 03-guided.html, 04-quiet.html, and 05-compact.html in the same directory.
+- Browser verification: tests/e2e/profile-design-prototypes.spec.ts; current ignored evidence includes the dossier, language-detail, and mobile-guided screenshots in artifacts/.
+- Harness state: feature_list.json and this progress.md. F057 is complete. The next recommended feature is a separately reviewed migration of the approved information model into the production React CandidateProfile and options editor; this prototype work intentionally did not make that product-data migration.
+
+## 2026-08-07 - F058 MetaApp public ground-truth kickoff
+
+- Marked F058 `in_progress` for the user-supplied MetaApp application URL.
+- Read-only public HTML inspection found `js-websiteInfo.website_info.resume_form_schema` version 8. The visible denominator is currently 4 groups and 13 logical fields; hidden schema fields are excluded from the ground truth.
+- Browser control had no available instance, so this feature is limited to independently auditable public-schema evidence. It will not claim authenticated rendered-DOM coverage, page filling, upload, login, or submission.
+
+### F058 implementation and acceptance evidence
+
+- Added a reviewed public snapshot and normalized ground truth for MetaApp's `软件研发工程师` application. The current visible denominator is 4 groups / 13 logical fields: 简历 1、基本信息 4、教育经历 4、实习经历 4. Hidden Schema objects are not counted.
+- Added a GET-only `npm run audit:metaapp` command. It refetched the user-supplied public application URL, parsed `js-websiteInfo.website_info.resume_form_schema` version 8, compared every visible group and field with the snapshot, verified the public job title through the job-detail GET endpoint, and reported no application submission.
+- The normalized corpus ground truth contains the credential-free origin and `/140297/resume/:id/apply` path template. A static privacy check confirmed 4/13, no raw job id, and no cookie, authorization, password, filename, or raw-HTML marker.
+- `npm run audit:metaapp` exited 0 with `4 groups, 13 visible fields`. `npm run verify:corpus` exited 0. Final `npm run validate` exited 0 with 41 test files / 370 tests, corpus verification, production build, 13-file distribution verification, unchanged permissions, and collector exclusion.
+- `git diff --check` reported no whitespace errors beyond the repository's existing Windows line-ending notices. JSON parse and `node --check scripts/audit-metaapp.mjs` passed. No browser login, page write, file upload, or final-submit action was performed.
+
+### F058 changed files and handoff
+
+- Ground truth and source snapshot: `ats-corpus/ground-truth/metaapp-campus-application-v1.json` and `tests/fixtures/metaapp-campus-application-schema.json`.
+- Live audit and operator notes: `scripts/audit-metaapp.mjs`, `docs/metaapp-ground-truth.md`, and the `audit:metaapp` package script.
+- Harness state: `feature_list.json` and this `progress.md`. F058 is complete. The next evidence step is a developer-triggered anonymous rendered-page observation for MetaApp, audited against the 4-group/13-field denominator; only after that should the Xiaomi and MetaApp samples be used to justify a broader Feishu family detector/template.
+
+## 2026-08-07 - F059 MetaApp scanner hardening kickoff
+
+- Marked F059 `in_progress` after the user requested a scanner fix and supplied a new private anonymous observation in Downloads. The file remains outside the repository and is used only for aggregate diagnostics.
+- The existing corpus importer accepted the sample in dry-run mode. It records the expected four sections, 279 raw interactive nodes, 242 standalone option nodes, one protected file input and one protected final-submit button, with no current values or authentication material.
+- Independent strict comparison against the F058 Ground Truth finds 7/13 logical fields. The reproducible defects are missing basic-section association, weak-wrapper label shadowing, missing 手机号码 and date-range semantics, missing required markers, and UI treatment of standalone options as raw controls rather than a separate structural count.
+- Scope is limited to privacy-safe structure extraction and the development-only collector quality gate. Production filling behavior, permissions, login, attachments, and final submission remain unchanged.
+
+## 2026-08-07 - F060 Lenovo Talent component ground-truth kickoff
+
+- Followed the repository resume protocol for the user-supplied `https://talent.lenovo.com.cn/account/resume` URL and ran `./init.ps1 -SkipInstall`; the starting validation passed with 41 test files / 370 tests.
+- Used agent-reach's public webpage reader first. The unauthenticated route exposes only the Lenovo account-login shell, so it is excluded from the resume component denominator.
+- Browser discovery returned no connected instance. No login, QR scan, SMS/voice code, CAPTCHA, cookie, browser storage, candidate value, page write, upload, save, or application submission was attempted.
+- Continued with credential-free production evidence only: the current PC `myResume` chunk uses Element Plus controls and exposes seven editor sections, stable model names, validators, conditional branches, repeatable-record components, attachment constraints, and section-specific API families. `GET /gateway/sysDict/all` returned 76 dictionaries, including all 15 option sets referenced by the resume component.
+- Current reviewed denominator is 7 sections, 55 profile fields, and 2 workflow confirmation controls. This remains public compiled-component/dictionary evidence until an authorized authenticated rendered-DOM observation is available.
+
+### F060 implementation and acceptance evidence
+
+- Added a normalized Lenovo Talent PC ground truth and a source-bound audit snapshot. The current denominator is 7 sections / 55 profile fields / 2 workflow controls: 上传简历 2、个人信息 17、教育经历 9、实习经历 7、项目经验 6、技能/爱好 10、其他 4. Upload parsing and acknowledgement checkboxes are kept outside the profile-field count.
+- Preserved exact technical evidence needed by deterministic filling: Element Plus control families, stable model names, required-rule keys, `YYYY/MM` month controls, repeatability and record-local API families, conditional dependencies, attachment formats/10 MiB limits, sensitive identity confirmation, and the observed misspellings `depatureDate`, `projectIntrodution`, and `informationChannell`.
+- Recorded one material component anomaly instead of normalizing it away: the PC country select has a boolean `multiple` attribute and an array-shaped display model while the mobile component is single-select. The mobile bundle exposes only personal, education, and other editing and explicitly directs applicants to the PC site for the remaining sections.
+- Added a credential-free live audit. It discovers the current versioned index, PC/mobile `myResume`, resume API, and static config chunks; parses the PC component with TypeScript; compares all 55 profile controls and required rules; verifies section API path markers without calling them; and refetches `GET /gateway/sysDict/all` to check all 15 referenced dictionaries by count, first/last label, and SHA-256 digest.
+- `npm run audit:lenovo` exited 0 with `7 groups, 55 profile fields, 2 workflow controls, 15 remote option sets`; `npm run verify:corpus` exited 0. The audit performed public GET requests only and made no resume read/write, upload, save, or submission call.
+- The first full validation run encountered a 5-second timeout in the pre-existing expanded `ProfileEditor` test while the other 372 tests passed. An isolated diagnostic with a 15-second ceiling completed all 6/6 tests in 4.985 seconds; the unchanged final strict `npm run validate` then exited 0 with 42 test files / 373 tests, corpus verification, production build, 13-file distribution verification, exact permissions, and collector exclusion all passing.
+- Final `npm run test:e2e` exited 0 with 29/29 Chrome scenarios, including complex controls, repeatable records, attachments, collector quality, privacy controls, and zero final submission. This evidence-only feature did not change a user-facing surface, so it adds no synthetic UI screenshot; no authenticated Lenovo screenshot was captured because no browser instance was connected.
+- JSON parsing and `node --check scripts/audit-lenovo.mjs` passed. The targeted privacy/no-write scan found no raw HTML, authentication query data, bearer material, candidate value, or resume endpoint call in the audit. `git diff --check` exited 0 with only the repository's existing LF-to-CRLF warnings.
+
+### F060 changed files and handoff
+
+- Ground truth and reviewed snapshot: `ats-corpus/ground-truth/lenovo-talent-resume-v1.json` and `tests/fixtures/lenovo-talent-resume-schema.json`.
+- Live audit and operator notes: `scripts/audit-lenovo.mjs`, `docs/lenovo-talent-resume-ground-truth.md`, and the `audit:lenovo` package script.
+- Harness state: `feature_list.json` and this `progress.md`. F060 is complete; F059 remains independently in progress. The next Lenovo evidence step is an authorized, value-redacted authenticated DOM observation for the 7/55 denominator. Only after that should a Lenovo-specific production template or Element Plus adapter be proposed. No login, browser credential inspection, commit, push, or PR was performed.
+
+### F059 implementation and acceptance evidence
+
+- Hardened the read-only CDP page-state scanner around bounded structural evidence. It now continues past weak inner wrappers to a real form item, recognizes exact allow-listed labels in small field containers, associates generic `div` section shells, derives section context from technical form names/classes, detects required attributes/classes/asterisks, and sanitizes file/date/upload-status text without reading current input values.
+- Limited the structural-label fallback to ancestors containing at most one logical field or a two-control range. This preserves date-range recovery while preventing a single known caption elsewhere in a large page or section from shadowing unrelated controls. The generic anonymous State / Find recall regression caught by the first full browser run was fixed and its isolated scenario then passed.
+- Added a synthetic MetaApp failure-shape unit fixture covering the reviewed 4 groups / 13 fields, nested wrappers, phone, two date ranges, structural required markers, standalone options/listbox, a file input, final-submit protection, and explicit private-value non-leak assertions.
+- Generalized the development-only collector quality gate. It recognizes the reviewed Xiaomi and MetaApp baselines, evaluates MetaApp independently against 4 groups / 13 logical fields and required evidence, excludes `option` and `listbox` structures from the semantic denominator, reports the three standalone option nodes separately, and blocks download on missing fields, missing required state, raw-count mismatch, weak semantics, or unprotected final submission.
+- Extended the browser collector scenario across both baselines. The MetaApp-derived page reaches 4/4 groups and 13/13 fields, reports 3 option nodes outside the logical-field count, leaks none of its synthetic private values or raw job id into JSON, and leaves the submit counter at zero.
+- Focused `npm test -- --run src/bridge/pageState.test.ts src/ats/observation.test.ts src/devtools/ats-collector` exited 0 with 4 files / 12 tests. `npm run build:collector` and `npm run verify:collector` passed with the exact unchanged permissions.
+- `npm run test:e2e -- --grep "MetaApp|collector"` exited 0. Final `npm run validate` exited 0 with TypeScript, 42 test files / 373 tests, corpus verification, production build, 13-file distribution verification, unchanged permissions, forbidden-permission absence, and proof that the development collector is absent from production.
+- Final complete `npm run test:e2e` exited 0 with 29/29 Chrome scenarios, including generic State / Find, Xiaomi, MetaApp, filling, attachments, privacy controls, repeatable records, PDF/DOCX/OCR, and zero final submission. `artifacts/metaapp-ats-collector.png` was refreshed and visually inspected; it contains synthetic structure only and shows the 4/4, 13/13 independent quality result.
+- `feature_list.json` parses with 61 features and F059 is `done`. `git diff --check` exited 0 with only existing Windows LF/CRLF notices. The user-supplied observation remains unchanged in Downloads; no login, cookie/password access, telemetry, upload, page write, permission change, or final-submit action was introduced.
+
+### F059 changed files and handoff
+
+- Scanner and unit proof: `src/bridge/pageState.ts` and `src/bridge/pageState.test.ts`.
+- Collector gate and UI: `src/devtools/ats-collector/xiaomiQuality.ts`, `xiaomiQuality.test.ts`, and `AtsCollectorCard.tsx`.
+- Browser proof: `tests/e2e/ats-collector.spec.ts` and ignored current screenshot `artifacts/metaapp-ats-collector.png`.
+- Harness state: `feature_list.json` and this `progress.md`. F059 is complete. The next recommended action is to rebuild/reload `dist-collector`, refresh the authenticated MetaApp application, and create a fresh anonymous observation; only that real recapture can confirm the production DOM now reaches the synthetic 4/4 and 13/13 target. No commit or push was performed.
+
+## 2026-08-07 - F070 NIO Feishu application ground-truth kickoff
+
+- Marked F070 `in_progress` for the user-supplied `nio.jobs.feishu.cn` application URL after the repository baseline passed with 44 test files / 381 tests.
+- A credential-free GET of the application HTML exposes public `js-websiteInfo.website_info.resume_form_schema` version 1. Initial independent evidence contains 7 visible groups / 27 logical fields for `资深大语言模型算法（上海）`, including NIO-specific application questions and three configured yes/no selects.
+- Scope is evidence only: create company-explicit 蔚来/NIO ground truth, source snapshot, drift audit, and documentation. Do not inspect browser credentials or values, log in, fill, upload, save, or submit; rendered-DOM coverage remains a separate later observation.
+
+### F070 implementation and acceptance evidence
+
+- Added `ats-corpus/ground-truth/nio-feishu-senior-llm-algorithm-application-v1.json`. Both the filename and structured metadata identify `蔚来（NIO）`; the source path is normalized to `/index/resume/:id/apply` and does not retain the public job id.
+- The reviewed denominator is 7 groups / 27 logical fields / 7 customized fields: 简历 1、基本信息 7、教育经历 4、工作经历 4、项目经历 5、自我评价 1、申请信息 5. Exact group/child required and repeatable flags are preserved even where the source configuration is unusual.
+- Recorded the three NIO-specific configured selects and their exact `是` / `否` captions. Built-in location, preferred-location and degree option catalogs are absent from the public form schema, so the ground truth does not invent them.
+- Added a company-explicit reviewed source snapshot and `npm run audit:nio`. The audit refetches only the public application HTML and public job-detail endpoint, compares schema version, company origin, job title, every group and field, customization, options, and the 7/27 denominator, and makes no application mutation request.
+- `npm run audit:nio` exited 0 for `资深大语言模型算法（上海）`; `npm run verify:corpus`, JSON parsing, `node --check scripts/audit-nio.mjs`, and the normalized-artifact privacy/path/count audit passed.
+- Final `npm run validate` exited 0 with TypeScript, 44 test files / 381 tests, corpus verification, production build, 13-file distribution verification, unchanged permissions, forbidden-permission absence, and collector exclusion. `git diff --check` exited 0 with only existing LF/CRLF notices.
+- This is independent public server-schema ground truth, not authenticated rendered-DOM or filling evidence. No browser credential/value inspection, login, cookie/token access, attachment upload, field write, save, or final application submission was performed.
+
+### F070 changed files and handoff
+
+- Ground truth: `ats-corpus/ground-truth/nio-feishu-senior-llm-algorithm-application-v1.json`.
+- Reviewed source snapshot: `tests/fixtures/nio-feishu-senior-llm-algorithm-application-schema.json`.
+- Drift audit and command: `scripts/audit-nio.mjs` and the `audit:nio` package script.
+- Documentation and harness: `docs/nio-feishu-ground-truth.md`, `feature_list.json`, and this `progress.md`.
+- F070 is complete. The next NIO evidence step is a developer-triggered anonymous rendered-page observation compared against 7/27; only that later evidence can validate actual controls or promote NIO/Feishu support. No commit or push was performed.
+
+## 2026-08-07 - F061 ATS family expansion harness and support policy
+
+- Used the long-running-agent-harness workflow to convert the OfferLink architecture review into nine durable features, F061-F069. The sequence is support policy, generalized Feishu, Zhiye, Moka, Hotjob, local host overrides, optional privacy-safe AI proposals, an evidence-derived catalog, and a 12-page real acceptance gate.
+- Added docs/ats-family-expansion-plan.md. It defines the clean-room five-layer architecture, standard-mode local boundary, feature dependencies, support levels, exact metric formulas, four-family/12-page matrix, verification ladder, evidence allowlist, prohibited data, and failure policy.
+- Added a pure typed ATS support policy. It validates privacy attestations, dates, aggregate metrics, evidence ids and safe artifact references; rejects raw/profile/authentication/query/file metadata claims; and derives planned, observed, fixture-verified, or real-page-verified without touching a browser page.
+- Promotion requires an independent ground truth or value-redacted observation for the same site. Fixture promotion requires a passing synthetic run. Real promotion requires three distinct passing sites, at least 90% eligible-field coverage, at least 95% verified-write success, coverage of text/choice/date/repeatable controls, and zero incorrect writes, unsafe actions, final-submit activations, unexpected navigation, duplicate records, or standard-mode network calls.
+- Added the first bundled support evidence registry. Xiaomi and MetaApp ground truths make the future general Feishu family observed only; it has zero fixture or real write claims. Zhiye, Moka, and Hotjob remain planned.
+- Focused npm test -- --run src/ats/supportPolicy.test.ts src/ats/supportEvidence.test.ts exited 0 with 2 files / 8 tests. TypeScript passed.
+- Final npm run validate exited 0 with TypeScript, 44 test files / 381 tests, corpus verification, production build, 13-file distribution verification, unchanged exact permissions, forbidden-permission absence, and developer-collector exclusion.
+- F061 changes no page detection, matching, writing, user interface, permission, network request, or production support claim, so no new Chrome screenshot or real-page action was required. No OfferLink code, selector configuration, private API, asset, branding, or rating was copied.
+
+### F061 changed files and handoff
+
+- Durable roadmap: docs/ats-family-expansion-plan.md.
+- Policy and current evidence: src/ats/supportPolicy.ts and src/ats/supportEvidence.ts.
+- Verification: src/ats/supportPolicy.test.ts and src/ats/supportEvidence.test.ts.
+- Harness state: feature_list.json and this progress.md. F061 is complete. F062 is the next unblocked node: generalize Feishu from the existing Xiaomi and MetaApp evidence while keeping the family below real-page-verified until three distinct real sites pass.
+
+## 2026-08-07 - F071 禾赛科技 Feishu application ground-truth kickoff
+
+- Followed the repository resume protocol and ran `./init.ps1 -SkipInstall`; the starting validation passed with 44 test files / 381 tests.
+- Used agent-reach's general-web/Jina Reader path on the user-supplied public application URL. The page title identifies `禾赛科技`, while the public server payload states the legal tenant name `上海禾赛科技有限公司`; the public job-detail endpoint identifies `设备工程师（嘉定）`.
+- Independent credential-free inspection of `js-websiteInfo.website_info.resume_form_schema` version 1 found 10 visible groups / 30 logical fields / 1 customized field.
+- Scope is evidence only: create company-explicit ground truth, reviewed snapshot, GET-only drift audit, and documentation. No login, cookie or current-value inspection, form write, upload, save, or final application submission is permitted; rendered-DOM coverage remains a separate later observation.
+
+### F071 implementation and acceptance evidence
+
+- Added `ats-corpus/ground-truth/hesai-feishu-equipment-engineer-jiading-application-v1.json`. Structured metadata states company `禾赛科技` and legal company name `上海禾赛科技有限公司` in plaintext; the normalized source path is `/index/resume/:id/apply` and does not retain the public job id.
+- The independent denominator is 10 groups / 30 logical fields / 1 customized field: 简历 1、基本信息 3、教育经历 4、工作经历 4、实习经历 4、项目经历 5、作品 3、获奖 3、语言能力 2、自我评价 1. Exact required and repeatable flags are preserved, including the required 简历 group with a non-required attachment child and individually required fields inside optional repeatable groups.
+- Added a reviewed source snapshot plus `npm run audit:hesai`. The GET-only audit refetched the public HTML and job-detail endpoint, verified the page title and public tenant name, compared schema version and every visible group/field, checked the job title `设备工程师（嘉定）`, and exited 0 with `10 groups, 30 visible fields`.
+- `npm run verify:corpus` exited 0. JSON parsing, `node --check scripts/audit-hesai.mjs`, and a normalized-artifact audit proved the two plaintext company names, 10/30 denominator, templated path, no raw job id, and no prohibited current-value/authentication/raw-HTML/file/selector data keys.
+- Final `npm run validate` exited 0 with TypeScript, 44 test files / 381 tests, corpus verification, production build, 13-file distribution verification, exact permissions, forbidden-permission absence, and developer-collector exclusion. `git diff --check` for the tracked feature files exited 0 with only existing LF-to-CRLF notices; all four new files passed an explicit trailing-whitespace check.
+- This remains public server-schema ground truth, not authenticated rendered-DOM or filling evidence. No browser credential/value inspection, login, cookie/token access, attachment upload, field write, save, or final application submission was performed.
+
+### F071 changed files and handoff
+
+- Ground truth: `ats-corpus/ground-truth/hesai-feishu-equipment-engineer-jiading-application-v1.json`.
+- Reviewed source snapshot: `tests/fixtures/hesai-feishu-equipment-engineer-jiading-application-schema.json`.
+- Drift audit and command: `scripts/audit-hesai.mjs` and the `audit:hesai` package script.
+- Documentation and harness: `docs/hesai-feishu-ground-truth.md`, `feature_list.json`, and this `progress.md`.
+- F071 is complete. The next 禾赛 evidence step is a developer-triggered anonymous rendered-page observation compared against 10/30; only that later evidence can validate actual controls or successful filling. F062 remains the next implementation feature in the broader ATS-family roadmap. No commit or push was performed.
+
+## 2026-08-07 - F075 legacy ground-truth path migration kickoff
+
+- Followed the repository resume protocol and ran `./init.ps1 -SkipInstall`; the starting validation passed with 44 test files / 381 tests.
+- Confirmed that Xiaomi, MetaApp, and Lenovo still use flat legacy paths while `ats-corpus/ground-truth/README.md` now defines `ground-truth/<ats-family>/<company>/` as the current company-classified convention.
+- Scope is a lossless organization and metadata migration. Preserve every reviewed field and stable artifact id; add explicit company/ATS/denominator metadata; update active references; do not change matcher behavior, support level, browser permissions, candidate data, or any real page.
+
+## 2026-08-07 - F072 company-explicit downloaded observation organization kickoff
+
+- Found three developer-downloaded ATS observations and classified them from their credential-free origins as 蔚来（NIO）, MetaApp, and 小米.
+- Read-only privacy inspection found all four privacy flags false in every file, no current-value/selected/authentication/file-metadata/DOM-session keys, no seven-plus-digit values, no email addresses, and templated paths without raw application ids.
+- The NIO and MetaApp exports pass the current corpus importer in dry-run mode. The older Xiaomi export predates the required `sections` and `summary.sectionCount` fields, so it will be preserved and clearly marked legacy rather than silently rewritten or presented as current-schema validated.
+- Scope: copy originals byte-for-byte into a company-explicit non-production staging tree, add a readable index, verify hashes, and leave the Downloads originals untouched.
+
+### F072 implementation and acceptance evidence
+
+- Added `ats-corpus/observations/README.md` as the plaintext company index. It names 蔚来（NIO）, MetaApp, and 小米 and records each ATS family, normalized origin/path, captured counts, staging filename, validation status, and independent ground-truth link.
+- Copied the three Downloads observations unchanged into `ats-corpus/observations/feishu-recruiting/{nio,metaapp,xiaomi}/`. Source/copy SHA-256 pairs matched: NIO `592f2c6d455927d38182f701a8581ef1925a281607aa7ec16c642fe0ca0e0cb1`, MetaApp `8a86994740f2cf5a3814371e62ae181aaf25e25b60ff6c5deb2f12b1c5071fb7`, and Xiaomi `1c8173e03f10eaea0cff6b6ef8eec45ebb058e8c8fe54a55212c8bc4495aa0c9`. The Downloads originals were not changed or deleted.
+- The staged privacy audit passed for all three observations: all four declared privacy flags are false, all JSON parses, paths remain templated, and no current-value/selected/authentication/file-metadata/DOM-session keys, local paths, emails, or seven-plus-digit values were found.
+- Current-schema corpus-import dry runs passed for NIO (`generic-html`, digest `3165e4f01a4d096e`) and MetaApp (`generic-html`, digest `c6a1a699f41d305d`). Xiaomi remains explicitly marked legacy because its older export has no required top-level `sections` or `summary.sectionCount`; it was not silently altered or promoted to validated evidence.
+- Updated `ats-corpus/README.md` to document `observations/` as non-production staging that is excluded from reviewed corpus samples. `npm run verify:corpus` exited 0, and final `npm run validate` exited 0 with TypeScript, 44 test files / 381 tests, corpus verification, production build, 13-file distribution verification, exact permissions, forbidden-permission absence, and developer-collector exclusion.
+
+### F072 changed files and handoff
+
+- Company index: `ats-corpus/observations/README.md`.
+- Staged copies: the NIO, MetaApp, and Xiaomi JSON files below `ats-corpus/observations/feishu-recruiting/`.
+- Corpus documentation and harness: `ats-corpus/README.md`, `feature_list.json`, and this `progress.md`.
+- F072 is complete. The next evidence action is to recapture Xiaomi with the current collector, then independently compare each current-schema observation with its company ground truth before importing any file into `ats-corpus/samples/`. F062 remains the broader ATS-family implementation feature. No commit or push was performed.
+
+## 2026-08-07 - F073 安克创新 Feishu application ground-truth kickoff
+
+- Followed the repository resume protocol and ran `./init.ps1 -SkipInstall`; starting validation passed with 44 test files / 381 tests.
+- Used agent-reach's general-web/Jina Reader route on the user-supplied public job-detail URL. The public title states `AI 业务工程师 — Agent 交付方向 AI Business Engineer (Forward Deployed) - 加入安克创新科技股份有限公司`.
+- Credential-free GET inspection confirmed both the supplied detail page and the derived `/index/resume/:id/apply` page expose the same `js-websiteInfo.website_info.resume_form_schema` version 1 with 5 visible groups / 15 logical fields / 0 customized fields.
+- Scope is independent public evidence only: add company-explicit normalized ground truth, a reviewed source snapshot, a GET-only drift audit, and documentation. No login, candidate value, cookie/token inspection, attachment upload, field write, save, or final application submission is permitted.
+
+### F073 implementation and acceptance evidence
+
+- Added `ats-corpus/ground-truth/anker-innovations-feishu-ai-business-engineer-application-v1.json`. Company metadata states `安克创新`, `安克创新科技股份有限公司`, and `Anker Innovations` in plaintext; normalized paths are `/index/position/:id/detail` and `/index/resume/:id/apply` and contain no raw job-post id.
+- The independent denominator is 5 groups / 15 logical fields / 0 customized fields: 简历 1、基本信息 3、教育经历 4、工作经历 4、作品 3. The source's unusual distinction is preserved: 教育经历 is a required repeatable group while its four children are individually optional, and 简历 is a required group while 简历附件 is individually optional.
+- Added the reviewed source snapshot and `npm run audit:anker`. The GET-only audit refetched the supplied detail page, its derived application page, and the public job endpoint; verified company and bilingual job identity; compared both live schemas field-for-field with the snapshot; proved detail/application schema equivalence; and exited 0 with `5 groups, 15 visible fields`.
+- JSON parsing, `node --check scripts/audit-anker.mjs`, and the normalized-artifact audit proved the 5/15 denominator, both plaintext Chinese company names, templated paths, absence of the raw public job id from normalized ground truth, and absence of prohibited value/authentication/raw-HTML/file/selector/session keys. `npm run verify:corpus` exited 0.
+- Final `npm run validate` exited 0 with TypeScript, 44 test files / 381 tests, corpus verification, production build, 13-file distribution verification, exact permissions, forbidden-permission absence, and developer-collector exclusion. This was not a user-visible runtime milestone, so no E2E screenshot was required.
+
+### F073 changed files and handoff
+
+- Ground truth: `ats-corpus/ground-truth/anker-innovations-feishu-ai-business-engineer-application-v1.json`.
+- Reviewed source snapshot: `tests/fixtures/anker-innovations-feishu-ai-business-engineer-application-schema.json`.
+- Drift audit and command: `scripts/audit-anker.mjs` and the `audit:anker` package script.
+- Documentation and harness: `docs/anker-innovations-feishu-ground-truth.md`, `feature_list.json`, and this `progress.md`.
+- F073 is complete. The next 安克 evidence step is a developer-triggered anonymous rendered-page observation compared against 5/15; only that later evidence can validate actual controls or successful filling. F062 remains the broader Feishu-family implementation feature. No commit or push was performed.
+
+## 2026-08-07 - F074 携程社会招聘简历编辑 Ground Truth kickoff
+
+- Followed the repository resume protocol and ran `./init.ps1 -SkipInstall`; starting validation passed with 44 test files / 381 tests.
+- Used agent-reach's general-web/Jina Reader route on the user-supplied URL. The credential-free landing page identifies 携程集团（Trip.com Group） and the current root HTML exposes a public Chinese `i18n_base_language` dictionary.
+- Public static-bundle inspection classified the site as a company-owned custom recruitment SPA, not Feishu/Moka or another shared ATS. The main route table marks `/experienced/personal-homepage` as authenticated and lazy-loads personal-homepage module `46096`; the current module defines the `/experienced/personal-homepage/editCV` contract.
+- Independent bundle review found 7 visible sections / 28 logical controls / 5 repeatable collections / 2 attachment controls for the experienced route. Phone changes trigger a manual verification-code gate; no attempt will be made to read or bypass it.
+- Scope is public contract evidence only: add a family/company-classified normalized artifact, a reviewed source snapshot, a GET-only drift audit, and documentation. No login, candidate-value/API response inspection, upload/parse call, verification request, field write, save, or final application submission is permitted.
+
+### F074 implementation and acceptance evidence
+
+- Added the company-explicit normalized artifact at `ats-corpus/ground-truth/ctrip-careers-custom/ctrip/ctrip__experienced-edit-cv__v1.json`. It classifies `job.ctrip.com` as `ctrip-careers-custom` / `company-owned-custom-ats`, explicitly not a shared third-party ATS, and replaces the supplied `tabindex=2` route detail with the template `tabindex=:tab`.
+- The independent reviewed snapshot records 7 groups / 28 logical fields / 21 required fields / 5 repeatable collections / 2 attachment fields / 4 configured-option fields / 1 manual verification gate. It preserves the two 25 MB PDF/DOC/DOCX file controls, `male`/`female`, degree and proficiency option values, the `1900-01-01` current-job sentinel, and the manual SMS boundary without storing a candidate value.
+- Added `npm run audit:ctrip`. On 2026-08-07 it resolved the live public root, `main.dec41b1a.js`, current personal-homepage chunk 400, and shared recruitment API chunk 138 using GET only. It verified the authenticated experienced route, module 46096, edit-CV contract, live Chinese i18n labels, field/model markers, option values, file constraints, API boundary strings, the 7/28 denominator, normalized-path privacy rules, and exited 0. It invoked no candidate, parse, verification, update, save, or submission endpoint.
+- `node --check scripts/audit-ctrip.mjs`, JSON parsing for the GT/snapshot/harness, `npm run verify:corpus`, and the classification/documentation inspection all exited 0. `npm run validate` exited 0 with TypeScript, 44 test files / 381 tests, corpus verification, production build, 13-file distribution verification, exact permissions, forbidden-permission absence, and developer-collector exclusion.
+- This is a documentation/corpus milestone rather than a user-visible runtime change, so no E2E screenshot was required. Evidence remains explicitly `public-bundle-contract`: it does not claim logged-in rendered-DOM coverage or successful filling.
+
+### F074 changed files and handoff
+
+- Ground truth and indexes: `ats-corpus/ground-truth/ctrip-careers-custom/ctrip/ctrip__experienced-edit-cv__v1.json`, `ats-corpus/ground-truth/README.md`, and `ats-corpus/README.md`.
+- Reviewed source snapshot: `tests/fixtures/ctrip-experienced-edit-cv-public-bundle-contract.json`.
+- Drift audit and command: `scripts/audit-ctrip.mjs` and the `audit:ctrip` package script.
+- Documentation and harness: `docs/ctrip-experienced-edit-cv-ground-truth.md`, `feature_list.json`, and this `progress.md`.
+- F074 is complete. The next Ctrip evidence action is a developer-triggered anonymous scan of the authenticated rendered page, compared group-by-group with 7/28. Do not capture existing values, filenames, cookies, tokens, request bodies, or invoke parse, SMS, save, or final submission. No commit or push was performed.
+
+## 2026-08-07 - F076 Huya campus Moka resume ground-truth kickoff
+
+- Followed the repository resume protocol and ran `./init.ps1 -SkipInstall`; starting validation passed with 44 test files / 381 tests.
+- The user supplied `https://app.mokahr.com/campus_apply/huya/4112#/candidateHome/resume`. The hostname and route classify the page as a Moka campus-application tenant for company slug `huya`; public evidence will be used to confirm the company identity and independently observable resume contract.
+- Scope is evidence only: create a Moka/huya family-company artifact, reviewed snapshot, GET-only audit, and documentation. No login, current candidate value, cookie/token inspection, attachment upload, form write, save, or final application submission is permitted.
+
+### F076 implementation and acceptance evidence
+
+- Public tenant-shell evidence identifies organization `huya`, display name `虎牙直播`, site 4112, `campus` mode, Chinese locale, and Moka branding. The normalized artifact classifies the page as `moka` / `shared-ats-tenant` and stores it at `ats-corpus/ground-truth/moka/huya/huya__campus-candidate-resume__v1.json`; its path template replaces the public site number with `:siteId` and contains no `4112`.
+- The current public Moka applyWeb bundle declares that `/candidateHome/resume` copies `DEFAULT_APPLY_SETTING`, deletes `uploadInfo`, and renders the remaining standard form. The independent reviewed denominator is 9 groups / 41 logical fields / 1 required field / 6 repeatable groups / 7 configured-option fields / 0 attachment fields / 1 identity-sensitive field. The exact group order, selected technical field ids, Chinese labels, Moka types, and gender/degree/language/work-experience catalogs are preserved.
+- Added `npm run audit:huya-moka`. The audit performs only three public GETs: the two-step anonymous tenant-shell bootstrap and the current static applyWeb bundle. The anonymous bootstrap cookies remain in process memory and are never printed or persisted. The audit verifies tenant identity, release/asset discovery, routes, default-setting selection, common field definitions, option catalogs, 9/41 counts, the candidateInfo read boundary, and the `PUT /personal-center/resumeInfo` save boundary; it invokes neither endpoint and exited 0.
+- JSON parsing and the normalized privacy/count audit proved the family/company classification, exact 9/41 denominator, absence of site id 4112 from normalized GT, and absence of prohibited current-value/cookie/token/filename/raw-HTML/selector/request/response/session keys. `npm run verify:corpus` exited 0.
+- Final `npm run validate` exited 0 with TypeScript, 44 test files / 381 tests, corpus verification, production build, 13-file distribution verification, exact permissions, forbidden-permission absence, and developer-collector exclusion. This is a corpus/documentation milestone, not a user-visible runtime change, so no new E2E screenshot was required.
+
+### F076 changed files and handoff
+
+- Ground truth and index: `ats-corpus/ground-truth/moka/huya/huya__campus-candidate-resume__v1.json` and `ats-corpus/ground-truth/README.md`.
+- Reviewed source snapshot: `tests/fixtures/huya-moka-campus-candidate-resume-public-contract.json`.
+- GET-only drift audit and command: `scripts/audit-huya-moka.mjs` and the `audit:huya-moka` package script.
+- Documentation and harness: `docs/huya-moka-campus-resume-ground-truth.md`, `feature_list.json`, and this `progress.md`.
+- F076 is complete. The next Huya/Moka evidence action is a developer-triggered anonymous scan of the logged-in rendered page compared group-by-group with 9/41. That later observation must contain no values, identity number, filename, authentication data, request body, save, CAPTCHA action, or final submission. No commit or push was performed.
+
+### 2026-08-07 - F075 implementation and acceptance evidence
+
+- Migrated the three flat artifacts without changing their stable ids or field definitions: Xiaomi to `ats-corpus/ground-truth/feishu-recruiting/xiaomi/xiaomi__internship-application__v1.json`, MetaApp to `ats-corpus/ground-truth/feishu-recruiting/metaapp/metaapp__campus-application__v1.json`, and Lenovo to `ats-corpus/ground-truth/lenovo-talent/lenovo/lenovo__candidate-resume-editor__v1.json`. The old physical paths are absent.
+- Added explicit company metadata for `小米（Xiaomi）`, `MetaApp`, and `联想（Lenovo）`; added `feishu-recruiting` or `lenovo-talent` source-family metadata; and recorded exact denominators of 9/34, 4/13, and 7/55. No unsupported legal company name was invented.
+- Updated every active runtime import, Xiaomi observation audit, Lenovo live audit, support-evidence reference, company observation index, ground-truth index, and current company documentation to the new paths. A repository search found zero active old-path references outside append-only historical `progress.md` entries.
+- `npm run audit:xiaomi`, `npm run audit:metaapp`, and `npm run audit:lenovo` exited 0 and independently reconfirmed the exact public structures using GET-only evidence. The focused regression exited 0 with 4 test files / 10 tests.
+- Final `npm run validate` exited 0 with TypeScript, 44 test files / 381 tests, corpus verification, production build, 13-file distribution verification, exact permissions, forbidden-permission absence, and developer-collector exclusion. This migration changes no user-visible runtime surface, so no E2E screenshot was required.
+
+### F075 changed files and handoff
+
+- Migrated artifacts: the Xiaomi, MetaApp, and Lenovo family/company paths listed above.
+- Active references: `scripts/ats-corpus/xiaomi-observation-audit.mjs`, `scripts/audit-lenovo.mjs`, `src/ats/supportEvidence.ts`, `src/ats/xiaomiObservationAudit.test.ts`, and `src/devtools/ats-collector/`.
+- Indexes and documentation: `ats-corpus/ground-truth/README.md`, `ats-corpus/observations/README.md`, and the three company ground-truth documents.
+- Harness state: `feature_list.json` and this `progress.md`. F075 is complete; F076 remains independently in progress. No commit or push was performed.
+
+## 2026-08-07 - F077 kickoff: organize Huya Moka downloaded observation
+
+- Set `F077` to `in_progress` after the repository resume protocol and baseline initialization passed.
+- Located six `ats-observation-unknown-2026-08-07T11-19*.json` downloads for `https://app.mokahr.com/campus_apply/huya/:id`.
+- Initial evidence: all six are valid schema-v1 JSON; they form three byte-level hashes caused only by capture time and one semantic SHA-256 after `capturedAt` is excluded. Each reports 71 raw controls, 2 sections, 68 controls with extracted semantics, and all four privacy flags as `false`.
+- Scope: preserve Downloads originals, stage one latest byte-identical representative under an explicit `moka/huya` path, document duplicate handling and ground-truth comparison, then run the listed privacy/import/corpus/full-validation checks.
+
+## 2026-08-07 - F077 completed: Huya Moka observation organized
+
+- Grouped all six matching Downloads files. Byte-level group sizes are `1`, `3`, and `2` for three capture timestamps; after excluding only `capturedAt`, all six share semantic SHA-256 `dda0adcb983a36b9299c65dd953343f6be8eb097c78c027826d9c5d6f20da42b`. They therefore count as one independent rendered structure.
+- Preserved every Downloads original and copied the latest representative byte-for-byte to `ats-corpus/observations/moka/huya/huya__moka__campus-candidate-resume__2026-08-07T11-19-58-393Z.json`. Source and staged files are both 24,097 bytes and share SHA-256 `e1becd7004fc4b564b0135c82273c19bcf82fd17c2227841446444888f8898bb`.
+- The staged observation identifies `https://app.mokahr.com/campus_apply/huya/:id`, reports 71 raw controls, 2 detected sections, and 68 controls with extracted semantics. Its four privacy declarations are false and the prohibited-key audit found no raw values, selected state, authentication data, file metadata, local paths, or DOM/session identifiers.
+- `npm run corpus:import -- ats-corpus/observations/moka/huya/huya__moka__campus-candidate-resume__2026-08-07T11-19-58-393Z.json --dry-run` exited 0. It correctly retained the payload's current `generic-html` / `unknown` classification, so this staging change does not claim that a Moka detector or template exists.
+- Updated `ats-corpus/observations/README.md` with the explicit 虎牙/Moka path, provenance digest, duplicate handling, validation boundary, and link to the independent 9-group / 41-logical-field ground truth. The 71 raw DOM controls are explicitly not treated as 71 logical fields.
+- `npm run verify:corpus` exited 0. Final `npm run validate` exited 0 with TypeScript, 44 test files / 381 tests, corpus verification, production build, 13-file distribution verification, permission checks, and developer-collector exclusion.
+
+### F077 changed files and handoff
+
+- Added observation: `ats-corpus/observations/moka/huya/huya__moka__campus-candidate-resume__2026-08-07T11-19-58-393Z.json`.
+- Updated index and harness state: `ats-corpus/observations/README.md`, `feature_list.json`, and `progress.md`.
+- F077 is complete. This is a developer-data organization milestone with no user-visible runtime change, so E2E and a new screenshot were not required. The next recommended implementation is a Moka family detector and default template driven by the independent Huya ground truth, followed by a recapture that should report `moka` and a concrete resume page type.
+- No commit or push was performed.
+
+## 2026-08-07 — F079 kickoff: generic kernel + Feishu Recruiting adapter
+
+- Read `feature_list.json`, `progress.md`, and the complete `long-running-agent-harness` skill instructions.
+- Ran `./init.ps1 -SkipInstall`; the baseline `npm run validate` passed with TypeScript, 44 test files / 381 tests, corpus verification, production build, 13 distribution files, permission checks, and no developer collector in the production bundle.
+- Split the requested milestone into F079–F081 so module separation, execution wiring, and user-visible regression evidence remain independently recoverable.
+- Current scope is F079 only: move generic HTML and Feishu Recruiting family knowledge behind ATS adapter modules, replacing the Xiaomi-specific family identity without changing final-submit or sensitive-field safety behavior.
+
+### F079 completion and F080 kickoff
+
+- Added `src/ats/adapters/generic.ts` and the `src/ats/adapters/feishu/` detector/template module. The family id is now `feishu-recruiting`; no Xiaomi-specific family id remains in ATS runtime code or tests.
+- Moved default composition to `src/ats/defaultRuntime.ts`; `AtsMatchingRuntime` now receives detector and template registries explicitly and contains no concrete family imports.
+- Added detector regression coverage for Xiaomi, NIO, MetaApp, Anker, Hesai, marker evidence, HTTPS enforcement, unrelated origins, and suffix lookalikes.
+- `npm test -- --run src/ats` passed: 10 files / 45 tests. `npx tsc --noEmit`, JSON parsing, and `git diff --check` passed; line-ending warnings were informational.
+- F080 is now in progress: route template driver/verification metadata and repeatable rules through the generic content kernel.
+
+### F080 completion and F081 kickoff
+
+- `PageControlAdapterRegistry` can now resolve an exact template-requested driver. `writeControlVerified` rejects incompatible drivers and non-verifying strategies before mutation, retains the two-attempt bound, and still requires adapter readback for every success.
+- `fillPage` passes family `driverHint` and `verification` metadata through the generic write boundary; saved field corrections retain control-driver evidence while overriding only the profile path.
+- Moved repeatable group keys to the domain layer. The Feishu template now owns record path aliases, section/add/record/save selectors, allowed labels, and creation limits.
+- Reworked generic repeatable scanning, creation, and save lifecycle code to consume the resolved template. Production content code has no Xiaomi/Mioffice/Feishu-specific repeatable branch or adapter id.
+- Focused F080 verification passed: 14 test files / 84 tests, TypeScript, feature ledger parsing, and `git diff --check`. The explicit source audit reported no company/family-specific repeatable branches in non-test `src/content` code.
+- F081 is now in progress: document the boundary, run the full validation/E2E suites, and record a fresh milestone screenshot.
+
+### F081 completion and handoff
+
+- Added `docs/generic-kernel-feishu-adapter.md` and linked it from the README. It separates generic execution responsibilities from Feishu family knowledge and explicitly says public Schema/anonymous observations do not prove every authenticated page can be filled.
+- Cross-tenant detector tests cover Xiaomi, NIO, MetaApp, Anker, and Hesai URL shapes plus unrelated, lookalike, and non-HTTPS fallback. Runtime tests cover deterministic mappings, sensitive confirmation, saved corrections, driver incompatibility, selects, date periods, repeatable creation/save, and final-submit exclusion.
+- The first `npm run test:e2e` attempt used four workers: 6 tests completed, then the local Vite server exited and 23 tests failed, mostly with `ERR_CONNECTION_REFUSED`. An isolated single-worker run proved the directly related controls/Xiaomi/repeatable tests were healthy and exposed one intentional behavior change: lifecycle reporting now includes all six groups, producing 7 saved records plus 3 verified records that require no save.
+- Updated the repeatable E2E assertion to require exactly those 10 successful lifecycle results and zero stopped records. Set Playwright to one worker so the required command is deterministic in the current development environment.
+- Final `npm run test:e2e` passed 29/29 in 3.0 minutes. It refreshed `artifacts/repeatable-records.png` at 2026-08-07 21:23:20; visual inspection confirmed two education rows, two internship rows, three project rows, work sample/award/language rows, saved state where required, and a visible but untouched final-submit control.
+- Final `npm run validate` passed: TypeScript, 45 test files / 393 tests, corpus verification, production build, 13 required distribution files, exact permission audit, and development-collector exclusion. `git diff --check` passed with only line-ending warnings; feature JSON parsed; no legacy `xiaomi-feishu`/`xiaomi-recruitment` id remains; Feishu adapter definitions contain no page action.
+
+Changed files for F079–F081:
+
+- ATS composition and family modules: `src/ats/adapters/generic.ts`, `src/ats/adapters/feishu/{detector,index,template}.ts`, `src/ats/defaultTemplates.ts`, `src/ats/defaultRuntime.ts`, `src/ats/matchingRuntime.ts`, `src/ats/templateContracts.ts`, and `src/ats/templateRegistry.ts` plus focused tests.
+- Generic execution: `src/content/{engine,pageDriver,repeatableRecords,repeatableLifecycle}.ts`, `src/content/controlAdapters/registry.ts`, `src/domain/repeatableGroups.ts`, and focused tests.
+- Regression harness and docs: `src/fixture/repeatable-main.ts`, `repeatable-fixture.html`, `tests/e2e/repeatable-records.spec.ts`, `playwright.config.ts`, `README.md`, `docs/generic-kernel-feishu-adapter.md`, `feature_list.json`, and `progress.md`.
+
+No commit or push was performed. There is no blocker for F079–F081. The repository still has the pre-existing F039 browser-action feature marked `in_progress`; reconcile or complete that ledger item before starting another implementation slice. After that, the recommended product validation is a user-triggered, no-submit canary on one authenticated Feishu application page, followed by a separate Moka family adapter rather than company-specific branches.
+
+## 2026-08-07 — F082 kickoff: pre-K5 root-worktree checkpoint
+
+- Re-read `feature_list.json`, `progress.md`, repository instructions, and the complete `long-running-agent-harness` skill. Ran `./init.ps1 -SkipInstall`; validation passed with TypeScript, 45 test files / 393 tests, corpus verification, production build, 13 distribution files, exact permission checks, and developer-collector exclusion.
+- Confirmed the root worktree is `agent/ats-observation-core` at `2d8cd61`, while K2–K5 use separate worktrees. F039 remains owned by K2 and will not be altered here.
+- The K5 worktree already contains uncommitted `src/adapter-sdk` files plus its own feature/progress edits. This root task will not copy, edit, stage, or commit anything from K5; F083 waits for a clean, explicitly frozen K5 checkpoint.
+- Registered F082–F084. Current scope is F082 only: inventory, privacy/secret audit, full validation, deterministic E2E, and a local pre-K5 checkpoint commit with no push.
+
+### F082 pre-commit audit and verification evidence
+
+- Added `scripts/audit-pre-k5-checkpoint.mjs`, exposed as `npm run audit:pre-k5-checkpoint`, and documented the boundary in `docs/pre-k5-root-checkpoint-audit.md`. The report is path-only on failure and never prints matched values. `--compare-staged` requires the exact audited candidate set to be staged before a commit.
+- The final pre-stage inventory contains 201 candidate paths / 2132854 bytes with manifest SHA-256 `39bcb4ef288a3496cd83250a6aadc5972f25446324ed12a25eb4c9b5694483dd`: 67 tracked changes, zero tracked deletions, and 134 untracked files. Intended-role counts are 89 extension source/test files, 25 ATS corpus/evidence files, 22 E2E/fixture files, 22 acceptance/architecture documents, 19 scripts, 12 design-prototype files, 5 configuration files, 3 policy/entry documents, 2 harness ledgers, 1 evaluation file, and 1 local E2E fixture.
+- The candidate audit found zero high-confidence credentials/private keys/tokens, local absolute user paths, files over 1 MiB, unexpected binaries, symbolic links/reparse points, or ignored outputs. The only binary candidates are the three allowlisted Epilogue `.woff2` assets. Eight local/build entries remain ignored: `.chrome-autofill-profile/`, `.chromium-autofill-profile/`, `.env`, `artifacts/`, `dist-collector/`, `dist/`, `node_modules/`, and `test-results/`.
+- Observation audit covers 4 active structures plus 5 explicitly excluded Huya duplicates. MetaApp, NIO, Huya, and all five duplicates pass the current schema/privacy validator. The historical Xiaomi file remains the one expected fail-closed `schema-invalid` staging artifact because it predates required `sections` and `summary.sectionCount`; its four privacy attestations remain false, the forbidden-key/personal-value audit passes, and it is not a corpus sample. This preserves the existing F047 limitation instead of mislabeling old evidence as current-schema ground truth.
+- `npm run verify:corpus` passed with zero promoted samples, and `npm test -- --run src/ats` passed 10 files / 45 tests. The path-specific Xiaomi quality command exited 1 with the expected `schema-invalid` code and printed no captured values; dry-run import results were 8 current-schema passes and the same one expected legacy rejection.
+- Final `npm run validate` passed TypeScript, 45 test files / 393 tests, corpus verification, production build, 13 required distribution files, exact browser permissions, forbidden-permission absence, and production collector exclusion. Final `npm run test:e2e` passed 29/29 with one worker in 2.8 minutes. An earlier wrapper attempt was terminated by an accidental five-second tool timeout before completion; the full rerun above is the acceptance result.
+- `feature_list.json` parsed and the final diff checks exited 0. The staged check first caught two extra EOF blank lines and one Markdown trailing-space line; those three formatting defects were removed before committing. The tracked diff contains 67 paths, 4,526 insertions, and 845 deletions, with no file deletion. Before staging, remote refs hashed to `55fff0e997814ec32a7c9c9852fbd0fe0f2324a80afaf7cc1dca242aa35a58d9`; this digest will be compared again after the local commits to prove that no push occurred.
+- The current Feishu execution shape is explicitly documented as a pre-K5 prototype: its CSS selectors, `feishu-select`, and `feishu-date-range` ids are reference behavior only and are not the frozen adapter contract. F083 remains `todo` until K5 supplies a clean, identified SDK commit.
+
+### F082 completion and handoff
+
+- Created the audited local checkpoint commit `c7c24f8f432e5e7eb2e5a91666f2cfed85faf49b` (`checkpoint: preserve pre-k5 ATS autofill prototype`) on `agent/ats-observation-core`. It contains all 201 audited paths, and the worktree was clean immediately after the commit.
+- No file was deleted, no stash/rebase was performed, and no other worktree was modified. The remote-ref digest remained `55fff0e997814ec32a7c9c9852fbd0fe0f2324a80afaf7cc1dca242aa35a58d9`, matching the pre-stage value; no push occurred.
+- F082-specific additions are `scripts/audit-pre-k5-checkpoint.mjs`, its package command, `docs/pre-k5-root-checkpoint-audit.md`, and the F082–F084 harness entries/evidence. The audit now reads all repository observation JSON files even when the worktree is clean, while candidate path/count/size checks still operate against the current `HEAD` diff.
+- F082 is done. F083 is intentionally not started: its first acceptance condition requires a clean, explicitly frozen K5 adapter-sdk commit. Until K5 provides that commit id, this branch must not copy or conform to the uncommitted SDK draft.
+## 2026-08-12 - F085 零浏览器扩展秋招 Agent PRD 与验证基线
+
+- 按 `long-running-agent-harness` 和仓库 Resume protocol 恢复了工程状态：读取 `feature_list.json`、`progress.md` 与现有 browser-kernel/真实页验证文档，并在依赖已存在时运行 `./init.ps1 -SkipInstall`。
+- 初始化验证退出码为 0：TypeScript 通过，45 个测试文件 / 393 个测试通过，ATS corpus 校验通过，生产构建通过，13 个分发文件和当前扩展权限审计通过。
+- 新增 `docs/prd-zero-extension-recruitment-agent.md`。产品决策是“Electron 本机桌面 Agent + 独立求职 Chrome/Edge profile + 内部 CDP transport”，正式产品不再要求安装浏览器扩展，也不承诺接管默认 Chrome profile。
+- PRD 定义了 15 个端到端用户步骤，每一步都包含系统行为、可观察完成标准和验证办法；定义 E0-E5 证据等级，并规定只有用户授权的真实招聘页非提交写入与回读 E4 才能证明该页面可用。模拟/复制招聘页不能作为小米、飞书、Moka 等站点支持证据。
+- 字段评测口径已固定：字段分母来自独立真实页人工标注，不由程序扫描结果自证；每个字段必须得到唯一终态，明确区分 `profile_missing`、`write_failed`、`unsupported_control`、`ambiguous_review`、敏感确认、人工验证、文件确认、条件不适用、站点规则阻断和用户接管。
+- 目标指标包括字段盘点率 100%、每页可自动填覆盖率至少 90%、每页验证写入成功率至少 95%、总体至少 98%、映射正确率至少 98%，以及错误写入、重复记录、凭证读取、验证码绕过、未确认敏感动作和最终提交全部为 0。
+- 在 `feature_list.json` 追加 F085-F095 共 11 个可恢复节点：PRD、零扩展浏览器、类型化内核、桌面岗位/批次、全字段审核、小米 E4、Feishu 五公司、非 Feishu 三页面、五岗位恢复、BOSS 有界沟通、桌面发布与扩展退役。BOSS F094 是独立可选能力，不阻塞表单 MVP F095。
+- 结构验证退出码为 0：`feature_list.json` 共 96 个 feature，F085-F095 共 11 个节点，ID 唯一、依赖均存在，且每个节点具有状态、验收、验证和 notes；PRD 的 12 个必需章节和 15 个可验证用户步骤全部存在。
+- `git diff --check -- feature_list.json docs/prd-zero-extension-recruitment-agent.md` 退出码为 0，仅报告 Windows 工作区预期的 LF-to-CRLF 提示。
+- 最终 `npm run validate` 退出码为 0：TypeScript 通过；45 个测试文件 / 393 个测试通过；ATS corpus 验证为 0 个 promoted sample；生产构建通过；13 个分发文件、精确扩展权限、禁止权限缺失和开发 collector 排除检查通过。
+- 本节点只改产品文档和持久任务账本，没有修改产品运行代码、扩展权限、真实页面、用户档案或浏览器配置；因此不需要新的用户可见 E2E 或截图。工作区中原有的 `AGENTS.md` 修改及 `deployment-recovery/`、`dist-collector-backup-f043-20260808-184942/` 未跟踪目录均未改动。
+
+### F085 changed files and handoff
+
+- PRD：`docs/prd-zero-extension-recruitment-agent.md`。
+- 路线图：`feature_list.json` 中的 F085-F095。
+- 证据与交接：本 `progress.md` 节。
+- F085 的文档、任务清单和验证证据现已完成。下一推荐节点为 F086：在不安装扩展、不访问默认 Chrome profile 的前提下，建立 Electron 开发入口、独立求职 profile、动态 loopback CDP 会话和真实小米 URL 的 E2 只读启动证据。
+## 2026-08-12 - F096 AI-first MCP 多 Agent 与仅真实网页验证计划
+
+- 按 `long-running-agent-harness` 和仓库 Resume protocol 恢复根工作树，读取 `feature_list.json`、`progress.md`、零扩展 PRD、browser-kernel 交付计划、ATS ground truth/observation 索引，并运行 `./init.ps1 -SkipInstall`。根 Agent 的初始化命令退出码为 0，验证通过 45 个测试文件 / 393 个测试、ATS corpus、生产构建和 13 个分发文件审计。
+- 用户明确要求多个子 Agent。本轮并行派出三个只读规划 Agent，分别负责真实页评测、AI/MCP/Node CDP 架构、以及多 worktree 交付。三个 Agent 均未修改文件、未访问或写入真实招聘页面；根 Agent 统一处理了结论差异。
+- 发现根账本对 F039-F043 的状态已经陈旧，而隔离 worktree 和 origin 分支显示 K2 `f52e8e1`、K3 `f760551`、K4 `29776d7`、K5 `6d5f163`、F043 `4d39144` 均已完成并推送。F043 的脱敏报告记录旧扩展/K5 路径在小米、虎牙、携程的 17/17 普通字段验证、0 wrong-control 和 0 禁止动作。该证据只作为迁移基线，不能证明零扩展 Node CDP、Codex MCP、AI 无模板、当前八站或全字段审核。
+- 新增 `docs/ai-first-mcp-real-page-multi-agent-plan.md`。MVP 改成 Node/CLI-first：`Codex/Claude Skill -> MCP stdio -> Local Application Service -> AI planner + policy compiler -> typed browser kernel -> Node CDP -> 独立 Chrome/Edge profile`。桌面/Web 工作台继续复用同一服务，但不阻塞首个 Codex MVP。
+- 无模板边界已固定：AI 只提交 `fieldRef -> profilePath/terminal decision`，不能提交值、selector、XPath、坐标、脚本或 raw CDP；真实 AI-first 运行必须记录 `plannerSource=ai` 和 `legacyFieldTemplateEnabled=false`。ATS/company ground truth 是独立标注与漂移参照，不是运行前提。
+- 浏览器验收 allowlist 冻结为八个已留存真实页面：小米、MetaApp、蔚来、安克、禾赛、虎牙、联想、携程。公开契约合计 243 个历史字段定义，但每次 E3 必须按当前页面、条件、步骤和重复记录重新冻结 reachable field instances。任何新建、复制、下载或托管的模拟招聘网页均不得用于新 feature 的浏览器验收、完成门或支持宣称。
+- 纯协议、schema、策略、状态机、数据库、幂等和指标可以使用结构化对象单测；现有 fixture/模拟页只能保留为 legacy primitive regression，不得计入 MVP 指标。新开发不得新增模拟招聘网页。
+- 多 Agent 组织固定为 Coordinator/Integrator、Browser Platform、AI/Application、Independent Annotation/Judge 四个角色；每一波根 Agent + 最多三个子 Agent。真实登录 profile 只允许一个 Execution Agent 串行占用，字段分母由独立标注 Agent和用户冻结，Judge 离线复算，执行者不能更改分母或自报通过。
+- 将项目目标更新为完全本地的 MCP/CLI/Web 求职工作台，并调整 F086/F087/F089/F091/F092/F095 依赖与说明。追加 F096-F100：计划、基线收敛、AI planner/policy、MCP/Application/Skill、八站独立 Annotation/Judge。首个实现门为 F097，之后 F086/F098/F100 可由三个子 Agent 并行；F099 依赖 F087+F098，F090 才进入小米 AI-first 零扩展真实写入。
+- Feature/DAG 检查退出码为 0：`feature_list.json` 共 101 个节点；F096-F100 ID 唯一，全部依赖存在，且每项具备状态、验收、验证和 notes。计划审计确认 11 个必需章节、8 个真实站点和 6 个 MCP 工具全部存在。
+- `git diff --check -- feature_list.json docs/ai-first-mcp-real-page-multi-agent-plan.md` 退出码为 0，仅有 Windows 工作区预期的 LF-to-CRLF 提示。
+- 最终 `npm run validate` 退出码为 0：TypeScript 通过，45 个测试文件 / 393 个测试通过，ATS corpus 校验通过，生产构建通过，13 个分发文件、当前精确权限、禁止权限缺失和开发 collector 排除审计通过。
+- 本节点仅修改文档和持久任务账本，没有修改产品运行代码、浏览器、真实页面、用户档案或授权状态。未运行 legacy 模拟招聘页 E2E，也未生成新的截图，以免把模拟或旧扩展证据误记成新 MVP 证据。原有 `AGENTS.md` 修改和两个未跟踪恢复目录未触碰。
+
+### F096 changed files and handoff
+
+- 多 Agent 实施计划：`docs/ai-first-mcp-real-page-multi-agent-plan.md`。
+- 项目目标、依赖和 F096-F100：`feature_list.json`。
+- 本次验证与交接：本 `progress.md` 节。
+- F096 完成。下一推荐节点是 Coordinator-only 的 F097：审计并收敛已完成的 K2-K5/F043 分支、PR、commit 和证据，创建干净 `zeroext-mvp-base`。F097 通过后，同时启动三个独立 worktree：B/F086 Node CDP runtime、A/F098 AI planner/policy、Q/F100 Annotation/Judge。
+
+## 2026-08-12 - F097 零扩展集成基线审计启动
+
+- 按仓库恢复协议再次运行 `./init.ps1 -SkipInstall`，退出码为 0：TypeScript 通过，45 个测试文件 / 393 个测试通过，ATS corpus 校验通过，生产构建和 13 个分发文件审计通过。
+- F039-F043 的固定分支形成严格祖先链，五个隔离 worktree 均干净且各自 feature 状态为 `done`：K2 `f52e8e1`、K3 `f760551`、K4 `29776d7`、K5 `6d5f163`、F043 `4d39144`。本地 head 与对应 origin ref 全部一致。
+- GitHub Draft PR 元数据已核对：#4 K2 基于 K1、#5 K3 基于 K2、#6 K4 基于 K3、#7 K5 基于 K4、#8 F043 基于 K5；五个 PR 均为 OPEN Draft，head OID 与隔离 worktree 完全一致。
+- 历史 F043 只证明旧扩展/K5 路径在当次小米、虎牙、携程普通字段分母上 17/17 非提交写入；它不证明 Node CDP、MCP、AI-first、当前页面、完整字段或八站支持，集成后必须继续保留这一证据限制。
+- F097 记录集成分支 `agent/zeroext-mvp-base`，基线 `agent/ats-observation-core`。根工作区中的用户 `AGENTS.md` 修改和两个恢复目录不纳入 checkpoint；F085/F096 文档与账本先作为一个作用域明确的计划 checkpoint 提交，再在独立 worktree 收敛 F043。
+
+## 2026-08-12 - F097 零扩展集成基线完成
+
+- 直接合并根 ATS 分支与 F043 的预检暴露了 `src/content/index.ts`、`src/shared/messages.ts` 和 side-panel/page-driver 的 modify/delete 冲突；整体合并会恢复 K5 已删除的 content-script 第二写入通道。未提交合并已安全中止，最终基线改为以 F043/K5 `4d39144` 为唯一运行时底座，定向迁移根分支中已经提交的 profile、matching、privacy、evaluation、resume、ATS corpus、公开契约、PRD 和 F044-F100 账本资产。
+- 单 writer 证明：生产构建只有 `src/background/index.ts` entry point，manifest 无 `scripting` 权限和 content script，`dist/content.js` 不存在；招聘页写入只通过 `ProductionAdapterPageBridge -> AdapterPageBridge -> ChromeRecruitmentKernelApi -> typed K5 kernel`。根分支的旧 content-script writer 未被选入零扩展基线。
+- `npm run validate` 退出码 0：TypeScript 通过，46 个测试文件 / 475 个测试通过，ATS corpus 校验通过，生产构建通过，12 个分发文件、精确七项扩展权限与 `dist/content.js` 缺失检查通过。`git diff --check` 无 whitespace error，只有 Windows LF/CRLF 提示。
+- 被用户中断的 legacy `npm run test:e2e` 没有被记作通过证据；遗留 Playwright/Vite 进程已停止，生成的四个模拟页 artifact 已恢复。根据用户最新要求，F097 不再重跑模拟招聘页，后续站点兼容证据只来自 allowlist 中的真实网页。
+- 真实来源/E2 审计：携程通过 7 组/28 字段公开 bundle 合约，禾赛通过 10 组/30 字段，MetaApp 通过 4 组/13 字段，NIO 通过 7 组/27 字段；全部为 GET-only 且无候选人 API/提交动作。安克检测到公开标题与冻结公司名漂移；虎牙和联想公开资源连接超时；小米 observation 命令因缺少显式私有 observation 文件按设计失败。失败均保留为 drift/typed blocker，不算 site pass。
+- 历史 F043 报告的 17/17、0 wrong-control、0 protected/final-submit 动作只保留为旧扩展 K5 迁移证据，不证明 Node CDP、MCP、AI-first、当前八页或完整字段。F097 因此完成的是可开发基线，而不是“小米已由零扩展 Agent 填好”的产品宣称。
+
+### F097 changed files and handoff
+
+- 集成运行时底座：完整保留 F043/K5 的单一 typed writer，不修改 F039-F043 历史 commits 或 Draft PR #4-#8。
+- 迁移资产：`src/domain/**`、`src/matching/**`、`src/privacy/**`、`src/evaluation/**`、`src/resume/**`、`ats-corpus/**`、相关只读 audit scripts/public contracts、两份零扩展计划文档、`feature_list.json` 和本 `progress.md`。
+- 集成分支：`agent/zeroext-mvp-base`；运行时 base：`4d39144`；计划 checkpoint：根分支 `16cd189`。下一步从本基线并行启动 F086 Node CDP runtime、F098 AI planner/policy、F100 Independent Annotation/Judge；真实浏览器仍只允许一个执行者串行占用。

@@ -1,0 +1,259 @@
+{
+  "schemaVersion": 1,
+  "id": "ctrip-experienced-edit-cv-v1",
+  "company": {
+    "id": "ctrip-group",
+    "name": "携程集团",
+    "englishName": "Trip.com Group"
+  },
+  "classification": {
+    "atsFamily": "ctrip-careers-custom",
+    "kind": "company-owned-custom-ats",
+    "sharedVendorTemplate": false,
+    "basis": "The public job.ctrip.com SPA owns its route table, i18n catalog, hrrecruit API namespace, resume model, and edit-CV module."
+  },
+  "source": {
+    "originPattern": "https://job.ctrip.com",
+    "pathTemplate": "/",
+    "hashRouteTemplate": "#/experienced/personal-homepage/editCV?tabindex=:tab",
+    "language": "zh-CN",
+    "pageType": "candidate-profile-editor"
+  },
+  "evidence": {
+    "capturedAt": "2026-08-07",
+    "source": "public root HTML i18n_base_language plus public main and personal-homepage JavaScript contracts",
+    "evidenceType": "public-bundle-contract",
+    "routeRequiresAuthentication": true,
+    "recruitmentType": "socialRecruitment",
+    "boundary": "The authenticated rendered page and candidate APIs were not accessed. No candidate values, authentication data, request or response body, upload, parse request, verification request, save, or application submission entered this artifact."
+  },
+  "denominators": {
+    "groups": 7,
+    "logicalFields": 28,
+    "requiredFields": 21,
+    "repeatableCollections": 5,
+    "attachmentFields": 2,
+    "configuredOptionFields": 4,
+    "manualVerificationGates": 1
+  },
+  "groups": [
+    {
+      "label": "简历导入（解析入口）",
+      "groupKey": "resume_import",
+      "required": false,
+      "repeatable": false,
+      "fields": [
+        {
+          "label": "导入简历文件",
+          "fieldName": "resumeImportFile",
+          "inputName": "file",
+          "type": "attachment",
+          "required": false,
+          "accept": [".pdf", ".doc", ".docx"],
+          "maxSizeMb": 25,
+          "behavior": "Parse-only prefill entry; successful parsing can replace the editor's current draft fields before the user reviews and explicitly saves."
+        }
+      ]
+    },
+    {
+      "label": "基本信息",
+      "groupKey": "basic_info",
+      "i18nKey": "recruit.overseasCareers.homgpageResume.basicInformation",
+      "required": true,
+      "repeatable": false,
+      "fields": [
+        { "label": "姓名", "i18nKey": "recruit.overseasCareers.homgpageResume.name", "fieldName": "name", "type": "text", "required": true },
+        {
+          "label": "手机号",
+          "i18nKey": "recruit.overseasCareers.homgpageResume.phoneNumber",
+          "fieldName": "mobile",
+          "relatedFieldNames": ["mobilePre"],
+          "type": "phone_with_country_code",
+          "required": true,
+          "manualGate": "Changing the stored phone number or country code can require an SMS verification code that must be completed by the user."
+        },
+        { "label": "邮箱", "i18nKey": "recruit.overseasCareers.homgpageResume.emailAddress", "fieldName": "email", "type": "email", "required": true },
+        {
+          "label": "性别",
+          "i18nKey": "recruit.overseasCareers.homgpageResume.gender",
+          "fieldName": "gender",
+          "type": "select",
+          "required": true,
+          "options": [
+            { "label": "男", "value": "male" },
+            { "label": "女", "value": "female" }
+          ]
+        },
+        { "label": "出生日期", "i18nKey": "recruit.overseasCareers.homgpageResume.dateofBirth", "fieldName": "birthday", "type": "date", "required": true },
+        { "label": "居住城市", "i18nKey": "recruit.overseasCareers.homgpageResume.cityofResidence", "fieldName": "residenceState", "type": "text", "required": true }
+      ]
+    },
+    {
+      "label": "教育背景",
+      "groupKey": "education",
+      "i18nKey": "recruit.overseasCareers.homgpageResume.education",
+      "collectionName": "recruitEducationList",
+      "required": true,
+      "repeatable": true,
+      "fields": [
+        { "label": "学校", "i18nKey": "recruit.overseasCareers.homgpageResume.school", "fieldName": "schoolName", "type": "searchable_select_or_custom_text", "required": true },
+        {
+          "label": "学历",
+          "i18nKey": "recruit.overseasCareers.homgpageResume.degree",
+          "fieldName": "highestDegree",
+          "type": "select",
+          "required": true,
+          "options": [
+            { "label": "高中", "value": "highSchool" },
+            { "label": "大专", "value": "college" },
+            { "label": "本科", "value": "bachelor" },
+            { "label": "硕士", "value": "master" },
+            { "label": "博士", "value": "doctor" },
+            { "label": "其他", "value": "other" }
+          ]
+        },
+        { "label": "专业", "i18nKey": "recruit.overseasCareers.homgpageResume.fieldofStudy", "fieldName": "majorName", "type": "text", "required": true },
+        { "label": "入学日期", "i18nKey": "recruit.overseasCareers.homgpageResume.firstDayAttended", "fieldName": "startDate", "type": "date", "required": true },
+        { "label": "毕业日期", "i18nKey": "recruit.overseasCareers.homgpageResume.lastDayAttended", "fieldName": "endDate", "type": "date", "required": true },
+        { "label": "经历描述", "i18nKey": "recruit.overseasCareers.homgpageResume.educationDescription", "fieldName": "description", "type": "long_text", "required": false }
+      ]
+    },
+    {
+      "label": "工作经历",
+      "groupKey": "work_history",
+      "i18nKey": "recruit.overseasCareers.homgpageResume.jobHistory",
+      "collectionName": "recruitWorkingList",
+      "required": false,
+      "repeatable": true,
+      "fields": [
+        { "label": "公司", "i18nKey": "recruit.overseasCareers.homgpageResume.company", "fieldName": "companyName", "type": "text", "required": true },
+        { "label": "职位", "i18nKey": "recruit.overseasCareers.homgpageResume.jobTitle", "fieldName": "jobTitle", "type": "text", "required": true },
+        { "label": "开始日期", "i18nKey": "recruit.overseasCareers.homgpageResume.startDate", "fieldName": "startDate", "type": "date", "required": true },
+        {
+          "label": "结束日期",
+          "i18nKey": "recruit.overseasCareers.homgpageResume.endDate",
+          "fieldName": "endDate",
+          "type": "date",
+          "required": true,
+          "behavior": "For the last work record, selecting currentJob replaces this date control and the save contract uses the sentinel 1900-01-01."
+        },
+        {
+          "label": "我现在在这家公司就职",
+          "i18nKey": "recruit.overseasCareers.homgpageResume.currentJob",
+          "fieldName": "currentJob",
+          "type": "checkbox",
+          "required": false,
+          "persistence": "component state mapped to the last record's endDate sentinel"
+        },
+        { "label": "经历描述", "i18nKey": "recruit.overseasCareers.homgpageResume.jobHistoryDescription", "fieldName": "description", "type": "long_text", "required": false }
+      ]
+    },
+    {
+      "label": "技能和专长",
+      "groupKey": "skills_and_specialties",
+      "i18nKey": "recruit.overseasCareers.homgpageResume.skillandSpeciality",
+      "required": false,
+      "repeatable": false,
+      "fields": [
+        {
+          "label": "语言",
+          "i18nKey": "recruit.overseasCareers.homgpageResume.language",
+          "collectionName": "recruitLanguageList",
+          "fieldName": "languageType",
+          "type": "text",
+          "required": true
+        },
+        {
+          "label": "掌握程度",
+          "i18nKey": "recruit.overseasCareers.homgpageResume.proficiencyL",
+          "collectionName": "recruitLanguageList",
+          "fieldName": "languageLevel",
+          "type": "select",
+          "required": true,
+          "options": [
+            { "label": "入门", "value": "Proficiency.01" },
+            { "label": "基础", "value": "Proficiency.02" },
+            { "label": "进阶", "value": "Proficiency.03" },
+            { "label": "精通", "value": "Proficiency.04" }
+          ]
+        },
+        {
+          "label": "技能",
+          "i18nKey": "recruit.overseasCareers.homgpageResume.skill",
+          "collectionName": "recruitSkillList",
+          "fieldName": "skillName",
+          "type": "text",
+          "required": true
+        },
+        {
+          "label": "掌握程度",
+          "i18nKey": "recruit.overseasCareers.homgpageResume.proficiencyL",
+          "collectionName": "recruitSkillList",
+          "fieldName": "skillLevel",
+          "type": "select",
+          "required": true,
+          "options": [
+            { "label": "入门", "value": "Proficiency.01" },
+            { "label": "基础", "value": "Proficiency.02" },
+            { "label": "进阶", "value": "Proficiency.03" },
+            { "label": "精通", "value": "Proficiency.04" }
+          ]
+        },
+        {
+          "label": "证书",
+          "i18nKey": "recruit.overseasCareers.homgpageResume.certification",
+          "collectionName": "recruitCertificateList",
+          "fieldName": "certificateName",
+          "type": "text",
+          "required": true
+        },
+        {
+          "label": "成绩",
+          "i18nKey": "recruit.overseasCareers.homgpageResume.examScore",
+          "collectionName": "recruitCertificateList",
+          "fieldName": "score",
+          "type": "text",
+          "required": false
+        },
+        {
+          "label": "发证日期",
+          "i18nKey": "recruit.overseasCareers.homgpageResume.issuedDate",
+          "collectionName": "recruitCertificateList",
+          "fieldName": "obtainDate",
+          "type": "date",
+          "required": true
+        }
+      ]
+    },
+    {
+      "label": "自我描述",
+      "groupKey": "additional_information",
+      "i18nKey": "recruit.overseasCareers.homgpageResume.additionalInformation",
+      "required": false,
+      "repeatable": false,
+      "fields": [
+        { "label": "自我描述", "i18nKey": "recruit.overseasCareers.homgpageResume.additionalInformation", "fieldName": "evaluation", "type": "long_text", "required": false }
+      ]
+    },
+    {
+      "label": "作品集或附件",
+      "groupKey": "portfolio_attachments",
+      "i18nKey": "recruit.overseasCareers.homgpageResume.portfolioorAttachments",
+      "required": false,
+      "repeatable": false,
+      "fields": [
+        {
+          "label": "作品集或附件",
+          "i18nKey": "recruit.overseasCareers.homgpageResume.portfolioorAttachments",
+          "fieldName": "PPtFileList",
+          "inputName": "file",
+          "type": "attachment",
+          "required": false,
+          "multiple": false,
+          "accept": [".pdf", ".doc", ".docx"],
+          "maxSizeMb": 25
+        }
+      ]
+    }
+  ]
+}
