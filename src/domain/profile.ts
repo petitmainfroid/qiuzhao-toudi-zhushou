@@ -1,4 +1,4 @@
-export const PROFILE_SCHEMA_VERSION = 2;
+export const PROFILE_SCHEMA_VERSION = 5;
 
 export interface BasicInfo {
   fullName: string;
@@ -9,8 +9,25 @@ export interface BasicInfo {
   email: string;
   nationality: string;
   currentCity: string;
+  currentProvince?: string;
+  currentDistrict?: string;
   hometown: string;
   politicalStatus: string;
+  identityDocumentType?: string;
+  identityDocumentNumber?: string;
+  ethnicity?: string;
+  maritalStatus?: string;
+  religion?: string;
+  heightCm?: string;
+  weightKg?: string;
+  homeCity?: string;
+  homeProvince?: string;
+  homeDistrict?: string;
+  schoolCity?: string;
+  schoolDistrict?: string;
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
+  hobbies?: string;
 }
 
 export interface EducationRecord {
@@ -23,6 +40,15 @@ export interface EducationRecord {
   endDate: string;
   gpa: string;
   ranking: string;
+  college?: string;
+  majorCategory?: string;
+  mainCourses?: string;
+  description?: string;
+  academicDegree?: string;
+  schoolProvince?: string;
+  schoolCity?: string;
+  currentStatus?: string;
+  gpaScale?: string;
 }
 
 export interface WorkExperienceRecord {
@@ -33,6 +59,13 @@ export interface WorkExperienceRecord {
   startDate: string;
   endDate: string;
   description: string;
+  industry?: string;
+  location?: string;
+  achievement?: string;
+}
+
+export interface EmploymentExperienceRecord extends WorkExperienceRecord {
+  employmentType?: string;
 }
 
 export interface ProjectRecord {
@@ -44,6 +77,7 @@ export interface ProjectRecord {
   description: string;
   outcome: string;
   link: string;
+  responsibilities?: string;
 }
 
 export interface WorkSampleRecord {
@@ -57,18 +91,108 @@ export interface AwardRecord {
   name: string;
   date: string;
   description: string;
+  category?: string;
+  level?: string;
+  grade?: string;
+  issuer?: string;
 }
 
 export interface LanguageRecord {
   id: string;
   language: string;
   proficiency: string;
+  listeningSpeaking?: string;
+  readingWriting?: string;
+}
+
+export interface LanguageExamRecord {
+  id: string;
+  language: string;
+  examType: string;
+  score: string;
+  examDate: string;
+  validUntil: string;
+  certificateNumber: string;
 }
 
 export interface JobPreference {
   targetRoles: string;
   preferredCities: string;
   availableDate: string;
+  targetIndustries?: string;
+  expectedSalary?: string;
+  currentSalary?: string;
+  expectedSalaryMin?: string;
+  expectedSalaryMax?: string;
+  salaryCurrency?: string;
+  salaryPeriod?: string;
+  acceptsAdjustment?: string;
+  internalReferral?: string;
+  recruitmentSource?: string;
+  workYears?: string;
+}
+
+export interface CampusLeadershipRecord {
+  id: string;
+  title: string;
+  level: string;
+  organization: string;
+  startDate: string;
+  endDate: string;
+  description: string;
+}
+
+export interface CampusActivityRecord {
+  id: string;
+  name: string;
+  role: string;
+  participationType: string;
+  startDate: string;
+  endDate: string;
+  description: string;
+}
+
+export interface FamilyMemberRecord {
+  id: string;
+  name: string;
+  relationship: string;
+  employer: string;
+  phone: string;
+  role: string;
+  birthDate: string;
+  location: string;
+  politicalStatus?: string;
+}
+
+export interface CertificateRecord {
+  id: string;
+  name: string;
+  date: string;
+  description: string;
+  issuingOrganization?: string;
+  credentialNumber?: string;
+  validUntil?: string;
+}
+
+export interface PublicationRecord {
+  id: string;
+  title: string;
+  journal: string;
+  publishedAt: string;
+  tier: string;
+  authorPosition: string;
+  impactFactor: string;
+  link: string;
+  description: string;
+}
+
+export interface PatentRecord {
+  id: string;
+  name: string;
+  number: string;
+  type: string;
+  description: string;
+  status?: string;
 }
 
 export interface ReusableAnswers {
@@ -84,10 +208,18 @@ export interface CandidateProfile {
   basic: BasicInfo;
   education: EducationRecord[];
   workExperiences: WorkExperienceRecord[];
+  employmentExperiences?: EmploymentExperienceRecord[];
   projects: ProjectRecord[];
   workSamples: WorkSampleRecord[];
   awards: AwardRecord[];
   languages: LanguageRecord[];
+  languageExams?: LanguageExamRecord[];
+  campusLeadership?: CampusLeadershipRecord[];
+  campusActivities?: CampusActivityRecord[];
+  familyMembers?: FamilyMemberRecord[];
+  certificates?: CertificateRecord[];
+  publications?: PublicationRecord[];
+  patents?: PatentRecord[];
   jobPreference: JobPreference;
   answers: ReusableAnswers;
 }
@@ -129,7 +261,16 @@ export function createEducationRecord(): EducationRecord {
     startDate: "",
     endDate: "",
     gpa: "",
-    ranking: ""
+    ranking: "",
+    college: "",
+    majorCategory: "",
+    mainCourses: "",
+    description: "",
+    academicDegree: "",
+    schoolProvince: "",
+    schoolCity: "",
+    currentStatus: "",
+    gpaScale: ""
   };
 }
 
@@ -141,7 +282,18 @@ export function createWorkExperienceRecord(): WorkExperienceRecord {
     role: "",
     startDate: "",
     endDate: "",
-    description: ""
+    description: "",
+    industry: "",
+    location: "",
+    achievement: ""
+  };
+}
+
+export function createEmploymentExperienceRecord(): EmploymentExperienceRecord {
+  return {
+    ...createWorkExperienceRecord(),
+    id: recordId("employment"),
+    employmentType: ""
   };
 }
 
@@ -154,7 +306,8 @@ export function createProjectRecord(): ProjectRecord {
     endDate: "",
     description: "",
     outcome: "",
-    link: ""
+    link: "",
+    responsibilities: ""
   };
 }
 
@@ -171,7 +324,11 @@ export function createAwardRecord(): AwardRecord {
     id: recordId("award"),
     name: "",
     date: "",
-    description: ""
+    description: "",
+    category: "",
+    level: "",
+    grade: "",
+    issuer: ""
   };
 }
 
@@ -179,8 +336,46 @@ export function createLanguageRecord(): LanguageRecord {
   return {
     id: recordId("language"),
     language: "",
-    proficiency: ""
+    proficiency: "",
+    listeningSpeaking: "",
+    readingWriting: ""
   };
+}
+
+export function createLanguageExamRecord(): LanguageExamRecord {
+  return {
+    id: recordId("language-exam"),
+    language: "",
+    examType: "",
+    score: "",
+    examDate: "",
+    validUntil: "",
+    certificateNumber: ""
+  };
+}
+
+export function createCampusLeadershipRecord(): CampusLeadershipRecord {
+  return { id: recordId("campus-leadership"), title: "", level: "", organization: "", startDate: "", endDate: "", description: "" };
+}
+
+export function createCampusActivityRecord(): CampusActivityRecord {
+  return { id: recordId("campus-activity"), name: "", role: "", participationType: "", startDate: "", endDate: "", description: "" };
+}
+
+export function createFamilyMemberRecord(): FamilyMemberRecord {
+  return { id: recordId("family-member"), name: "", relationship: "", employer: "", phone: "", role: "", birthDate: "", location: "", politicalStatus: "" };
+}
+
+export function createCertificateRecord(): CertificateRecord {
+  return { id: recordId("certificate"), name: "", date: "", description: "", issuingOrganization: "", credentialNumber: "", validUntil: "" };
+}
+
+export function createPublicationRecord(): PublicationRecord {
+  return { id: recordId("publication"), title: "", journal: "", publishedAt: "", tier: "", authorPosition: "", impactFactor: "", link: "", description: "" };
+}
+
+export function createPatentRecord(): PatentRecord {
+  return { id: recordId("patent"), name: "", number: "", type: "", description: "", status: "" };
 }
 
 export function createEmptyProfile(): CandidateProfile {
@@ -196,19 +391,55 @@ export function createEmptyProfile(): CandidateProfile {
       email: "",
       nationality: "",
       currentCity: "",
+      currentProvince: "",
+      currentDistrict: "",
       hometown: "",
-      politicalStatus: ""
+      politicalStatus: "",
+      identityDocumentType: "",
+      identityDocumentNumber: "",
+      ethnicity: "",
+      maritalStatus: "",
+      religion: "",
+      heightCm: "",
+      weightKg: "",
+      homeCity: "",
+      homeProvince: "",
+      homeDistrict: "",
+      schoolCity: "",
+      schoolDistrict: "",
+      emergencyContactName: "",
+      emergencyContactPhone: "",
+      hobbies: ""
     },
     education: [createEducationRecord()],
     workExperiences: [],
+    employmentExperiences: [],
     projects: [],
     workSamples: [],
     awards: [],
     languages: [],
+    languageExams: [],
+    campusLeadership: [],
+    campusActivities: [],
+    familyMembers: [],
+    certificates: [],
+    publications: [],
+    patents: [],
     jobPreference: {
       targetRoles: "",
       preferredCities: "",
-      availableDate: ""
+      availableDate: "",
+      targetIndustries: "",
+      expectedSalary: "",
+      currentSalary: "",
+      expectedSalaryMin: "",
+      expectedSalaryMax: "",
+      salaryCurrency: "",
+      salaryPeriod: "",
+      acceptsAdjustment: "",
+      internalReferral: "",
+      recruitmentSource: "",
+      workYears: ""
     },
     answers: {
       selfIntroduction: "",
@@ -241,7 +472,16 @@ function normalizeEducation(value: unknown): EducationRecord {
     startDate: asString(source.startDate),
     endDate: asString(source.endDate),
     gpa: asString(source.gpa),
-    ranking: asString(source.ranking)
+    ranking: asString(source.ranking),
+    college: asString(source.college),
+    majorCategory: asString(source.majorCategory),
+    mainCourses: asString(source.mainCourses),
+    description: asString(source.description),
+    academicDegree: asString(source.academicDegree),
+    schoolProvince: asString(source.schoolProvince),
+    schoolCity: asString(source.schoolCity),
+    currentStatus: asString(source.currentStatus),
+    gpaScale: asString(source.gpaScale)
   };
 }
 
@@ -255,7 +495,19 @@ function normalizeWork(value: unknown): WorkExperienceRecord {
     role: asString(source.role),
     startDate: asString(source.startDate),
     endDate: asString(source.endDate),
-    description: asString(source.description)
+    description: asString(source.description),
+    industry: asString(source.industry),
+    location: asString(source.location),
+    achievement: asString(source.achievement)
+  };
+}
+
+function normalizeEmployment(value: unknown): EmploymentExperienceRecord {
+  const source = asRecord(value);
+  return {
+    ...normalizeWork(value),
+    id: asString(source.id) || recordId("employment"),
+    employmentType: asString(source.employmentType)
   };
 }
 
@@ -270,7 +522,8 @@ function normalizeProject(value: unknown): ProjectRecord {
     endDate: asString(source.endDate),
     description: asString(source.description),
     outcome: asString(source.outcome),
-    link: asString(source.link)
+    link: asString(source.link),
+    responsibilities: asString(source.responsibilities)
   };
 }
 
@@ -291,7 +544,11 @@ function normalizeAward(value: unknown): AwardRecord {
     id: asString(source.id) || recordId("award"),
     name: asString(source.name),
     date: asString(source.date),
-    description: asString(source.description)
+    description: asString(source.description),
+    category: asString(source.category),
+    level: asString(source.level),
+    grade: asString(source.grade),
+    issuer: asString(source.issuer)
   };
 }
 
@@ -301,7 +558,110 @@ function normalizeLanguage(value: unknown): LanguageRecord {
     ...createLanguageRecord(),
     id: asString(source.id) || recordId("language"),
     language: asString(source.language),
-    proficiency: asString(source.proficiency)
+    proficiency: asString(source.proficiency),
+    listeningSpeaking: asString(source.listeningSpeaking),
+    readingWriting: asString(source.readingWriting)
+  };
+}
+
+function normalizeLanguageExam(value: unknown): LanguageExamRecord {
+  const source = asRecord(value);
+  return {
+    ...createLanguageExamRecord(),
+    id: asString(source.id) || recordId("language-exam"),
+    language: asString(source.language),
+    examType: asString(source.examType),
+    score: asString(source.score),
+    examDate: asString(source.examDate),
+    validUntil: asString(source.validUntil),
+    certificateNumber: asString(source.certificateNumber)
+  };
+}
+
+function normalizeCampusLeadership(value: unknown): CampusLeadershipRecord {
+  const source = asRecord(value);
+  return {
+    ...createCampusLeadershipRecord(),
+    id: asString(source.id) || recordId("campus-leadership"),
+    title: asString(source.title),
+    level: asString(source.level),
+    organization: asString(source.organization),
+    startDate: asString(source.startDate),
+    endDate: asString(source.endDate),
+    description: asString(source.description)
+  };
+}
+
+function normalizeCampusActivity(value: unknown): CampusActivityRecord {
+  const source = asRecord(value);
+  return {
+    ...createCampusActivityRecord(),
+    id: asString(source.id) || recordId("campus-activity"),
+    name: asString(source.name),
+    role: asString(source.role),
+    participationType: asString(source.participationType),
+    startDate: asString(source.startDate),
+    endDate: asString(source.endDate),
+    description: asString(source.description)
+  };
+}
+
+function normalizeFamilyMember(value: unknown): FamilyMemberRecord {
+  const source = asRecord(value);
+  return {
+    ...createFamilyMemberRecord(),
+    id: asString(source.id) || recordId("family-member"),
+    name: asString(source.name),
+    relationship: asString(source.relationship),
+    employer: asString(source.employer),
+    phone: asString(source.phone),
+    role: asString(source.role),
+    birthDate: asString(source.birthDate),
+    location: asString(source.location),
+    politicalStatus: asString(source.politicalStatus)
+  };
+}
+
+function normalizeCertificate(value: unknown): CertificateRecord {
+  const source = asRecord(value);
+  return {
+    ...createCertificateRecord(),
+    id: asString(source.id) || recordId("certificate"),
+    name: asString(source.name),
+    date: asString(source.date),
+    description: asString(source.description),
+    issuingOrganization: asString(source.issuingOrganization),
+    credentialNumber: asString(source.credentialNumber),
+    validUntil: asString(source.validUntil)
+  };
+}
+
+function normalizePublication(value: unknown): PublicationRecord {
+  const source = asRecord(value);
+  return {
+    ...createPublicationRecord(),
+    id: asString(source.id) || recordId("publication"),
+    title: asString(source.title),
+    journal: asString(source.journal),
+    publishedAt: asString(source.publishedAt),
+    tier: asString(source.tier),
+    authorPosition: asString(source.authorPosition),
+    impactFactor: asString(source.impactFactor),
+    link: asString(source.link),
+    description: asString(source.description)
+  };
+}
+
+function normalizePatent(value: unknown): PatentRecord {
+  const source = asRecord(value);
+  return {
+    ...createPatentRecord(),
+    id: asString(source.id) || recordId("patent"),
+    name: asString(source.name),
+    number: asString(source.number),
+    type: asString(source.type),
+    description: asString(source.description),
+    status: asString(source.status)
   };
 }
 
@@ -325,7 +685,7 @@ function migrateLegacyProfile(source: UnknownRecord): CandidateProfile {
 
 export function migrateProfile(value: unknown): CandidateProfile {
   const source = asRecord(value);
-  if (source.schemaVersion !== PROFILE_SCHEMA_VERSION && source.schemaVersion !== 1) {
+  if (source.schemaVersion !== PROFILE_SCHEMA_VERSION && source.schemaVersion !== 4 && source.schemaVersion !== 3 && source.schemaVersion !== 2 && source.schemaVersion !== 1) {
     return migrateLegacyProfile(source);
   }
 
@@ -335,6 +695,19 @@ export function migrateProfile(value: unknown): CandidateProfile {
   const answers = asRecord(source.answers);
   const education = Array.isArray(source.education)
     ? source.education.map(normalizeEducation)
+    : [];
+  const legacyLanguageExams = Array.isArray(source.languages)
+    ? source.languages.flatMap((value) => {
+        const record = asRecord(value);
+        const examType = asString(record.qualification);
+        const score = asString(record.score);
+        if (!examType && !score) return [];
+        return [normalizeLanguageExam({
+          language: record.language,
+          examType,
+          score
+        })];
+      })
     : [];
 
   return {
@@ -349,12 +722,32 @@ export function migrateProfile(value: unknown): CandidateProfile {
       email: asString(basic.email),
       nationality: asString(basic.nationality),
       currentCity: asString(basic.currentCity),
+      currentProvince: asString(basic.currentProvince),
+      currentDistrict: asString(basic.currentDistrict),
       hometown: asString(basic.hometown),
-      politicalStatus: asString(basic.politicalStatus)
+      politicalStatus: asString(basic.politicalStatus),
+      identityDocumentType: asString(basic.identityDocumentType),
+      identityDocumentNumber: asString(basic.identityDocumentNumber),
+      ethnicity: asString(basic.ethnicity),
+      maritalStatus: asString(basic.maritalStatus),
+      religion: asString(basic.religion),
+      heightCm: asString(basic.heightCm),
+      weightKg: asString(basic.weightKg),
+      homeCity: asString(basic.homeCity),
+      homeProvince: asString(basic.homeProvince),
+      homeDistrict: asString(basic.homeDistrict),
+      schoolCity: asString(basic.schoolCity),
+      schoolDistrict: asString(basic.schoolDistrict),
+      emergencyContactName: asString(basic.emergencyContactName),
+      emergencyContactPhone: asString(basic.emergencyContactPhone),
+      hobbies: asString(basic.hobbies)
     },
     education: education.length > 0 ? education : [createEducationRecord()],
     workExperiences: Array.isArray(source.workExperiences)
       ? source.workExperiences.map(normalizeWork)
+      : [],
+    employmentExperiences: Array.isArray(source.employmentExperiences)
+      ? source.employmentExperiences.map(normalizeEmployment)
       : [],
     projects: Array.isArray(source.projects)
       ? source.projects.map(normalizeProject)
@@ -368,10 +761,42 @@ export function migrateProfile(value: unknown): CandidateProfile {
     languages: Array.isArray(source.languages)
       ? source.languages.map(normalizeLanguage)
       : [],
+    languageExams: Array.isArray(source.languageExams)
+      ? source.languageExams.map(normalizeLanguageExam)
+      : legacyLanguageExams,
+    campusLeadership: Array.isArray(source.campusLeadership)
+      ? source.campusLeadership.map(normalizeCampusLeadership)
+      : [],
+    campusActivities: Array.isArray(source.campusActivities)
+      ? source.campusActivities.map(normalizeCampusActivity)
+      : [],
+    familyMembers: Array.isArray(source.familyMembers)
+      ? source.familyMembers.map(normalizeFamilyMember)
+      : [],
+    certificates: Array.isArray(source.certificates)
+      ? source.certificates.map(normalizeCertificate)
+      : [],
+    publications: Array.isArray(source.publications)
+      ? source.publications.map(normalizePublication)
+      : [],
+    patents: Array.isArray(source.patents)
+      ? source.patents.map(normalizePatent)
+      : [],
     jobPreference: {
       targetRoles: asString(jobPreference.targetRoles),
       preferredCities: asString(jobPreference.preferredCities),
-      availableDate: asString(jobPreference.availableDate)
+      availableDate: asString(jobPreference.availableDate),
+      targetIndustries: asString(jobPreference.targetIndustries),
+      expectedSalary: asString(jobPreference.expectedSalary),
+      currentSalary: asString(jobPreference.currentSalary),
+      expectedSalaryMin: asString(jobPreference.expectedSalaryMin),
+      expectedSalaryMax: asString(jobPreference.expectedSalaryMax),
+      salaryCurrency: asString(jobPreference.salaryCurrency),
+      salaryPeriod: asString(jobPreference.salaryPeriod),
+      acceptsAdjustment: asString(jobPreference.acceptsAdjustment),
+      internalReferral: asString(jobPreference.internalReferral),
+      recruitmentSource: asString(jobPreference.recruitmentSource),
+      workYears: asString(jobPreference.workYears)
     },
     answers: {
       selfIntroduction: asString(answers.selfIntroduction),
@@ -456,6 +881,62 @@ export function calculateProfileCompletion(profile: CandidateProfile): ProfileCo
     );
   });
 
+  (profile.employmentExperiences ?? []).forEach((record, index) => {
+    if (!hasMeaningfulFields(record)) return;
+    items.push(
+      required(`employmentExperiences.${index}.company`, `工作经历 ${index + 1} · 单位`, record.company),
+      required(`employmentExperiences.${index}.role`, `工作经历 ${index + 1} · 岗位`, record.role),
+      required(`employmentExperiences.${index}.description`, `工作经历 ${index + 1} · 描述`, record.description)
+    );
+  });
+
+  (profile.languageExams ?? []).forEach((record, index) => {
+    if (!hasMeaningfulFields(record)) return;
+    items.push(
+      required(`languageExams.${index}.language`, `语言考试 ${index + 1} · 对应语言`, record.language),
+      required(`languageExams.${index}.examType`, `语言考试 ${index + 1} · 考试类型`, record.examType),
+      required(`languageExams.${index}.score`, `语言考试 ${index + 1} · 成绩`, record.score)
+    );
+  });
+
+  (profile.campusLeadership ?? []).forEach((record, index) => {
+    if (!hasMeaningfulFields(record)) return;
+    items.push(
+      required(`campusLeadership.${index}.title`, `在校职务 ${index + 1} · 职务`, record.title),
+      required(`campusLeadership.${index}.description`, `在校职务 ${index + 1} · 描述`, record.description)
+    );
+  });
+
+  (profile.campusActivities ?? []).forEach((record, index) => {
+    if (!hasMeaningfulFields(record)) return;
+    items.push(
+      required(`campusActivities.${index}.name`, `校园活动 ${index + 1} · 名称`, record.name),
+      required(`campusActivities.${index}.description`, `校园活动 ${index + 1} · 描述`, record.description)
+    );
+  });
+  (profile.familyMembers ?? []).forEach((record, index) => {
+    if (!hasMeaningfulFields(record)) return;
+    items.push(
+      required(`familyMembers.${index}.name`, `家庭成员 ${index + 1} · 姓名`, record.name),
+      required(`familyMembers.${index}.relationship`, `家庭成员 ${index + 1} · 关系`, record.relationship)
+    );
+  });
+
+  (profile.certificates ?? []).forEach((record, index) => {
+    if (!hasMeaningfulFields(record)) return;
+    items.push(required(`certificates.${index}.name`, `证书 ${index + 1} · 名称`, record.name));
+  });
+
+  (profile.publications ?? []).forEach((record, index) => {
+    if (!hasMeaningfulFields(record)) return;
+    items.push(required(`publications.${index}.title`, `论文期刊 ${index + 1} · 名称`, record.title));
+  });
+
+  (profile.patents ?? []).forEach((record, index) => {
+    if (!hasMeaningfulFields(record)) return;
+    items.push(required(`patents.${index}.name`, `专利 ${index + 1} · 名称`, record.name));
+  });
+
   const filled = items.filter((item) => item.filled).length;
   return {
     filled,
@@ -476,12 +957,27 @@ export function validateProfile(profile: CandidateProfile): ProfileValidation {
   const errors: Record<string, string> = {};
   const phone = profile.basic.phone.trim();
   const email = profile.basic.email.trim();
+  const emergencyPhone = profile.basic.emergencyContactPhone?.trim() ?? "";
+  const identityType = profile.basic.identityDocumentType?.trim() ?? "";
+  const identityNumber = profile.basic.identityDocumentNumber?.trim() ?? "";
 
   if (phone && !/^[+\d][\d\s-]{6,19}$/.test(phone)) {
     errors["basic.phone"] = "请输入有效的手机号码，可包含国家或地区区号。";
   }
   if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     errors["basic.email"] = "请输入有效的邮箱地址。";
+  }
+  if (emergencyPhone && !/^[+\d][\d\s-]{6,19}$/.test(emergencyPhone)) {
+    errors["basic.emergencyContactPhone"] = "请输入有效的紧急联系人电话。";
+  }
+  if (identityType && !identityNumber) {
+    errors["basic.identityDocumentNumber"] = "选择证件类型后，请填写证件号码。";
+  }
+  if (identityNumber && !identityType) {
+    errors["basic.identityDocumentType"] = "填写证件号码后，请选择证件类型。";
+  }
+  if (identityNumber && (identityNumber.length < 4 || identityNumber.length > 40 || /[\u0000-\u001f\u007f]/.test(identityNumber))) {
+    errors["basic.identityDocumentNumber"] = "证件号码应为 4–40 个有效字符。";
   }
 
   profile.education.forEach((record, index) => {
@@ -497,6 +993,32 @@ export function validateProfile(profile: CandidateProfile): ProfileValidation {
   profile.projects.forEach((record, index) => {
     if (record.startDate && record.endDate && record.startDate > record.endDate) {
       errors[`projects.${index}.endDate`] = "结束时间不能早于开始时间。";
+    }
+  });
+  (profile.employmentExperiences ?? []).forEach((record, index) => {
+    if (record.startDate && record.endDate && record.startDate > record.endDate) {
+      errors[`employmentExperiences.${index}.endDate`] = "结束时间不能早于开始时间。";
+    }
+  });
+  (profile.campusLeadership ?? []).forEach((record, index) => {
+    if (record.startDate && record.endDate && record.startDate > record.endDate) {
+      errors[`campusLeadership.${index}.endDate`] = "结束时间不能早于开始时间。";
+    }
+  });
+  (profile.campusActivities ?? []).forEach((record, index) => {
+    if (record.startDate && record.endDate && record.startDate > record.endDate) {
+      errors[`campusActivities.${index}.endDate`] = "结束时间不能早于开始时间。";
+    }
+  });
+  (profile.languageExams ?? []).forEach((record, index) => {
+    if (record.examDate && record.validUntil && record.examDate > record.validUntil) {
+      errors[`languageExams.${index}.validUntil`] = "有效期不能早于考试日期。";
+    }
+  });
+  (profile.familyMembers ?? []).forEach((record, index) => {
+    const memberPhone = record.phone.trim();
+    if (memberPhone && !/^[+\d][\d\s-]{6,19}$/.test(memberPhone)) {
+      errors[`familyMembers.${index}.phone`] = "请输入有效的联系电话。";
     }
   });
 

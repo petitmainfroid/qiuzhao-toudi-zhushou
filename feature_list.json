@@ -901,6 +901,29 @@
         "Record branch, commit, draft PR, exact denominators, rates, typed failures, blockers, and zero-submit evidence in progress.md."
       ],
       "notes": "Completed on 2026-08-08 in isolated worktree qiuzhaozhushou-f043. User-authorized live L2/L3 acceptance covered Xiaomi/Feishu, Huya/Moka and Ctrip/custom ATS: 17/17 supported approved ordinary fields verified on the primary strategy, 0 fallback writes, 0 selected skips, 0 wrong-control writes and 0 protected or final-submit actions. Exact label/placeholder fallback is permitted only on reviewed routes when technical names are unavailable; ambiguous cross-section labels still fail closed. The privacy-safe aggregate report is artifacts/live-browser-kernel-report.json."
+    },
+    {
+      "id": "F084",
+      "title": "Promote the detailed dossier profile and prove saved-PDF upload",
+      "status": "in_progress",
+      "depends_on": ["F043"],
+      "branch": "agent/profile-dossier-production",
+      "pr_base": "agent/browser-kernel-real-site-acceptance",
+      "acceptance": [
+        "The production options page adopts the selected dossier information architecture and Organic visual direction instead of remaining a disconnected static prototype.",
+        "The editable local profile exposes the complete 14-section dossier inventory, including separate language proficiency and language-exam records, while preserving schema migration and existing saved values.",
+        "Setting the reusable PDF and importing resume information are visibly separate actions: the first persists one PDF locally, while the second parses into an unsaved editable draft and never implies that a recruitment site was updated.",
+        "The side panel can attach the saved PDF to one deterministic recruitment-site resume target only after explicit per-site confirmation, verifies the selected file metadata after the action, and never submits the application.",
+        "A user-visible milestone has current synthetic screenshots and real-machine evidence records only counts, family identity and typed outcomes; no real profile values, filenames, page screenshots, cookies or URL queries are committed."
+      ],
+      "verification": [
+        "npm test -- --run src/domain src/storage src/options src/sidepanel src/bridge/pageUpload.test.ts",
+        "npm run validate",
+        "npm run test:e2e",
+        "Inspect artifacts/profile-editor.png and an anonymous saved-PDF side-panel screenshot.",
+        "Perform one user-authorized live saved-PDF attachment without clicking save or final submit; record privacy-safe result counts in progress.md."
+      ],
+      "notes": "Started 2026-08-08 after live F043 feedback showed that ordinary-field success did not satisfy the product without resume attachment. The selected reference is design-prototypes/profile-editor/01-dossier.html on agent/ats-observation-core; migration is selective so the K5 production kernel remains the base. The dossier UI, schema migration, separate PDF actions, synthetic attachment flow and real Xiaomi target detection are implemented and verified. F084 remains in_progress because the live page already contains an attachment, so no replacement upload was performed without a new explicit user confirmation."
     }
   ]
 }

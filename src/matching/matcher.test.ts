@@ -38,10 +38,12 @@ describe("field matcher catalog", () => {
     ["当前居住城市", "select", "basic.currentCity"],
     ["籍贯", "select", "basic.hometown"],
     ["政治面貌", "select", "basic.politicalStatus"],
+    ["证件类型", "select", "basic.identityDocumentType"],
+    ["身份证号码", "text", "basic.identityDocumentNumber"],
     ["毕业院校", "text", "education.0.school"],
     ["University Name", "text", "education.0.school"],
     ["最高学历", "select", "education.0.degree"],
-    ["Academic Degree", "select", "education.0.degree"],
+    ["Academic Degree", "select", "education.0.academicDegree"],
     ["学历类型", "select", "education.0.educationType"],
     ["所学专业", "text", "education.0.major"],
     ["Field of Study", "text", "education.0.major"],
@@ -138,7 +140,8 @@ describe("field matcher catalog", () => {
     ["账户密码", "password", "unsupported-control"],
     ["上传简历", "file", "unsupported-control"],
     ["短信验证码", "text", "verification-control"],
-    ["身份证号码", "text", "sensitive-unsupported"]
+    ["个人证件", "text", "sensitive-unsupported"],
+    ["银行卡号", "text", "sensitive-unsupported"]
   ] as const)("excludes %s", (label, kind, reason) => {
     const result = matchField(descriptor(label, kind));
     expect(result.profilePath).toBeNull();

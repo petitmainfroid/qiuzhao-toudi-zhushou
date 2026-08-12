@@ -1,4 +1,5 @@
 import type { ControlKind } from "./types";
+import { supplementalCanonicalFields } from "./supplementalCatalog";
 
 export interface CanonicalField {
   path: string;
@@ -100,7 +101,7 @@ export const canonicalFields: CanonicalField[] = [
   {
     path: "education.0.degree",
     label: "学历",
-    aliases: ["学历", "最高学历", "学位", "degree", "education level", "highest degree", "academic degree"],
+    aliases: ["学历", "最高学历", "degree", "education level", "highest degree"],
     kinds: ["text", "select", "radio"],
     contextHints: ["教育", "学历", "education"]
   },
@@ -325,5 +326,6 @@ export const canonicalFields: CanonicalField[] = [
     label: "职业规划",
     aliases: ["职业规划", "职业目标", "未来规划", "career plan", "career goals", "career objective"],
     kinds: ["textarea", "contenteditable", "text"]
-  }
+  },
+  ...supplementalCanonicalFields
 ];

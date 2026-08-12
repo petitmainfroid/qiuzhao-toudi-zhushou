@@ -6,7 +6,7 @@ async function seedReadyProfile(page: Page) {
     localStorage.clear();
     localStorage.setItem("qiuzhao.privacyAcknowledged", "true");
     localStorage.setItem("qiuzhao.candidateProfile", JSON.stringify({
-      schemaVersion: 2,
+      schemaVersion: 5,
       updatedAt: "2026-08-05T00:00:00.000Z",
       basic: {
         fullName: "Synthetic Candidate",

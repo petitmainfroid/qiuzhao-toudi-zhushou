@@ -87,7 +87,7 @@ test("unpacked extension boots and parses a local PDF on its options page", asyn
     await page.goto(`chrome-extension://${extensionId}/options.html`);
     await expect(page.getByRole("heading", { name: "先确认数据如何被使用。" })).toBeVisible();
     await page.getByRole("button", { name: "我已了解，开始建立档案" }).click();
-    await page.getByLabel("上传简历并解析").setInputFiles({
+    await page.getByLabel("从简历导入档案信息").setInputFiles({
       name: "extension-smoke.pdf",
       mimeType: "application/pdf",
       buffer: buildPdf(["Extension Smoke", "13800138002", "extension.smoke@example.com"])

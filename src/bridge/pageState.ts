@@ -417,6 +417,18 @@ function previousSemanticText(record: FlatNode, recordByNode: Map<CdpDomNode, Fl
   return sanitizeSemanticText(candidates.join(" "));
 }
 
+function enclosingPreviousSemanticText(
+  record: FlatNode,
+  recordByNode: Map<CdpDomNode, FlatNode>
+): string {
+  let current: FlatNode | null = record;
+  for (let depth = 0; current && depth < 10; depth += 1, current = current.parent) {
+    const candidate = previousSemanticText(current, recordByNode);
+    if (candidate) return candidate;
+  }
+  return "";
+}
+
 function classifySafety(
   control: Omit<PrivacySafeControl, "ref" | "safety">,
   internalSignals = ""
@@ -588,7 +600,9 @@ function inspectControls(flattened: FlattenedDocument): InspectedControlTarget[]
     const placeholder = sanitizeSemanticText(attribute(record.node, "placeholder"), 80);
     const fieldMetadata = nearestFieldMetadata(record);
     const technicalName = sanitizeSemanticText(attribute(record.node, "name"), 80) || fieldMetadata.name;
-    const nearbyText = previousSemanticText(record, recordByNode);
+    const inputType = controlInputType(record);
+    const nearbyText = previousSemanticText(record, recordByNode)
+      || (inputType === "file" ? enclosingPreviousSemanticText(record, recordByNode) : "");
     const associatedLabel = id ? labelByFor.get(id) || "" : "";
     const label = sanitizeSemanticText(
       associatedLabel || wrappingLabel || ariaLabelledBy || ariaLabel || ownText || placeholder
@@ -596,7 +610,6 @@ function inspectControls(flattened: FlattenedDocument): InspectedControlTarget[]
         || attribute(record.node, "title") || technicalName,
       100
     );
-    const inputType = controlInputType(record);
     const base: Omit<PrivacySafeControl, "ref" | "safety"> = {
       role,
       tag: publicTag(record.node),

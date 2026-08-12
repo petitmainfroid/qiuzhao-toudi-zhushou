@@ -52,6 +52,12 @@ TypeScript、Python、数据分析；擅长把模糊需求拆成可验证规则�
 `;
 
 describe("resume parser", () => {
+  it("does not infer an identity number from an unlabelled numeric token", () => {
+    const parsed = parseResumeText(`匿名候选人\n编号 320000200306180000\n教育经历\n2022.09 - 2026.06 测试大学 软件工程 本科`);
+    expect(parsed.profile.basic.identityDocumentType).toBe("");
+    expect(parsed.profile.basic.identityDocumentNumber).toBe("");
+  });
+
   it("maps a realistic Chinese campus resume into the existing profile schema", () => {
     const parsed = parseResumeText(REALISTIC_CAMPUS_RESUME);
 
@@ -64,7 +70,9 @@ describe("resume parser", () => {
       nationality: "中国",
       currentCity: "上海",
       hometown: "江苏苏州",
-      politicalStatus: "中共党员"
+      politicalStatus: "中共党员",
+      identityDocumentType: "居民身份证",
+      identityDocumentNumber: "320000200306180000"
     });
     expect(parsed.profile.education).toHaveLength(2);
     expect(parsed.profile.education[0]).toMatchObject({
@@ -92,10 +100,12 @@ describe("resume parser", () => {
     expect(parsed.profile.workSamples[0].link).toBe("https://portfolio.example.test");
     expect(parsed.profile.awards[0].name).toBe("全国大学生计算机设计大赛一等奖");
     expect(parsed.profile.languages[0]).toMatchObject({ language: "英语", proficiency: "无障碍沟通" });
+    expect(parsed.profile.languageExams).toEqual([
+      expect.objectContaining({ language: "英语", examType: "CET-6（六级）" })
+    ]);
     expect(parsed.profile.jobPreference).toMatchObject({ targetRoles: "算法工程师", preferredCities: "上海、北京" });
     expect(parsed.profile.answers.strengths).toContain("TypeScript");
     expect(parsed.profile.answers.selfEvaluation).toContain("重视事实与边界");
-    expect(JSON.stringify(parsed.profile)).not.toContain("320000200306180000");
     expect(parsed.populatedPaths.length).toBeGreaterThan(25);
   });
 

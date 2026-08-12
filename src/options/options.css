@@ -250,6 +250,8 @@
 .section-nav {
   position: sticky;
   top: 20px;
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
   padding: 22px;
   background: var(--oat);
   border-radius: 24px;
@@ -454,6 +456,63 @@
 .empty-copy {
   margin: 0;
   font-size: 13px;
+}
+
+.subsection-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 18px;
+  margin: 0 0 14px;
+  padding: 0 2px 12px;
+  border-bottom: 1px solid var(--clay);
+}
+
+.subsection-heading h3,
+.subsection-heading p {
+  margin: 0;
+}
+
+.subsection-heading h3 {
+  font-size: 17px;
+  letter-spacing: -0.025em;
+}
+
+.subsection-heading p {
+  max-width: 520px;
+  font-size: 11px;
+  line-height: 1.5;
+  text-align: right;
+}
+
+.subsection-spacing {
+  margin-top: 34px;
+}
+
+.sensitive-card {
+  border: 1px solid var(--terracotta);
+}
+
+.sensitive-card .section-icon {
+  background: var(--terracotta);
+}
+
+.sensitive-notice {
+  margin: -8px 0 22px;
+  padding: 15px 17px;
+  color: var(--sand);
+  background: var(--terracotta);
+  border-radius: 18px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.6;
+}
+
+.privacy-export-warning {
+  margin: 14px 0 0;
+  color: var(--clay);
+  font-size: 0.82rem;
+  line-height: 1.6;
 }
 
 .attachment-note {
@@ -721,5 +780,306 @@
   .delete-confirmation {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .subsection-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .subsection-heading p {
+    text-align: left;
+  }
+}
+
+/* Selected dossier direction: one durable information ledger, not a separate demo surface. */
+.options-shell {
+  width: min(1540px, 100%);
+  padding: 26px 30px 150px;
+}
+
+.options-header {
+  min-height: 58px;
+  margin-bottom: 0;
+  padding: 0 12px 20px;
+  border-bottom: 1px solid rgba(176, 139, 110, 0.42);
+}
+
+.welcome-card {
+  grid-template-columns: minmax(0, 1fr) 220px;
+  min-height: 260px;
+  gap: 72px;
+  margin: 0 -30px;
+  padding: 58px clamp(42px, 7vw, 108px);
+  color: var(--moss);
+  background:
+    repeating-linear-gradient(90deg, transparent 0 55px, rgba(176, 139, 110, 0.12) 55px 56px),
+    var(--sand);
+  border-radius: 0;
+}
+
+.welcome-card h1 {
+  max-width: 900px;
+  font-size: clamp(48px, 5.4vw, 82px);
+  line-height: 1.02;
+}
+
+.welcome-copy {
+  max-width: 740px;
+}
+
+.completion-ring {
+  width: 186px;
+  height: 186px;
+  background: conic-gradient(var(--moss) var(--progress), rgba(176, 139, 110, 0.28) 0);
+}
+
+.completion-ring > div {
+  width: 142px;
+  height: 142px;
+  color: var(--moss);
+  background: var(--sand);
+}
+
+.dossier-resume-card {
+  display: block;
+  width: calc(100% - 450px);
+  margin: 24px 214px 0;
+  padding: 34px;
+  background: rgba(232, 220, 199, 0.78);
+  border: 1px solid rgba(176, 139, 110, 0.46);
+  border-left: 7px solid var(--terracotta);
+}
+
+.resume-action-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.resume-action-card {
+  display: flex;
+  min-height: 280px;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 26px;
+  background: var(--oat);
+  border: 1px dashed var(--clay);
+  border-radius: 24px;
+}
+
+.resume-action-card h3 {
+  margin: 0;
+  font-size: 20px;
+  letter-spacing: -0.035em;
+}
+
+.resume-action-card > p:not(.eyebrow, .resume-empty-state) {
+  margin: 10px 0 18px;
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+.resume-action-card .resume-upload-button {
+  width: 100%;
+  margin-top: auto;
+}
+
+.resume-empty-state {
+  margin: 8px 0 16px;
+  color: var(--clay);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.editor-layout {
+  grid-template-columns: 190px minmax(0, 1fr) 190px;
+  gap: 22px;
+}
+
+.section-nav,
+.profile-dock {
+  top: 18px;
+  padding: 18px;
+  background: rgba(232, 220, 199, 0.82);
+  border: 1px solid rgba(176, 139, 110, 0.42);
+  border-radius: 22px;
+  backdrop-filter: blur(14px);
+}
+
+.section-nav > a {
+  padding: 9px 8px;
+  font-size: 11px;
+}
+
+.section-nav > a:first-of-type {
+  background: rgba(139, 157, 131, 0.24);
+}
+
+.profile-dock {
+  position: sticky;
+  display: grid;
+  gap: 14px;
+}
+
+.profile-dock-heading,
+.profile-dock-card,
+.profile-dock dl > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.profile-dock-heading span {
+  padding: 5px 8px;
+  background: rgba(139, 157, 131, 0.24);
+  border-radius: 12px;
+  font-size: 9px;
+}
+
+.profile-dock-card {
+  align-items: flex-start;
+  flex-direction: column;
+  padding: 16px;
+  color: var(--sand);
+  background: var(--moss);
+  border-radius: 18px;
+}
+
+.profile-dock-card span {
+  font-size: 10px;
+}
+
+.profile-dock dl {
+  display: grid;
+  gap: 9px;
+  margin: 0;
+  font-size: 9px;
+}
+
+.profile-dock dt,
+.profile-dock dd {
+  margin: 0;
+}
+
+.profile-dock dd {
+  font-weight: 700;
+  text-align: right;
+}
+
+.profile-dock > a {
+  color: var(--terracotta);
+  font-size: 10px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.form-card,
+.privacy-controls {
+  position: relative;
+  overflow: hidden;
+  padding: 36px;
+  background: rgba(232, 220, 199, 0.78);
+  border: 1px solid rgba(176, 139, 110, 0.42);
+  border-left: 7px solid var(--terracotta);
+  border-radius: 26px;
+}
+
+.form-card::after {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 24px;
+  height: 24px;
+  border-top: 1px solid var(--clay);
+  border-right: 1px solid var(--clay);
+  content: "";
+}
+
+.section-header {
+  align-items: flex-start;
+}
+
+.section-index {
+  padding-top: 14px;
+  font-size: 15px;
+}
+
+.section-icon {
+  color: var(--terracotta);
+  background: transparent;
+}
+
+.repeat-card {
+  background: rgba(212, 184, 149, 0.56);
+  border: 1px solid rgba(176, 139, 110, 0.28);
+}
+
+.form-sections #basic { order: 1; }
+.form-sections #preference { order: 2; }
+.form-sections #education { order: 3; }
+.form-sections #work { order: 4; }
+.form-sections #projects { order: 5; }
+.form-sections #works { order: 6; }
+.form-sections #campus { order: 7; }
+.form-sections #awards { order: 8; }
+.form-sections #languages { order: 9; }
+.form-sections #certificates { order: 10; }
+.form-sections #research { order: 11; }
+.form-sections #family { order: 12; }
+.form-sections #answers { order: 13; }
+.form-sections .attachment-note { order: 14; }
+.form-sections .privacy-controls { order: 15; }
+
+.save-footer {
+  position: sticky;
+  bottom: 16px;
+  width: min(680px, calc(100% - 56px));
+  margin-top: 28px;
+  background: rgba(232, 220, 199, 0.94);
+  box-shadow: 0 18px 48px rgba(96, 108, 56, 0.18);
+  backdrop-filter: blur(14px);
+}
+
+@media (max-width: 1180px) {
+  .dossier-resume-card {
+    width: calc(100% - 214px);
+    margin-left: 214px;
+    margin-right: 0;
+  }
+
+  .editor-layout {
+    grid-template-columns: 190px minmax(0, 1fr);
+  }
+
+  .profile-dock {
+    display: none;
+  }
+}
+
+@media (max-width: 860px) {
+  .options-shell {
+    padding: 18px 18px 120px;
+  }
+
+  .welcome-card {
+    margin: 0 -18px;
+    padding: 38px 28px;
+  }
+
+  .dossier-resume-card {
+    width: 100%;
+    margin: 20px 0 0;
+  }
+
+  .resume-action-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form-card,
+  .privacy-controls,
+  .dossier-resume-card {
+    padding: 26px 22px;
   }
 }

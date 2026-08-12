@@ -4,7 +4,7 @@ test("Xiaomi-derived fixture scans and fills reusable fields without submission"
   await page.goto("/xiaomi-fixture.html");
   const result = await page.evaluate(async () => {
     const profile = {
-      schemaVersion: 2 as const,
+      schemaVersion: 5 as const,
       updatedAt: "",
       basic: {
         fullName: "小米回归测试",

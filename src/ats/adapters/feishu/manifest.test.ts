@@ -143,6 +143,7 @@ function labelOnlyXiaomiSummary(): AtsAdapterPageSummary {
       control("major-1", "专业"),
       control("project-0", "项目名称"),
       control("self-evaluation", "自我评价"),
+      { ...control("resume", "附件简历", "file"), safety: "file" as const },
       control("custom-description", "描述")
     ]
   };
@@ -224,7 +225,8 @@ describe("Feishu recruiting K5 manifest", () => {
       expect.objectContaining({ controlKey: "major-0", intent: { kind: "profile-field", pathPattern: "education.0.major" } }),
       expect.objectContaining({ controlKey: "major-1", intent: { kind: "profile-field", pathPattern: "education.1.major" } }),
       expect.objectContaining({ controlKey: "project-0", intent: { kind: "profile-field", pathPattern: "projects.0.name" } }),
-      expect.objectContaining({ controlKey: "self-evaluation", intent: { kind: "profile-field", pathPattern: "answers.selfEvaluation" } })
+      expect.objectContaining({ controlKey: "self-evaluation", intent: { kind: "profile-field", pathPattern: "answers.selfEvaluation" } }),
+      expect.objectContaining({ controlKey: "resume", intent: { kind: "saved-resume" }, decision: "confirm" })
     ]));
     expect(resolution.plan.skipped).toContainEqual({ controlKey: "custom-description", reason: "ambiguous-rule" });
   });

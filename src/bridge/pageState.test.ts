@@ -118,6 +118,36 @@ describe("privacy-safe page state", () => {
     expect(JSON.stringify(state)).not.toMatch(/私密姓名|2026-02-25|23:31|13800138000|private value/i);
   });
 
+  it("labels an unlabeled nested file input from its enclosing resume section", () => {
+    backendNodeId = 1;
+    const root: CdpDomNode = {
+      backendNodeId: backendNodeId++,
+      nodeType: 9,
+      nodeName: "#document",
+      frameId: "main-frame",
+      children: [element("html", {}, [element("body", {}, [
+        element("div", {}, [
+          element("div", {}, [element("p", {}, [text("附件简历")])]),
+          element("div", {}, [element("div", {}, [element("span", {}, [
+            element("button", { type: "button" }, [
+              element("input", { type: "file", accept: ".pdf,.doc,.docx" }),
+              element("div", {}, [text("私密简历.pdf 上次上传: 2026-02-25 23:31 更新 删除")])
+            ])
+          ])])])
+        ])
+      ])])]
+    };
+
+    const state = buildPrivacySafePageState(root, session, new OpaqueReferenceRegistry(() => "filenonce"));
+    const fileInput = state.controls.find((control) => control.inputType === "file");
+    expect(fileInput).toEqual(expect.objectContaining({
+      tag: "input",
+      safety: "file",
+      semantics: expect.objectContaining({ label: "附件简历" })
+    }));
+    expect(JSON.stringify(state)).not.toMatch(/私密简历|2026-02-25|23:31/);
+  });
+
   it("emits one opaque composite reference for a two-input Feishu date range", () => {
     backendNodeId = 1;
     const root: CdpDomNode = {

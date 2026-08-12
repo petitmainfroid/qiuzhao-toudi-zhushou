@@ -5,7 +5,7 @@ test("repeatable records are created one at a time, rescanned, and filled withou
 
   const result = await page.evaluate(async () => {
     const profile = {
-      schemaVersion: 2 as const,
+      schemaVersion: 5 as const,
       updatedAt: "",
       basic: {
         fullName: "重复记录回归",
