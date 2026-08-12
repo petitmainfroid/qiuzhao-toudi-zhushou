@@ -3,7 +3,7 @@ import http from "node:http";
 import type { BrowserRuntimeStatus } from "./types.js";
 
 export interface ControlHandlers {
-  getStatus(): BrowserRuntimeStatus;
+  getStatus(): BrowserRuntimeStatus | Promise<BrowserRuntimeStatus>;
   stop(): Promise<BrowserRuntimeStatus>;
 }
 
@@ -35,8 +35,16 @@ export class CapabilityControlServer {
       }
 
       if (request.method === "GET" && request.url === "/v1/status") {
-        response.statusCode = 200;
-        response.end(`${JSON.stringify(this.handlers.getStatus())}\n`);
+        void Promise.resolve(this.handlers.getStatus()).then(
+          (status) => {
+            response.statusCode = 200;
+            response.end(`${JSON.stringify(status)}\n`);
+          },
+          () => {
+            response.statusCode = 500;
+            response.end('{"error":"status_failed"}\n');
+          }
+        );
         return;
       }
 

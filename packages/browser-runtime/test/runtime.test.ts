@@ -4,7 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { callControl } from "../controlClient.js";
-import { BrowserRuntime } from "../runtime.js";
+import { BrowserRuntime, runtimeStateForPageUrls } from "../runtime.js";
 import { readSession } from "../sessionStore.js";
 
 const fakeBrowserScript = new URL("./fake-browser.js", import.meta.url).pathname.replace(/^\/(.:\/)/, "$1");
@@ -28,12 +28,12 @@ test("launches, disconnects, reconnects with a rotated capability, and shuts dow
   });
 
   const first = await readSession(sessionFile);
-  assert.equal(first.status.state, "login-needed");
+  assert.equal(first.status.state, "ready");
   assert.ok(first.status.cdpPort && first.status.cdpPort > 0);
   assert.ok(first.status.controlPort > 0);
   assert.equal(first.status.page?.pathPattern, "/internship/resume/:id/apply");
   assert.doesNotMatch(JSON.stringify(first), /private=removed/);
-  assert.equal((await callControl(first, "GET", "/v1/status")).state, "login-needed");
+  assert.equal((await callControl(first, "GET", "/v1/status")).state, "ready");
 
   await launch.disconnect();
   await assert.rejects(callControl(first, "GET", "/v1/status"));
@@ -58,4 +58,13 @@ test("launches, disconnects, reconnects with a rotated capability, and shuts dow
   await new Promise((resolve) => setTimeout(resolve, 100));
   await assert.rejects(callControl(second, "GET", "/v1/status"));
   assert.equal((await readSession(sessionFile)).status.state, "stopped");
+});
+
+test("distinguishes the requested application path from a same-origin login page", () => {
+  const target = "https://xiaomi.jobs.f.mioffice.cn/internship/resume/1234567890123456789/apply";
+  assert.equal(runtimeStateForPageUrls([target], target), "ready");
+  assert.equal(runtimeStateForPageUrls([
+    "https://xiaomi.jobs.f.mioffice.cn/internship/login?redirect=private"
+  ], target), "login-needed");
+  assert.equal(runtimeStateForPageUrls(["chrome://newtab/"], target), "login-needed");
 });

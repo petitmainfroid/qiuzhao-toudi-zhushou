@@ -272,8 +272,19 @@ export function runFixedPageAction(this: Element, payload: FixedPageActionPayloa
         ? "repeatable-add"
         : "repeatable-save";
       const submitButton = element instanceof ownerWindow.HTMLButtonElement && element.type.toLowerCase() === "submit";
+      const fixedFeishuRepeatableAdd = payload.purpose === "add-repeatable-record"
+        && element.matches(".formOperate-addBtn, .createFormSection-addBtn")
+        && Boolean(element.closest([
+          ".resumeEditForm-education",
+          ".resumeEditForm-internship",
+          ".resumeEditForm-work",
+          ".resumeEditForm-works",
+          ".resumeEditForm-project",
+          ".resumeEditForm-award",
+          ".resumeEditForm-language"
+        ].join(", ")));
       if (
-        !element.matches("button, input[type='button'], [role='button']")
+        (!element.matches("button, input[type='button'], [role='button']") && !fixedFeishuRepeatableAdd)
         || submitButton
         || element.matches("a[href], input[type='submit']")
       ) {

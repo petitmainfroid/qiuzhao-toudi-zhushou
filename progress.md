@@ -2367,3 +2367,19 @@ No commit or push was performed. There is no blocker for F079–F081. The reposi
 - F100 commit `5b1f370`（来源 `2fb05a8`）：real-page allowlist/Judge 16/16 测试通过，registry/schema verifier 确认严格 8 站、3 schemas、历史 243 定义只作 provenance；localhost、fixture、copied/branded simulation、unknown/ninth site、query identifiers、annotation tampering 和 executor 自报 pass 均拒绝。
 - 真正启动了 Chrome 151.0.7922.75，使用独立 profile `AppData/Local/qiuzhao-workbench/browser-profiles/chrome`、动态 CDP `127.0.0.1:52052` 和独立 runtime capability。打开并规范化真实小米 URL 为 origin `https://xiaomi.jobs.f.mioffice.cn`、path `/internship/resume/:id/apply`；当前停在 `/internship/login`，状态 `login-needed`。未安装本项目扩展、未使用默认 profile、未读取候选人字段值、未写页面、未提交。
 - F098 与 F100 标记 `done`；F086 保持 `in_progress`，因为真实小米 E2 登录后页面识别尚等待用户在专用 Chrome 完成人工登录。后续只读 E3 盘点和 E4 写入不能在登录完成前开始，也不能以模拟页替代。
+
+## 2026-08-12 - F086 真实小米登录后验收与 F087 启动
+
+- 用户在零扩展专用 Chrome 中完成小米人工登录后，使用项目自己的 Node CDP runtime 串行执行真实 E3。首次完整结构扫描得到 57 个原始控件、4 个 frame、0 个 open shadow root，未读取页面值、未读取 Cookie、未写入、未上传、未删除、未提交。真实扫描发现“提交简历”是 `type=button`，旧规则误归普通控件；将“提交简历/投递简历/submit resume/CV”加入最终提交禁区后，真实复扫为 53 ordinary、1 identity、1 file、1 destructive、1 final-submit，最终提交动作计数为 0。
+- 通过只返回 `filled/empty/unknown/not_read_safety` 的瞬时 presence 审计读取 53 个普通原始控件：19 filled、33 empty、1 unknown，4 个禁区完全不读；这些是原始控件而非独立人工冻结的逻辑字段分母，不能直接宣称 33 个招聘字段未填。日期月份曾泄漏进语义标签，已统一脱敏为 `[日期]`，真实复扫不再返回已选月份；页面值、原始 DOM 和完整 URL 未写入仓库。
+- 真实页有且仅有教育、实习、作品、项目、获奖、语言六个 repeatable 分区，每个分区有且仅有一个添加控件；记录数分别为 2/0/0/2/0/2。原观察器忽略飞书无标准 `button/role` 的 `.createFormSection-addBtn` / `.formOperate-addBtn`，因此 Agent 看不到“添加实习经历”。内核现按飞书组件形状和所属 repeatable section 暴露六个语义动作（例如 `internship_list.add` / 添加实习经历），不按小米公司名分支；底层 fixed action 仅允许这些 section 内的固定添加形状，外部 lookalike 拒绝。
+- F086 runtime 的状态判定从“有 target URL 即 login-needed”改为当前规范化路径判断，并在每次授权状态查询时实时刷新：申请页为 `ready`，同域登录页为 `login-needed`。真实停止、重启后，Chrome 151.0.7922.75 的独立 profile 恢复登录和小米申请页，CLI 状态为 `ready`；命令行使用动态 loopback CDP、无 `--load-extension`，专用 profile 不含本项目扩展，默认 Chrome `Local State` 和 `Default/Preferences` 的长度与最后修改时间在启动前后均不变。
+- 重启后的真实页面有一次 SPA 只保留加载动画：标题和申请路径存在，但 `resumeSectionCount=0`。诊断未发现脱敏 HTTP 4xx/5xx 或 runtime exception；私有诊断返回 typed blocker `xiaomi_form_not_rendered`、0 读值、0 写、0 提交，不把动画控件冒充完整表单，也不覆盖重启前的 63 控件（含 6 个添加动作）证据。这是后续 F087 wait/retry 状态机需要处理的真实阻断。
+- 定向验证：browser runtime 7/7；`pageState`、`pageActions`、`pageDriver` 37/37；TypeScript 通过。最终 `npm run validate` 通过：47 个测试文件 / 494 tests、ATS corpus、production build、12 个分发文件、权限和 legacy content writer 缺失检查全部通过。按照用户“只用真实招聘页证明站点兼容”的要求，本轮没有运行或引用模拟招聘页 E2E 作为小米证据，也未生成模拟页截图。
+
+### F086 changed files and handoff
+
+- Runtime/live status：`packages/browser-runtime/{controlServer,runtime}.ts` 与对应 tests。
+- Privacy-safe observation / fixed action：`src/bridge/pageState.ts`、`src/content/pageDriver.ts` 与对应 tests。
+- 私有真实页命令：`scripts/real-pages/inspect-xiaomi-e3.mjs`；只输出脱敏结构、布尔 presence、计数和 typed blocker，不持久化页面值、DOM、Cookie、查询参数或真实截图。
+- F086 标记 `done`，F087 标记 `in_progress`。下一步是将已经验证的 observe/find/action/wait 契约完整迁移到 Node transport，并实现 `xiaomi_form_not_rendered` 的有界 wait/reobserve；在本地档案 repository、lease、独立逻辑字段标注和 E4 授权接通前，不创建实习记录、不填普通字段、不操作敏感/附件/同意/删除/提交。

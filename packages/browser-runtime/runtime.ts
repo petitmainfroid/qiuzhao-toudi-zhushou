@@ -30,6 +30,23 @@ function parseBrowserVersion(browser: string): string | undefined {
   return match?.[1];
 }
 
+export function runtimeStateForPageUrls(
+  pageUrls: readonly string[],
+  targetUrl: string
+): "ready" | "login-needed" {
+  const requested = normalizePageIdentity(targetUrl);
+  const identities = pageUrls.flatMap((pageUrl) => {
+    try {
+      return [normalizePageIdentity(pageUrl)];
+    } catch {
+      return [];
+    }
+  });
+  return identities.some((identity) =>
+    identity.origin === requested.origin && identity.pathPattern === requested.pathPattern
+  ) ? "ready" : "login-needed";
+}
+
 export class BrowserRuntime {
   private child?: ChildProcess;
   private control?: CapabilityControlServer;
@@ -99,6 +116,9 @@ export class BrowserRuntime {
     if (!processExists(options.browserPid)) throw new Error("browser_process_missing");
     const cdp = await probeCdp(options.cdpPort);
     const target = options.targetUrl ? normalizePageIdentity(options.targetUrl) : undefined;
+    const currentState = target
+      ? runtimeStateForPageUrls(await listInspectablePageUrls(options.cdpPort), options.targetUrl!)
+      : "ready";
     const record: RuntimeSessionRecord = {
       schemaVersion: 1,
       capability: randomBytes(32).toString("base64url"),
@@ -106,7 +126,7 @@ export class BrowserRuntime {
       commandPrefix: options.browser.commandPrefix,
       status: {
         launchId: randomUUID(),
-        state: target ? "login-needed" : "ready",
+        state: currentState,
         browser: options.browser.kind,
         browserVersion: parseBrowserVersion(cdp.browser),
         browserPid: options.browserPid,
@@ -129,6 +149,22 @@ export class BrowserRuntime {
 
   getCapability(): string {
     return this.record.capability;
+  }
+
+  async refreshStatus(): Promise<BrowserRuntimeStatus> {
+    if (
+      this.record.status.state === "stopped"
+      || this.record.status.state === "disconnected"
+      || !this.options.targetUrl
+      || !this.record.status.cdpPort
+    ) return this.getStatus();
+    const pageUrls = await listInspectablePageUrls(this.record.status.cdpPort);
+    const nextState = runtimeStateForPageUrls(pageUrls, this.options.targetUrl);
+    if (this.record.status.state !== nextState) {
+      this.record.status.state = nextState;
+      await this.persist();
+    }
+    return this.getStatus();
   }
 
   async stop(): Promise<BrowserRuntimeStatus> {
@@ -162,7 +198,7 @@ export class BrowserRuntime {
 
   private async startControl(): Promise<void> {
     this.control = new CapabilityControlServer(this.record.capability, {
-      getStatus: () => this.getStatus(),
+      getStatus: () => this.refreshStatus(),
       stop: () => this.stop()
     });
     this.record.status.controlPort = await this.control.start();
@@ -185,30 +221,32 @@ export class BrowserRuntime {
         const port = Number(firstLine);
         if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error("invalid_cdp_port");
         const info = await probeCdp(port);
-        const pageUrls = await listInspectablePageUrls(port);
+        let pageUrls = await listInspectablePageUrls(port);
         if (pageUrls.length === 0) throw new Error("cdp_page_missing");
         if (this.options.targetUrl) {
-          const identities = pageUrls.flatMap((pageUrl) => {
+          const requested = normalizePageIdentity(this.options.targetUrl);
+          const hasRequestedOrigin = pageUrls.some((pageUrl) => {
             try {
-              return [normalizePageIdentity(pageUrl)];
+              return normalizePageIdentity(pageUrl).origin === requested.origin;
             } catch {
-              return [];
+              return false;
             }
           });
-          const requested = normalizePageIdentity(this.options.targetUrl);
-          const observed = identities.find(
-            (identity) =>
-              identity.origin === requested.origin && identity.pathPattern === requested.pathPattern
-          );
-          if (!observed) throw new Error("target_page_not_identified");
+          if (!hasRequestedOrigin) throw new Error("target_origin_not_identified");
+          // Give client-side authentication redirects a bounded chance to
+          // settle, then classify only from the normalized current path.
+          await delay(750);
+          pageUrls = await listInspectablePageUrls(port);
           this.record.status.page = {
-            origin: observed.origin,
-            pathPattern: observed.pathPattern
+            origin: requested.origin,
+            pathPattern: requested.pathPattern
           };
+          this.record.status.state = runtimeStateForPageUrls(pageUrls, this.options.targetUrl);
+        } else {
+          this.record.status.state = "ready";
         }
         this.record.status.cdpPort = port;
         this.record.status.browserVersion = parseBrowserVersion(info.browser);
-        this.record.status.state = this.options.targetUrl ? "login-needed" : "ready";
         delete this.record.status.errorCode;
         await this.persist();
         return;

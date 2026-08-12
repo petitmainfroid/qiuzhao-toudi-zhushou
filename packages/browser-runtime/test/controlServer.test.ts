@@ -44,3 +44,18 @@ test("binds dynamically to loopback and rejects missing or wrong capabilities", 
   await server.close();
   await assert.rejects(request(port, "correct-capability"));
 });
+
+test("awaits an asynchronous live status refresh", async () => {
+  let refreshed = false;
+  const server = new CapabilityControlServer("live-capability", {
+    getStatus: async () => {
+      refreshed = true;
+      return status;
+    },
+    stop: async () => status
+  });
+  const port = await server.start();
+  assert.equal(await request(port, "live-capability"), 200);
+  assert.equal(refreshed, true);
+  await server.close();
+});

@@ -200,6 +200,7 @@ function sanitizeSemanticText(value: string | undefined, maxLength = MAX_TEXT_LE
       .replace(/\b\d{4}[-/]\d{1,2}[-/]\d{1,2}(?:\s+\d{1,2}:\d{2}(?::\d{2})?)?\b/g, "[时间]");
   }
   return sanitized
+    .replace(/\b(?:19|20)\d{2}\s*(?:[-/.]|年)\s*(?:0?[1-9]|1[0-2])(?:\s*月)?\b/g, "[日期]")
     .replace(/\s+/g, " ")
     .trim()
     .slice(0, maxLength);
@@ -345,6 +346,38 @@ function textContent(node: CdpDomNode, maxLength = MAX_TEXT_LENGTH): string {
   return sanitizeSemanticText(chunks.join(" "), maxLength);
 }
 
+const repeatableSectionMetadata = [
+  { className: "resumeEditForm-education", name: "education_list.add", label: "添加教育经历" },
+  { className: "resumeEditForm-internship", name: "internship_list.add", label: "添加实习经历" },
+  { className: "resumeEditForm-work", name: "works_list.add", label: "添加作品" },
+  { className: "resumeEditForm-works", name: "works_list.add", label: "添加作品" },
+  { className: "resumeEditForm-project", name: "project_list.add", label: "添加项目经历" },
+  { className: "resumeEditForm-award", name: "award_list.add", label: "添加获奖经历" },
+  { className: "resumeEditForm-language", name: "language_list.add", label: "添加语言能力" }
+] as const;
+
+function classNames(node: CdpDomNode): Set<string> {
+  return new Set((attribute(node, "class") ?? "").split(/\s+/).filter(Boolean));
+}
+
+function fixedRepeatableAddNode(node: CdpDomNode): boolean {
+  const classes = classNames(node);
+  if (!classes.has("formOperate-addBtn") && !classes.has("createFormSection-addBtn")) return false;
+  return /^(?:添加|新增)$/.test(textContent(node, 20));
+}
+
+function repeatableAddMetadata(record: FlatNode): { name: string; label: string } | null {
+  if (!fixedRepeatableAddNode(record.node)) return null;
+  let current: FlatNode | null = record.parent;
+  while (current) {
+    const classes = classNames(current.node);
+    const metadata = repeatableSectionMetadata.find(({ className }) => classes.has(className));
+    if (metadata) return { name: metadata.name, label: metadata.label };
+    current = current.parent;
+  }
+  return null;
+}
+
 function implicitRole(node: CdpDomNode): PageControlRole | null {
   const explicit = attribute(node, "role")?.toLowerCase() as PageControlRole | undefined;
   if (explicit && INTERACTIVE_ROLES.has(explicit)) return explicit;
@@ -352,6 +385,7 @@ function implicitRole(node: CdpDomNode): PageControlRole | null {
   if (name === "textarea") return "textbox";
   if (name === "select") return hasAttribute(node, "multiple") ? "listbox" : "combobox";
   if (name === "button") return "button";
+  if (fixedRepeatableAddNode(node)) return "button";
   if (name === "a" && attribute(node, "href") !== undefined) return "link";
   if (isContentEditableNode(node)) return "textbox";
   if (name !== "input") return null;
@@ -449,7 +483,7 @@ function classifySafety(
   if (
     control.inputType === "submit"
     || control.inputType === "image"
-    || /提交申请|最终提交|确认投递|立即申请|发送申请|submit\s*application|final\s*submit|apply\s*now|send\s*application/.test(corpus)
+    || /提交申请|提交简历|最终提交|确认投递|立即申请|发送申请|投递简历|submit\s*application|submit\s*(?:resume|cv)|final\s*submit|apply\s*now|send\s*application/.test(corpus)
   ) return "final-submit";
   return "ordinary";
 }
@@ -587,11 +621,15 @@ function inspectControls(flattened: FlattenedDocument): InspectedControlTarget[]
       : "";
     const placeholder = sanitizeSemanticText(attribute(record.node, "placeholder"), 80);
     const fieldMetadata = nearestFieldMetadata(record);
-    const technicalName = sanitizeSemanticText(attribute(record.node, "name"), 80) || fieldMetadata.name;
+    const repeatableMetadata = repeatableAddMetadata(record);
+    const technicalName = sanitizeSemanticText(attribute(record.node, "name"), 80)
+      || fieldMetadata.name
+      || repeatableMetadata?.name
+      || "";
     const nearbyText = previousSemanticText(record, recordByNode);
     const associatedLabel = id ? labelByFor.get(id) || "" : "";
     const label = sanitizeSemanticText(
-      associatedLabel || wrappingLabel || ariaLabelledBy || ariaLabel || ownText || placeholder
+      repeatableMetadata?.label || associatedLabel || wrappingLabel || ariaLabelledBy || ariaLabel || ownText || placeholder
         || fieldMetadata.label || nearbyText
         || attribute(record.node, "title") || technicalName,
       100
