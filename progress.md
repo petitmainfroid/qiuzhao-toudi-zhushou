@@ -2356,3 +2356,5 @@ No commit or push was performed. There is no blocker for F079–F081. The reposi
 - 集成运行时底座：完整保留 F043/K5 的单一 typed writer，不修改 F039-F043 历史 commits 或 Draft PR #4-#8。
 - 迁移资产：`src/domain/**`、`src/matching/**`、`src/privacy/**`、`src/evaluation/**`、`src/resume/**`、`ats-corpus/**`、相关只读 audit scripts/public contracts、两份零扩展计划文档、`feature_list.json` 和本 `progress.md`。
 - 集成分支：`agent/zeroext-mvp-base`；运行时 base：`4d39144`；计划 checkpoint：根分支 `16cd189`。下一步从本基线并行启动 F086 Node CDP runtime、F098 AI planner/policy、F100 Independent Annotation/Judge；真实浏览器仍只允许一个执行者串行占用。
+- F097 checkpoint commit 为 `5e87ae4a4cf18f068b68474ba5d4f0e6c2b5fb0a`，已推送至 `origin/agent/zeroext-mvp-base`；Draft PR #10：`https://github.com/petitmainfroid/qiuzhao-toudi-zhushou/pull/10`，base 为已发布的 `agent/ats-observation-core`。PR 保持 Draft，未合并或标 ready。
+- 已从 `5e87ae4` 创建三个干净独立 worktree：F086 `agent/zeroext-f086-runtime` / `C:\Users\jiangbingjian\qiuzhaozhushou-f086`，F098 `agent/zeroext-f098-planner` / `C:\Users\jiangbingjian\qiuzhaozhushou-f098`，F100 `agent/zeroext-f100-evals` / `C:\Users\jiangbingjian\qiuzhaozhushou-f100`；三项状态同步为 `in_progress`，共同 `pr_base=agent/zeroext-mvp-base`。
