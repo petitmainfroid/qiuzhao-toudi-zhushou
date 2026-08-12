@@ -2368,7 +2368,7 @@ No commit or push was performed. There is no blocker for F079–F081. The reposi
 - 真正启动了 Chrome 151.0.7922.75，使用独立 profile `AppData/Local/qiuzhao-workbench/browser-profiles/chrome`、动态 CDP `127.0.0.1:52052` 和独立 runtime capability。打开并规范化真实小米 URL 为 origin `https://xiaomi.jobs.f.mioffice.cn`、path `/internship/resume/:id/apply`；当前停在 `/internship/login`，状态 `login-needed`。未安装本项目扩展、未使用默认 profile、未读取候选人字段值、未写页面、未提交。
 - F098 与 F100 标记 `done`；F086 保持 `in_progress`，因为真实小米 E2 登录后页面识别尚等待用户在专用 Chrome 完成人工登录。后续只读 E3 盘点和 E4 写入不能在登录完成前开始，也不能以模拟页替代。
 
-## 2026-08-12 - F086 真实小米登录后验收与 F087 启动
+## 2026-08-12 - F086 真实小米登录后验证
 
 - 用户在零扩展专用 Chrome 中完成小米人工登录后，使用项目自己的 Node CDP runtime 串行执行真实 E3。首次完整结构扫描得到 57 个原始控件、4 个 frame、0 个 open shadow root，未读取页面值、未读取 Cookie、未写入、未上传、未删除、未提交。真实扫描发现“提交简历”是 `type=button`，旧规则误归普通控件；将“提交简历/投递简历/submit resume/CV”加入最终提交禁区后，真实复扫为 53 ordinary、1 identity、1 file、1 destructive、1 final-submit，最终提交动作计数为 0。
 - 通过只返回 `filled/empty/unknown/not_read_safety` 的瞬时 presence 审计读取 53 个普通原始控件：19 filled、33 empty、1 unknown，4 个禁区完全不读；这些是原始控件而非独立人工冻结的逻辑字段分母，不能直接宣称 33 个招聘字段未填。日期月份曾泄漏进语义标签，已统一脱敏为 `[日期]`，真实复扫不再返回已选月份；页面值、原始 DOM 和完整 URL 未写入仓库。
@@ -2382,4 +2382,4 @@ No commit or push was performed. There is no blocker for F079–F081. The reposi
 - Runtime/live status：`packages/browser-runtime/{controlServer,runtime}.ts` 与对应 tests。
 - Privacy-safe observation / fixed action：`src/bridge/pageState.ts`、`src/content/pageDriver.ts` 与对应 tests。
 - 私有真实页命令：`scripts/real-pages/inspect-xiaomi-e3.mjs`；只输出脱敏结构、布尔 presence、计数和 typed blocker，不持久化页面值、DOM、Cookie、查询参数或真实截图。
-- F086 标记 `done`，F087 标记 `in_progress`。下一步是将已经验证的 observe/find/action/wait 契约完整迁移到 Node transport，并实现 `xiaomi_form_not_rendered` 的有界 wait/reobserve；在本地档案 repository、lease、独立逻辑字段标注和 E4 授权接通前，不创建实习记录、不填普通字段、不操作敏感/附件/同意/删除/提交。
+- F086 保持 `in_progress`：当前机器上的实现、真实小米启动/登录/重启、默认 profile 元数据和零本项目扩展检查已通过，但列出的“全新 Windows 用户 + `chrome://extensions` 可视验收”尚未执行，且按隐私要求没有保存含个人页面的截图。F087 仍为 `todo`；本轮针对真实失败加入的提交保护、日期脱敏和 repeatable add 观察/固定动作属于待 F086 关门后正式接入 Node transport 的候选代码，不能冒充 F087 完成。下一步先补 F086 的干净环境证据，再将已经验证的 observe/find/action/wait 契约完整迁移到 Node transport，并实现 `xiaomi_form_not_rendered` 的有界 wait/reobserve；在本地档案 repository、lease、独立逻辑字段标注和 E4 授权接通前，不创建实习记录、不填普通字段、不操作敏感/附件/同意/删除/提交。
