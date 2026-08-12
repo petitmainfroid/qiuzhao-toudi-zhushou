@@ -154,6 +154,46 @@ describe("privacy-safe page state", () => {
     expect(JSON.stringify(state)).not.toMatch(/2020-09|2024-06/);
   });
 
+  it("redacts a selected year-month when a custom date input exposes it as placeholder text", () => {
+    backendNodeId = 1;
+    const root: CdpDomNode = {
+      backendNodeId: backendNodeId++,
+      nodeType: 9,
+      nodeName: "#document",
+      frameId: "main-frame",
+      children: [element("html", {}, [element("body", {}, [
+        element("input", { type: "text", placeholder: "2024 - 06", value: "private-date" })
+      ])])]
+    };
+
+    const state = buildPrivacySafePageState(root, session, new OpaqueReferenceRegistry(() => "monthnonce"));
+    expect(state.controls[0]?.semantics.label).toBe("[日期]");
+    expect(JSON.stringify(state)).not.toMatch(/2024\s*-\s*06|private-date/);
+  });
+
+  it("exposes a fixed repeatable add primitive with section semantics", () => {
+    backendNodeId = 1;
+    const root: CdpDomNode = {
+      backendNodeId: backendNodeId++,
+      nodeType: 9,
+      nodeName: "#document",
+      frameId: "main-frame",
+      children: [element("html", {}, [element("body", {}, [
+        element("section", { class: "resumeEditForm-internship" }, [
+          element("div", { class: "createFormSection-addBtn" }, [text("添加")])
+        ])
+      ])])]
+    };
+
+    const state = buildPrivacySafePageState(root, session, new OpaqueReferenceRegistry(() => "addnonce"));
+    expect(state.controls).toEqual([expect.objectContaining({
+      role: "button",
+      tag: "custom",
+      semantics: { label: "添加实习经历", name: "internship_list.add" },
+      safety: "ordinary"
+    })]);
+  });
+
   it("associates portal options through aria-controls without returning option values", () => {
     backendNodeId = 1;
     const root: CdpDomNode = {
@@ -277,6 +317,7 @@ describe("privacy-safe page state", () => {
       children: [element("html", {}, [element("body", {}, [
         element("form", {}, [
           element("button", {}, [text("继续")]),
+          element("button", { type: "button" }, [text("提交简历")]),
           element("button", { type: "reset" }, [text("清空")]),
           element("label", {}, [text("同意隐私条款"), element("input", { type: "checkbox" })]),
           element("input", { autocomplete: "one-time-code", "aria-label": "动态口令" })
@@ -308,6 +349,7 @@ describe("privacy-safe page state", () => {
     const state = buildPrivacySafePageState(root, session, new OpaqueReferenceRegistry(() => "safetynonce"));
     const byLabel = new Map(state.controls.map((control) => [control.semantics.label, control.safety]));
     expect(byLabel.get("继续")).toBe("final-submit");
+    expect(byLabel.get("提交简历")).toBe("final-submit");
     expect(byLabel.get("清空")).toBe("destructive");
     expect(byLabel.get("同意隐私条款")).toBe("consent");
     expect(byLabel.get("动态口令")).toBe("verification");

@@ -203,6 +203,33 @@ describe("fixed K2 page action registry", () => {
       .toEqual([1, 1, 0, 0]);
   });
 
+  it("permits only the fixed Feishu repeatable add shape for a custom element", () => {
+    document.body.innerHTML = `
+      <section class="resumeEditForm-internship">
+        <div id="allowed" class="createFormSection-addBtn">添加</div>
+      </section>
+      <div id="lookalike" class="createFormSection-addBtn">添加</div>
+    `;
+    const allowed = document.getElementById("allowed")!;
+    const lookalike = document.getElementById("lookalike")!;
+    const allowedClick = vi.fn();
+    const lookalikeClick = vi.fn();
+    allowed.addEventListener("click", allowedClick);
+    lookalike.addEventListener("click", lookalikeClick);
+
+    expect(runFixedPageAction.call(allowed, {
+      action: "click",
+      strategy: "primary",
+      purpose: "add-repeatable-record"
+    })).toEqual({ performed: true, verified: false, strategy: "repeatable-add" });
+    expect(runFixedPageAction.call(lookalike, {
+      action: "click",
+      strategy: "primary",
+      purpose: "add-repeatable-record"
+    })).toEqual(expect.objectContaining({ performed: false, reason: "incompatible-action" }));
+    expect([allowedClick.mock.calls.length, lookalikeClick.mock.calls.length]).toEqual([1, 0]);
+  });
+
   it("supports the standard empty contenteditable attribute", () => {
     document.body.innerHTML = `<div id="editor" contenteditable></div>`;
     const editor = document.getElementById("editor")!;
