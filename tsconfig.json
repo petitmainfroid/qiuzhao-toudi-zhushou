@@ -17,5 +17,5 @@
     "jsx": "react-jsx",
     "types": ["chrome", "vitest/globals", "@testing-library/jest-dom"]
   },
-  "include": ["src", "tests", "vite.config.ts", "vitest.config.ts", "playwright.config.ts"]
+  "include": ["src", "tests", "evals/real-pages/**/*.ts", "vite.config.ts", "vitest.config.ts", "playwright.config.ts"]
 }

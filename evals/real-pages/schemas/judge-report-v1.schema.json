@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.qiuzhao.invalid/evals/real-pages/judge-report-v1.schema.json",
+  "title": "Independent real-page Judge report v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "kind", "reportId", "runId", "siteId", "annotation", "judgeRole", "judgedAt", "recomputedDenominators", "counts", "metrics", "annotationIntegrityPassed", "privacyPassed", "safetyPassed", "gate"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "kind": { "const": "independent-real-page-judge" },
+    "reportId": { "type": "string" },
+    "runId": { "type": "string" },
+    "siteId": { "enum": ["xiaomi-feishu", "metaapp-feishu", "nio-feishu", "anker-feishu", "hesai-feishu", "huya-moka", "lenovo-talent", "ctrip-careers"] },
+    "annotation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["annotationId", "revision", "annotationHash"],
+      "properties": {
+        "annotationId": { "type": "string" }, "revision": { "type": "integer", "minimum": 1 }, "annotationHash": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+      }
+    },
+    "judgeRole": { "const": "independent-judge" },
+    "judgedAt": { "type": "string", "format": "date-time" },
+    "recomputedDenominators": { "$ref": "#/$defs/denominators" },
+    "counts": {
+      "type": "object", "additionalProperties": false,
+      "required": ["audited", "verifiedEligibleFields", "verifiedWrites", "primaryVerified", "mappedAndExecuted", "mappingCorrect", "knownWrongMappings", "writeAttemptsWithReadback"],
+      "properties": {
+        "audited": { "type": "integer", "minimum": 0 }, "verifiedEligibleFields": { "type": "integer", "minimum": 0 },
+        "verifiedWrites": { "type": "integer", "minimum": 0 }, "primaryVerified": { "type": "integer", "minimum": 0 },
+        "mappedAndExecuted": { "type": "integer", "minimum": 0 }, "mappingCorrect": { "type": "integer", "minimum": 0 },
+        "knownWrongMappings": { "type": "integer", "minimum": 0 }, "writeAttemptsWithReadback": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "metrics": {
+      "type": "object", "additionalProperties": false,
+      "required": ["auditCoverage", "eligibleCoverage", "verifiedWriteRate", "primaryVerifiedRate", "mappingCorrectRate", "writeReadbackCoverage"],
+      "properties": {
+        "auditCoverage": { "$ref": "#/$defs/ratio" }, "eligibleCoverage": { "$ref": "#/$defs/ratio" },
+        "verifiedWriteRate": { "$ref": "#/$defs/ratio" }, "primaryVerifiedRate": { "$ref": "#/$defs/ratio" },
+        "mappingCorrectRate": { "$ref": "#/$defs/ratio" }, "writeReadbackCoverage": { "$ref": "#/$defs/ratio" }
+      }
+    },
+    "annotationIntegrityPassed": { "type": "boolean" },
+    "privacyPassed": { "type": "boolean" },
+    "safetyPassed": { "type": "boolean" },
+    "gate": {
+      "type": "object", "additionalProperties": false,
+      "required": ["pass", "failures"],
+      "properties": { "pass": { "type": "boolean" }, "failures": { "type": "array", "uniqueItems": true, "items": { "type": "string" } } }
+    }
+  },
+  "$defs": {
+    "ratio": { "type": "number", "minimum": 0, "maximum": 1 },
+    "denominators": {
+      "type": "object", "additionalProperties": false,
+      "required": ["aReachable", "bEligible", "cWriteAttempts"],
+      "properties": { "aReachable": { "type": "integer", "minimum": 0 }, "bEligible": { "type": "integer", "minimum": 0 }, "cWriteAttempts": { "type": "integer", "minimum": 0 } }
+    }
+  }
+}
