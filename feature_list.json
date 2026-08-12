@@ -1,5 +1,5 @@
 {
-  "project_goal": "Build a local-first Chrome/Edge extension where a job seeker maintains one structured profile and can safely preview and fill matching fields on recruitment websites without automatic submission.",
+  "project_goal": "Build a fully local recruitment workbench whose typed MCP/CLI/Web entry points let Codex or another authorized Agent understand, fill, and audit real recruitment pages through an isolated Chrome/Edge CDP session without installing an extension or submitting an application.",
   "features": [
     {
       "id": "F000",
@@ -1684,6 +1684,312 @@
         "Audit changed paths and prove kernel-owned directories are unchanged from the K5 integration base."
       ],
       "notes": "Do not start until F083 has a stable SDK commit and an approved gap assessment. Real authenticated-site filling is a later user-triggered, no-submit integration acceptance, not adapter daily development."
+    },
+    {
+      "id": "F085",
+      "title": "Define the zero-extension recruitment Agent PRD and verification harness",
+      "status": "done",
+      "depends_on": ["F082"],
+      "acceptance": [
+        "A durable PRD defines the zero-browser-extension product decision, target users, scope, non-goals, single-job and batch flows, field-level audit taxonomy, safety boundaries, architecture, migration plan, milestones, metrics, rollback, and open decisions.",
+        "Every user-flow step and engineering milestone names observable acceptance criteria and a deterministic verification method; synthetic controls are explicitly prohibited from proving real recruitment-site support.",
+        "The roadmap preserves reusable profile, resume, matching, ATS, verified-write, privacy, and evaluation modules while treating extension-specific entry points as compatibility-only until desktop parity is proven.",
+        "The repository baseline remains green, feature_list.json stays machine-readable, and progress.md records exact initialization and document verification evidence without changing product runtime code."
+      ],
+      "verification": [
+        "Parse feature_list.json as JSON and prove F085-F095 have valid ids, dependencies, statuses, acceptance, verification, and notes.",
+        "Audit docs/prd-zero-extension-recruitment-agent.md for the required product, field-audit, evidence-level, real-page, safety, architecture, migration, milestone, metric, and rollback sections.",
+        "npm run validate",
+        "Run git diff --check on the F085 documentation and harness files."
+      ],
+      "notes": "Documentation-only initializer node. The requested long-running-agent-harness turns the zero-extension goal into resumable F085-F095 milestones; it does not modify browser or extension runtime behavior."
+    },
+    {
+      "id": "F086",
+      "title": "Launch and reconnect an isolated recruitment browser without an extension",
+      "status": "todo",
+      "depends_on": ["F097"],
+      "acceptance": [
+        "A local Node runtime and interactive CLI launch a visible installed Chrome or Edge with a dedicated non-default recruitment profile and connect through a dynamically allocated loopback CDP endpoint without installing or invoking this project's extension.",
+        "The application reports starting, ready, login-needed, disconnected, and stopped states and can safely reconnect after an application restart without accessing the user's default browser profile.",
+        "The control endpoint is protected by a per-launch random capability, listens only on loopback, exposes no cookie or credential API, and leaves no unexpected listener after shutdown.",
+        "A current real Xiaomi recruitment URL can be opened and identified at evidence level E2 without reading candidate values or modifying the page."
+      ],
+      "verification": [
+        "Run the new desktop browser-runtime unit and integration tests, including wrong-token, port-binding, restart, and shutdown cases.",
+        "On a clean Windows user, inspect chrome://extensions and prove the product is absent while the dedicated recruitment profile is active.",
+        "Compare default-profile file metadata before and after the run and audit process arguments plus loopback listeners.",
+        "Run the private E2 Xiaomi launch check and record browser/app versions, normalized path, zero writes, and zero final submissions."
+      ],
+      "notes": "CLI-first shortens the path to the Codex MVP. Production uses installed Chrome/Edge with a dedicated profile; fixed Chrome for Testing is transport QA-only and cannot prove recruitment-page compatibility. Electron/Web reuse the same service later."
+    },
+    {
+      "id": "F087",
+      "title": "Expose the verified browser kernel through a zero-extension typed runtime",
+      "status": "todo",
+      "depends_on": ["F086", "F097"],
+      "acceptance": [
+        "Page state, semantic find, safe expansion, repeatable creation, text/choice/date actions, bounded waits, readback verification, pause, and field audit are available through schema-validated intent-level APIs over the desktop runtime.",
+        "No public Agent or CLI surface accepts arbitrary JavaScript, CSS/XPath selectors, screen coordinates, raw CDP, arbitrary file paths, cookies, credentials, delete actions, or final submission.",
+        "Every action is bound to an authorized origin, page epoch, opaque element reference, request id, attempt budget, and post-action Boolean verification; navigation and DOM replacement invalidate stale references.",
+        "Existing sensitive, verification, attachment-confirmation, site-policy, and never-submit protections remain fail-closed without extension APIs."
+      ],
+      "verification": [
+        "Run protocol schema tests plus malicious-output, unknown-command, stale-reference, wrong-origin, replay, navigation-race, and process-restart negative tests.",
+        "Run a static audit proving the public runtime contains no eval, arbitrary selector, cookie, raw CDP, delete, or submit command.",
+        "Run browser-kernel unit and minimal unbranded control tests; these checks may prove primitives but may not claim site compatibility.",
+        "Run a user-authorized E3 read-only inventory on the current real Xiaomi login page and prove scan-before/after values and record counts are unchanged."
+      ],
+      "notes": "Reuse the stable K1-K5 browser-kernel contracts only after F097 freezes the exact completed commits. CDP remains an internal transport; do not reproduce BossHunter's arbitrary /eval surface."
+    },
+    {
+      "id": "F088",
+      "title": "Build the desktop profile, job-card, and batch-authorization experience",
+      "status": "todo",
+      "depends_on": ["F086", "F049"],
+      "acceptance": [
+        "The desktop application edits and imports the local structured profile and shows job cards with web link, company, job title, JD, ATS, last status, and an automatic-fill button.",
+        "Users can authorize one job or one explicit batch once; the lease binds exact normalized URLs, allowed origins, profile version, ordinary action scope, expiration, and revocation state.",
+        "The Agent does not require per-field or per-page clicks within an active ordinary-fill lease, but new origins, sensitive data, attachments, external messages, and final submission are never inherited.",
+        "The Organic interface follows the repository palette, typography, shape, grain, motion, keyboard, and accessibility direction without exposing a final-submit action."
+      ],
+      "verification": [
+        "Run desktop component, local-database migration, offline profile import/edit/delete, job metadata, and lease-state tests.",
+        "Run desktop E2E for one job and a three-job batch, including wrong URL, added tab, expiration, revocation, and restart behavior.",
+        "Compare each retained real job card's title and JD with its current E2 page and record typed failures without using copied recruitment pages.",
+        "Capture a current artifacts/ desktop screenshot using only synthetic profile values and run npm run validate."
+      ],
+      "notes": "This replaces the side-panel funnel in the target product. Extension UI remains compatibility-only until F095 proves desktop release parity."
+    },
+    {
+      "id": "F089",
+      "title": "Implement complete real-page field inventory and field-level audit conclusions",
+      "status": "todo",
+      "depends_on": ["F087", "F099", "F100"],
+      "acceptance": [
+        "The runtime inventories every reachable logical field across the main document, same-origin frames, open shadow roots, applicable conditional sections, bounded steps, and repeatable groups while explicitly reporting inaccessible controls.",
+        "An independent human annotation supplies the real-page field denominator; Agent output is never used as its own ground truth and every annotated field maps to exactly one audit row.",
+        "Every field receives exactly one terminal conclusion from the PRD taxonomy, clearly separating matching content, profile missing data, failed writes, unsupported controls, ambiguous content, sensitive confirmation, manual verification, file confirmation, non-applicability, site-policy blocks, and user-required navigation.",
+        "Audit artifacts contain stable profile paths and aggregate outcomes but no page values, profile values, credentials, raw DOM, request bodies, query URLs, filenames, or real filled-page screenshots in the repository."
+      ],
+      "verification": [
+        "Validate the audit JSON schema plus mutual-exclusion, completeness, stable-denominator, conditional-field, and privacy properties.",
+        "Independently annotate the current real Xiaomi page and obtain 100% inventory coverage at E3 with scan-before/after values and counts unchanged.",
+        "Deliberately remove selected profile data and prove those fields become profile_missing rather than write_failed or fabricated values.",
+        "Run npm run validate and the private real-page audit command introduced by this feature."
+      ],
+      "notes": "This feature answers the user's core evaluation question through the CLI/MCP-first flow. The desktop workbench is not a prerequisite. The independent real-page annotation, not the Agent scan, owns the denominator."
+    },
+    {
+      "id": "F090",
+      "title": "Prove Xiaomi zero-extension non-submitting fill acceptance",
+      "status": "todo",
+      "depends_on": ["F089"],
+      "acceptance": [
+        "The packaged or production-equivalent desktop runtime opens the current real Xiaomi application in the dedicated browser, resumes the user-established login, inventories the complete page, creates applicable repeatable records, fills authorized ordinary fields, verifies every write, and produces the complete audit without any browser extension.",
+        "The independently annotated field inventory coverage is 100%, eligible auto-fill coverage is at least 90%, verified-write success is at least 95%, and mapping correctness is at least 98% with zero known incorrect writes.",
+        "There are zero duplicate records, unconfirmed sensitive actions, credential or Cookie reads, CAPTCHA/SMS/identity bypasses, unexpected navigations, delete actions, and final application submissions.",
+        "Failures remain visible with typed field conclusions and private evidence; no field is removed from the denominator to improve the result."
+      ],
+      "verification": [
+        "Run npm run validate and the desktop E2E suite.",
+        "Run the user-authorized private E4 Xiaomi command with real intended profile data and no final submission, then recompute all metrics from the value-redacted manifest.",
+        "Inspect the private field-by-field evidence against the independent annotation and confirm the repository contains no real values, filled-page screenshots, credentials, raw DOM, or query identifiers.",
+        "Repeat the run after a forced restart and prove zero duplicate repeatable records and correct checkpoint recovery."
+      ],
+      "notes": "This is the first real product proof. No simulated Xiaomi page, copied HTML, public schema, or E3-only observation can satisfy this node."
+    },
+    {
+      "id": "F091",
+      "title": "Validate zero-extension Feishu behavior across retained real companies",
+      "status": "todo",
+      "depends_on": ["F090", "F100"],
+      "acceptance": [
+        "Current real pages for Xiaomi, MetaApp, NIO, Anker Innovations, and Hesai each have an independent field denominator, E3 inventory, and an E4 pass or explicit typed blocker using the desktop runtime.",
+        "At least three different companies pass E4 before any behavior is promoted from a company override to the Feishu family; one company's label or control fix cannot change another company's verified outcome without rerunning its regression.",
+        "Every eligible page reaches 100% field inventory, at least 90% eligible coverage, at least 95% verified-write success, at least 98% mapping correctness, zero known wrong writes, and zero forbidden actions or final submissions.",
+        "A generated tenant-difference report identifies common contracts, company-specific labels, unsupported custom questions, drift, and the exact rule layer used for every field."
+      ],
+      "verification": [
+        "Run the Feishu adapter conformance and cross-tenant regression suites plus npm run validate.",
+        "Run user-authorized private E3/E4 commands for all five retained real companies and recompute per-site and aggregate metrics from manifests.",
+        "Mutate one company override in a negative test and prove other tenant mappings and safety rules are unchanged.",
+        "Audit evidence levels so public schema, old observations, or one company's success cannot be mislabeled as family-wide real-page verification."
+      ],
+      "notes": "Use the retained real-source corpus only as independent provenance and drift context, not as a required field template. Current E4 runs must disable legacy field templates and revalidate every page."
+    },
+    {
+      "id": "F092",
+      "title": "Validate zero-extension filling across retained non-Feishu ATS pages",
+      "status": "todo",
+      "depends_on": ["F090", "F100"],
+      "acceptance": [
+        "Current real Huya Moka, Lenovo Talent, and Ctrip custom resume pages each receive independent annotation, E3 inventory, and E4 non-submitting desktop-runtime acceptance or an explicit site-policy/authentication blocker.",
+        "The three pages together cover ordinary text, textarea or contenteditable, native or custom choices, dates, and applicable repeatable records without reusing Feishu-specific execution branches.",
+        "Every eligible page reaches 100% field inventory, at least 90% eligible coverage, at least 95% verified-write success, at least 98% mapping correctness, zero known wrong writes, and zero forbidden actions or final submissions.",
+        "Failures are converted into typed, privacy-safe defects and regression primitives only after the original real-page evidence and denominator are preserved."
+      ],
+      "verification": [
+        "Run ATS adapter and browser-kernel regressions plus npm run validate and desktop E2E.",
+        "Run user-authorized private E3/E4 commands against the three current real pages and recompute every metric from value-redacted manifests.",
+        "Inspect the failure-to-regression ledger and prove no copied recruitment page or simulated branded page is used as compatibility evidence.",
+        "Audit zero cross-family imports in the generic browser kernel and zero final-submit capability in all adapters."
+      ],
+      "notes": "Coordinate implementation with existing family features such as F064, but release evidence must come from the retained real pages named here rather than a synthetic ATS fixture."
+    },
+    {
+      "id": "F093",
+      "title": "Run resumable autonomous multi-job batches with one authorization",
+      "status": "todo",
+      "depends_on": ["F091", "F092"],
+      "acceptance": [
+        "A user can authorize at least five explicit jobs once and the Agent processes every unblocked job through open, inventory, plan, repeatable creation, verified fill, audit, and pause-or-complete without further ordinary-field clicks.",
+        "The durable action ledger records job, page epoch, field reference, intent, attempt, verification, conclusion, and checkpoint without page or profile values; recovery resumes from the last verified checkpoint.",
+        "Each field has at most one primary attempt plus one registered fallback, blocked jobs do not prevent safe later jobs, and lease expiration or revocation stops all further page access.",
+        "Forced browser, Agent, and desktop-process terminations produce zero duplicate records, duplicate messages, cross-origin actions, incorrect writes, and final submissions after recovery."
+      ],
+      "verification": [
+        "Run state-machine property tests for interruption at every workflow boundary, idempotency keys, retry budgets, revocation, expiration, and stale page epochs.",
+        "Run a user-authorized five-job private batch across at least two ATS families and compare every audit denominator and result with the corresponding single-page acceptance.",
+        "Force termination during repeatable creation, field fill, navigation, pause, and audit generation; restart and prove exact-once outcomes.",
+        "Run npm run validate, desktop E2E, privacy scans, and aggregate metric recomputation."
+      ],
+      "notes": "This milestone delivers the requested low-click autonomy: one bounded batch authorization instead of manual steps on every page, while safety pauses remain mandatory."
+    },
+    {
+      "id": "F094",
+      "title": "Add policy-gated BOSS browsing and bounded automatic communication",
+      "status": "todo",
+      "depends_on": ["F093"],
+      "acceptance": [
+        "A site-policy review and user-authorized E3 observation establish which BOSS browsing and messaging behaviors may be automated; prohibited or uncertain behavior fails closed and is not bypassed.",
+        "A separate communication lease binds job/contact scope, factual profile version, allowed message categories, daily limit, working hours, expiration, and revocation; ordinary form-fill authorization cannot send a message.",
+        "The Agent can draft and, only within the lease, send permitted greetings, factual resume answers, and interview-time candidates while pausing for compensation commitments, offer acceptance, identity, money, external login, attachments, or unknown sensitive questions.",
+        "Every outbound message has a unique idempotency key and auditable target, job, category, factual sources, timestamp, and result with zero duplicate or post-revocation sends."
+      ],
+      "verification": [
+        "Complete and record the site-policy gate before enabling write actions; if it fails, verify the product remains read-only and mark the feature blocked rather than evading controls.",
+        "Run message-policy, factual-grounding, duplicate, target-binding, rate-limit, working-hours, expiration, revocation, and malicious-model-output tests.",
+        "With explicit user selection, perform one private real-conversation E4 send, then compare the exact target and message with the approved plan and record zero duplicate or out-of-scope actions.",
+        "Run npm run validate, desktop E2E, and privacy scans proving no credentials, cookies, unrelated chats, or raw private conversation contents enter repository evidence."
+      ],
+      "notes": "This is an optional post-form milestone and must remain behind a separate feature flag and authorization model. It does not block the zero-extension form-filling MVP or F095 release."
+    },
+    {
+      "id": "F095",
+      "title": "Package the zero-extension desktop MVP and retire the extension dependency",
+      "status": "todo",
+      "depends_on": ["F088", "F093"],
+      "acceptance": [
+        "A signed or explicitly development-labeled Windows installer supports install, first launch, update, rollback, and uninstall, and a new user can reach a real-page field audit without installing a browser extension or enabling browser developer mode.",
+        "The production package contains no extension manifest, background/content-script entry point, unpacked-extension instruction, or runtime dependency on chrome.runtime, chrome.tabs, chrome.debugger, chrome.storage, or extension messaging.",
+        "Existing local profile and mapping data can be copied through a user-confirmed migration with integrity verification; the source data and old extension are not deleted automatically.",
+        "F090-F093 release metrics pass on the packaged build, privacy and safety boundaries are documented, and the extension implementation is retained only in history or an explicitly non-production compatibility archive."
+      ],
+      "verification": [
+        "On a clean Windows user, record installer hash/signing status and execute install-to-first-real-audit, upgrade, rollback, uninstall, and data-migration acceptance.",
+        "Inspect chrome://extensions, the production archive, process tree, listeners, and runtime logs to prove zero extension installation or dependency and zero default-profile access.",
+        "Run npm run validate, all desktop unit/E2E/package checks, and the packaged private real-page smoke matrix required by F090-F093.",
+        "Run secret/PII/license/package-content scans, git diff --check, and inspect current user-visible screenshots in artifacts/."
+      ],
+      "notes": "F094 BOSS communication is deliberately not a release dependency. Retire extension code only after packaged desktop parity and data migration are proven; never delete user data or historical evidence automatically."
+    },
+    {
+      "id": "F096",
+      "title": "Define the AI-first MCP multi-agent plan with real-page-only validation",
+      "status": "done",
+      "depends_on": ["F085"],
+      "acceptance": [
+        "A durable implementation plan defines the Node/CLI-first local architecture, six-tool MCP contract, template-independent AI observe-plan-compile-execute-audit loop, multi-agent ownership, worktree rules, dependency DAG, real-page queue, evidence levels, field denominators, metrics, safety boundaries, failure regression, and handoff contract.",
+        "Browser-level compatibility validation is allowlisted to the eight retained current real pages for Xiaomi, MetaApp, NIO, Anker Innovations, Hesai, Huya Moka, Lenovo Talent, and Ctrip; copied HTML, simulated recruitment pages, branded fixtures, public contracts, and historical observations cannot satisfy an E3/E4 feature gate.",
+        "The plan reconciles the stale root F039-F043 ledger with the completed isolated K2-K5/F043 branches and makes a verified clean integration checkpoint the first implementation gate instead of redoing the browser kernel.",
+        "At least three independent planning agents review real-page evaluation, AI/MCP architecture, and multi-agent delivery, while the root Agent owns the final unified plan and changes no product runtime code."
+      ],
+      "verification": [
+        "Parse feature_list.json and validate F096-F100 ids, dependencies, statuses, acceptance, verification, notes, and DAG reachability.",
+        "Audit docs/ai-first-mcp-real-page-multi-agent-plan.md for the eight-site allowlist, no-template proof, six MCP tools, four Agent roles, worktree ownership, serial E3/E4 protocol, metric denominators, waves, feature DoD, failure workflow, and handoff contract.",
+        "npm run validate",
+        "Run git diff --check on the F096 plan and harness files and record the three sub-Agent read-only reviews in progress.md."
+      ],
+      "notes": "Documentation-only long-running-agent-harness initializer node requested by the user. It plans multi-Agent development but does not start implementation or touch a real recruitment page."
+    },
+    {
+      "id": "F097",
+      "title": "Converge the completed K2-K5 and real-page branches into a clean zero-extension base",
+      "status": "in_progress",
+      "branch": "agent/zeroext-mvp-base",
+      "pr_base": "agent/ats-observation-core",
+      "depends_on": ["F096"],
+      "acceptance": [
+        "The exact K2, K3, K4, K5, and F043 branches, commits, draft PR bases, checks, and evidence are audited against their isolated worktrees and remote refs; completed work is not reimplemented or silently copied from an uncommitted worktree.",
+        "The root feature ledger is synchronized with verified branch reality, including exact denominators, results, commits, and evidence limitations, without rewriting historical branch checkpoints.",
+        "A clean integration checkpoint contains the single typed K5 browser-kernel contract and the retained reusable profile/matching/privacy/evaluation modules, with no parallel writer selected as the zero-extension base.",
+        "The historical F043 Xiaomi/Huya/Ctrip 17-of-17 report is preserved as extension-kernel migration evidence but is explicitly barred from proving Node CDP, MCP, AI-first, current-page, or full-field acceptance."
+      ],
+      "verification": [
+        "Compare the five isolated branch heads and remote refs with their feature/progress evidence and draft PR metadata.",
+        "Run npm run validate and npm run test:e2e on the selected clean integration checkpoint.",
+        "Run git diff --check plus secret/PII/personal-value/real-page-artifact scans and prove the integration tree contains one selected browser writer.",
+        "Record the zero-extension integration branch, base, commit, validation denominators, and next three parallel worktrees in progress.md."
+      ],
+      "notes": "Coordinator-only gate. Respect the exact F039-F043 branch/pr_base history in AGENTS.md. Do not develop in the dirty root or mutate the user's existing profile-dossier changes."
+    },
+    {
+      "id": "F098",
+      "title": "Build the template-independent AI field planner and local policy compiler",
+      "status": "todo",
+      "depends_on": ["F097"],
+      "acceptance": [
+        "The planner consumes only a privacy-safe page structure plus profile-path catalog and produces exactly one typed decision for every observed field reference: map, profile_missing, manual, review, conditional_not_applicable, or ensure_repeatable.",
+        "The AI never receives scalar profile values by default and can never supply arbitrary page values, selectors, XPath, coordinates, JavaScript, raw CDP, files, cookies, credentials, save, delete, consent, or final-submit actions.",
+        "A deterministic compiler binds the proposal to origin, lease, profile version, page epoch, opaque ref, allowlisted profile path, control capability, safety class, attempt budget, and immutable plan id; invalid, missing, ambiguous, malicious, or incomplete output fails closed.",
+        "AI-first runs can prove legacyFieldTemplateEnabled=false and plannerSource=ai; ATS/company field templates remain optional evidence hints and cannot be a runtime prerequisite."
+      ],
+      "verification": [
+        "Run schema, property, full-field completeness, allowlisted-path, malicious-page-text, malicious-model-output, ambiguity, missing-profile, stale-epoch, lease, and policy negative tests using pure structured objects rather than simulated recruitment pages.",
+        "Run a static public-API audit for arbitrary values, selectors, script, raw CDP, upload, save, delete, consent, cookie, credential, and submit capabilities.",
+        "Prove plan compilation is deterministic and every input ref receives exactly one mutually exclusive decision.",
+        "Run npm run validate and git diff --check on the planner-owned paths."
+      ],
+      "notes": "AI/Application Agent owns packages/semantic-planner and packages/policy-compiler. It must not connect to or write a real recruitment page and must not edit browser-runtime, the independent annotation denominator, or shared ledger."
+    },
+    {
+      "id": "F099",
+      "title": "Expose the local application workflow to Codex through MCP and a thin Skill",
+      "status": "todo",
+      "depends_on": ["F087", "F098"],
+      "acceptance": [
+        "A local stdio MCP server exposes exactly workspace_status, application_inspect, application_plan, application_execute, application_audit, and workflow_cancel over the same application service used by CLI and future Web/desktop entry points.",
+        "Codex can complete a real MCP handshake and call the six tools, while MCP cannot create or enlarge an authorization lease and cannot bypass the planner, policy compiler, local value resolution, browser-kernel verification, or audit ledger.",
+        "The application service implements a bounded observe-plan-compile-execute-reobserve-audit loop with page-epoch invalidation, single-job locking, request-id idempotency, cancellation, restart recovery, and typed needs_replan or user_action_required states.",
+        "The Skill contains workflow guidance only; all authority and safety remain in the local kernel, and no MCP response contains profile/page values, credentials, raw HTML, URL queries, filenames, or private screenshots."
+      ],
+      "verification": [
+        "Run MCP stdio schema/handshake and a privacy-safe Codex tool-call transcript covering all six tools without accessing a recruitment page.",
+        "Run no-lease, wrong-origin, stale-plan, replay, duplicate request, malicious payload, cancellation, bounded replan, process restart, and concurrent-client tests.",
+        "Run a static registration audit proving there are exactly six public tools and no eval, selector, arbitrary value, raw CDP, cookie, upload, save, delete, consent, or submit tool.",
+        "Run npm run validate, Skill validation, secret/PII scans, and git diff --check on MCP/Application paths."
+      ],
+      "notes": "AI/Application Agent owns packages/application-service, packages/mcp-server, CLI lease commands, and the thin Skill. Browser compatibility is not proven until F089/F090 use the real-page queue."
+    },
+    {
+      "id": "F100",
+      "title": "Build an independent real-page annotation and Judge harness for the eight retained pages",
+      "status": "todo",
+      "depends_on": ["F097"],
+      "acceptance": [
+        "The evaluation allowlist accepts only the eight retained current real recruitment origins and normalized paths; local, fixture, copied, simulated, unknown, or newly added pages cannot enter E3/E4 or support metrics without a separately approved plan change.",
+        "Versioned annotation, run-manifest, and Judge schemas freeze annotation id/hash, reachable field instances, conditions, steps, repeatable instances, safety class, A/B/C denominators, code/app/browser versions, lease scope, Boolean verification, attempts, typed failures, and zero-action safety counts without storing real values.",
+        "An independent annotation role determines the denominator without reading Agent scan results, the user reviews and freezes it, the execution role cannot modify it, and the Judge independently recomputes every metric rather than trusting an executor-supplied pass.",
+        "Historical ground truths and observations are linked as provenance and drift references only; legacy simulated pages and screenshots are labeled primitive-regression or public-contract-drift and excluded from site-pass evidence."
+      ],
+      "verification": [
+        "Run allowlist negative tests for localhost, fixture paths, copied HTML, branded simulations, unknown real URLs, query identifiers, and an unapproved ninth site.",
+        "Run schema, denominator-freeze, mutually-exclusive conclusion, metric recomputation, executor-tampering, drift-versioning, and privacy allowlist tests using pure manifests.",
+        "Audit the retained eight-site registry against current ground-truth provenance and prove the total 243 historical field definitions are not reused as a fixed runtime denominator.",
+        "Run npm run validate, secret/PII/raw-DOM/query/real-value/private-screenshot scans, and git diff --check on evaluation-owned paths."
+      ],
+      "notes": "Independent Annotation/Judge Agent owns evals/real-pages and evaluation scripts, never browser or mapping code. Actual E3 annotation requires the user login window and final user review; actual E4 writes remain serial and are not part of this scaffold node."
     }
   ]
 }

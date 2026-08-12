@@ -1795,3 +1795,53 @@ No commit or push was performed. There is no blocker for F079–F081. The reposi
 - No file was deleted, no stash/rebase was performed, and no other worktree was modified. The remote-ref digest remained `55fff0e997814ec32a7c9c9852fbd0fe0f2324a80afaf7cc1dca242aa35a58d9`, matching the pre-stage value; no push occurred.
 - F082-specific additions are `scripts/audit-pre-k5-checkpoint.mjs`, its package command, `docs/pre-k5-root-checkpoint-audit.md`, and the F082–F084 harness entries/evidence. The audit now reads all repository observation JSON files even when the worktree is clean, while candidate path/count/size checks still operate against the current `HEAD` diff.
 - F082 is done. F083 is intentionally not started: its first acceptance condition requires a clean, explicitly frozen K5 adapter-sdk commit. Until K5 provides that commit id, this branch must not copy or conform to the uncommitted SDK draft.
+## 2026-08-12 - F085 零浏览器扩展秋招 Agent PRD 与验证基线
+
+- 按 `long-running-agent-harness` 和仓库 Resume protocol 恢复了工程状态：读取 `feature_list.json`、`progress.md` 与现有 browser-kernel/真实页验证文档，并在依赖已存在时运行 `./init.ps1 -SkipInstall`。
+- 初始化验证退出码为 0：TypeScript 通过，45 个测试文件 / 393 个测试通过，ATS corpus 校验通过，生产构建通过，13 个分发文件和当前扩展权限审计通过。
+- 新增 `docs/prd-zero-extension-recruitment-agent.md`。产品决策是“Electron 本机桌面 Agent + 独立求职 Chrome/Edge profile + 内部 CDP transport”，正式产品不再要求安装浏览器扩展，也不承诺接管默认 Chrome profile。
+- PRD 定义了 15 个端到端用户步骤，每一步都包含系统行为、可观察完成标准和验证办法；定义 E0-E5 证据等级，并规定只有用户授权的真实招聘页非提交写入与回读 E4 才能证明该页面可用。模拟/复制招聘页不能作为小米、飞书、Moka 等站点支持证据。
+- 字段评测口径已固定：字段分母来自独立真实页人工标注，不由程序扫描结果自证；每个字段必须得到唯一终态，明确区分 `profile_missing`、`write_failed`、`unsupported_control`、`ambiguous_review`、敏感确认、人工验证、文件确认、条件不适用、站点规则阻断和用户接管。
+- 目标指标包括字段盘点率 100%、每页可自动填覆盖率至少 90%、每页验证写入成功率至少 95%、总体至少 98%、映射正确率至少 98%，以及错误写入、重复记录、凭证读取、验证码绕过、未确认敏感动作和最终提交全部为 0。
+- 在 `feature_list.json` 追加 F085-F095 共 11 个可恢复节点：PRD、零扩展浏览器、类型化内核、桌面岗位/批次、全字段审核、小米 E4、Feishu 五公司、非 Feishu 三页面、五岗位恢复、BOSS 有界沟通、桌面发布与扩展退役。BOSS F094 是独立可选能力，不阻塞表单 MVP F095。
+- 结构验证退出码为 0：`feature_list.json` 共 96 个 feature，F085-F095 共 11 个节点，ID 唯一、依赖均存在，且每个节点具有状态、验收、验证和 notes；PRD 的 12 个必需章节和 15 个可验证用户步骤全部存在。
+- `git diff --check -- feature_list.json docs/prd-zero-extension-recruitment-agent.md` 退出码为 0，仅报告 Windows 工作区预期的 LF-to-CRLF 提示。
+- 最终 `npm run validate` 退出码为 0：TypeScript 通过；45 个测试文件 / 393 个测试通过；ATS corpus 验证为 0 个 promoted sample；生产构建通过；13 个分发文件、精确扩展权限、禁止权限缺失和开发 collector 排除检查通过。
+- 本节点只改产品文档和持久任务账本，没有修改产品运行代码、扩展权限、真实页面、用户档案或浏览器配置；因此不需要新的用户可见 E2E 或截图。工作区中原有的 `AGENTS.md` 修改及 `deployment-recovery/`、`dist-collector-backup-f043-20260808-184942/` 未跟踪目录均未改动。
+
+### F085 changed files and handoff
+
+- PRD：`docs/prd-zero-extension-recruitment-agent.md`。
+- 路线图：`feature_list.json` 中的 F085-F095。
+- 证据与交接：本 `progress.md` 节。
+- F085 的文档、任务清单和验证证据现已完成。下一推荐节点为 F086：在不安装扩展、不访问默认 Chrome profile 的前提下，建立 Electron 开发入口、独立求职 profile、动态 loopback CDP 会话和真实小米 URL 的 E2 只读启动证据。
+## 2026-08-12 - F096 AI-first MCP 多 Agent 与仅真实网页验证计划
+
+- 按 `long-running-agent-harness` 和仓库 Resume protocol 恢复根工作树，读取 `feature_list.json`、`progress.md`、零扩展 PRD、browser-kernel 交付计划、ATS ground truth/observation 索引，并运行 `./init.ps1 -SkipInstall`。根 Agent 的初始化命令退出码为 0，验证通过 45 个测试文件 / 393 个测试、ATS corpus、生产构建和 13 个分发文件审计。
+- 用户明确要求多个子 Agent。本轮并行派出三个只读规划 Agent，分别负责真实页评测、AI/MCP/Node CDP 架构、以及多 worktree 交付。三个 Agent 均未修改文件、未访问或写入真实招聘页面；根 Agent 统一处理了结论差异。
+- 发现根账本对 F039-F043 的状态已经陈旧，而隔离 worktree 和 origin 分支显示 K2 `f52e8e1`、K3 `f760551`、K4 `29776d7`、K5 `6d5f163`、F043 `4d39144` 均已完成并推送。F043 的脱敏报告记录旧扩展/K5 路径在小米、虎牙、携程的 17/17 普通字段验证、0 wrong-control 和 0 禁止动作。该证据只作为迁移基线，不能证明零扩展 Node CDP、Codex MCP、AI 无模板、当前八站或全字段审核。
+- 新增 `docs/ai-first-mcp-real-page-multi-agent-plan.md`。MVP 改成 Node/CLI-first：`Codex/Claude Skill -> MCP stdio -> Local Application Service -> AI planner + policy compiler -> typed browser kernel -> Node CDP -> 独立 Chrome/Edge profile`。桌面/Web 工作台继续复用同一服务，但不阻塞首个 Codex MVP。
+- 无模板边界已固定：AI 只提交 `fieldRef -> profilePath/terminal decision`，不能提交值、selector、XPath、坐标、脚本或 raw CDP；真实 AI-first 运行必须记录 `plannerSource=ai` 和 `legacyFieldTemplateEnabled=false`。ATS/company ground truth 是独立标注与漂移参照，不是运行前提。
+- 浏览器验收 allowlist 冻结为八个已留存真实页面：小米、MetaApp、蔚来、安克、禾赛、虎牙、联想、携程。公开契约合计 243 个历史字段定义，但每次 E3 必须按当前页面、条件、步骤和重复记录重新冻结 reachable field instances。任何新建、复制、下载或托管的模拟招聘网页均不得用于新 feature 的浏览器验收、完成门或支持宣称。
+- 纯协议、schema、策略、状态机、数据库、幂等和指标可以使用结构化对象单测；现有 fixture/模拟页只能保留为 legacy primitive regression，不得计入 MVP 指标。新开发不得新增模拟招聘网页。
+- 多 Agent 组织固定为 Coordinator/Integrator、Browser Platform、AI/Application、Independent Annotation/Judge 四个角色；每一波根 Agent + 最多三个子 Agent。真实登录 profile 只允许一个 Execution Agent 串行占用，字段分母由独立标注 Agent和用户冻结，Judge 离线复算，执行者不能更改分母或自报通过。
+- 将项目目标更新为完全本地的 MCP/CLI/Web 求职工作台，并调整 F086/F087/F089/F091/F092/F095 依赖与说明。追加 F096-F100：计划、基线收敛、AI planner/policy、MCP/Application/Skill、八站独立 Annotation/Judge。首个实现门为 F097，之后 F086/F098/F100 可由三个子 Agent 并行；F099 依赖 F087+F098，F090 才进入小米 AI-first 零扩展真实写入。
+- Feature/DAG 检查退出码为 0：`feature_list.json` 共 101 个节点；F096-F100 ID 唯一，全部依赖存在，且每项具备状态、验收、验证和 notes。计划审计确认 11 个必需章节、8 个真实站点和 6 个 MCP 工具全部存在。
+- `git diff --check -- feature_list.json docs/ai-first-mcp-real-page-multi-agent-plan.md` 退出码为 0，仅有 Windows 工作区预期的 LF-to-CRLF 提示。
+- 最终 `npm run validate` 退出码为 0：TypeScript 通过，45 个测试文件 / 393 个测试通过，ATS corpus 校验通过，生产构建通过，13 个分发文件、当前精确权限、禁止权限缺失和开发 collector 排除审计通过。
+- 本节点仅修改文档和持久任务账本，没有修改产品运行代码、浏览器、真实页面、用户档案或授权状态。未运行 legacy 模拟招聘页 E2E，也未生成新的截图，以免把模拟或旧扩展证据误记成新 MVP 证据。原有 `AGENTS.md` 修改和两个未跟踪恢复目录未触碰。
+
+### F096 changed files and handoff
+
+- 多 Agent 实施计划：`docs/ai-first-mcp-real-page-multi-agent-plan.md`。
+- 项目目标、依赖和 F096-F100：`feature_list.json`。
+- 本次验证与交接：本 `progress.md` 节。
+- F096 完成。下一推荐节点是 Coordinator-only 的 F097：审计并收敛已完成的 K2-K5/F043 分支、PR、commit 和证据，创建干净 `zeroext-mvp-base`。F097 通过后，同时启动三个独立 worktree：B/F086 Node CDP runtime、A/F098 AI planner/policy、Q/F100 Annotation/Judge。
+
+## 2026-08-12 - F097 零扩展集成基线审计启动
+
+- 按仓库恢复协议再次运行 `./init.ps1 -SkipInstall`，退出码为 0：TypeScript 通过，45 个测试文件 / 393 个测试通过，ATS corpus 校验通过，生产构建和 13 个分发文件审计通过。
+- F039-F043 的固定分支形成严格祖先链，五个隔离 worktree 均干净且各自 feature 状态为 `done`：K2 `f52e8e1`、K3 `f760551`、K4 `29776d7`、K5 `6d5f163`、F043 `4d39144`。本地 head 与对应 origin ref 全部一致。
+- GitHub Draft PR 元数据已核对：#4 K2 基于 K1、#5 K3 基于 K2、#6 K4 基于 K3、#7 K5 基于 K4、#8 F043 基于 K5；五个 PR 均为 OPEN Draft，head OID 与隔离 worktree 完全一致。
+- 历史 F043 只证明旧扩展/K5 路径在当次小米、虎牙、携程普通字段分母上 17/17 非提交写入；它不证明 Node CDP、MCP、AI-first、当前页面、完整字段或八站支持，集成后必须继续保留这一证据限制。
+- F097 记录集成分支 `agent/zeroext-mvp-base`，基线 `agent/ats-observation-core`。根工作区中的用户 `AGENTS.md` 修改和两个恢复目录不纳入 checkpoint；F085/F096 文档与账本先作为一个作用域明确的计划 checkpoint 提交，再在独立 worktree 收敛 F043。
