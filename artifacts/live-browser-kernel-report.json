@@ -1,0 +1,92 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-08-08T19:38:45+08:00",
+  "scope": "live-user-authorized-non-submit",
+  "browser": {
+    "name": "Google Chrome",
+    "version": "150.0.7871.187"
+  },
+  "extension": {
+    "version": "0.2.0",
+    "branch": "agent/browser-kernel-real-site-acceptance"
+  },
+  "sites": [
+    {
+      "company": "小米",
+      "atsFamily": "feishu-recruiting",
+      "routeTemplate": "/internship/resume/:id/apply",
+      "l2Status": "matched-after-anonymous-regression",
+      "supportedApprovedDenominator": 7,
+      "primaryVerified": 7,
+      "fallbackVerified": 0,
+      "finalVerified": 7,
+      "skippedSelected": 0,
+      "primarySuccessRate": 1,
+      "finalSuccessRate": 1,
+      "typedFailures": ["label-only-semantic-evidence-missing"]
+    },
+    {
+      "company": "虎牙",
+      "atsFamily": "moka",
+      "routeTemplate": "/campus_apply/huya/:id#/candidateHome/resume",
+      "l2Status": "matched-after-anonymous-regression",
+      "supportedApprovedDenominator": 6,
+      "primaryVerified": 6,
+      "fallbackVerified": 0,
+      "finalVerified": 6,
+      "skippedSelected": 0,
+      "primarySuccessRate": 1,
+      "finalSuccessRate": 1,
+      "typedFailures": ["label-only-semantic-evidence-missing"]
+    },
+    {
+      "company": "携程",
+      "atsFamily": "ctrip-careers-custom",
+      "routeTemplate": "/#/experienced/personal-homepage/editCV",
+      "l2Status": "matched-after-anonymous-regression",
+      "supportedApprovedDenominator": 4,
+      "primaryVerified": 4,
+      "fallbackVerified": 0,
+      "finalVerified": 4,
+      "skippedSelected": 0,
+      "primarySuccessRate": 1,
+      "finalSuccessRate": 1,
+      "typedFailures": ["placeholder-only-semantic-evidence-missing"]
+    }
+  ],
+  "aggregate": {
+    "familyCount": 3,
+    "companyCount": 3,
+    "supportedApprovedDenominator": 17,
+    "primaryVerified": 17,
+    "fallbackVerified": 0,
+    "finalVerified": 17,
+    "skippedSelected": 0,
+    "primarySuccessRate": 1,
+    "finalSuccessRate": 1,
+    "wrongControlWriteCount": 0
+  },
+  "safety": {
+    "finalSubmitActionCount": 0,
+    "passwordActionCount": 0,
+    "captchaActionCount": 0,
+    "smsVerificationActionCount": 0,
+    "identityActionCount": 0,
+    "consentActionCount": 0,
+    "destructiveActionCount": 0,
+    "attachmentActionCount": 0
+  },
+  "gate": {
+    "threeDistinctFamilies": true,
+    "perSitePrimaryAboveNinetyPercent": true,
+    "aggregateFinalAtLeastNinetyEightPercent": true,
+    "zeroWrongControlWrites": true,
+    "zeroFinalSubmitActions": true,
+    "pass": true
+  },
+  "limitations": [
+    "Only reachable user-approved ordinary controls with known local profile data are counted.",
+    "Ambiguous cross-section labels, unsupported custom selects, dates, attachments, sensitive controls and final submission are excluded from this run.",
+    "The report contains aggregate outcomes only and intentionally contains no candidate values or filled-page screenshot."
+  ]
+}

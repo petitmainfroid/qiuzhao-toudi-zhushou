@@ -67,11 +67,29 @@ export function toAtsAdapterPageSummary(state: PrivacySafePageState): AtsAdapter
   };
 }
 
-function detectionMarkers(summary: AtsAdapterPageSummary): Set<string> {
-  return new Set(summary.controls
-    .map((control) => control.semantics.name ?? "")
-    .filter(Boolean)
-    .map(normalizeSemanticKey));
+function controlExactLabels(control: AtsAdapterControlSummary): string[] {
+  return [...new Set([
+    control.semantics.label,
+    control.semantics.ariaLabel,
+    control.semantics.placeholder
+  ].filter((value): value is string => Boolean(value)).map(normalizeText).filter(Boolean))];
+}
+
+function detectionMarkerCount(summary: AtsAdapterPageSummary, manifest: AtsAdapterManifest): number {
+  const technicalMarkers = new Set(manifest.detection.semanticMarkers.map(normalizeSemanticKey));
+  const labelMarkers = new Set((manifest.detection.semanticLabelMarkers ?? []).map(normalizeText));
+  const evidence = new Set<string>();
+  for (const control of summary.controls) {
+    const technicalKey = controlSemanticKey(control);
+    if (technicalKey) {
+      if (technicalMarkers.has(technicalKey)) evidence.add(`technical:${technicalKey}`);
+      continue;
+    }
+    for (const label of controlExactLabels(control)) {
+      if (labelMarkers.has(label)) evidence.add(`label:${label}`);
+    }
+  }
+  return evidence.size;
 }
 
 function hostMatches(hostname: string, manifest: AtsAdapterManifest): { matched: boolean; exact: boolean } {
@@ -98,8 +116,7 @@ function detectionScore(summary: AtsAdapterPageSummary, manifest: AtsAdapterMani
       prefix === "/" ? summary.pathTemplate === "/" : summary.pathTemplate.startsWith(prefix)
     );
   if (!pathMatched) return null;
-  const markers = detectionMarkers(summary);
-  const markerMatches = manifest.detection.semanticMarkers.filter((marker) => markers.has(marker)).length;
+  const markerMatches = detectionMarkerCount(summary, manifest);
   if (markerMatches < manifest.detection.minimumSemanticMarkers) return null;
   return (host.exact ? 1_000 : 500)
     + (manifest.detection.pathPrefixes.length > 0 ? 100 : 0)
@@ -112,6 +129,28 @@ function controlSemanticKey(control: AtsAdapterControlSummary): string {
 
 function exactControlSemanticKey(control: AtsAdapterControlSummary): string {
   return (control.semantics.name ?? "").trim().toLowerCase();
+}
+
+function ruleMatchesLabel(control: AtsAdapterControlSummary, rule: AtsAdapterFieldRule): boolean {
+  const aliases = new Set((rule.semanticLabels ?? []).map(normalizeText));
+  return aliases.size > 0 && controlExactLabels(control).some((label) => aliases.has(label));
+}
+
+function inferredRecordIndex(
+  summary: AtsAdapterPageSummary,
+  control: AtsAdapterControlSummary,
+  rule: AtsAdapterFieldRule
+): number | null {
+  const technicalIndex = recordIndex(control);
+  if (technicalIndex !== null) return technicalIndex;
+  if (controlSemanticKey(control) || !ruleMatchesLabel(control, rule)) return null;
+  const matches = summary.controls.filter((candidate) =>
+    !controlSemanticKey(candidate)
+    && ruleMatchesLabel(candidate, rule)
+    && rule.roles.includes(candidate.role)
+  );
+  const index = matches.findIndex((candidate) => candidate.controlKey === control.controlKey);
+  return index >= 0 ? index : null;
 }
 
 function recordIndex(control: AtsAdapterControlSummary): number | null {
@@ -270,7 +309,7 @@ export class AtsAdapterRegistry {
       const semanticKey = controlSemanticKey(control);
       const semanticRules = semanticKey
         ? manifest.fields.filter((rule) => rule.semanticKeys.includes(semanticKey))
-        : [];
+        : manifest.fields.filter((rule) => ruleMatchesLabel(control, rule));
       if (semanticRules.length === 0) {
         skipped.push(skip(control, "unknown-field"));
         continue;
@@ -293,7 +332,7 @@ export class AtsAdapterRegistry {
         skipped.push(skip(control, "unsafe-control"));
         continue;
       }
-      const intent = resolvedIntent(rule.intent, recordIndex(control));
+      const intent = resolvedIntent(rule.intent, inferredRecordIndex(summary, control, rule));
       if (!intent) {
         skipped.push(skip(control, "missing-record-index"));
         continue;
@@ -301,7 +340,11 @@ export class AtsAdapterRegistry {
       fields.push({
         controlKey: control.controlKey,
         ruleId: rule.id,
-        semanticKey: exactControlSemanticKey(control) || semanticKey,
+        semanticKey: exactControlSemanticKey(control)
+          || control.semantics.label
+          || control.semantics.ariaLabel
+          || control.semantics.placeholder
+          || semanticKey,
         label: control.semantics.label
           ?? control.semantics.ariaLabel
           ?? control.semantics.placeholder

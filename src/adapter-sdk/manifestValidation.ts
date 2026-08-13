@@ -38,11 +38,12 @@ function exactKeys(
   value: UnknownRecord,
   allowed: readonly string[],
   path: string,
-  issues: AtsAdapterManifestIssue[]
+  issues: AtsAdapterManifestIssue[],
+  optional: readonly string[] = []
 ): boolean {
   const unknown = Object.keys(value).filter((key) => !allowed.includes(key));
   unknown.forEach((key) => issues.push({ code: "unknown-property", path: `${path}.${key}` }));
-  const missing = allowed.filter((key) => !(key in value));
+  const missing = allowed.filter((key) => !(key in value) && !optional.includes(key));
   missing.forEach((key) => issues.push({ code: "invalid-shape", path: `${path}.${key}` }));
   return unknown.length === 0 && missing.length === 0;
 }
@@ -153,9 +154,10 @@ function validateFieldRule(
   }
   exactKeys(
     value,
-    ["id", "semanticKeys", "roles", "capability", "decision", "intent", "verification"],
+    ["id", "semanticKeys", "semanticLabels", "roles", "capability", "decision", "intent", "verification"],
     path,
-    issues
+    issues,
+    ["semanticLabels"]
   );
   let valid = true;
   if (!identifier(value.id)) {
@@ -164,6 +166,10 @@ function validateFieldRule(
   }
   if (!stringArray(value.semanticKeys) || value.semanticKeys.length === 0 || !value.semanticKeys.every(semanticKey)) {
     issues.push({ code: "invalid-value", path: `${path}.semanticKeys` });
+    valid = false;
+  }
+  if (value.semanticLabels !== undefined && (!stringArray(value.semanticLabels, 50) || value.semanticLabels.length === 0)) {
+    issues.push({ code: "invalid-value", path: `${path}.semanticLabels` });
     valid = false;
   }
   if (
@@ -233,9 +239,10 @@ function validateManifest(value: unknown, issues: AtsAdapterManifestIssue[]): va
   else {
     exactKeys(
       value.detection,
-      ["httpsOnly", "exactHosts", "hostSuffixes", "pathPrefixes", "semanticMarkers", "minimumSemanticMarkers"],
+      ["httpsOnly", "exactHosts", "hostSuffixes", "pathPrefixes", "semanticMarkers", "semanticLabelMarkers", "minimumSemanticMarkers"],
       "manifest.detection",
-      issues
+      issues,
+      ["semanticLabelMarkers"]
     );
     if (value.detection.httpsOnly !== true) issues.push({ code: "invalid-value", path: "manifest.detection.httpsOnly" });
     const exactHostValues = value.detection.exactHosts;
@@ -253,6 +260,10 @@ function validateManifest(value: unknown, issues: AtsAdapterManifestIssue[]): va
     if (!stringArray(value.detection.semanticMarkers, 100) || !value.detection.semanticMarkers.every(semanticKey)) {
       issues.push({ code: "invalid-value", path: "manifest.detection.semanticMarkers" });
     }
+    if (
+      value.detection.semanticLabelMarkers !== undefined
+      && (!stringArray(value.detection.semanticLabelMarkers, 100) || value.detection.semanticLabelMarkers.length === 0)
+    ) issues.push({ code: "invalid-value", path: "manifest.detection.semanticLabelMarkers" });
     if (
       !Number.isInteger(value.detection.minimumSemanticMarkers)
       || Number(value.detection.minimumSemanticMarkers) < 0

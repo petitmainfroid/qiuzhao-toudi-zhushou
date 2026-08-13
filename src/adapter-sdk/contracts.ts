@@ -64,12 +64,16 @@ export interface AtsAdapterDetection {
   hostSuffixes: string[];
   pathPrefixes: string[];
   semanticMarkers: string[];
+  /** Exact visible-label evidence used only when a control has no technical semantic name. */
+  semanticLabelMarkers?: string[];
   minimumSemanticMarkers: number;
 }
 
 export interface AtsAdapterFieldRule {
   id: string;
   semanticKeys: string[];
+  /** Exact visible labels accepted only when the page exposes no technical semantic name. */
+  semanticLabels?: string[];
   roles: PageControlRole[];
   capability: AtsControlCapability;
   decision: AtsFieldDecision;

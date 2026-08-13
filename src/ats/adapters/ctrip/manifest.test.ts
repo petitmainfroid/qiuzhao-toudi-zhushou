@@ -67,6 +67,22 @@ function summary(origin = "https://job.ctrip.com", pathTemplate = "/"): AtsAdapt
   };
 }
 
+function labelOnlyCtripSummary(): AtsAdapterPageSummary {
+  return {
+    snapshotKey: "state_ctrip_label_only",
+    origin: "https://job.ctrip.com",
+    pathTemplate: "/",
+    controls: [
+      control("name", "", "请输入姓名"),
+      control("mobile", "", "请输入手机号"),
+      control("email", "", "请输入邮箱"),
+      control("birth", "", "请选择出生日期"),
+      control("city", "", "请输入居住城市"),
+      control("major", "", "请输入专业")
+    ]
+  };
+}
+
 describe("Ctrip Careers K5 manifest", () => {
   it("covers the 28-field public bundle contract with 14 conservative mappings", () => {
     expect(validateAtsAdapterManifest(ctripCareersManifest)).toEqual({
@@ -139,6 +155,20 @@ describe("Ctrip Careers K5 manifest", () => {
       { controlKey: "ref_custom_1234", reason: "unknown-field" },
       { controlKey: "ref_save_123456", reason: "unknown-field" },
       { controlKey: "ref_submit_1234", reason: "final-submit" }
+    ]));
+  });
+
+  it("maps the reviewed placeholder-only live variant without weakening confirmation gates", () => {
+    const result = new AtsAdapterRegistry([ctripCareersManifest]).detect(labelOnlyCtripSummary());
+    expect(result.status).toBe("matched");
+    if (result.status !== "matched") throw new Error("Expected placeholder-only Ctrip variant to match.");
+    expect(result.plan.fields).toEqual(expect.arrayContaining([
+      expect.objectContaining({ controlKey: "name", intent: { kind: "profile-field", pathPattern: "basic.fullName" } }),
+      expect.objectContaining({ controlKey: "mobile", decision: "confirm", intent: { kind: "profile-field", pathPattern: "basic.phone" } }),
+      expect.objectContaining({ controlKey: "email", intent: { kind: "profile-field", pathPattern: "basic.email" } }),
+      expect.objectContaining({ controlKey: "birth", decision: "confirm", intent: { kind: "profile-field", pathPattern: "basic.birthDate" } }),
+      expect.objectContaining({ controlKey: "city", intent: { kind: "profile-field", pathPattern: "basic.currentCity" } }),
+      expect.objectContaining({ controlKey: "major", intent: { kind: "profile-field", pathPattern: "education.0.major" } })
     ]));
   });
 

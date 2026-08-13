@@ -24,6 +24,7 @@
     "verify:dist": "node scripts/verify-dist.mjs",
     "verify:package": "node scripts/verify-package.mjs",
     "verify:skill": "node scripts/verify-skill.mjs",
+    "verify:live-acceptance": "node scripts/verify-live-acceptance-report.mjs",
     "test:skill-install": "node scripts/test-skill-install.mjs",
     "validate": "node scripts/validate.mjs",
     "package": "node scripts/package.mjs",

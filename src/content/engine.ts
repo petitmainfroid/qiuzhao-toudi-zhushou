@@ -51,12 +51,15 @@ export interface FillItemOutcome {
   profilePath: string;
   status: "filled" | "skipped";
   reason?: string;
+  attempts?: 0 | 1 | 2;
 }
 
 export interface FillResult {
   outcomes: FillItemOutcome[];
   filledCount: number;
   skippedCount: number;
+  primaryVerifiedCount?: number;
+  fallbackVerifiedCount?: number;
 }
 
 function previewValue(value: string): string {

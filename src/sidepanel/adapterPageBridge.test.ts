@@ -273,7 +273,12 @@ describe("AdapterPageBridge", () => {
       intent: { kind: "fill", source: { kind: "profile", path: "basic.fullName" } }
     }));
     expect(JSON.stringify(test.action.mock.calls)).not.toContain("Local Only Candidate");
-    expect(result).toMatchObject({ filledCount: 1, skippedCount: 2 });
+    expect(result).toMatchObject({
+      filledCount: 1,
+      skippedCount: 2,
+      primaryVerifiedCount: 1,
+      fallbackVerifiedCount: 0
+    });
     expect(result.outcomes.map((outcome) => outcome.status)).toEqual(["filled", "skipped", "skipped"]);
   });
 
