@@ -1,5 +1,10 @@
 # qiuzhao-cli progress
 
+## 2026-08-14 B006 in progress
+
+- Added a safe BOSS visible-card adapter. It accepts only devalued job-card data, deduplicates job identities and fail-closes for login/verification/origin issues. Target test, TypeScript and structure checks pass.
+- Real evidence is not available: `qiuzhao agent status` shows the dedicated browser is attached to `https://job.ctrip.com/#/experienced/jobList`, not a BOSS page. B006 remains in progress until a logged-in BOSS page is independently inventoried and user-authorized for read-only E3/E4.
+
 ## 2026-08-14 B004 durable workflow complete
 
 - Added a closed, per-job workflow state machine with a single-job lock, bounded action attempts, epoch invalidation on restart, cancellation and stale-epoch rejection. It has no browser or page-action interface.

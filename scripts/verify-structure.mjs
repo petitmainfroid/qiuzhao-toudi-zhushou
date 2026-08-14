@@ -15,6 +15,7 @@ const required = [
   'modules/job-repository/src/index.ts',
   'modules/job-workflow/src/index.ts',
   'modules/job-ranking/src/index.ts',
+  'modules/job-discovery/src/index.ts',
   'gerenxinxi/profile-service/src/index.ts',
   'gerenxinxi/profile-host/src/index.ts',
   'gerenxinxi/resume-parser/src/index.ts',

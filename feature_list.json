@@ -218,7 +218,7 @@
       "acceptance": ["确定性规则先运行，AI 仅返回闭合评分决定且不能读档案标量。"], "verification": ["npm run validate", "真实岗位审核样本脱敏 manifest"], "notes": "未知或歧义岗位进入人工审核。"
     },
     {
-      "id": "B006", "title": "BOSS 真实岗位发现适配", "status": "todo", "depends_on": ["B003", "B004", "B005"],
+      "id": "B006", "title": "BOSS 真实岗位发现适配", "status": "in_progress", "depends_on": ["B003", "B004", "B005"],
       "acceptance": ["已登录真实 BOSS 页面可只读发现、去重和保存用户可见岗位信息。"], "verification": ["独立分母 E3", "用户授权真实 BOSS 只读 E4 manifest", "npm run validate"], "notes": "不绕过登录、验证码或平台限制。"
     },
     {
