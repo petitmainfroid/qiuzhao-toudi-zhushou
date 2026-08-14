@@ -1,5 +1,12 @@
 # qiuzhao-cli progress
 
+## 2026-08-14 B008 in progress
+
+- Added a local loopback workbench that reads the encrypted job repository and presents real job title, company, location, JD excerpt, state and a user-opened link. It uses the existing Organic visual system and contains no fabricated cards or profile values.
+- Security: the listener is dynamic `127.0.0.1` only; a one-time bootstrap path mints an HttpOnly/SameSite session; every response is no-store and frame/CSP restricted. There is no open job API, CORS policy, Cookie/credential display, Agent action, upload, message or submission control.
+- Verification: workbench protocol test passed; card contract test and TypeScript passed; a real encrypted local repository load returned bootstrap 303 and authenticated page 200 without emitting job content.
+- B008 remains `in_progress` until the user opens the actual workbench and a current screenshot confirms the rendered cards against the BOSS read-only record set.
+
 ## 2026-08-14 B006 in progress
 
 - Real BOSS read-only checkpoint: after an explicit user-directed binding to the existing logged-in BOSS result tab, two consecutive fixed visible-card collections both returned 20 accepted records and the same local record-set digest. The repository is DPAPI-encrypted and was refreshed without BOSS page writes, messages, Cookie/credential reads, scrolling, navigation, CAPTCHA handling, or final submission. Public redacted evidence is `artifacts/boss-visible-read-only-manifest.json`.

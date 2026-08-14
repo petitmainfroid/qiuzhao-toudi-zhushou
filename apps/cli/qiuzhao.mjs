@@ -7,6 +7,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '.
 const commands = Object.freeze({
   browser: path.join(root, 'modules', 'browser-session', 'cli.mjs'),
   jobs: path.join(root, 'modules', 'job-discovery', 'cli.mjs'),
+  workbench: path.join(root, 'modules', 'workbench', 'cli.mjs'),
   profile: path.join(root, 'modules', 'profile-page', 'cli.mjs'),
   agent: path.join(root, 'modules', 'mcp-server', 'cli.mjs'),
   'xiaomi-e3': path.join(root, 'modules', 'real-page-validation', 'xiaomi-e3.mjs')
@@ -18,6 +19,7 @@ function usage() {
     '',
     '  browser <launch|reconnect|open|search|tabs|attach|confirm-ready|status|disconnect|stop>',
     '  jobs <discover-boss [--target <targetId>]|diagnose-boss>',
+    '  workbench serve',
     '  profile <serve|status|stop>',
     '  agent <serve|status|authorize|revoke>',
     '  xiaomi-e3',
