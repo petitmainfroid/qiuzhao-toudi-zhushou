@@ -13,6 +13,7 @@ const required = [
   'modules/real-page-validation/index.mjs',
   'modules/job-contracts/src/index.ts',
   'modules/job-repository/src/index.ts',
+  'modules/job-workflow/src/index.ts',
   'gerenxinxi/profile-service/src/index.ts',
   'gerenxinxi/profile-host/src/index.ts',
   'gerenxinxi/resume-parser/src/index.ts',

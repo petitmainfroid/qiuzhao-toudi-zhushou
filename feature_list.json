@@ -210,7 +210,7 @@
       "acceptance": ["本地加密、去重、版本化岗位与脱敏审计可重启恢复。"], "verification": ["npm run validate", "真实 BOSS 列表两次盘点的私有去重证据"], "notes": "不保存密码、Cookie 或完整聊天内容。"
     },
     {
-      "id": "B004", "title": "可恢复岗位工作流", "status": "todo", "depends_on": ["B002", "B003"],
+      "id": "B004", "title": "可恢复岗位工作流", "status": "in_progress", "depends_on": ["B002", "B003"],
       "acceptance": ["工作流状态、动作预算、取消和强杀恢复均可审计。"], "verification": ["npm run validate", "真实页只读/重启私有 manifest"], "notes": "单浏览器会话串行。"
     },
     {
