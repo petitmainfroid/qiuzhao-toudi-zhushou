@@ -1,0 +1,590 @@
+{
+  "schemaVersion": 1,
+  "repository": "https://github.com/powerycy/BossHunter.git",
+  "commit": "62d1ccea878932f4e98ff67eaa00d5302c7cdff4",
+  "license": "BossHunter Non-Commercial License",
+  "fileCount": 116,
+  "totalBytes": 1477480,
+  "files": [
+    {
+      "path": "config.example.yaml",
+      "bytes": 2694,
+      "sha256": "d3dd36835dd87c932da53cf39675c7c21a124d01bdb6458d8302ff75b1dd5af3"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-06-07-built-in-browser-runtime.md",
+      "bytes": 9592,
+      "sha256": "128852e34ca753668e2134dfff4e928e82c35af920894e206ff0f3b9b5b42350"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-06-09-hard-prefilter-gate.md",
+      "bytes": 25921,
+      "sha256": "681d27fa7b2510c1da3d069f22236f63664ff608c69340879cc421ade3ceea97"
+    },
+    {
+      "path": "docs/superpowers/specs/2026-06-07-browser-runtime-design.md",
+      "bytes": 11287,
+      "sha256": "4b641597a1d1bc4b27517db8d4791c885d1759c4140b439a16bf00ae03563b62"
+    },
+    {
+      "path": "LICENSE",
+      "bytes": 2257,
+      "sha256": "20ec3b8d42e231d868959c1fd7d396e495c3fa61a0a95ef798ea5b52195a191c"
+    },
+    {
+      "path": "pyproject.toml",
+      "bytes": 994,
+      "sha256": "20ddf720e730a56bd3e32f6af6c952e61b777670b83c67396b5acf507d406554"
+    },
+    {
+      "path": "README.md",
+      "bytes": 25296,
+      "sha256": "29e213715c348ff3284b48fecc3d7615a7f59e701c847f4a568ea667b2a72eed"
+    },
+    {
+      "path": "SKILL.md",
+      "bytes": 7903,
+      "sha256": "567ba35e627d0898831b826b984f9fdf089cbb668cdfd29deec137adbda26f9b"
+    },
+    {
+      "path": "src/bosshunter/__init__.py",
+      "bytes": 428,
+      "sha256": "91a07ead47fa702169b0009bbb869a43634d5ca9a70983a4c3195b288bb403f3"
+    },
+    {
+      "path": "src/bosshunter/ai/__init__.py",
+      "bytes": 71,
+      "sha256": "97ec761e8db37e9485f215d02f45b9d24a3b770c604b653ad52b4a22f16bafe7"
+    },
+    {
+      "path": "src/bosshunter/ai/credentials.py",
+      "bytes": 21303,
+      "sha256": "5a9cdfa44155fefce7c471fc63765ef2dc05f08ce418207241dea135504dd228"
+    },
+    {
+      "path": "src/bosshunter/ai/greeter.py",
+      "bytes": 18821,
+      "sha256": "1af6cce1f6b187711317af58877ac9f7f0f9b27bff982d3bf187340873c7137e"
+    },
+    {
+      "path": "src/bosshunter/ai/prefilter.py",
+      "bytes": 2547,
+      "sha256": "afbb7850f0acda876bfcf32bcb98841e1f4266e438334b046bd8cd32818044d4"
+    },
+    {
+      "path": "src/bosshunter/ai/resume.py",
+      "bytes": 25184,
+      "sha256": "db79179e86a77926d730f5f9234eb9ea9653e0157485a702b9a8602866e2cb55"
+    },
+    {
+      "path": "src/bosshunter/ai/scorer.py",
+      "bytes": 25375,
+      "sha256": "4fe8dc90b704b409fb400a51d09f62dd818c2b4a308395bf31ee07b0ab19b831"
+    },
+    {
+      "path": "src/bosshunter/browser/__init__.py",
+      "bytes": 4285,
+      "sha256": "2845ff62ae5a81f65e4058ba0e40c6a65f4cea438d0133bb7acf7f469037d124"
+    },
+    {
+      "path": "src/bosshunter/browser/client.py",
+      "bytes": 5414,
+      "sha256": "2abab648fc3a22c9b434b9e9c288062c36d6fc713024049c71d547d7b15ad463"
+    },
+    {
+      "path": "src/bosshunter/browser/diagnostics.py",
+      "bytes": 4859,
+      "sha256": "ada635bfccba4250e8fe1b575a6f1e6920f24004e89caa60da2a64161c959974"
+    },
+    {
+      "path": "src/bosshunter/browser/runtime/__init__.py",
+      "bytes": 10097,
+      "sha256": "13908c036fd185fc87254eac8a0e5d23b7840b08d0d586120e77a3413effb3fb"
+    },
+    {
+      "path": "src/bosshunter/browser/runtime/cdp-proxy.mjs",
+      "bytes": 25333,
+      "sha256": "e98c1d6af65538469658270a143bb51bc666f18248908298515d6adecccdda91"
+    },
+    {
+      "path": "src/bosshunter/browser/runtime/check-runtime.mjs",
+      "bytes": 4735,
+      "sha256": "40eba402265b6d0e21ef4bd4b5fb4b36f9081571fbd9212e3e07fc0d202c7f4f"
+    },
+    {
+      "path": "src/bosshunter/browser/runtime/site-patterns/zhipin.com.md",
+      "bytes": 1214,
+      "sha256": "f71455766f6adbbf9a4a4a305d27e4bcc9c7ba616a8cd0775e88bdbb7a27bfb5"
+    },
+    {
+      "path": "src/bosshunter/browser/session.py",
+      "bytes": 2637,
+      "sha256": "15b9ba4835949fec5c3770d8add81f519c168ad815886e5690cc9acc8e1d1e0f"
+    },
+    {
+      "path": "src/bosshunter/cancellation.py",
+      "bytes": 2277,
+      "sha256": "997f7a4948b6f00523f43dc9bbe806731eb74074d75a07fa25cb726fa249df5e"
+    },
+    {
+      "path": "src/bosshunter/cities.py",
+      "bytes": 7796,
+      "sha256": "c28bcef001d1c3cbecfe3878d9e53fb2b44ed22cdeab10c5f2cc9e7e8e158602"
+    },
+    {
+      "path": "src/bosshunter/config.py",
+      "bytes": 6090,
+      "sha256": "062b121aa16658eda56e931bf66aa3cda9e9412feb78b549a2cbc413252edc85"
+    },
+    {
+      "path": "src/bosshunter/data/boss_cities.json",
+      "bytes": 41369,
+      "sha256": "434f6a099c27e1d92a37d534996598a51c6be5177d0804110e55e548d504d043"
+    },
+    {
+      "path": "src/bosshunter/db.py",
+      "bytes": 26204,
+      "sha256": "0192409eace664c1ccc34e93b8e923ccacad9a9200f8bab00c39f284b387e0bd"
+    },
+    {
+      "path": "src/bosshunter/dedup/__init__.py",
+      "bytes": 47,
+      "sha256": "362a7f11f3ae7501d0ef917bb7f72180de3a1362aca3509f216cc48e07c3cca8"
+    },
+    {
+      "path": "src/bosshunter/executor/__init__.py",
+      "bytes": 67,
+      "sha256": "442db66bc2d7f55954951a20b1a0a94854266fbfb44c493a67973bfaeb471d93"
+    },
+    {
+      "path": "src/bosshunter/executor/monitor.py",
+      "bytes": 50252,
+      "sha256": "38f5e0f68169f2d992346382ec570f51c080e40c3c5d25890e9fbc9b17987a12"
+    },
+    {
+      "path": "src/bosshunter/executor/sender.py",
+      "bytes": 46081,
+      "sha256": "2ee1b247a79eb5144fb6f9fb86a0b4f38bf8cc40ce437e8482df160563381f10"
+    },
+    {
+      "path": "src/bosshunter/job_export.py",
+      "bytes": 9686,
+      "sha256": "2f90ce508b554566605db8ce27eab2888eda387bd0a25025f8d2c7ebfd14487c"
+    },
+    {
+      "path": "src/bosshunter/job_filters.py",
+      "bytes": 1464,
+      "sha256": "9fbca17e282af456b826301283a252e42997aced96596a3f7e027c6af29cc10e"
+    },
+    {
+      "path": "src/bosshunter/main.py",
+      "bytes": 11638,
+      "sha256": "32b95551ec106ab0fa5551189d705e5f4cea95364fc2c18e3ea178878b79db38"
+    },
+    {
+      "path": "src/bosshunter/pipeline.py",
+      "bytes": 3936,
+      "sha256": "1f52a8d68b52b0ccfa72d7df8618d9e700726a53193b4e03fc0fae8f1d14eb0b"
+    },
+    {
+      "path": "src/bosshunter/scoring_run_store.py",
+      "bytes": 4024,
+      "sha256": "f3f5a8145af32771cafbc0b21e052aa8af264403d672c61ecc17e8749183f6bd"
+    },
+    {
+      "path": "src/bosshunter/scoring_selection.py",
+      "bytes": 5414,
+      "sha256": "9eefc4988b649d88535ac085610aecd5f951514295cebff560cd1161781655fc"
+    },
+    {
+      "path": "src/bosshunter/scraper/__init__.py",
+      "bytes": 53,
+      "sha256": "4ea36a063c2c0c4023d08e57d3ae136ceb481af2a59f280061df6ab5596d68dd"
+    },
+    {
+      "path": "src/bosshunter/scraper/jobs.py",
+      "bytes": 14056,
+      "sha256": "3a98801fcf50a83daa340881a5646b0da4e16ffbd63ad144923ce54a27771ff4"
+    },
+    {
+      "path": "src/bosshunter/throttle.py",
+      "bytes": 6800,
+      "sha256": "f73882cc8429e6a82a2ef5d110099ad3f9428bd2a0f1f2e1ba3d0dca17a9f4aa"
+    },
+    {
+      "path": "src/bosshunter/tracker/__init__.py",
+      "bytes": 55,
+      "sha256": "19220dbaa33516026e0e73a9acc9076b1513df4f0583b33b3f800fc41f303680"
+    },
+    {
+      "path": "src/bosshunter/tracker/status.py",
+      "bytes": 6940,
+      "sha256": "ed18acab3a4b44427586c2ed1aaa7a6bd0fcaac8fa3c514ebac95081fbc8c966"
+    },
+    {
+      "path": "src/bosshunter/ui/__init__.py",
+      "bytes": 68,
+      "sha256": "6413dc543a42323081f47934ac75bc2510abb8c88717e936db9d39ee3f7758c8"
+    },
+    {
+      "path": "src/bosshunter/ui/confirm.py",
+      "bytes": 3604,
+      "sha256": "ad503be65cb446188c2d186e15ec8b31f59f6c3bd218ffac77b6a68782f2a938"
+    },
+    {
+      "path": "src/bosshunter/web/__init__.py",
+      "bytes": 85,
+      "sha256": "7075ec7bbc9e0d92e6e9cfd2d5f06ae4dbda2b37d262358ea8541b8195151009"
+    },
+    {
+      "path": "src/bosshunter/web/city_lookup.py",
+      "bytes": 2025,
+      "sha256": "0157a9de58088dfae77498d35812e103e3b18e399891caf83ec653cc2f4e17a1"
+    },
+    {
+      "path": "src/bosshunter/web/config_schema.json",
+      "bytes": 6850,
+      "sha256": "ef7fd7a0e10d3bc99248cd83fe9810be3681ea89f8c12eeba2d39f2d3b41fd38"
+    },
+    {
+      "path": "src/bosshunter/web/frontend/dist/assets/index-BjysvlNd.css",
+      "bytes": 26165,
+      "sha256": "04f1ae549c526410f9541e694a6b1a2783d5e75e8510d6cfbfb9ed0a2d8a4d15"
+    },
+    {
+      "path": "src/bosshunter/web/frontend/dist/assets/index-Bu8tZyE6.js",
+      "bytes": 296982,
+      "sha256": "27b7f8f0660426818999588ced0f2de2b0c7e879a4fc7747062a3edcf21c68ce"
+    },
+    {
+      "path": "src/bosshunter/web/frontend/dist/index.html",
+      "bytes": 533,
+      "sha256": "d914307db262573e6d52e2eaa912b330cb2853d40f14a7c33391c6782197bcba"
+    },
+    {
+      "path": "src/bosshunter/web/frontend/index.html",
+      "bytes": 435,
+      "sha256": "ed3100b5fd16d9bfb4c9585344ae8f8f92de5a18a1de5719da6659a5f958fac1"
+    },
+    {
+      "path": "src/bosshunter/web/frontend/package-lock.json",
+      "bytes": 112699,
+      "sha256": "1bca68e0c60859c307de5c5405c5d853ca6f5987dd8b2d8469adfbb7554118e6"
+    },
+    {
+      "path": "src/bosshunter/web/frontend/package.json",
+      "bytes": 885,
+      "sha256": "f86e23a1ec289238a89b0918836b744e9e93ff049f17a41c52c3cb966a2d908b"
+    },
+    {
+      "path": "src/bosshunter/web/frontend/postcss.config.js",
+      "bytes": 80,
+      "sha256": "190c877db466995bf1482f4a16abd06e04a89ede3119341e2a86ff96e1737b27"
+    },
+    {
+      "path": "src/bosshunter/web/frontend/src/App.tsx",
+      "bytes": 1170,
+      "sha256": "b8a4022e8a87cefee5158319137b00c913606eff71fc1af224c89b8ee0bba726"
+    },
+    {
+      "path": "src/bosshunter/web/frontend/src/components/config/CityMultiSelect.tsx",
+      "bytes": 2532,
+      "sha256": "a121890d7562bdd4089a571998fdafadd1c55814ef1829fd5ff11dde82a5fed7"
+    },
+    {
+      "path": "src/bosshunter/web/frontend/src/components/dashboard/FunnelCards.tsx",
+      "bytes": 1331,
+      "sha256": "2493abc235346c25108f797765ebde62ac3b4164cb2f7dd4b3cd44bd7878c5c2"
+    },
+    {
+      "path": "src/bosshunter/web/frontend/src/components/dashboard/JobsTable.tsx",
+      "bytes": 8871,
+      "sha256": "1f50462c69409eb4e3a7c2ad7cf6a0d066907ac05fc2f47e28a7578dabf64e6e"
+    },
+    {
+      "path": "src/bosshunter/web/frontend/src/components/dashboard/PipelineFlow.tsx",
+      "bytes": 1732,
+      "sha256": "a57ea873ce0ae7464e6acc5efe3a7d6526852127edc6b2f922961c9bf7669409"
+    },
+    {
+      "path": "src/bosshunter/web/frontend/src/components/dashboard/RecentActivity.tsx",
+      "bytes": 2128,
+      "sha256": "650bcb25715e28bb2777e814373417acb7ae26ff9ec40ea8e24517feda79e609"
+    },
+    {
+      "path": "src/bosshunter/web/frontend/src/components/dashboard/RecycleBinPanel.tsx",
+      "bytes": 3790,
+      "sha256": "645171a731875f2c7e16aff2754e4c84e3afcbdfaf02f90f91ca4382d6de40f1"
+    },
+    {
+      "path": "src/bosshunter/web/frontend/src/components/dashboard/ScoreJobsDialog.tsx",
+      "bytes": 8981,
+      "sha256": "bdbb9d1af1be85e8144eca72711bb917cd19cdae43b57394a9bf51bfa91f8d16"
+    },
+    {
+      "path": "src/bosshunter/web/frontend/src/components/dashboard/TopCompanies.tsx",
+      "bytes": 1876,
+      "sha256": "e648d8eb0adb63142e17aa5c0624a90f964faef9c63ec5b0c15a85cd59f0d314"
+    },
+    {
+      "path": "src/bosshunter/web/frontend/src/components/dashboard/TrendChart.tsx",
+      "bytes": 2195,
+      "sha256": "224dbfab4fd94e486220a1f9089d4836d2317f3cd54d0e12f8c16b777c0ed952"
+    },
+    {
+      "path": "src/bosshunter/web/frontend/src/components/jobs/JobFilterBar.tsx",
+      "bytes": 3915,
+      "sha256": "81dc85ed8fa2ae3b02c6eba1f728433a0508e26eeb66a5491bb6b54a05816e7c"
+    },
+    {
+      "path": "src/bosshunter/web/frontend/src/components/layout/Header.tsx",
+      "bytes": 744,
+      "sha256": "bce311ca988d6921aa5be55443356a3ae9d205248e9cf2de57da0b4ee30a030f"
+    },
+    {
+      "path": "src/bosshunter/web/frontend/src/components/layout/Sidebar.tsx",
+      "bytes": 3611,
+      "sha256": "b88b49885742ee7de6ad6851c42074def5d401dc60c85562d65d67a5a489bd5b"
+    },
+    {
+      "path": "src/bosshunter/web/frontend/src/components/ui/badge.tsx",
+      "bytes": 1767,
+      "sha256": "d4747c5aa73152f0fd7b974d0bebb240dec3cd7be4358c61cfb1d5ac8a0da2c8"
+    },
+    {
+      "path": "src/bosshunter/web/frontend/src/components/ui/button.tsx",
+      "bytes": 1382,
+      "sha256": "e86bd83a274abbe960d9b831cc727a69b794268e0216ca76ba414871363f6798"
+    },
+    {
+      "path": "src/bosshunter/web/frontend/src/components/ui/card.tsx",
+      "bytes": 1187,
+      "sha256": "571877c476f7074a42d311f617f9aba621652b84e37cb794418e03855f8011c6"
+    },
+    {
+      "path": "src/bosshunter/web/frontend/src/components/ui/input.tsx",
+      "bytes": 653,
+      "sha256": "d230e785b61693e675d8564f25723e2223e95e821068eab92d57c44795cc94a9"
+    },
+    {
+      "path": "src/bosshunter/web/frontend/src/components/ui/select.tsx",
+      "bytes": 667,
+      "sha256": "0fab34c86e21f31d6e09055e6dc4fd897b9080d2657c875f8a51b8126c85492c"
+    },
+    {
+      "path": "src/bosshunter/web/frontend/src/components/ui/slider.tsx",
+      "bytes": 1136,
+      "sha256": "75f73c86345d35a3f0860a2eadf776b0535445934a7d01083e2452a16cce6814"
+    },
+    {
+      "path": "src/bosshunter/web/frontend/src/components/ui/switch.tsx",
+      "bytes": 995,
+      "sha256": "f51390387f693ab6ac293b5712b6d9ab345030035dc4ef71c945b00a54874dc5"
+    },
+    {
+      "path": "src/bosshunter/web/frontend/src/components/ui/tags-input.tsx",
+      "bytes": 1960,
+      "sha256": "64536a6cc19d515e4344db1bbf13d941d8c308f0688d0c5164b10b1315a0abe0"
+    },
+    {
+      "path": "src/bosshunter/web/frontend/src/globals.css",
+      "bytes": 1098,
+      "sha256": "aa9c93585ad3b390e845d3a0435f27c6213c89fa8c4a23c876bc5b675956c353"
+    },
+    {
+      "path": "src/bosshunter/web/frontend/src/hooks/useConfig.ts",
+      "bytes": 2663,
+      "sha256": "be3bed4b2466b824a76b4892289f60c9fb2f22170834d967b3e5be9554cf67da"
+    },
+    {
+      "path": "src/bosshunter/web/frontend/src/hooks/useDashboard.ts",
+      "bytes": 5197,
+      "sha256": "21f3affed81d2965a1ce83b37efd0651a0ad575134dc3b4f06ab91659e32564c"
+    },
+    {
+      "path": "src/bosshunter/web/frontend/src/hooks/useJobSearch.ts",
+      "bytes": 2508,
+      "sha256": "26d7f29f1b315eb156df4d7ee460d605dd15d13a036c67789c2010d5511f210b"
+    },
+    {
+      "path": "src/bosshunter/web/frontend/src/lib/historyDetail.ts",
+      "bytes": 1763,
+      "sha256": "5d80439c09ddea084e25265d768c4691d8910f04b865c543c722f98efd9b67ae"
+    },
+    {
+      "path": "src/bosshunter/web/frontend/src/lib/jobFilters.ts",
+      "bytes": 3597,
+      "sha256": "47405e18860885505ff49cf8a1d179ad431294dd9998c74aff9bb3c32eed3c5b"
+    },
+    {
+      "path": "src/bosshunter/web/frontend/src/lib/status.ts",
+      "bytes": 1207,
+      "sha256": "debe6b9e8fe287e529ace2a8f3b45445929931a61abdf2728fd3e0fe70319bad"
+    },
+    {
+      "path": "src/bosshunter/web/frontend/src/lib/utils.ts",
+      "bytes": 166,
+      "sha256": "7c8c3dfc0cdd370d44932828eb067ef771c8fe7996693221d5d4b90af6d54f2d"
+    },
+    {
+      "path": "src/bosshunter/web/frontend/src/main.tsx",
+      "bytes": 234,
+      "sha256": "35795c82122b795b2c4f432d6f64a5032931194ac57f6664f6de44a73771bce4"
+    },
+    {
+      "path": "src/bosshunter/web/frontend/src/pages/ConfigPage.tsx",
+      "bytes": 25734,
+      "sha256": "58497941048057529042c27087baba2b386096a7ddafd0ebbaa9762db6533997"
+    },
+    {
+      "path": "src/bosshunter/web/frontend/src/pages/DashboardPage.tsx",
+      "bytes": 65848,
+      "sha256": "f45f041c1e75d732d019300a43b8c01a9574e72ff4647f3baaa38a657f546112"
+    },
+    {
+      "path": "src/bosshunter/web/frontend/tailwind.config.ts",
+      "bytes": 470,
+      "sha256": "ada43b0507d34bed482754cb5e431bc58154a8fac31fd91c9bdd294977b72d50"
+    },
+    {
+      "path": "src/bosshunter/web/frontend/tsconfig.json",
+      "bytes": 577,
+      "sha256": "18c1314bb4643955bbce8a91d4da857019dc230f37820756d24918fd8558d7d1"
+    },
+    {
+      "path": "src/bosshunter/web/frontend/vite.config.ts",
+      "bytes": 387,
+      "sha256": "aa99c6a456353c601343d0077f24e2c3955d5ae7830b01a196cf4a1bd57d253e"
+    },
+    {
+      "path": "src/bosshunter/web/preflight.py",
+      "bytes": 10639,
+      "sha256": "f2761be92466aa217c2b0945e1b3d939b4b4f994e3f2c612a054246360836107"
+    },
+    {
+      "path": "src/bosshunter/web/resume_upload.py",
+      "bytes": 5498,
+      "sha256": "e8adf582f773cfe28cfd131ff14303ecd324c8215a444f0675728eaaeedfbaaf"
+    },
+    {
+      "path": "src/bosshunter/web/server.py",
+      "bytes": 56955,
+      "sha256": "dd5dc467b81d3a119481e175798128138d799c216271d41d804387857530f647"
+    },
+    {
+      "path": "src/bosshunter/web/tasks.py",
+      "bytes": 7336,
+      "sha256": "b90ce7ac4dbb65de3d768a7ac4527e574565c045a6c7e4ff7aca7550cb357022"
+    },
+    {
+      "path": "tests/test_ai_credentials.py",
+      "bytes": 22122,
+      "sha256": "9471e836be5934a0da63e1b9499db002ded85a74457118c0e51eeeac26a8afe1"
+    },
+    {
+      "path": "tests/test_ai_services.py",
+      "bytes": 2188,
+      "sha256": "7be17c8da0cad11da887ed45b15570eaee83e33be291d6d39c600578e7da083e"
+    },
+    {
+      "path": "tests/test_ai_token_resilience.py",
+      "bytes": 27889,
+      "sha256": "79f3a47ee7f082577cccd5017c81b326b2f2c01d38aae49ab6971104427f70bf"
+    },
+    {
+      "path": "tests/test_browser_diagnostics.py",
+      "bytes": 6508,
+      "sha256": "2cd2e73acfb02894983ed7590888f59c77a6858278c4f381a5acbfca5402f1e1"
+    },
+    {
+      "path": "tests/test_browser_facade.py",
+      "bytes": 6108,
+      "sha256": "b7ac4a3da8a50af285d07c736b1d7705cae048d876525b22f0b6e751e4e302c2"
+    },
+    {
+      "path": "tests/test_browser_runtime.py",
+      "bytes": 10568,
+      "sha256": "c7beef51ac056d1f630724aaa59dd9a8fa832428969849a0c11f5ebddc3a5b20"
+    },
+    {
+      "path": "tests/test_cancellation.py",
+      "bytes": 3552,
+      "sha256": "f9d23cb96b2ee75ba357c2d04721bf8f75a6beef6a4be039bce687ddfbb49b70"
+    },
+    {
+      "path": "tests/test_city_codes.py",
+      "bytes": 721,
+      "sha256": "83ff04e052cf06fa3fd228e6fb2e845559080d72dba215093363e3486dae078c"
+    },
+    {
+      "path": "tests/test_city_lookup.py",
+      "bytes": 1581,
+      "sha256": "17869463711f4449e3a9e83e07ca428e94f9b939f7f8a5c29bb39b4fed62450c"
+    },
+    {
+      "path": "tests/test_job_export_and_cities.py",
+      "bytes": 4604,
+      "sha256": "a501ef9074cb72fd4fdf6e3914ecdd9b3cdc2fa7a5bc83a30291956078251211"
+    },
+    {
+      "path": "tests/test_job_filters.py",
+      "bytes": 1460,
+      "sha256": "894e6ebaae21e80925a88d2646f6c14e822ce62e8df9ecd1ebad1c79c5aadb89"
+    },
+    {
+      "path": "tests/test_job_selection.py",
+      "bytes": 35253,
+      "sha256": "97ea13e48a5e1c0b1c83ebf1b65ad815a425d168e09f5b08560a980a1148373c"
+    },
+    {
+      "path": "tests/test_monitor_reply_dismiss.py",
+      "bytes": 14462,
+      "sha256": "b867cdd893e26a12ad73962b88a9864d32a0f92025923af16d4380a69161626e"
+    },
+    {
+      "path": "tests/test_recycle_bin.py",
+      "bytes": 6142,
+      "sha256": "a7decce6f4d426440b1c9bae01ca2cae0dcf214a1b81028fb5752c84c376d072"
+    },
+    {
+      "path": "tests/test_regression_small_fixes.py",
+      "bytes": 28991,
+      "sha256": "a632dc687f88c5616beeae9b498dd4e1c432ec3235cac09d73348b9a093b2934"
+    },
+    {
+      "path": "tests/test_resume_pdf_runtime.py",
+      "bytes": 25094,
+      "sha256": "9af2b1d1d99d435eebad669867edfac9b585c84b61e8bc89e818a7ebb8cf4629"
+    },
+    {
+      "path": "tests/test_scoring_config.py",
+      "bytes": 1390,
+      "sha256": "22731643df7230334d300f6d544e0526b64c8b09e88acc09cc13cf3e3c5a32a6"
+    },
+    {
+      "path": "tests/test_scoring_recovery.py",
+      "bytes": 5018,
+      "sha256": "d2b274cf11104e19982d09ae0ac339e5aa8d8eaf85a52ba83005e3dddf13d14a"
+    },
+    {
+      "path": "tests/test_scraper_background.py",
+      "bytes": 7249,
+      "sha256": "32750dd79386caf38e05c8c9a344e36ed1c906db2176dcde46f6876d4b5b8bd7"
+    },
+    {
+      "path": "tests/test_web_api_routes.py",
+      "bytes": 77340,
+      "sha256": "923c1e5efb8d3b80ebeb135627bf31386086436226876d622b0f84618486c6d6"
+    },
+    {
+      "path": "tests/test_web_config_api.py",
+      "bytes": 7019,
+      "sha256": "787718f8604898dc577d13ab6a014b2cbdf7529e26d096de71734cb20154004f"
+    },
+    {
+      "path": "tests/test_web_preflight.py",
+      "bytes": 4814,
+      "sha256": "10e4fa78b628f3a2e613e4cfb78d07e2fee58ec8d9fcc6505f1ec5dea102d8ea"
+    }
+  ]
+}

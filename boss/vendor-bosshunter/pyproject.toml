@@ -1,0 +1,49 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "bosshunter"
+version = "2.3.0"
+description = "BOSS直聘智能求职Agent - 端到端自动化求职工具"
+requires-python = ">=3.10"
+license = "LicenseRef-BossHunter-NonCommercial"
+dependencies = [
+    "click>=8.0",
+    "httpx>=0.27",
+    "patchright>=1.58.2",
+    "rich>=13.0",
+    "pyyaml>=6.0",
+    "anthropic>=0.40",
+    "markdown2>=2.4",
+    "bottle>=0.13",
+    "openpyxl>=3.1",
+    "pypdf>=5.0",
+]
+
+[project.optional-dependencies]
+pdf = [
+    "xhtml2pdf>=0.2.11",
+]
+
+[project.scripts]
+bosshunter = "bosshunter.main:cli"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/bosshunter"]
+artifacts = [
+    "src/bosshunter/browser/runtime/*.mjs",
+    "src/bosshunter/browser/runtime/site-patterns/*.md",
+    "src/bosshunter/data/*.json",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.ruff]
+line-length = 120
+indent-width = 4
+
+[tool.ruff.format]
+indent-style = "tab"

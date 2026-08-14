@@ -178,6 +178,23 @@
         "MCP 六工具握手检查"
       ],
       "notes": "npm run validate ???36 core?188 module??MCP ???????????????/?????????? 0?"
+    },
+    {
+      "id": "B001",
+      "title": "BossHunter 来源隔离归档与模块导航",
+      "status": "done",
+      "depends_on": [],
+      "acceptance": [
+        "在 boss/vendor-bosshunter 中按固定上游提交归档被选中的原始文件，并保留完整许可证、来源提交和文件哈希。",
+        "在 boss/modules 中建立岗位库、岗位发现、岗位评分、沟通服务、工作流、工作台和 Agent Skill 七个独立模块导航。",
+        "正式产品运行时、构建入口和 MCP 不引用 vendor-bosshunter。"
+      ],
+      "verification": [
+        "node boss/scripts/verify-vendor-snapshot.mjs",
+        "npm run validate",
+        "git diff --check"
+      ],
+      "notes": "已冻结上游 62d1ccea 的 116 文件/1,477,480 字节快照，七模块导航、真实操作 E0-E5 标准、逐文件 SHA-256 与正式运行零引用检查均通过；非商业许可证代码未接入产品运行时。"
     }
   ]
 }

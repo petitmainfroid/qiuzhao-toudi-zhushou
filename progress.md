@@ -1,5 +1,16 @@
 # qiuzhao-cli progress
 
+## 2026-08-14 · B001 BossHunter 来源隔离归档与模块导航完成
+
+- Goal: isolate a fixed BossHunter reference snapshot, define seven rewrite boundaries, and keep all upstream code out of the product runtime.
+- Source: `https://github.com/powerycy/BossHunter.git` at `62d1ccea878932f4e98ff67eaa00d5302c7cdff4`; 116 files / 1,477,480 bytes, including the actual BossHunter Non-Commercial License.
+- Changed: added `boss/vendor-bosshunter/**`, `boss/{AGENTS,README,REAL_OPERATION_ACCEPTANCE,module-map,upstream-snapshot}.md/json`, `boss/scripts/verify-vendor-snapshot.mjs`, and seven `boss/modules/*/README.md` boundary documents; appended B001 to `feature_list.json`.
+- Safety/license: vendor is immutable reference only. The verifier checks per-file SHA-256, required upstream files, license marker, seven module references, and zero vendor references from `apps/`, `modules/`, `gerenxinxi/`, and `shared/`. The upstream arbitrary eval/selector/path CDP layer is explicitly rejected from runtime reuse.
+- Real-page acceptance: `boss/REAL_OPERATION_ACCEPTANCE.md` defines E0-E5, fixed A/B/C denominators, serial real-browser access, redacted evidence rules, and the BOSS discovery/message/restart/combined application gates. This node did not access a real recruitment page or perform any external action.
+- Verification: `node boss/scripts/verify-vendor-snapshot.mjs` passed. A clean worktree first exposed an existing test-order prerequisite (`profile-host/dist-ui` must exist before `vitest` reads it); after `npm run profile:build`, `npm run validate` passed: structure 12/12, TypeScript, core 36/36, module tests 23 files / 188 tests, and production profile build. `git diff --check` excluding the byte-frozen vendor passed; the upstream snapshot itself contains pre-existing trailing whitespace/extra EOF blank lines, which are retained and protected by the SHA-256 manifest.
+- Branch: `agent/boss-b001-source-isolation`; commit and push follow this recorded verification.
+- Next: B002, independent behavior contracts. It must define product-owned schemas/errors and tests before any Node runtime implementation or real-page action.
+
 ## 2026-08-13 · M001
 
 - Goal: extract the zero-extension Agent path into one maintainable repository without mutating the source repository.
