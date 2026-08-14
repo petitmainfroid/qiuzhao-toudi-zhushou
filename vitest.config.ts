@@ -10,8 +10,6 @@ export default defineConfig({
     ],
     exclude: ["**/node_modules/**", "**/dist-ui/**"],
     pool: "forks",
-    poolOptions: {
-      forks: { singleFork: true }
-    }
+    fileParallelism: false
   }
 });

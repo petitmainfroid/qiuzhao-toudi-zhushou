@@ -13,7 +13,7 @@
   - `npm run test:core`: pass; 26/26.
   - `npm run test:modules`: pass; 21 files, 175/175 tests.
   - `npm run profile:build`: pass; local React profile UI and PDF worker emitted.
-  - `npm audit --omit=dev`: pass; 0 production vulnerabilities.
+  - `npm audit`: pass; 0 production or development vulnerabilities after upgrading the extracted repository's test toolchain.
 - Privacy/structure audit: no runtime dependency on the source worktree; no extension manifest/background/sidepanel/content entrypoint; no copied runtime profile, session, Cookie, or personal-value files.
 - Known blockers: real Xiaomi E3-E5 is still pending a user-authorized real-page run; profile-host PDF persistence/parsing needs its separate regression feature; full installer packaging remains pending.
 - Next: run the Xiaomi real-page queue from this extracted tree, then fix only evidence-backed failures without changing the frozen field denominator.
