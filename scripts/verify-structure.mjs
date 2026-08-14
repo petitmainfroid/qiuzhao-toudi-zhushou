@@ -13,6 +13,7 @@ const required = [
   'modules/real-page-validation/index.mjs',
   'gerenxinxi/profile-service/src/index.ts',
   'gerenxinxi/profile-host/src/index.ts',
+  'gerenxinxi/resume-parser/src/index.ts',
   'shared/domain/profile.ts'
 ];
 

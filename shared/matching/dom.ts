@@ -26,17 +26,17 @@ function textWithoutControls(element: Element | null): string {
 
 function closestFormItem(element: SupportedControl): Element | null {
   return element.closest("[data-form-field-name]")
-    ?? element.closest(".atsx-form-item, .ud-form-item, .form-item, .form-group");
+    ?? element.closest(".form-item, .form-group, [class*='form-item'], [role='group']");
 }
 
 function closestUploadContainer(element: SupportedControl): Element | null {
   if (!(element instanceof HTMLInputElement) || element.type !== "file") return null;
-  return element.closest(".atsx-upload-btn, .atsx-upload-drag, .ud-upload, .ant-upload, .el-upload");
+  return element.closest(".ant-upload, .el-upload, [class*='upload']");
 }
 
 function dateRangeProfilePaths(element: SupportedControl, formItem: Element | null): readonly [string, string] | undefined {
   if (!(element instanceof HTMLInputElement) || kindFor(element) !== "date-range") return undefined;
-  const record = element.closest<HTMLElement>(".resumeEditForm-item");
+  const record = element.closest<HTMLElement>("[data-repeatable-item], [role='group'], fieldset, article, li");
   const structuralIds = record
     ? Array.from(record.querySelectorAll<HTMLElement>("input[id], textarea[id], select[id]"))
       .map((control) => control.id)
@@ -63,10 +63,10 @@ function kindFor(element: SupportedControl): ControlKind {
   if (element instanceof HTMLTextAreaElement) return "textarea";
   if (element instanceof HTMLSelectElement) return "select";
   if (element instanceof HTMLInputElement) {
-    if (element.closest(".atsx-date-picker-period, [class*='date-picker-period']")) {
+    if (element.closest("[data-date-range], [class*='date-picker-period'], [class*='date-range'], [class*='daterange']")) {
       return "date-range";
     }
-    if (element.closest(".atsx-select, .ud-select, [role='combobox']")) {
+    if (element.closest("[role='combobox'], .ant-select, .el-select, [class*='select'][aria-haspopup]")) {
       return "custom-select";
     }
     const type = element.type.toLowerCase();
@@ -97,7 +97,7 @@ function associatedLabel(element: SupportedControl): string {
   const dataLabel = cleanText(formItem?.getAttribute("data-form-field-i18n-name"));
   if (dataLabel) return dataLabel;
   const itemLabel = formItem?.querySelector(
-    ".atsx-form-item-label label, .atsx-form-item-label, .ud-form-item-label label, .ud-form-item-label, [class*='form-item-label'] label, [class*='form-item-label']"
+    "[class*='form-item-label'] label, [class*='form-item-label'], [data-field-label]"
   );
   if (itemLabel) return textWithoutControls(itemLabel);
   return "";
@@ -111,7 +111,7 @@ function nearbyText(element: SupportedControl): string {
     ?? closestUploadContainer(element)
     ?? element.closest("[role='group'], .form-item, .form-group, .field, td, li");
   const section = element.closest(
-    "[class*='resumeEditForm-'], [class*='applyFormModuleWrapper'], section, fieldset"
+    "[data-repeatable-group], [data-form-section], [role='group'], section, fieldset, article"
   );
   const sectionHeading = section?.querySelector(
     "h1, h2, h3, legend, [class*='formSection-title'], [class*='ModuleWrapper-title']"

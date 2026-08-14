@@ -79,6 +79,7 @@ async function launch(options: {
   sessionTtlMs?: number;
   localData?: ProfileHostImportCoordinator;
   resumeStore?: ProfileHostResumeStore;
+  resumeParser?: Parameters<typeof startProfileHost>[0]["resumeParser"];
 } = {}) {
   const store = new MemoryStore();
   const host = await startProfileHost({
@@ -321,6 +322,34 @@ describe("loopback profile host", () => {
     });
     expect(removed.status).toBe(200);
     expect(resumeStore.saved).toBeNull();
+  });
+
+  it("parses the encrypted stored resume only through an authenticated CSRF mutation", async () => {
+    const profile = createEmptyProfile();
+    profile.basic.fullName = "Synthetic Candidate";
+    const resumeParser = {
+      async parse() {
+        return {
+          profile,
+          populatedPaths: ["basic.fullName"],
+          warnings: [],
+          pageCount: 1,
+          usedOcr: false as const,
+          extractedCharacterCount: 42
+        };
+      }
+    };
+    const { host } = await launch({ resumeParser });
+    const { cookie, csrf } = await bootstrap(host);
+    expect((await fetch(`${host.origin}/api/resume/parse`, { method: "POST", headers: { Cookie: cookie } })).status).toBe(403);
+    const response = await fetch(`${host.origin}/api/resume/parse`, {
+      method: "POST",
+      headers: { Cookie: cookie, Origin: host.origin, "X-Profile-CSRF": csrf }
+    });
+    expect(response.status).toBe(200);
+    const body = await response.json() as Record<string, unknown>;
+    expect(body).toEqual(expect.objectContaining({ pageCount: 1, extractedCharacterCount: 42 }));
+    expect(body).not.toHaveProperty("text");
   });
 
   it("authenticates migration APIs and binds confirm/rollback writes to ETags", async () => {

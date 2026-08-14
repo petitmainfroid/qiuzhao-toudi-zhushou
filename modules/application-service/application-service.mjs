@@ -45,16 +45,25 @@ function repeatableMetadata(control, controls) {
   const text = [control.semantics?.name, control.semantics?.label, control.semantics?.ariaLabel, control.semantics?.nearbyText]
     .filter(Boolean).join(' ').toLowerCase();
   for (const [collection, aliases] of Object.entries(COLLECTION_ALIASES)) {
-    if (!aliases.some((alias) => text.includes(alias)) && !/(添加|新增|add)/i.test(text)) continue;
+    if (!aliases.some((alias) => text.includes(alias))) continue;
     const indexes = new Set();
+    const unindexedOccurrences = new Map();
     for (const candidate of controls) {
       const name = candidate.semantics?.name ?? '';
       for (const alias of aliases) {
         const match = new RegExp(`^${alias}\\[(\\d+)\\]`).exec(name);
-        if (match) indexes.add(Number(match[1]));
+        if (match) {
+          indexes.add(Number(match[1]));
+          continue;
+        }
+        if (name === alias) {
+          const semantic = structuralLabel(candidate);
+          const key = `${alias}|${semantic}|${candidate.role}|${candidate.tag}`;
+          unindexedOccurrences.set(key, (unindexedOccurrences.get(key) ?? 0) + 1);
+        }
       }
     }
-    return { collection, index: indexes.size };
+    return { collection, index: Math.max(indexes.size, ...unindexedOccurrences.values(), 0) };
   }
   return undefined;
 }
@@ -167,13 +176,19 @@ export class RecruitmentApplicationService {
     this.auditRows = new Map();
     this.replay = new Map();
     this.workflow = { schemaVersion: 1, status: 'idle', completedRequests: [], round: 0 };
+    this.kernelStartupError = undefined;
   }
 
   async start() {
     if (this.started) return this.workspaceStatus();
-    await this.kernel.start();
     this.workflow = await this.ledger.load();
     for (const entry of this.workflow.completedRequests ?? []) this.replay.set(entry.requestId, entry);
+    try {
+      await this.kernel.start();
+      this.kernelStartupError = undefined;
+    } catch (error) {
+      this.kernelStartupError = safeErrorCode(error);
+    }
     this.started = true;
     return this.workspaceStatus();
   }
@@ -181,7 +196,7 @@ export class RecruitmentApplicationService {
   async workspaceStatus(input = {}) {
     this.#requireStarted();
     if (!exactKeys(input, [])) throw new ApplicationServiceError('invalid_request', 'workspace_status accepts no properties');
-    const kernelStatus = this.kernel.status();
+    const kernelStatus = await this.#kernelStatus();
     let profile;
     try {
       const snapshot = await this.profileService.getAgentSnapshot();
@@ -199,7 +214,15 @@ export class RecruitmentApplicationService {
     const authorized = Boolean(lease && profile.profileVersion === lease.profileVersion
       && kernelStatus.origin === lease.origin && lease.expiresAt > this.now());
     return {
-      browser: { state: kernelStatus.state, origin: kernelStatus.origin, path: kernelStatus.path },
+      browser: {
+        state: kernelStatus.state,
+        origin: kernelStatus.origin,
+        path: kernelStatus.path,
+        ...(kernelStatus.errorCode || this.kernelStartupError
+          ? { errorCode: kernelStatus.errorCode ?? this.kernelStartupError }
+          : {}),
+        ...browserRecovery(kernelStatus.state)
+      },
       profile,
       authorization: { state: authorized ? 'active' : 'inactive', scope: authorized ? 'ordinary' : 'none' },
       workflow: {
@@ -214,8 +237,9 @@ export class RecruitmentApplicationService {
     this.#requireStarted();
     if (!exactKeys(input, [])) throw new ApplicationServiceError('invalid_request', 'application_inspect accepts no properties');
     if (this.executing) throw new ApplicationServiceError('workflow_busy', 'another execution owns the page');
+    const status = await this.#kernelStatus();
+    this.#requireBrowserReady(status);
     const profile = await this.profileService.getAgentSnapshot();
-    const status = this.kernel.status();
     await this.#readyLease(status.origin, profile.profileVersion);
     const observed = await this.kernel.observe();
     const converted = createPlannerFields(observed.state);
@@ -258,11 +282,16 @@ export class RecruitmentApplicationService {
       || !Number.isSafeInteger(input.pageEpoch) || !input.proposal || typeof input.proposal !== 'object') {
       throw new ApplicationServiceError('invalid_request', 'application_plan requires a closed snapshot-bound proposal');
     }
+    this.#requireBrowserReady(await this.#kernelStatus());
     if (!this.inspection || input.snapshotId !== this.inspection.snapshotId || input.pageEpoch !== this.inspection.pageEpoch) {
       throw new ApplicationServiceError('needs_replan', 'the inspected page state is stale');
     }
     const lease = await this.#activeLease();
-    const nextRound = (this.workflow.round ?? 0) + 1;
+    const continuingReplan = ['idle', 'needs_replan'].includes(this.workflow.status)
+      && Boolean(this.workflow.jobId)
+      && this.workflow.origin === this.inspection.origin
+      && this.workflow.profileVersion === this.inspection.profileVersion;
+    const nextRound = continuingReplan ? (this.workflow.round ?? 0) + 1 : 1;
     if (nextRound > this.maxReplanRounds) {
       this.workflow = await this.ledger.save({ ...this.workflow, status: 'user_action_required' });
       throw new ApplicationServiceError('user_action_required', 'the bounded replanning budget is exhausted');
@@ -301,7 +330,9 @@ export class RecruitmentApplicationService {
     this.workflow = await this.ledger.save({
       ...this.workflow,
       status: 'idle',
-      jobId: this.workflow.jobId ?? `job_${this.createId().replaceAll('-', '')}`,
+      jobId: continuingReplan && this.workflow.jobId
+        ? this.workflow.jobId
+        : `job_${this.createId().replaceAll('-', '')}`,
       origin: compiled.binding.origin,
       profileVersion: compiled.binding.profileVersion,
       planId: compiled.planId,
@@ -326,6 +357,7 @@ export class RecruitmentApplicationService {
       || !input.planId.startsWith('plan_') || !validId(input.requestId)) {
       throw new ApplicationServiceError('invalid_request', 'application_execute requires only planId and requestId');
     }
+    this.#requireBrowserReady(await this.#kernelStatus());
     const inputDigest = digest(input);
     const replay = this.replay.get(input.requestId);
     if (replay) {
@@ -469,6 +501,23 @@ export class RecruitmentApplicationService {
     this.started = false;
   }
 
+  async #kernelStatus() {
+    try {
+      return typeof this.kernel.refreshStatus === 'function'
+        ? await this.kernel.refreshStatus()
+        : this.kernel.status();
+    } catch (error) {
+      return { state: 'disconnected', errorCode: safeErrorCode(error) };
+    }
+  }
+
+  #requireBrowserReady(status) {
+    if (status?.state === 'ready') return;
+    this.inspection = undefined;
+    this.plan = undefined;
+    throw new ApplicationServiceError('browser_not_ready', `browser is ${status?.state ?? 'unavailable'}`);
+  }
+
   async #activeLease() {
     if (!this.inspection) throw new ApplicationServiceError('needs_replan', 'a current inspection is required');
     return this.#readyLease(this.inspection.origin, this.inspection.profileVersion);
@@ -499,4 +548,22 @@ export class RecruitmentApplicationService {
   #requireStarted() {
     if (!this.started) throw new ApplicationServiceError('service_not_started', 'application service is not started');
   }
+}
+
+function safeErrorCode(error) {
+  if (typeof error?.code === 'string' && /^[a-z0-9_-]{1,80}$/.test(error.code)) return error.code;
+  return error instanceof Error && /^[a-z0-9_-]{1,80}$/.test(error.message)
+    ? error.message
+    : 'cdp_unavailable';
+}
+
+function browserRecovery(state) {
+  if (state === 'ready') return { recommendedAction: 'none' };
+  if (state === 'login-needed') {
+    return { recommendedAction: 'confirm_ready', recoveryCommand: 'qiuzhao browser confirm-ready' };
+  }
+  if (state === 'disconnected') {
+    return { recommendedAction: 'reconnect', recoveryCommand: 'qiuzhao browser reconnect' };
+  }
+  return { recommendedAction: 'launch', recoveryCommand: 'qiuzhao browser launch --url <招聘网页>' };
 }

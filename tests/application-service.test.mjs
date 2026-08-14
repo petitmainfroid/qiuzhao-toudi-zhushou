@@ -32,14 +32,18 @@ function observedControls() {
   ];
 }
 
-function createHarness({ lease = LEASE, ledgerState, blockExecute } = {}) {
+function createHarness({ lease = LEASE, ledgerState, blockExecute, kernelStartError, kernelState = 'ready' } = {}) {
   let pageEpoch = 0;
   let executeRelease;
   const executeBarrier = blockExecute ? new Promise((resolve) => { executeRelease = resolve; }) : undefined;
   const kernelCalls = [];
   const kernel = {
-    async start() {},
-    status() { return { state: 'ready', origin: ORIGIN, path: '/internship/resume/:id/apply', pageEpoch }; },
+    async start() { if (kernelStartError) throw new Error(kernelStartError); },
+    status() {
+      return kernelState === 'ready'
+        ? { state: 'ready', origin: ORIGIN, path: '/internship/resume/:id/apply', pageEpoch }
+        : { state: kernelState, errorCode: kernelStartError ?? 'cdp_unavailable', pageEpoch };
+    },
     async observe() {
       pageEpoch += 1;
       return {
@@ -125,6 +129,29 @@ test('observe-plan-compile-execute-reobserve-audit returns no scalar values', as
   assert.equal(serialized.includes('identityDocumentNumber'), true);
 });
 
+test('browser startup failure keeps Agent online with one actionable recovery step and zero writes', async () => {
+  const harness = createHarness({ kernelStartError: 'session_not_ready', kernelState: 'disconnected' });
+  await assert.doesNotReject(() => harness.service.start());
+  const status = await harness.service.workspaceStatus();
+  assert.deepEqual(status.browser, {
+    state: 'disconnected',
+    origin: undefined,
+    path: undefined,
+    errorCode: 'session_not_ready',
+    recommendedAction: 'reconnect',
+    recoveryCommand: 'qiuzhao browser reconnect'
+  });
+  await assert.rejects(() => harness.service.inspect(), (error) => error?.code === 'browser_not_ready');
+  await assert.rejects(() => harness.service.planApplication({
+    snapshotId: 'snapshot_12345678', pageEpoch: 1,
+    proposal: { schemaVersion: 1, decisions: [] }
+  }), (error) => error?.code === 'browser_not_ready');
+  await assert.rejects(() => harness.service.execute({
+    planId: `plan_${'a'.repeat(64)}`, requestId: 'request_offline1'
+  }), (error) => error?.code === 'browser_not_ready');
+  assert.equal(harness.kernelCalls.some((call) => call.kind === 'execute'), false);
+});
+
 test('no lease, wrong origin, stale state, and malicious payload fail before writes', async () => {
   for (const lease of [null, { ...LEASE, origin: 'https://wrong.example' }]) {
     const harness = createHarness({ lease });
@@ -191,6 +218,29 @@ test('bounded replanning and single-job lock fail closed', async () => {
   await first;
 });
 
+test('a completed workflow starts a fresh bounded planning job', async () => {
+  const harness = createHarness({
+    ledgerState: {
+      schemaVersion: 1,
+      status: 'completed',
+      jobId: 'job_previous_12345678',
+      origin: ORIGIN,
+      profileVersion: PROFILE_VERSION,
+      round: 4,
+      completedRequests: []
+    }
+  });
+  await harness.service.start();
+  const inspected = await harness.service.inspect();
+  const plan = await harness.service.planApplication({
+    snapshotId: inspected.snapshotId,
+    pageEpoch: inspected.pageEpoch,
+    proposal: completeProposal(inspected)
+  });
+  assert.equal(plan.round, 1);
+  assert.notEqual(harness.getStored().jobId, 'job_previous_12345678');
+});
+
 test('inspection collapses one radio group and one protected composite into logical fields', async () => {
   const harness = createHarness();
   harness.service.kernel.observe = async () => ({
@@ -221,4 +271,39 @@ test('inspection collapses one radio group and one protected composite into logi
   assert.deepEqual(inspected.fields[0].options.map((option) => option.label), ['无', '内推', '大使推荐']);
   assert.equal(inspected.fields[0].hasValue, true);
   assert.equal(inspected.fields[1].safetyClass, 'identity');
+});
+
+test('repeatable add controls bind to their own semantic collection instead of the first collection', async () => {
+  const context = createHarness();
+  context.service.profileService.getAgentSnapshot = async () => ({
+    profileVersion: PROFILE_VERSION,
+    profileSchemaVersion: 4,
+    catalog: [{ path: 'workExperiences', kind: 'repeatable', safetyClass: 'ordinary', hasValue: true }],
+    completeness: { totalScalarPaths: 0, populatedScalarPaths: 0, repeatableRoots: [{ path: 'workExperiences', nonEmptyItemCount: 1 }] }
+  });
+  context.service.kernel.observe = async () => ({
+    pageEpoch: 1,
+    state: {
+      snapshotId: 'snapshot_repeat_12345678', origin: ORIGIN, path: '/apply',
+      controls: [
+        {
+          ref: 'ref_internship_add', role: 'button', tag: 'button', inputType: '',
+          semantics: { name: 'internship_list.add', label: '添加实习经历' },
+          disabled: false, readOnly: false, required: false, multiple: false,
+          boundary: 'main', safety: 'ordinary', hasValue: false
+        }
+      ],
+      summary: { controlCount: 1, frameCount: 1, openShadowRootCount: 0, blockedControlCount: 0 }
+    }
+  });
+  await context.service.start();
+  const inspection = await context.service.inspect();
+  const plan = await context.service.planApplication({
+    snapshotId: inspection.snapshotId,
+    pageEpoch: inspection.pageEpoch,
+    proposal: { schemaVersion: 1, decisions: [{ kind: 'ensure_repeatable', ref: 'ref_internship_add', profilePath: 'workExperiences' }] }
+  });
+  const result = await context.service.execute({ planId: plan.planId, requestId: 'repeatable_request_12345678' });
+  assert.notEqual(result.outcomes[0]?.reason, 'unsupported_repeatable');
+  assert.equal(context.kernelCalls.find((call) => call.kind === 'execute')?.input.intent.collection, 'workExperiences');
 });

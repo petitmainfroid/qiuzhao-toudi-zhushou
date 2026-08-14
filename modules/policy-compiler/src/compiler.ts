@@ -48,7 +48,7 @@ const EXECUTABLE_CAPABILITIES = new Set([
 ]);
 
 const KIND_CAPABILITIES: Readonly<Record<Exclude<ProfilePathKind, "repeatable">, readonly string[]>> = Object.freeze({
-  text: ["fill_text", "fill_multiline"],
+  text: ["fill_text", "fill_multiline", "select_option"],
   multiline: ["fill_multiline", "fill_text"],
   choice: ["select_option"],
   date: ["set_date"],

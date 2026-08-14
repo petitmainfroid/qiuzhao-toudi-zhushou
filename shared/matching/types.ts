@@ -60,7 +60,7 @@ export interface MatchResult {
     familyId: string;
     templateVersion: string;
     ruleId: string;
-    driverHint: "native" | "feishu-select" | "feishu-date-range" | "aria-combobox";
+    driverHint: "native" | "custom-select" | "date-range" | "aria-combobox";
     verification: "normalized-equality" | "selected-option" | "checked-state" | "none";
   };
 }

@@ -7,6 +7,7 @@ import { startProfileHost } from "./host";
 import { FileProfileHostStore } from "./profileServiceAdapter";
 import { ProfileServiceImportAdapter } from "./profileImportAdapter";
 import { FileResumeStore } from "./resumeStore";
+import { StoredPdfResumeParser } from "../../resume-parser/src";
 
 export interface LocalProfileEditorOptions {
   appDataDirectory: string;
@@ -54,16 +55,15 @@ export async function startLocalProfileEditor(options: LocalProfileEditorOptions
   });
   const store = new FileProfileHostStore(repository);
   const localData = new ProfileServiceImportAdapter(repository);
+  const resumeStore = options.resumeProtector ? new FileResumeStore({
+    filePath: join(dirname(profilePath), "resume.json"),
+    protector: options.resumeProtector
+  }) : undefined;
   await store.initialize();
   return startProfileHost({
     store,
     localData,
-    ...(options.resumeProtector ? {
-      resumeStore: new FileResumeStore({
-        filePath: join(dirname(profilePath), "resume.json"),
-        protector: options.resumeProtector
-      })
-    } : {}),
+    ...(resumeStore ? { resumeStore, resumeParser: new StoredPdfResumeParser(resumeStore) } : {}),
     ui: await loadProfileHostUiBundle(options.uiDirectory),
     bootstrapTtlMs: options.bootstrapTtlMs,
     sessionTtlMs: options.sessionTtlMs

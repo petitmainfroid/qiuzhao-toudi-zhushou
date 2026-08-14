@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { spawn } from 'node:child_process';
-import { readFile } from 'node:fs/promises';
+import { lstat, readFile, unlink } from 'node:fs/promises';
 import path from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 import { selectBrowser } from './browser-discovery.mjs';
@@ -47,6 +47,10 @@ function selectedTab(target, entry) {
   };
 }
 
+function isMissingFile(error) {
+  return error && typeof error === 'object' && error.code === 'ENOENT';
+}
+
 export class BrowserSessionManager {
   constructor(options = {}) {
     this.env = options.env ?? process.env;
@@ -64,6 +68,7 @@ export class BrowserSessionManager {
       this.explicitProfileDir ?? defaultProfileDir(browser.kind, this.env),
       browser.defaultDataDirs
     );
+    await this.#removeStaleActivePort(prepared.profileDir);
     const page = targetUrl ? normalizePage(targetUrl) : undefined;
     const args = [
       ...(browser.commandPrefix ?? []),
@@ -130,13 +135,15 @@ export class BrowserSessionManager {
     } catch {
       currentPort = undefined;
     }
-    if (currentPort && currentPort !== previous.cdpPort) throw new Error('cdp_endpoint_changed');
     if (currentPort) {
+      let endpointIsLive = false;
       try {
         await probeCdp(currentPort);
+        endpointIsLive = true;
       } catch {
         currentPort = undefined;
       }
+      if (endpointIsLive && currentPort !== previous.cdpPort) throw new Error('cdp_endpoint_changed');
     }
 
     if (!currentPort) {
@@ -239,6 +246,34 @@ export class BrowserSessionManager {
     return publicStatus(session);
   }
 
+  async connection() {
+    const session = await this.#connectedSession();
+    if (session.state !== 'ready' || !session.readyConfirmedAt) {
+      throw new Error('browser_confirmation_required');
+    }
+    if (!session.selectedTab) throw new Error('target_tab_not_selected');
+    const current = (await listPageTargets(session.cdpPort)).find(
+      (tab) => tab.targetId === session.selectedTab.targetId
+    );
+    if (!current) throw new Error('selected_tab_stale');
+    if (
+      current.origin !== session.selectedTab.origin
+      || current.pathPattern !== session.selectedTab.pathPattern
+      || (session.requestedPage
+        && (current.origin !== session.requestedPage.origin
+          || current.pathPattern !== session.requestedPage.pathPattern))
+    ) {
+      throw new Error('selected_page_changed');
+    }
+    return {
+      launchId: session.launchId,
+      cdpPort: session.cdpPort,
+      targetId: current.targetId,
+      origin: current.origin,
+      pathPattern: current.pathPattern
+    };
+  }
+
   async status() {
     try {
       const session = await readSession(this.sessionFile);
@@ -254,33 +289,6 @@ export class BrowserSessionManager {
     } catch {
       return { state: 'stopped', errorCode: 'session_missing' };
     }
-  }
-
-  async connection() {
-    const session = await this.#connectedSession();
-    if (!session.selectedTab || session.state !== 'ready' || !session.readyConfirmedAt) {
-      throw new Error('session_not_ready');
-    }
-    const current = (await listPageTargets(session.cdpPort)).find(
-      (tab) => tab.targetId === session.selectedTab.targetId
-    );
-    if (!current) throw new Error('selected_tab_stale');
-    if (
-      current.origin !== session.selectedTab.origin ||
-      current.pathPattern !== session.selectedTab.pathPattern ||
-      (session.requestedPage && (
-        current.origin !== session.requestedPage.origin ||
-        current.pathPattern !== session.requestedPage.pathPattern
-      ))
-    ) throw new Error('selected_page_changed');
-    return {
-      launchId: session.launchId,
-      profileId: session.profileId,
-      cdpPort: session.cdpPort,
-      targetId: current.targetId,
-      origin: current.origin,
-      pathPattern: current.pathPattern
-    };
   }
 
   async disconnect() {
@@ -315,6 +323,46 @@ export class BrowserSessionManager {
     const port = Number(firstLine);
     if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error('invalid_cdp_port');
     return port;
+  }
+
+  async #removeStaleActivePort(profileDir) {
+    const activePortFile = path.join(profileDir, 'DevToolsActivePort');
+    let original;
+    try {
+      const metadata = await lstat(activePortFile);
+      if (!metadata.isFile() || metadata.isSymbolicLink()) throw new Error('unsafe_cdp_port_file');
+      original = await readFile(activePortFile, 'utf8');
+    } catch (error) {
+      if (isMissingFile(error)) return;
+      throw error;
+    }
+
+    const port = Number(original.split(/\r?\n/, 1)[0]);
+    if (Number.isInteger(port) && port >= 1 && port <= 65535) {
+      for (let attempt = 0; attempt < 2; attempt += 1) {
+        try {
+          await probeCdp(port);
+          throw new Error('profile_browser_already_running');
+        } catch (error) {
+          if (error instanceof Error && error.message === 'profile_browser_already_running') throw error;
+          if (attempt === 0) await delay(100);
+        }
+      }
+    }
+
+    let latest;
+    try {
+      latest = await readFile(activePortFile, 'utf8');
+    } catch (error) {
+      if (isMissingFile(error)) return;
+      throw error;
+    }
+    if (latest !== original) throw new Error('cdp_endpoint_changed');
+    try {
+      await unlink(activePortFile);
+    } catch (error) {
+      if (!isMissingFile(error)) throw error;
+    }
   }
 
   async #terminateBrowser(session) {

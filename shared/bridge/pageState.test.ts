@@ -85,7 +85,7 @@ const session: PowerSessionView = {
 };
 
 describe("privacy-safe page state", () => {
-  it("inherits allowlisted Feishu field metadata and redacts uploaded-file metadata", () => {
+  it("inherits allowlisted structured field metadata and redacts uploaded-file metadata", () => {
     backendNodeId = 1;
     const root: CdpDomNode = {
       backendNodeId: backendNodeId++,
@@ -105,7 +105,7 @@ describe("privacy-safe page state", () => {
       ])])]
     };
 
-    const state = buildPrivacySafePageState(root, session, new OpaqueReferenceRegistry(() => "feishunonce"));
+    const state = buildPrivacySafePageState(root, session, new OpaqueReferenceRegistry(() => "semanticnonce"));
     expect(state.controls[0]).toEqual(expect.objectContaining({
       semantics: expect.objectContaining({
         label: "学校名称",
@@ -118,7 +118,7 @@ describe("privacy-safe page state", () => {
     expect(JSON.stringify(state)).not.toMatch(/私密姓名|2026-02-25|23:31|13800138000|private value/i);
   });
 
-  it("emits one opaque composite reference for a two-input Feishu date range", () => {
+  it("emits one opaque composite reference for a two-input date range", () => {
     backendNodeId = 1;
     const root: CdpDomNode = {
       backendNodeId: backendNodeId++,
@@ -127,7 +127,7 @@ describe("privacy-safe page state", () => {
       frameId: "main-frame",
       children: [element("html", {}, [element("body", {}, [
         element("div", {
-          class: "atsx-date-picker-period",
+          class: "date-picker-period",
           "data-form-field-name": "education_list[0].start_end_time",
           "data-form-field-i18n-name": "起止时间"
         }, [
@@ -179,8 +179,10 @@ describe("privacy-safe page state", () => {
       nodeName: "#document",
       frameId: "main-frame",
       children: [element("html", {}, [element("body", {}, [
-        element("section", { class: "resumeEditForm-internship" }, [
-          element("div", { class: "createFormSection-addBtn" }, [text("添加")])
+        element("section", {}, [
+          element("h2", {}, [text("实习经历")]),
+          element("div", { "data-form-field-name": "internship_list" }),
+          element("div", {}, [text("添加")])
         ])
       ])])]
     };
@@ -189,9 +191,27 @@ describe("privacy-safe page state", () => {
     expect(state.controls).toEqual([expect.objectContaining({
       role: "button",
       tag: "custom",
-      semantics: { label: "添加实习经历", name: "internship_list.add" },
+      semantics: expect.objectContaining({ label: "添加实习经历", name: "internship_list.add" }),
       safety: "ordinary"
     })]);
+  });
+
+  it("collapses nested add-control wrappers to the outer actionable target", () => {
+    backendNodeId = 1;
+    const root: CdpDomNode = {
+      backendNodeId: backendNodeId++, nodeType: 9, nodeName: "#document", frameId: "main-frame",
+      children: [element("html", {}, [element("body", {}, [element("section", {}, [
+        element("h2", {}, [text("实习经历")]),
+        element("div", {}, [element("div", {}, [element("span", {}, [element("span", {}, [text("添加")])])])])
+      ])])])]
+    };
+
+    const state = buildPrivacySafePageState(root, session, new OpaqueReferenceRegistry(() => "nestedaddnonce"));
+    expect(state.controls).toHaveLength(1);
+    expect(state.controls[0]).toEqual(expect.objectContaining({
+      role: "button",
+      semantics: expect.objectContaining({ name: "internship_list.add" })
+    }));
   });
 
   it("associates portal options through aria-controls without returning option values", () => {
@@ -362,19 +382,19 @@ describe("privacy-safe page state", () => {
     const root: CdpDomNode = {
       backendNodeId: backendNodeId++, nodeType: 9, nodeName: "#document", frameId: "main-frame",
       children: [element("html", {}, [element("body", {}, [
-        element("div", { class: "atsx-row atsx-form-item custom-field" }, [
-          element("div", { class: "atsx-form-item-label required" }, [text("璧锋鏃堕棿")]),
-          element("div", { class: "atsx-date-picker atsx-date-picker-period-month" }, [
-            element("input", { class: "atsx-date-picker-period-hidden-input" })
+        element("div", { class: "form-row form-item custom-field" }, [
+          element("div", { class: "form-item-label required" }, [text("璧锋鏃堕棿")]),
+          element("div", { class: "date-picker date-picker-period-month" }, [
+            element("input", { class: "date-picker-period-hidden-input" })
           ])
         ]),
-        element("div", { class: "atsx-row atsx-form-item" }, [
-          element("div", { class: "atsx-form-item-label" }, [text("瀛﹀巻")]),
-          element("div", { role: "combobox", class: "atsx-select-selection" }, [
-            element("input", { class: "atsx-select-search__field" })
+        element("div", { class: "form-row form-item" }, [
+          element("div", { class: "form-item-label" }, [text("瀛﹀巻")]),
+          element("div", { role: "combobox", class: "select-control" }, [
+            element("input", { class: "select-search-field" })
           ])
         ]),
-        element("div", { class: "resumeEditForm-hiddenField" }, [
+        element("div", { class: "generic-hidden-field" }, [
           element("input", { "aria-label": "绯荤粺瀛楁" })
         ])
       ])])]

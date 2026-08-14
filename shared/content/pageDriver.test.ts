@@ -203,12 +203,14 @@ describe("fixed K2 page action registry", () => {
       .toEqual([1, 1, 0, 0]);
   });
 
-  it("permits only the fixed Feishu repeatable add shape for a custom element", () => {
+  it("permits a custom repeatable add control only inside a semantically identified group", () => {
     document.body.innerHTML = `
-      <section class="resumeEditForm-internship">
-        <div id="allowed" class="createFormSection-addBtn">添加</div>
+      <section>
+        <h2>实习经历</h2>
+        <div data-form-field-name="internship_list"></div>
+        <div id="allowed">添加</div>
       </section>
-      <div id="lookalike" class="createFormSection-addBtn">添加</div>
+      <div id="lookalike">添加</div>
     `;
     const allowed = document.getElementById("allowed")!;
     const lookalike = document.getElementById("lookalike")!;
@@ -391,9 +393,9 @@ describe("verified page driver", () => {
 
   it("waits for an exact remote custom-select option and verifies its selected marker", async () => {
     document.body.innerHTML = `
-      <div class="atsx-select">
-        <div role="combobox"><input id="school" /></div>
-        <span class="atsx-select-selection-selected-value"></span>
+      <div class="generic-select" aria-haspopup="listbox">
+        <div role="combobox"><input id="school" class="query-input" /></div>
+        <span class="selected-value"></span>
       </div>
       <ul id="options"></ul>
     `;
@@ -404,7 +406,7 @@ describe("verified page driver", () => {
         option.role = "option";
         option.textContent = input.value;
         option.addEventListener("click", () => {
-          document.querySelector<HTMLElement>(".atsx-select-selection-selected-value")!.textContent = option.textContent;
+          document.querySelector<HTMLElement>(".selected-value")!.textContent = option.textContent;
         });
         document.getElementById("options")!.replaceChildren(option);
       }, 10);
@@ -415,7 +417,7 @@ describe("verified page driver", () => {
     });
 
     expect(result).toEqual({ status: "verified", attempts: 1 });
-    expect(document.querySelector(".atsx-select-selection-selected-value")?.textContent).toBe("匿名测试大学");
+    expect(document.querySelector(".selected-value")?.textContent).toBe("匿名测试大学");
   });
 
   it("selects every exact option in a native multiple select", async () => {
@@ -449,8 +451,8 @@ describe("verified page driver", () => {
 
   it("does not accept a date-range hidden value unless both visible months update", async () => {
     document.body.innerHTML = `
-      <div class="atsx-date-picker atsx-date-picker-period atsx-date-picker-period-month" data-date-range>
-        <input class="atsx-date-picker-period-hidden-input" type="text" />
+      <div class="generic-date-picker date-picker-period-month" data-date-range>
+        <input class="date-picker-period-hidden-input" type="text" />
         <span>开始月份未更新</span><span>结束月份未更新</span>
       </div>
     `;

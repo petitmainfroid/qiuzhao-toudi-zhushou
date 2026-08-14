@@ -1,10 +1,19 @@
 import http from 'node:http';
-import { mkdir, writeFile } from 'node:fs/promises';
+import { access, mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 const profileArgument = process.argv.find((value) => value.startsWith('--user-data-dir='));
 if (!profileArgument) throw new Error('fake_profile_missing');
 const profileDir = profileArgument.slice('--user-data-dir='.length);
+const activePortFile = path.join(profileDir, 'DevToolsActivePort');
+if (process.argv.includes('--fail-if-active-port-exists')) {
+  try {
+    await access(activePortFile);
+    process.exit(23);
+  } catch {
+    // The clean startup path is expected to have no endpoint file yet.
+  }
+}
 const initialUrl = process.argv.find((value) => /^https?:\/\//.test(value)) ?? 'about:blank';
 let sequence = 1;
 const targets = [{ id: `target-${sequence}`, type: 'page', url: initialUrl }];
@@ -46,5 +55,5 @@ await mkdir(profileDir, { recursive: true });
 await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
 const address = server.address();
 if (!address || typeof address === 'string') throw new Error('fake_listener_missing');
-await writeFile(path.join(profileDir, 'DevToolsActivePort'), `${address.port}\n/devtools/browser/fake\n`);
+await writeFile(activePortFile, `${address.port}\n/devtools/browser/fake\n`);
 for (const signal of ['SIGTERM', 'SIGINT']) process.on(signal, () => server.close(() => process.exit(0)));

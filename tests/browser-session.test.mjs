@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { tmpdir } from 'node:os';
 import http from 'node:http';
@@ -14,7 +14,7 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const fakeBrowser = path.join(here, 'fake-browser.mjs');
 const xiaomiUrl = 'https://xiaomi.jobs.f.mioffice.cn/internship/resume/7663053400020879658/apply?tracking=private';
 
-async function fixture() {
+async function fixture({ failOnStaleActivePort = false } = {}) {
   const root = await mkdtemp(path.join(tmpdir(), 'qiuzhao-yonghuxinxi-'));
   const profileDir = path.join(root, 'profile');
   const sessionFile = path.join(root, 'session.json');
@@ -24,7 +24,7 @@ async function fixture() {
     browser: {
       kind: 'chrome',
       executablePath: process.execPath,
-      commandPrefix: [fakeBrowser],
+      commandPrefix: [fakeBrowser, ...(failOnStaleActivePort ? ['--fail-if-active-port-exists'] : [])],
       defaultDataDirs: [path.join(root, 'default-profile')]
     },
     startupTimeoutMs: 5000,
@@ -120,12 +120,39 @@ test('login redirects stay login-needed until the selected tab returns to the re
   }
 });
 
-test('a stopped browser relaunches the query-free target with the same persistent profile', async () => {
+test('connection exposes only the confirmed selected target and rejects identity drift', async () => {
   const context = await fixture();
+  try {
+    const launched = await context.manager.launch({ targetUrl: xiaomiUrl });
+    const privateSession = await readSession(context.sessionFile);
+    await assert.rejects(() => context.manager.connection(), /browser_confirmation_required/);
+    await context.manager.confirmReady();
+    assert.deepEqual(await context.manager.connection(), {
+      launchId: launched.launchId,
+      cdpPort: privateSession.cdpPort,
+      targetId: launched.selectedTab.targetId,
+      origin: 'https://xiaomi.jobs.f.mioffice.cn',
+      pathPattern: '/internship/resume/:id/apply'
+    });
+    await navigateFake(
+      privateSession.cdpPort,
+      launched.selectedTab.targetId,
+      'https://xiaomi.jobs.f.mioffice.cn/internship/resume/1234567890123456/other'
+    );
+    await assert.rejects(() => context.manager.connection(), /selected_page_changed/);
+    await context.manager.stop();
+  } finally {
+    await rm(context.root, { recursive: true, force: true });
+  }
+});
+
+test('a stopped browser relaunches the query-free target with the same persistent profile', async () => {
+  const context = await fixture({ failOnStaleActivePort: true });
   try {
     const first = await context.manager.launch({ targetUrl: xiaomiUrl });
     const firstSession = await readSession(context.sessionFile);
     await context.manager.stop();
+    assert.equal((await readFile(path.join(context.profileDir, 'DevToolsActivePort'), 'utf8')).length > 0, true);
     const restartedApp = new BrowserSessionManager({
       profileDir: context.profileDir,
       sessionFile: context.sessionFile,
@@ -139,6 +166,7 @@ test('a stopped browser relaunches the query-free target with the same persisten
     assert.equal(relaunched.selectedTab.origin, 'https://xiaomi.jobs.f.mioffice.cn');
     assert.equal(relaunched.selectedTab.pathPattern, '/internship/resume/:id/apply');
     const secondSession = await readSession(context.sessionFile);
+    assert.notEqual(secondSession.cdpPort, 0);
     assert.equal(secondSession.requestedNavigationUrl.includes('?'), false);
     assert.equal(secondSession.requestedNavigationUrl, firstSession.requestedNavigationUrl);
     await restartedApp.stop();
@@ -155,7 +183,52 @@ test('a mismatched CDP endpoint is rejected before tabs are listed or attached',
     session.cdpPort = session.cdpPort === 65535 ? 65534 : session.cdpPort + 1;
     await writeSession(context.sessionFile, session);
     await assert.rejects(() => context.manager.listTabs(), /cdp_endpoint_changed/);
+    await assert.rejects(() => context.manager.reconnect(), /cdp_endpoint_changed/);
     if (session.browserPid) process.kill(session.browserPid);
+  } finally {
+    await rm(context.root, { recursive: true, force: true });
+  }
+});
+
+test('launch refuses to remove a live endpoint owned by the dedicated profile', async () => {
+  const context = await fixture();
+  try {
+    await context.manager.launch();
+    const competingManager = new BrowserSessionManager({
+      profileDir: context.profileDir,
+      sessionFile: path.join(context.root, 'competing-session.json'),
+      browser: {
+        kind: 'chrome',
+        executablePath: process.execPath,
+        commandPrefix: [fakeBrowser],
+        defaultDataDirs: [path.join(context.root, 'default-profile')]
+      },
+      startupTimeoutMs: 5000,
+      pollIntervalMs: 20,
+      detach: false
+    });
+    await assert.rejects(() => competingManager.launch(), /profile_browser_already_running/);
+    assert.equal((await context.manager.status()).state, 'ready');
+    await context.manager.stop();
+  } finally {
+    await rm(context.root, { recursive: true, force: true });
+  }
+});
+
+test('launch refuses cleanup when the endpoint file changes during stale probing', async () => {
+  const context = await fixture();
+  try {
+    await prepareDedicatedProfile(context.profileDir, [path.join(context.root, 'default-profile')]);
+    const activePortFile = path.join(context.profileDir, 'DevToolsActivePort');
+    await writeFile(activePortFile, '65534\n/devtools/browser/stale\n');
+    const changed = new Promise((resolve, reject) => {
+      setTimeout(() => {
+        writeFile(activePortFile, '65533\n/devtools/browser/concurrent\n').then(resolve, reject);
+      }, 50);
+    });
+    await assert.rejects(() => context.manager.launch(), /cdp_endpoint_changed/);
+    await changed;
+    assert.match(await readFile(activePortFile, 'utf8'), /^65533\n/);
   } finally {
     await rm(context.root, { recursive: true, force: true });
   }

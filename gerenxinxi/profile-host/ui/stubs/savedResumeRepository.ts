@@ -1,3 +1,5 @@
+import type { CandidateProfile } from "../../../../shared/domain/profile";
+
 export interface SavedResumeMetadata {
   name: string;
   mimeType: "application/pdf";
@@ -10,6 +12,14 @@ export interface SavedResumeRepositoryLike {
   load(): Promise<SavedResumeMetadata | null>;
   save(file: File): Promise<SavedResumeMetadata>;
   clear(): Promise<void>;
+  parseSaved?(): Promise<{
+    profile: CandidateProfile;
+    populatedPaths: string[];
+    warnings: string[];
+    pageCount: number;
+    usedOcr: boolean;
+    extractedCharacterCount: number;
+  }>;
 }
 
 export class SavedResumeRepository implements SavedResumeRepositoryLike {

@@ -1,13 +1,183 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
+  "project_goal": "让零扩展 Agent 在浏览器断开时可恢复，并基于本地加密档案与真实 PDF 完成小米招聘页的非提交填写闭环。",
   "product": "qiuzhao-cli",
   "features": [
-    { "id": "M001", "name": "模块化抽取", "status": "done", "verification": ["npm run verify:structure", "npm run typecheck", "npm run test", "npm run profile:build"] },
-    { "id": "M002", "name": "个人档案页面与本地加密存储", "status": "implemented_and_automated_checks_passed" },
-    { "id": "M003", "name": "专用浏览器登录态与 CDP 会话", "status": "implemented_and_automated_checks_passed" },
-    { "id": "M004", "name": "Agent ApplicationService 与 MCP 六工具", "status": "implemented_and_automated_checks_passed" },
-    { "id": "M005", "name": "小米真实页面 E3-E5", "status": "pending_user_authorized_real_page_validation" },
-    { "id": "M006", "name": "个人信息页 PDF 原件本地持久化", "status": "done", "verification": ["npm run typecheck", "npm run test:modules", "npm run profile:build", "npm run validate"] },
-    { "id": "M007", "name": "真实 PDF 文本解析与字段提取回归", "status": "pending_real_document_validation" }
+    {
+      "id": "M001",
+      "title": "模块化抽取",
+      "status": "done",
+      "depends_on": [],
+      "acceptance": [
+        "零扩展 CLI/MCP 模块位于独立仓库。"
+      ],
+      "verification": [
+        "npm run validate"
+      ],
+      "notes": "已完成。"
+    },
+    {
+      "id": "M002",
+      "title": "个人档案页面与本地加密存储",
+      "status": "done",
+      "depends_on": [
+        "M001"
+      ],
+      "acceptance": [
+        "结构化档案使用本地加密仓库。"
+      ],
+      "verification": [
+        "npm run validate"
+      ],
+      "notes": "自动化验证已通过。"
+    },
+    {
+      "id": "M003",
+      "title": "专用浏览器登录态与 CDP 会话",
+      "status": "done",
+      "depends_on": [
+        "M001"
+      ],
+      "acceptance": [
+        "使用专用 Profile 保存登录态。"
+      ],
+      "verification": [
+        "npm run test:core"
+      ],
+      "notes": "基础流程已实现；异常恢复由 M008 加固。"
+    },
+    {
+      "id": "M004",
+      "title": "ApplicationService 与 MCP 六工具",
+      "status": "done",
+      "depends_on": [
+        "M001",
+        "M002",
+        "M003"
+      ],
+      "acceptance": [
+        "MCP 只暴露六个意图级工具。"
+      ],
+      "verification": [
+        "npm run test:core"
+      ],
+      "notes": "基础流程已实现；离线启动由 M009 加固。"
+    },
+    {
+      "id": "M006",
+      "title": "个人信息页 PDF 原件本地持久化",
+      "status": "done",
+      "depends_on": [
+        "M002"
+      ],
+      "acceptance": [
+        "PDF 原件使用 CurrentUser DPAPI 保存并可跨重启读取。"
+      ],
+      "verification": [
+        "npm run validate"
+      ],
+      "notes": "提交 cb17724。"
+    },
+    {
+      "id": "M008",
+      "title": "浏览器旧 CDP 端口清理与自动重连",
+      "status": "done",
+      "depends_on": [
+        "M003"
+      ],
+      "acceptance": [
+        "失效 DevToolsActivePort 不再阻止启动。",
+        "活动端口或并发变化的端口文件绝不被清理。",
+        "浏览器重启后复用专用 Profile 并自动重连到去查询参数的目标页。"
+      ],
+      "verification": [
+        "node --test tests/browser-session.test.mjs",
+        "npm run test:core"
+      ],
+      "notes": "合入原项目双探测与并发保护方案，修复 browser-session.mjs 约 314 行。"
+    },
+    {
+      "id": "M009",
+      "title": "Agent 无 CDP 时的可操作离线状态",
+      "status": "done",
+      "depends_on": [
+        "M008",
+        "M004"
+      ],
+      "acceptance": [
+        "ApplicationService 启动不因 kernel.start 连接错误退出。",
+        "workspace_status 返回 browser disconnected/stopped 及下一步操作提示。",
+        "inspect/plan/execute 在离线时 fail closed。",
+        "MCP 六工具仍可发现和连接。"
+      ],
+      "verification": [
+        "node --test tests/application-service.test.mjs tests/mcp-server.test.mjs",
+        "npm run test:core"
+      ],
+      "notes": "真实 CLI 已验证无会话时返回 launch 指令、断开后自动重连、小米标签页成功接管；补齐 BrowserSessionManager.connection 身份绑定契约。"
+    },
+    {
+      "id": "M007",
+      "title": "真实 PDF 文本解析与字段提取回归",
+      "status": "done",
+      "depends_on": [
+        "M006",
+        "M009"
+      ],
+      "acceptance": [
+        "使用用户真实 PDF 在当前个人信息页完成本地文本提取。",
+        "解析结果填入对应结构化字段且不覆盖已有非空值。",
+        "失败时保存和解析结论保持分离。"
+      ],
+      "verification": [
+        "真实 PDF 私有执行记录（不入库原文）",
+        "个人信息页逐字段审核",
+        "npm run validate"
+      ],
+      "notes": "???? PDF ?????????????????????????????????????"
+    },
+    {
+      "id": "M010",
+      "title": "小米真实页面 E3–E5 非提交闭环",
+      "status": "done",
+      "depends_on": [
+        "M007",
+        "M009"
+      ],
+      "acceptance": [
+        "真实页完成识别、受控填写、布尔回读和浏览器重启复验。",
+        "冻结字段分母中每个字段有唯一结论。",
+        "错误控件、敏感字段自动处理、验证码绕过和最终提交均为零。",
+        "执行不依赖飞书或公司专用选择器。"
+      ],
+      "verification": [
+        "小米真实页 E3 脱敏盘点",
+        "用户授权后的 E4 非提交写入 manifest",
+        "E5 重启一致性 manifest"
+      ],
+      "notes": "???????? E3 ?????E4 ?????????/???E5 ?????? 51/51 ?????E3 ??????????????? ground truth?"
+    },
+    {
+      "id": "M011",
+      "title": "最终回归与状态文档",
+      "status": "done",
+      "depends_on": [
+        "M008",
+        "M009",
+        "M007",
+        "M010"
+      ],
+      "acceptance": [
+        "全部自动化检查通过。",
+        "STATUS 与 progress 准确区分自动化和真实页证据。",
+        "代码中不存在飞书专用残留选择器。"
+      ],
+      "verification": [
+        "npm run validate",
+        "静态选择器审计",
+        "MCP 六工具握手检查"
+      ],
+      "notes": "npm run validate ???36 core?188 module??MCP ???????????????/?????????? 0?"
+    }
   ]
 }

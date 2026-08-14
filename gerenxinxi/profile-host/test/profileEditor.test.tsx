@@ -71,4 +71,33 @@ describe("ProfileEditor host integration", () => {
     expect(await screen.findByText(/candidate\.pdf/)).toBeTruthy();
     expect(screen.getByText("已保存常用 PDF")).toBeTruthy();
   });
+
+  it("re-parses an already saved PDF and merges fields without replacing existing values", async () => {
+    const profile = createEmptyProfile();
+    profile.basic.fullName = "Existing Name";
+    const parsed = createEmptyProfile();
+    parsed.basic.fullName = "Parsed Name";
+    parsed.basic.currentCity = "上海";
+    const metadata = { name: "candidate.pdf", mimeType: "application/pdf" as const, size: 16, sha256: "a".repeat(64), savedAt: "2026-08-13T00:00:00.000Z" };
+    const savedResumeRepository = {
+      load: vi.fn(async () => metadata),
+      save: vi.fn(async () => metadata),
+      clear: vi.fn(async () => undefined),
+      parseSaved: vi.fn(async () => ({
+        profile: parsed,
+        populatedPaths: ["basic.fullName", "basic.currentCity"],
+        warnings: [],
+        pageCount: 1,
+        usedOcr: false,
+        extractedCharacterCount: 42
+      }))
+    };
+    render(<ProfileEditor repository={{ load: async () => profile, save: async (value) => value }} savedResumeRepository={savedResumeRepository} />);
+    await screen.findByText("已保存常用 PDF");
+    await userEvent.click(screen.getByRole("button", { name: "重新解析" }));
+    await waitFor(() => expect(savedResumeRepository.parseSaved).toHaveBeenCalledTimes(1));
+    expect((screen.getByLabelText("姓名") as HTMLInputElement).value).toBe("Existing Name");
+    expect((screen.getByLabelText("当前城市") as HTMLInputElement).value).toBe("上海");
+    expect(await screen.findByText(/填入 1 项/)).toBeTruthy();
+  });
 });

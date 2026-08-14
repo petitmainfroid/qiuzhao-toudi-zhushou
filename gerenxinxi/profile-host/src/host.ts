@@ -234,6 +234,15 @@ export async function startProfileHost(options: ProfileHostOptions): Promise<Pro
         sendJson(response, 200, { resume: await options.resumeStore.loadMetadata() });
         return;
       }
+      if (request.method === "POST" && path === "/api/resume/parse") {
+        if (options.resumeParser === undefined) throw new RequestError(404, "not_found");
+        requireMutation(request, origin, activeSession);
+        if (Number(request.headers["content-length"] ?? 0) !== 0 || request.headers["transfer-encoding"] !== undefined) {
+          throw new RequestError(400, "unexpected_body");
+        }
+        sendJson(response, 200, await options.resumeParser.parse());
+        return;
+      }
       if (request.method === "PUT" && path === "/api/resume") {
         if (options.resumeStore === undefined) throw new RequestError(404, "not_found");
         requireMutation(request, origin, activeSession);

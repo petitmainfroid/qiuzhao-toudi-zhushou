@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "evidenceLevel": "private-real-document-observation",
+  "documentKind": "user-selected-pdf",
+  "sourceStoredEncrypted": true,
+  "sourcePersistedAcrossRestart": true,
+  "pageCount": 1,
+  "extractedCharacterCount": 1210,
+  "populatedFieldCount": 22,
+  "firstMerge": {
+    "importedFieldCount": 8,
+    "addedRecordCount": 6,
+    "overwroteExistingNonEmpty": 0
+  },
+  "restartReplay": {
+    "profileReloaded": true,
+    "pdfReloaded": true,
+    "importedFieldCount": 0,
+    "addedRecordCount": 0
+  },
+  "identityFieldsAutoImported": false,
+  "rawTextStoredInRepository": false,
+  "fileNameStoredInRepositoryEvidence": false
+}

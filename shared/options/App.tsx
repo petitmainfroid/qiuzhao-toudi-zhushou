@@ -442,12 +442,12 @@ export function ProfileEditor({
     }
   }
 
-  async function importResume(file: File | undefined) {
-    if (!file) return;
+  async function importResume(file: File | undefined, savedOnly = false) {
+    if (!file && !savedOnly) return;
     setResumeImport({ status: "parsing", message: "正在本机解析简历…", detail: "解析期间不会发送网络请求。" });
-    let locallySavedPdf: SavedResumeMetadata | null = null;
+    let locallySavedPdf: SavedResumeMetadata | null = savedOnly ? savedResume : null;
     let saveWarning = "";
-    if (detectResumeFormat(file) === "pdf" && localResumeRepository) {
+    if (file && detectResumeFormat(file) === "pdf" && localResumeRepository) {
       try {
         locallySavedPdf = await localResumeRepository.save(file);
         setSavedResume(locallySavedPdf);
@@ -457,8 +457,14 @@ export function ProfileEditor({
       }
     }
     try {
-      const extracted = await extractResumeText(file);
-      const parsed = parseResumeText(extracted.text);
+      const storedParsed = locallySavedPdf && localResumeRepository?.parseSaved
+        ? await localResumeRepository.parseSaved()
+        : null;
+      if (!file && !storedParsed) throw new Error("当前没有可重新解析的本机 PDF 简历。");
+      const extracted = storedParsed
+        ? { format: "pdf" as const, text: "", pageCount: storedParsed.pageCount, usedOcr: storedParsed.usedOcr }
+        : await extractResumeText(file!);
+      const parsed = storedParsed ?? parseResumeText(extracted.text);
       if (parsed.populatedPaths.length === 0) {
         throw new Error("没有识别到可填入档案的内容。请检查简历章节标题，或换用文字版 PDF/DOCX。");
       }
@@ -701,6 +707,13 @@ export function ProfileEditor({
                       <span>{savedResume.name} · {formatSavedResumeSize(savedResume.size)}</span>
                       <span>SHA-256 {savedResume.sha256.slice(0, 12)}… · 仅保存在本机</span>
                     </div>
+                    {localResumeRepository?.parseSaved ? (
+                      <button
+                        type="button"
+                        disabled={resumeImport.status === "parsing"}
+                        onClick={() => { void importResume(undefined, true); }}
+                      >重新解析</button>
+                    ) : null}
                     <button type="button" onClick={() => { void deleteSavedResume(); }}>删除 PDF</button>
                   </div>
                 ) : null}

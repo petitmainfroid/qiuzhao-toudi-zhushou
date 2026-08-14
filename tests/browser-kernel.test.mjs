@@ -101,6 +101,72 @@ test('typed kernel observes and finds without page values', async () => {
   assert.deepEqual(context.calls.map((call) => call.method), ['DOM.getDocument', 'DOM.resolveNode', 'Runtime.callFunctionOn', 'Runtime.releaseObjectGroup']);
 });
 
+test('kernel start automatically reconnects a disconnected dedicated browser session', async () => {
+  let connectionAttempts = 0;
+  let reconnectAttempts = 0;
+  const cdp = { async connect() {}, close() {} };
+  const pageModule = { OpaqueReferenceRegistry: class {} };
+  const browserSession = {
+    async connection() {
+      connectionAttempts += 1;
+      if (connectionAttempts === 1) throw new Error('session_not_ready');
+      return { ...connection };
+    },
+    async status() { return { state: 'disconnected', errorCode: 'cdp_unavailable' }; },
+    async reconnect() {
+      reconnectAttempts += 1;
+      return { state: 'ready' };
+    }
+  };
+  const kernel = new ZeroExtensionBrowserKernel({
+    browserSession,
+    profileService: {},
+    cdpFactory: () => cdp,
+    loadPageModule: async () => pageModule,
+    loadFixedAction: async () => 'function () {}'
+  });
+  assert.equal((await kernel.start()).state, 'ready');
+  assert.equal(reconnectAttempts, 1);
+  assert.equal(connectionAttempts, 2);
+  assert.equal(kernel.status().state, 'ready');
+});
+
+test('kernel exposes disconnected state instead of throwing when CDP recovery fails', async () => {
+  const browserSession = {
+    async connection() { throw new Error('session_not_ready'); },
+    async status() { return { state: 'disconnected', errorCode: 'cdp_unavailable' }; },
+    async reconnect() { throw new Error('browser_startup_timeout'); }
+  };
+  const kernel = new ZeroExtensionBrowserKernel({ browserSession, profileService: {} });
+  const status = await kernel.start();
+  assert.equal(status.state, 'disconnected');
+  assert.equal(status.errorCode, 'cdp_unavailable');
+  assert.equal(status.authorized, false);
+  await assert.rejects(() => kernel.observe(), /kernel_not_started/);
+});
+
+test('kernel status reattaches after the separately restarted browser becomes ready', async () => {
+  let ready = false;
+  const cdp = { async connect() {}, close() {} };
+  const browserSession = {
+    async connection() {
+      if (!ready) throw new Error('session_not_ready');
+      return { ...connection };
+    },
+    async status() { return ready ? { state: 'ready' } : { state: 'stopped', errorCode: 'session_missing' }; }
+  };
+  const kernel = new ZeroExtensionBrowserKernel({
+    browserSession,
+    profileService: {},
+    cdpFactory: () => cdp,
+    loadPageModule: async () => ({ OpaqueReferenceRegistry: class {} }),
+    loadFixedAction: async () => 'function () {}'
+  });
+  assert.equal((await kernel.start()).state, 'stopped');
+  ready = true;
+  assert.equal((await kernel.refreshStatus()).state, 'ready');
+});
+
 test('ordinary action resolves the value locally and returns Boolean verification only', async () => {
   const context = fixture();
   const observed = await ready(context);

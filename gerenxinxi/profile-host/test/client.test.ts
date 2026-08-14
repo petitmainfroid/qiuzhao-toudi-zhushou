@@ -131,4 +131,17 @@ describe("HttpSavedResumeRepository", () => {
     expect(Buffer.from(uploadHeaders.get("x-resume-name")!, "base64url").toString("utf8")).toBe("校招简历.pdf");
     expect(request.mock.calls[3]?.[1]?.method).toBe("DELETE");
   });
+
+  it("requests server-side parsing of the already encrypted PDF", async () => {
+    const profile = createEmptyProfile();
+    const parsed = { profile, populatedPaths: ["basic.fullName"], warnings: [], pageCount: 1, usedOcr: false, extractedCharacterCount: 42 };
+    const request = vi.fn<typeof fetch>()
+      .mockResolvedValueOnce(new Response(JSON.stringify({ csrfToken: "c".repeat(43), expiresAt: Date.now() + 1000 }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify(parsed), { status: 200 }));
+    const repository = new HttpSavedResumeRepository("", request);
+    await expect(repository.parseSaved()).resolves.toEqual(parsed);
+    expect(request.mock.calls[1]?.[0]).toBe("/api/resume/parse");
+    expect(request.mock.calls[1]?.[1]?.method).toBe("POST");
+    expect(new Headers(request.mock.calls[1]?.[1]?.headers).get("x-profile-csrf")).toBe("c".repeat(43));
+  });
 });

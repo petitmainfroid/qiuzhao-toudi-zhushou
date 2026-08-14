@@ -13,6 +13,15 @@ export interface SavedResumeMetadata {
   savedAt: string;
 }
 
+export interface SavedResumeParseResult {
+  profile: import("../domain/profile").CandidateProfile;
+  populatedPaths: string[];
+  warnings: string[];
+  pageCount: number;
+  usedOcr: boolean;
+  extractedCharacterCount: number;
+}
+
 export interface SavedResume extends SavedResumeMetadata {
   file: File;
 }
@@ -26,6 +35,7 @@ export interface SavedResumeRepositoryLike {
   load(): Promise<SavedResumeMetadata | null>;
   save(file: File): Promise<SavedResumeMetadata>;
   clear(): Promise<void>;
+  parseSaved?(): Promise<SavedResumeParseResult>;
 }
 
 export class SavedResumeValidationError extends Error {

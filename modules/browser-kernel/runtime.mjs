@@ -126,14 +126,24 @@ function compatible(intent, target) {
 function countCollection(state, collection) {
   const aliases = COLLECTION_NAMES[collection] ?? [];
   const indexes = new Set();
+  const unindexedOccurrences = new Map();
   for (const control of state.controls) {
     const name = control.semantics.name ?? '';
     for (const alias of aliases) {
       const match = new RegExp(`^${alias}\\[(\\d+)\\]`).exec(name);
-      if (match) indexes.add(Number(match[1]));
+      if (match) {
+        indexes.add(Number(match[1]));
+        continue;
+      }
+      if (name === alias) {
+        const semantic = control.semantics.label || control.semantics.ariaLabel
+          || control.semantics.placeholder || `${control.role}|${control.tag}`;
+        const key = `${alias}|${semantic}|${control.role}|${control.tag}`;
+        unindexedOccurrences.set(key, (unindexedOccurrences.get(key) ?? 0) + 1);
+      }
     }
   }
-  return indexes.size;
+  return Math.max(indexes.size, ...unindexedOccurrences.values(), 0);
 }
 
 export class ZeroExtensionBrowserKernel {
@@ -168,27 +178,72 @@ export class ZeroExtensionBrowserKernel {
     this.lease = undefined;
     this.requests = new Map();
     this.auditEntries = [];
+    this.browserState = 'stopped';
+    this.browserErrorCode = 'session_missing';
+    this.offlineIdentity = undefined;
   }
 
   async start() {
-    this.connection = await this.browserSession.connection();
-    this.cdp = this.cdpFactory(this.connection);
-    this.pageModule = await this.loadPageModule();
-    this.fixedActionSource = await this.loadFixedAction();
-    this.registry = new this.pageModule.OpaqueReferenceRegistry(() => this.createId().replaceAll('-', '').slice(0, 16));
-    await this.cdp.connect();
-    return this.status();
+    let connection;
+    try {
+      connection = await this.browserSession.connection();
+    } catch (initialError) {
+      const beforeRecovery = await this.#sessionStatus(initialError);
+      if (beforeRecovery.state === 'disconnected') {
+        try {
+          const recovered = await this.browserSession.reconnect();
+          if (recovered.state === 'ready') connection = await this.browserSession.connection();
+          else return this.#setOffline(recovered, recovered.errorCode ?? 'browser_confirmation_required');
+        } catch (recoveryError) {
+          return this.#setOffline(await this.#sessionStatus(recoveryError), errorCode(recoveryError));
+        }
+      } else {
+        return this.#setOffline(beforeRecovery, errorCode(initialError));
+      }
+    }
+    try {
+      const [pageModule, fixedActionSource] = await Promise.all([
+        this.loadPageModule(),
+        this.loadFixedAction()
+      ]);
+      const cdp = this.cdpFactory(connection);
+      await cdp.connect();
+      this.connection = connection;
+      this.cdp = cdp;
+      this.pageModule = pageModule;
+      this.fixedActionSource = fixedActionSource;
+      this.registry = new pageModule.OpaqueReferenceRegistry(() => this.createId().replaceAll('-', '').slice(0, 16));
+      this.browserState = 'ready';
+      this.browserErrorCode = undefined;
+      this.offlineIdentity = undefined;
+      return this.status();
+    } catch (connectError) {
+      return this.#setOffline(await this.#sessionStatus(connectError), errorCode(connectError));
+    }
   }
 
   status() {
     return {
-      state: this.cdp ? 'ready' : 'stopped',
-      sessionId: this.connection?.launchId,
-      origin: this.connection?.origin,
-      path: this.connection?.pathPattern,
+      state: this.cdp ? 'ready' : this.browserState,
+      sessionId: this.connection?.launchId ?? this.offlineIdentity?.launchId,
+      origin: this.connection?.origin ?? this.offlineIdentity?.origin,
+      path: this.connection?.pathPattern ?? this.offlineIdentity?.path,
       pageEpoch: this.pageEpoch,
-      authorized: Boolean(this.lease && this.lease.expiresAt > this.now())
+      authorized: Boolean(this.cdp && this.lease && this.lease.expiresAt > this.now()),
+      ...(this.browserErrorCode ? { errorCode: this.browserErrorCode } : {})
     };
+  }
+
+  async refreshStatus() {
+    const browserStatus = await this.#sessionStatus();
+    if (browserStatus.state !== 'ready') {
+      const fallback = browserStatus.state === 'login-needed'
+        ? 'browser_confirmation_required'
+        : browserStatus.errorCode ?? 'cdp_unavailable';
+      return this.#setOffline(browserStatus, fallback);
+    }
+    if (!this.cdp || !this.connection) return this.start();
+    return this.status();
   }
 
   async observe() {
@@ -315,6 +370,40 @@ export class ZeroExtensionBrowserKernel {
     this.cdp?.close();
     this.cdp = undefined;
     this.current = undefined;
+    this.connection = undefined;
+    this.browserState = 'stopped';
+    this.browserErrorCode = undefined;
+    this.offlineIdentity = undefined;
+  }
+
+  async #sessionStatus(cause) {
+    try {
+      return await this.browserSession.status();
+    } catch {
+      return { state: 'stopped', errorCode: errorCode(cause) };
+    }
+  }
+
+  #setOffline(sessionStatus, fallbackError) {
+    this.revokeLease();
+    this.registry?.invalidate();
+    this.current = undefined;
+    this.cdp?.close();
+    this.cdp = undefined;
+    this.connection = undefined;
+    this.registry = undefined;
+    this.pageModule = undefined;
+    this.fixedActionSource = undefined;
+    this.browserState = ['stopped', 'disconnected', 'login-needed'].includes(sessionStatus?.state)
+      ? sessionStatus.state
+      : 'disconnected';
+    this.browserErrorCode = sessionStatus?.errorCode ?? fallbackError ?? 'cdp_unavailable';
+    this.offlineIdentity = {
+      launchId: sessionStatus?.launchId,
+      origin: sessionStatus?.selectedTab?.origin ?? sessionStatus?.requestedPage?.origin,
+      path: sessionStatus?.selectedTab?.pathPattern ?? sessionStatus?.requestedPage?.pathPattern
+    };
+    return this.status();
   }
 
   async #executeFresh(request) {
@@ -485,4 +574,10 @@ export class ZeroExtensionBrowserKernel {
     this.#requireStarted();
     if (!this.current || this.current.pageEpoch !== pageEpoch) throw new Error('stale_page_epoch');
   }
+}
+
+function errorCode(error) {
+  return error instanceof Error && /^[a-z0-9_-]{1,80}$/.test(error.message)
+    ? error.message
+    : 'cdp_unavailable';
 }

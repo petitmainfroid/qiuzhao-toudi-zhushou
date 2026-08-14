@@ -73,6 +73,35 @@ test('stdio transport handles initialize, list, call, unknown tool, and parse fa
   assert.equal(service.calls.at(-1).name, 'close');
 });
 
+test('stdio MCP remains discoverable and reports recovery when application start has no CDP', async () => {
+  const service = fakeApplicationService();
+  service.start = async () => { service.calls.push({ name: 'start-offline' }); };
+  service.workspaceStatus = async () => ({
+    browser: {
+      state: 'disconnected', errorCode: 'cdp_unavailable',
+      recommendedAction: 'reconnect', recoveryCommand: 'qiuzhao browser reconnect'
+    },
+    profile: { state: 'ready' },
+    authorization: { state: 'inactive', scope: 'none' },
+    workflow: { status: 'idle', round: 0, recoverable: false }
+  });
+  const input = new PassThrough();
+  const output = new PassThrough();
+  let text = '';
+  output.on('data', (chunk) => { text += chunk.toString('utf8'); });
+  const serving = serveStdio({ applicationService: service, input, output });
+  input.write(`${JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'initialize', params: {} })}\n`);
+  input.write(`${JSON.stringify({ jsonrpc: '2.0', method: 'notifications/initialized' })}\n`);
+  input.write(`${JSON.stringify({ jsonrpc: '2.0', id: 2, method: 'tools/list' })}\n`);
+  input.write(`${JSON.stringify({ jsonrpc: '2.0', id: 3, method: 'tools/call', params: { name: 'workspace_status', arguments: {} } })}\n`);
+  input.end();
+  await serving;
+  const messages = text.trim().split(/\r?\n/).map((line) => JSON.parse(line));
+  assert.equal(messages[1].result.tools.length, 6);
+  assert.equal(messages[2].result.structuredContent.browser.state, 'disconnected');
+  assert.equal(messages[2].result.structuredContent.browser.recommendedAction, 'reconnect');
+});
+
 test('calls before initialization and malformed or malicious tool payloads fail closed', async () => {
   const service = fakeApplicationService();
   const server = new QiuzhaoMcpServer({ applicationService: service });

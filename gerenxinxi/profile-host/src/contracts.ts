@@ -62,6 +62,7 @@ export interface ProfileHostOptions {
   store: ProfileHostStore;
   localData?: ProfileHostImportCoordinator;
   resumeStore?: import("./resumeStore").ProfileHostResumeStore;
+  resumeParser?: { parse(): Promise<import("../../resume-parser/src").StoredResumeParseResult> };
   ui: ProfileHostUiBundle;
   bootstrapTtlMs?: number;
   sessionTtlMs?: number;

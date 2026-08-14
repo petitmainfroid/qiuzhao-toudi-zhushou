@@ -164,7 +164,6 @@ export function runFixedPageAction(this: Element, payload: FixedPageActionPayloa
   if (payload.action === "fill-range") {
     const markerSelector = [
       "[data-date-range]",
-      ".atsx-date-picker-period",
       "[class*='date-range']",
       "[class*='date-picker-period']",
       "[class*='daterange']"
@@ -272,19 +271,44 @@ export function runFixedPageAction(this: Element, payload: FixedPageActionPayloa
         ? "repeatable-add"
         : "repeatable-save";
       const submitButton = element instanceof ownerWindow.HTMLButtonElement && element.type.toLowerCase() === "submit";
-      const fixedFeishuRepeatableAdd = payload.purpose === "add-repeatable-record"
-        && element.matches(".formOperate-addBtn, .createFormSection-addBtn")
-        && Boolean(element.closest([
-          ".resumeEditForm-education",
-          ".resumeEditForm-internship",
-          ".resumeEditForm-work",
-          ".resumeEditForm-works",
-          ".resumeEditForm-project",
-          ".resumeEditForm-award",
-          ".resumeEditForm-language"
-        ].join(", ")));
+      const repeatableGroups = [
+        { heading: /教育经历|教育背景|education(?:al)?\s*(?:experience|background)/i, fields: /学校|院校|学历|专业|degree|major|school/i },
+        { heading: /实习经历|工作经历|职业经历|internship|work\s*experience|employment/i, fields: /公司|职位|岗位|描述|company|employer|position|role|description/i },
+        { heading: /作品(?:集|经历)?|portfolio|work\s*samples?/i, fields: /作品|链接|名称|link|title|name/i },
+        { heading: /项目经历|项目经验|projects?/i, fields: /项目名称|项目角色|描述|project|role|description/i },
+        { heading: /获奖(?:经历)?|荣誉(?:奖项)?|奖项|awards?|honors?/i, fields: /获奖|奖项|荣誉|名称|级别|award|honor|title/i },
+        { heading: /语言能力|外语能力|languages?/i, fields: /语言|精通程度|熟练程度|language|proficiency/i }
+      ];
+      let semanticRepeatableAdd = false;
+      if (payload.purpose === "add-repeatable-record") {
+        let container: Element | null = element.parentElement;
+        for (let depth = 0; container && depth < 10; depth += 1, container = container.parentElement) {
+          if (container.matches("body, html")) break;
+          const semanticNodes = Array.from(container.querySelectorAll<HTMLElement>(
+            "[data-form-field-name], [data-section], [aria-label], h1, h2, h3, h4, h5, h6, legend, [role='heading']"
+          )).slice(0, 40);
+          const signal = [
+            container.getAttribute("data-form-field-name") ?? "",
+            container.getAttribute("data-section") ?? "",
+            container.getAttribute("aria-label") ?? "",
+            ...semanticNodes.flatMap((node) => [
+              node.getAttribute("data-form-field-name") ?? "",
+              node.getAttribute("data-section") ?? "",
+              node.getAttribute("aria-label") ?? "",
+              node.matches("h1, h2, h3, h4, h5, h6, legend, [role='heading']") ? node.textContent ?? "" : ""
+            ])
+          ].join(" ");
+          const containerText = (container.textContent ?? "").replace(/\s+/g, " ").trim().slice(0, 500);
+          if (repeatableGroups.some((group) =>
+            group.heading.test(signal) || (group.heading.test(containerText) && group.fields.test(containerText))
+          )) {
+            semanticRepeatableAdd = true;
+            break;
+          }
+        }
+      }
       if (
-        (!element.matches("button, input[type='button'], [role='button']") && !fixedFeishuRepeatableAdd)
+        (!element.matches("button, input[type='button'], [role='button']") && !semanticRepeatableAdd)
         || submitButton
         || element.matches("a[href], input[type='submit']")
       ) {
@@ -359,8 +383,6 @@ export function runFixedPageAction(this: Element, payload: FixedPageActionPayloa
     }
     const optionSelector = [
       "[role='option']",
-      ".atsx-select-dropdown-menu-item",
-      ".ud-select-option",
       ".ant-select-item-option",
       ".el-select-dropdown__item"
     ].join(",");
@@ -385,7 +407,7 @@ export function runFixedPageAction(this: Element, payload: FixedPageActionPayloa
     option.click();
     const selected = option.getAttribute("aria-selected") === "true"
       || option.getAttribute("data-selected") === "true"
-      || option.matches(".is-selected, .selected, .atsx-select-dropdown-menu-item-selected, .ant-select-item-option-selected")
+      || option.matches(".is-selected, .selected, .ant-select-item-option-selected")
       || (isInput && normalize(element.value) === target)
       || normalize(element.getAttribute("aria-valuetext") ?? "") === target;
     return selected
@@ -412,17 +434,14 @@ export function runFixedPageAction(this: Element, payload: FixedPageActionPayloa
 const BLOCKED_INPUT_TYPES = new Set([
   "file", "password", "hidden", "submit", "reset", "button", "image", "checkbox"
 ]);
-const CUSTOM_SELECT_SELECTOR = ".atsx-select, .ud-select, .ant-select, .el-select, [role='combobox']";
+const CUSTOM_SELECT_SELECTOR = ".ant-select, .el-select, [role='combobox'], [class*='select'][aria-haspopup]";
 const OPTION_SELECTOR = [
   "[role='option']",
-  ".atsx-select-dropdown-menu-item",
-  ".ud-select-option",
   ".ant-select-item-option",
   ".el-select-dropdown__item"
 ].join(", ");
 const SELECTED_OPTION_SELECTOR = [
   ".selected-value",
-  ".atsx-select-selection-selected-value",
   ".ant-select-selection-item",
   ".el-select__selected-item",
   "[data-selected='true']",
@@ -430,7 +449,7 @@ const SELECTED_OPTION_SELECTOR = [
 ].join(", ");
 
 function customSelectRoot(element: Element): HTMLElement | null {
-  return element.closest<HTMLElement>(".atsx-select, .ud-select, .ant-select, .el-select")
+  return element.closest<HTMLElement>(".ant-select, .el-select, [class*='select'][aria-haspopup]")
     ?? element.closest<HTMLElement>("[role='combobox']");
 }
 
@@ -441,7 +460,7 @@ function bounded(value: number | undefined, fallback: number, minimum: number, m
 
 function isDateRangeInput(element: PageControl): element is HTMLInputElement {
   return element instanceof HTMLInputElement
-    && Boolean(element.closest(".atsx-date-picker-period, [class*='date-picker-period']"));
+    && Boolean(element.closest("[data-date-range], [class*='date-picker-period'], [class*='date-range'], [class*='daterange']"));
 }
 
 function parseDateRange(value: string): { start: string; end: string } | null {
@@ -463,7 +482,7 @@ function dateRangeVisibleStateMatches(element: HTMLInputElement, value: string):
   const actual = parseDateRange(element.value);
   if (!expected || !actual || actual.start !== expected.start || actual.end !== expected.end) return false;
   const root = element.closest<HTMLElement>(
-    ".atsx-date-picker.atsx-date-picker-period-month, .atsx-date-picker.atsx-date-picker-period, [data-date-range]"
+    "[data-date-range], [class*='date-picker-period'], [class*='date-range'], [class*='daterange']"
   );
   if (!root) return false;
   const visibleDigits = (root.textContent ?? "").replace(/\D/g, "");
@@ -663,7 +682,7 @@ async function waitUntil(predicate: () => boolean, timeoutMs: number): Promise<b
 }
 
 function customSelectIsMultiple(root: HTMLElement): boolean {
-  return root.matches("[aria-multiselectable='true'], .ant-select-multiple, .atsx-select-multiple, [class*='select--multiple']")
+  return root.matches("[aria-multiselectable='true'], .ant-select-multiple, [class*='select--multiple']")
     || Boolean(root.querySelector("[aria-multiselectable='true']"));
 }
 
@@ -724,7 +743,7 @@ async function performWrite(element: PageControl, value: string, optionTimeoutMs
     dispatchInputEvents(element, value);
     if (isDateRangeInput(element)) {
       const root = element.closest<HTMLElement>(
-        ".atsx-date-picker.atsx-date-picker-period-month, .atsx-date-picker.atsx-date-picker-period, [data-date-range]"
+        "[data-date-range], [class*='date-picker-period'], [class*='date-range'], [class*='daterange']"
       );
       root?.dispatchEvent(new Event("input", { bubbles: true }));
       root?.dispatchEvent(new Event("change", { bubbles: true }));

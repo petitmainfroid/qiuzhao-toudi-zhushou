@@ -1,4 +1,7 @@
 import path from 'node:path';
+import { createHash } from 'node:crypto';
+import { mkdir, writeFile } from 'node:fs/promises';
+import { pathToFileURL } from 'node:url';
 import { build } from 'esbuild';
 
 const sourceCache = new Map();
@@ -31,11 +34,22 @@ export async function loadBundledNodeModule(relativeFile) {
     bundle: true,
     format: 'esm',
     platform: 'node',
+    external: ['pdfjs-dist/*'],
     write: false,
     logLevel: 'silent',
     target: 'node22'
   });
-  const url = `data:text/javascript;base64,${Buffer.from(bundled.outputFiles[0].text).toString('base64')}`;
+  const source = bundled.outputFiles[0].text;
+  const cacheRoot = path.resolve(import.meta.dirname, '..', '..', 'node_modules', '.cache', 'qiuzhao-node-modules');
+  const fileName = `${createHash('sha256').update(source).digest('hex')}.mjs`;
+  const cacheFile = path.join(cacheRoot, fileName);
+  await mkdir(cacheRoot, { recursive: true, mode: 0o700 });
+  try {
+    await writeFile(cacheFile, source, { flag: 'wx', mode: 0o600 });
+  } catch (error) {
+    if (error?.code !== 'EEXIST') throw error;
+  }
+  const url = pathToFileURL(cacheFile).href;
   const promise = import(url);
   sourceCache.set(key, promise);
   return await promise;

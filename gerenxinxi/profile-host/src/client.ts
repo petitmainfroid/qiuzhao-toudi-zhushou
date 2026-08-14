@@ -4,7 +4,7 @@ import type {
   ProfileLocalDataRepositoryLike,
   ProfileRepositoryLike
 } from "../../../shared/options/App";
-import type { SavedResumeMetadata, SavedResumeRepositoryLike } from "../../../shared/storage/savedResumeRepository";
+import type { SavedResumeMetadata, SavedResumeParseResult, SavedResumeRepositoryLike } from "../../../shared/storage/savedResumeRepository";
 
 interface SessionResponse {
   csrfToken: string;
@@ -227,6 +227,17 @@ export class HttpSavedResumeRepository implements SavedResumeRepositoryLike {
       headers: { Accept: "application/json", "X-Profile-CSRF": csrfToken }
     });
     await this.requireOk(response, "无法删除本地保存的 PDF 简历。");
+  }
+
+  async parseSaved(): Promise<SavedResumeParseResult> {
+    const csrfToken = await this.ensureSession();
+    const response = await this.request(`${this.baseUrl}/api/resume/parse`, {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { Accept: "application/json", "X-Profile-CSRF": csrfToken }
+    });
+    await this.requireOk(response, "PDF 简历无法在本机解析。");
+    return response.json() as Promise<SavedResumeParseResult>;
   }
 
   private async ensureSession(): Promise<string> {

@@ -5,6 +5,7 @@ import type { ProfileHostUiAsset, ProfileHostUiBundle } from "./contracts";
 const MIME_TYPES: Readonly<Record<string, string>> = {
   ".css": "text/css; charset=utf-8",
   ".js": "text/javascript; charset=utf-8",
+  ".mjs": "text/javascript; charset=utf-8",
   ".png": "image/png",
   ".svg": "image/svg+xml",
   ".woff": "font/woff",

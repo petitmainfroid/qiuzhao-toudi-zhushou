@@ -228,22 +228,84 @@ function nearestFieldMetadata(record: FlatNode): { name: string; label: string }
   return { name: "", label: "" };
 }
 
-function nearestRepeatableSectionName(record: FlatNode): string {
-  const roots: Record<string, string> = {
-    education: "education_list",
-    internship: "internship_list",
-    work: "works_list",
-    works: "works_list",
-    project: "project_list",
-    award: "award_list",
-    language: "language_list"
-  };
+const REPEATABLE_GROUPS = [
+  { name: "education_list", label: "添加教育经历", pattern: /education[_\s-]*(?:list|experience|background)|教育经历|教育背景|学历经历/i, fields: /学校|院校|学历|专业|degree|major|school/i },
+  { name: "internship_list", label: "添加实习经历", pattern: /internship[_\s-]*(?:list|experience)|work[_\s-]*(?:list|experience)|实习经历|工作经历|职业经历|employment/i, fields: /公司|职位|岗位|描述|company|employer|position|role|description/i },
+  { name: "works_list", label: "添加作品", pattern: /works?[_\s-]*list|作品(?:集|经历)?|portfolio|work\s*samples?/i, fields: /作品|链接|名称|link|title|name/i },
+  { name: "project_list", label: "添加项目经历", pattern: /project[_\s-]*(?:list|experience)|项目经历|项目经验|projects?/i, fields: /项目名称|项目角色|描述|project|role|description/i },
+  { name: "award_list", label: "添加获奖经历", pattern: /award[_\s-]*(?:list|experience)|获奖(?:经历)?|荣誉(?:奖项)?|奖项|awards?|honors?/i, fields: /获奖|奖项|荣誉|名称|级别|award|honor|title/i },
+  { name: "language_list", label: "添加语言能力", pattern: /language[_\s-]*(?:list|skills?)|语言能力|外语能力|languages?/i, fields: /语言|精通程度|熟练程度|language|proficiency/i }
+] as const;
+
+function repeatableGroupFromSignal(signal: string, requireFieldSignature = false): (typeof REPEATABLE_GROUPS)[number] | undefined {
+  return REPEATABLE_GROUPS.find((group) =>
+    group.pattern.test(signal) && (!requireFieldSignature || group.fields.test(signal) || /添加|新增|add|new/i.test(signal))
+  );
+}
+
+function structuralHeadingText(node: CdpDomNode): string {
+  const chunks: string[] = [];
+  let visited = 0;
+  function collect(current: CdpDomNode): void {
+    visited += 1;
+    if (visited > 300 || chunks.length >= 8) return;
+    const name = nodeName(current);
+    const role = attribute(current, "role")?.toLowerCase();
+    if (["h1", "h2", "h3", "h4", "h5", "h6", "legend"].includes(name) || role === "heading") {
+      const value = textContent(current, 100);
+      if (value) chunks.push(value);
+      return;
+    }
+    for (const child of current.children ?? []) collect(child);
+  }
+  collect(node);
+  return sanitizeSemanticText(chunks.join(" "), 300);
+}
+
+function descendantRepeatableSignals(node: CdpDomNode): string {
+  const signals: string[] = [];
+  let visited = 0;
+  function collect(current: CdpDomNode): void {
+    visited += 1;
+    if (visited > 400 || signals.length >= 24) return;
+    for (const name of ["data-form-field-name", "data-section", "aria-label"] as const) {
+      const value = attribute(current, name);
+      if (value) signals.push(value);
+    }
+    const tag = nodeName(current);
+    if (["h1", "h2", "h3", "h4", "h5", "h6", "legend"].includes(tag)
+      || attribute(current, "role")?.toLowerCase() === "heading") {
+      const value = textContent(current, 100);
+      if (value) signals.push(value);
+    }
+    for (const child of current.children ?? []) collect(child);
+  }
+  collect(node);
+  return sanitizeSemanticText(signals.join(" "), 500);
+}
+
+function repeatableGroupForRecord(record: FlatNode): (typeof REPEATABLE_GROUPS)[number] | undefined {
   let current: FlatNode | null = record;
   for (let depth = 0; current && depth < 12; depth += 1, current = current.parent) {
-    const match = /(?:^|\s)resumeEditForm-(education|internship|work|works|project|award|language)(?:\s|$)/.exec(classValue(current.node));
-    if (match) return roots[match[1]!] ?? "";
+    const tag = nodeName(current.node);
+    if (["form", "body", "html", "#document"].includes(tag)) break;
+    const directSignal = [
+      attribute(current.node, "data-form-field-name"),
+      attribute(current.node, "data-section"),
+      attribute(current.node, "aria-label"),
+      structuralHeadingText(current.node)
+    ].filter(Boolean).join(" ");
+    const directGroup = repeatableGroupFromSignal(directSignal);
+    if (directGroup) return directGroup;
+    const containerText = textContent(current.node, 240);
+    const group = repeatableGroupFromSignal(containerText, true);
+    if (group) return group;
   }
-  return "";
+  return undefined;
+}
+
+function nearestRepeatableSectionName(record: FlatNode): string {
+  return repeatableGroupForRecord(record)?.name ?? "";
 }
 
 function classValue(node: CdpDomNode): string {
@@ -313,8 +375,7 @@ function fixedDateRangeRoot(node: CdpDomNode): boolean {
   if (hasAttribute(node, "data-date-range")) return true;
   const className = attribute(node, "class") ?? "";
   if (/hidden-input/i.test(className)) return false;
-  return /(?:^|\s)atsx-date-picker-period(?:-month)?(?:\s|$)/.test(className)
-    || /date-picker-period|date-range|daterange/i.test(className);
+  return /date-picker-period|date-range|daterange/i.test(className);
 }
 
 function fixedDateRangeInputs(record: FlatNode): CdpDomNode[] {
@@ -433,36 +494,17 @@ function textContent(node: CdpDomNode, maxLength = MAX_TEXT_LENGTH): string {
   return sanitizeSemanticText(chunks.join(" "), maxLength);
 }
 
-const repeatableSectionMetadata = [
-  { className: "resumeEditForm-education", name: "education_list.add", label: "添加教育经历" },
-  { className: "resumeEditForm-internship", name: "internship_list.add", label: "添加实习经历" },
-  { className: "resumeEditForm-work", name: "works_list.add", label: "添加作品" },
-  { className: "resumeEditForm-works", name: "works_list.add", label: "添加作品" },
-  { className: "resumeEditForm-project", name: "project_list.add", label: "添加项目经历" },
-  { className: "resumeEditForm-award", name: "award_list.add", label: "添加获奖经历" },
-  { className: "resumeEditForm-language", name: "language_list.add", label: "添加语言能力" }
-] as const;
-
-function classNames(node: CdpDomNode): Set<string> {
-  return new Set((attribute(node, "class") ?? "").split(/\s+/).filter(Boolean));
-}
-
-function fixedRepeatableAddNode(node: CdpDomNode): boolean {
-  const classes = classNames(node);
-  if (!classes.has("formOperate-addBtn") && !classes.has("createFormSection-addBtn")) return false;
-  return /^(?:添加|新增)$/.test(textContent(node, 20));
+function semanticRepeatableAddNode(node: CdpDomNode): boolean {
+  if (node.nodeType !== 1
+    || !/^(?:添加|新增|继续添加|add|add another|new)$/i.test(textContent(node, 30))) return false;
+  const descendants = [...(node.children ?? []), ...(node.shadowRoots ?? [])];
+  return !descendants.some((child) => semanticRepeatableAddNode(child));
 }
 
 function repeatableAddMetadata(record: FlatNode): { name: string; label: string } | null {
-  if (!fixedRepeatableAddNode(record.node)) return null;
-  let current: FlatNode | null = record.parent;
-  while (current) {
-    const classes = classNames(current.node);
-    const metadata = repeatableSectionMetadata.find(({ className }) => classes.has(className));
-    if (metadata) return { name: metadata.name, label: metadata.label };
-    current = current.parent;
-  }
-  return null;
+  if (!semanticRepeatableAddNode(record.node)) return null;
+  const group = repeatableGroupForRecord(record);
+  return group ? { name: `${group.name}.add`, label: group.label } : null;
 }
 
 function implicitRole(node: CdpDomNode): PageControlRole | null {
@@ -472,7 +514,6 @@ function implicitRole(node: CdpDomNode): PageControlRole | null {
   if (name === "textarea") return "textbox";
   if (name === "select") return hasAttribute(node, "multiple") ? "listbox" : "combobox";
   if (name === "button") return "button";
-  if (fixedRepeatableAddNode(node)) return "button";
   if (name === "a" && attribute(node, "href") !== undefined) return "link";
   if (isContentEditableNode(node)) return "textbox";
   if (name !== "input") return null;
@@ -631,6 +672,9 @@ function fingerprintControl(control: Omit<PrivacySafeControl, "ref">): string {
 
 function inspectControls(flattened: FlattenedDocument): InspectedControlTarget[] {
   const recordByNode = new Map(flattened.nodes.map((record) => [record.node, record]));
+  const recordByBackendNodeId = new Map(flattened.nodes
+    .filter((record) => typeof record.node.backendNodeId === "number")
+    .map((record) => [record.node.backendNodeId!, record]));
   const nodesById = new Map<string, CdpDomNode>();
   const labelByFor = new Map<string, string>();
   const dateRangeRoots = new Map<CdpDomNode, CdpDomNode[]>();
@@ -683,12 +727,13 @@ function inspectControls(flattened: FlattenedDocument): InspectedControlTarget[]
       });
       continue;
     }
-    const role = implicitRole(record.node);
+    const repeatableMetadata = repeatableAddMetadata(record);
+    const role = implicitRole(record.node) ?? (repeatableMetadata ? "button" : null);
     const backendNodeId = record.node.backendNodeId;
     if (!role || typeof backendNodeId !== "number") continue;
     if (dateRangeInputIds.has(backendNodeId)) continue;
     if (structurallyHidden(record)) continue;
-    if (/(?:^|\s)atsx-select-search__field(?:\s|$)/.test(classValue(record.node))) continue;
+    if (/select-search[^\s]*field|search[^\s]*input/i.test(classValue(record.node))) continue;
 
     const id = attribute(record.node, "id");
     const ariaLabel = sanitizeSemanticText(attribute(record.node, "aria-label"));
@@ -713,7 +758,6 @@ function inspectControls(flattened: FlattenedDocument): InspectedControlTarget[]
     const placeholder = sanitizeSemanticText(attribute(record.node, "placeholder"), 80);
     const fieldMetadata = nearestFieldMetadata(record);
     const formLabel = nearestFormLabel(record);
-    const repeatableMetadata = repeatableAddMetadata(record);
     const technicalName = sanitizeSemanticText(attribute(record.node, "name"), 80)
       || fieldMetadata.name
       || repeatableMetadata?.name
@@ -768,7 +812,22 @@ function inspectControls(flattened: FlattenedDocument): InspectedControlTarget[]
       control
     });
   }
-  return controls;
+  const repeatableTargets = new Map(controls
+    .filter((target) => target.control.semantics.name?.endsWith(".add"))
+    .map((target) => [target.backendNodeId, target]));
+  return controls.filter((target) => {
+    const name = target.control.semantics.name;
+    if (!name?.endsWith(".add")) return true;
+    let ancestor = recordByBackendNodeId.get(target.backendNodeId)?.parent;
+    while (ancestor) {
+      const ancestorTarget = typeof ancestor.node.backendNodeId === "number"
+        ? repeatableTargets.get(ancestor.node.backendNodeId)
+        : undefined;
+      if (ancestorTarget?.control.semantics.name === name) return false;
+      ancestor = ancestor.parent;
+    }
+    return true;
+  });
 }
 
 function buildControls(

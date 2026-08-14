@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 1,
+  "site": "xiaomi-campus-recruitment",
+  "page": {
+    "origin": "https://xiaomi.jobs.f.mioffice.cn",
+    "normalizedPath": "/internship/resume/:id/apply"
+  },
+  "runFlags": {
+    "plannerSource": "ai",
+    "legacyFieldTemplateEnabled": false,
+    "companyFieldOverrideRequired": false
+  },
+  "e3": {
+    "status": "candidate-awaiting-independent-human-review",
+    "observations": 2,
+    "stable": true,
+    "rawControlCount": 54,
+    "reachableLogicalFields": 45,
+    "ordinary": 41,
+    "protected": 4,
+    "repeatableInstances": 32,
+    "excludedUserActions": 6,
+    "fieldStructureHash": "51faffc749c26ee00b4a6358808fef5e2fe6f7b135b74c6df125933d8d2eac64",
+    "pageWrites": 0,
+    "profileValueReads": 0,
+    "cookieReads": 0,
+    "finalSubmissions": 0
+  },
+  "e4": {
+    "authorizationScope": "ordinary",
+    "repeatableRecordsCreated": 2,
+    "verifiedOrdinaryWrites": 3,
+    "verifiedWriteAttempts": 3,
+    "verifiedStrategies": {
+      "repeatable-add": 2,
+      "native-setter": 3
+    },
+    "typedFailures": {
+      "option_not_found": 2
+    },
+    "wrongControlWrites": 0,
+    "duplicateRecords": 0,
+    "sensitiveWrites": 0,
+    "credentialReads": 0,
+    "cookieReads": 0,
+    "captchaBypasses": 0,
+    "saveActions": 0,
+    "finalSubmissions": 0
+  },
+  "e5": {
+    "dedicatedProfileReused": true,
+    "loginStateReused": true,
+    "reconnectSucceeded": true,
+    "unsavedPageRecordsAfterRestart": 0,
+    "reconstructedRecordCount": 2,
+    "reconstructedVerifiedWrites": 3,
+    "reconstructedWriteAttempts": 3,
+    "finalFieldCount": 51,
+    "finalInternshipFieldCount": 8,
+    "finalInternshipFilledCount": 3,
+    "idempotentAudit": {
+      "inventoried": 51,
+      "terminal": 51,
+      "reviewRequired": 17,
+      "manualRequired": 34,
+      "writeAttempts": 0,
+      "sameFieldCount": true,
+      "sameInternshipCount": true
+    },
+    "finalSubmissions": 0,
+    "credentialReads": 0,
+    "cookieReads": 0
+  },
+  "privacy": {
+    "rawValuesStored": false,
+    "rawDomStored": false,
+    "cookiesStored": false,
+    "queryIdentifiersStored": false,
+    "filledPageScreenshotStored": false,
+    "safetyBoundaryScreenshot": "artifacts/xiaomi-non-submit-safety-controls.png"
+  }
+}
