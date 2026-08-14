@@ -70,7 +70,20 @@ export function normalizePage(input) {
   if (url.protocol !== 'https:' || url.username || url.password) {
     throw new Error('https_url_without_credentials_required');
   }
+  const originalSearch = new URLSearchParams(url.search);
   url.search = '';
+  // Recruitment URLs can contain private tracking IDs. BOSS job search is the
+  // sole exception: retain only its bounded, user-visible search state so an
+  // Agent may open one intentional search rather than repeatedly reopening a
+  // generic landing page. Identity and public status still omit the query.
+  if (url.origin === 'https://www.zhipin.com') {
+    const query = originalSearch.get('query');
+    const city = originalSearch.get('city');
+    const page = originalSearch.get('page');
+    if (query && query.length <= 80 && !/[\u0000-\u001f]/u.test(query)) url.searchParams.set('query', query);
+    if (city && /^[0-9]{1,12}$/.test(city)) url.searchParams.set('city', city);
+    if (page && /^(?:[1-9][0-9]{0,2}|1000)$/.test(page)) url.searchParams.set('page', page);
+  }
   const normalizedPath = url.pathname
     .split('/')
     .map((segment) =>
@@ -84,4 +97,17 @@ export function normalizePage(input) {
     navigationUrl: url.toString(),
     identity: { origin: url.origin, pathPattern: `${normalizedPath}${normalizedHash}` }
   };
+}
+
+export function createBossSearchUrl({ query, city, page = 1 }) {
+  if (typeof query !== 'string' || !query.trim() || query.trim().length > 80 || /[\u0000-\u001f]/u.test(query)) {
+    throw new Error('invalid_boss_search_query');
+  }
+  if (city !== undefined && (!/^[0-9]{1,12}$/.test(String(city)))) throw new Error('invalid_boss_search_city');
+  if (!Number.isInteger(page) || page < 1 || page > 1000) throw new Error('invalid_boss_search_page');
+  const url = new URL('https://www.zhipin.com/web/geek/job');
+  url.searchParams.set('query', query.trim());
+  if (city !== undefined) url.searchParams.set('city', String(city));
+  if (page !== 1) url.searchParams.set('page', String(page));
+  return url.toString();
 }

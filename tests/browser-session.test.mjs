@@ -7,7 +7,7 @@ import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { BrowserSessionManager } from '../modules/browser-session/browser-session.mjs';
 import { openPageTarget } from '../modules/browser-session/cdp.mjs';
-import { prepareDedicatedProfile } from '../modules/browser-session/paths.mjs';
+import { createBossSearchUrl, normalizePage, prepareDedicatedProfile } from '../modules/browser-session/paths.mjs';
 import { readSession, writeSession } from '../modules/browser-session/session-store.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -247,6 +247,15 @@ test('public session evidence omits credentials, query strings, and raw profile 
   } finally {
     await rm(context.root, { recursive: true, force: true });
   }
+});
+
+test('BOSS search preserves only safe search parameters while all other query data is dropped', async () => {
+  const boss = normalizePage('https://www.zhipin.com/web/geek/job?query=TypeScript&city=101020100&page=2&tracking=secret');
+  assert.equal(boss.navigationUrl, 'https://www.zhipin.com/web/geek/job?query=TypeScript&city=101020100&page=2');
+  assert.equal(boss.identity.pathPattern, '/web/geek/job');
+  assert.equal(createBossSearchUrl({ query: 'TypeScript', city: '101020100', page: 2 }), boss.navigationUrl);
+  assert.equal(normalizePage('https://example.com/jobs?query=private').navigationUrl, 'https://example.com/jobs');
+  assert.throws(() => createBossSearchUrl({ query: 'x'.repeat(81) }), /invalid_boss_search_query/);
 });
 
 test('default browser profiles and invalid page targets fail closed', async () => {

@@ -25,6 +25,12 @@ async function main() {
     if (!url) throw new Error('url_required');
     return print(await manager.openUrl(url));
   }
+  if (command === 'search') {
+    const query = option('--query');
+    if (!query) throw new Error('query_required');
+    const page = option('--page');
+    return print(await manager.searchBossJobs({ query, city: option('--city'), ...(page ? { page: Number(page) } : {}) }));
+  }
   if (command === 'tabs') return print(await manager.listTabs());
   if (command === 'attach') {
     const targetId = option('--target');
@@ -35,7 +41,7 @@ async function main() {
   if (command === 'status') return print(await manager.status());
   if (command === 'disconnect') return print(await manager.disconnect());
   if (command === 'stop') return print(await manager.stop());
-  throw new Error('usage: cli.mjs <discover|launch|reconnect|open|tabs|attach|confirm-ready|status|disconnect|stop>');
+  throw new Error('usage: cli.mjs <discover|launch|reconnect|open|search|tabs|attach|confirm-ready|status|disconnect|stop>');
 }
 
 main().catch((error) => {

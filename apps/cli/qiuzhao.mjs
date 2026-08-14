@@ -15,7 +15,7 @@ function usage() {
   return [
     '用法：qiuzhao <命令> [参数]',
     '',
-    '  browser <launch|reconnect|open|tabs|attach|confirm-ready|status|disconnect|stop>',
+    '  browser <launch|reconnect|open|search|tabs|attach|confirm-ready|status|disconnect|stop>',
     '  profile <serve|status|stop>',
     '  agent <serve|status|authorize|revoke>',
     '  xiaomi-e3',

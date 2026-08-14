@@ -5,7 +5,7 @@ import path from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 import { selectBrowser } from './browser-discovery.mjs';
 import { activatePageTarget, closeBrowserViaCdp, listPageTargets, openPageTarget, probeCdp } from './cdp.mjs';
-import { defaultProfileDir, defaultSessionFile, normalizePage, prepareDedicatedProfile } from './paths.mjs';
+import { createBossSearchUrl, defaultProfileDir, defaultSessionFile, normalizePage, prepareDedicatedProfile } from './paths.mjs';
 import { readSession, writeSession } from './session-store.mjs';
 
 function processExists(pid) {
@@ -197,6 +197,10 @@ export class BrowserSessionManager {
     session.updatedAt = new Date().toISOString();
     await writeSession(this.sessionFile, session);
     return publicStatus(session);
+  }
+
+  async searchBossJobs(input) {
+    return await this.openUrl(createBossSearchUrl(input));
   }
 
   async listTabs() {
