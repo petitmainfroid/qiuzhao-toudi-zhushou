@@ -1,5 +1,11 @@
 # qiuzhao-cli progress
 
+## 2026-08-14 B004 durable workflow complete
+
+- Added a closed, per-job workflow state machine with a single-job lock, bounded action attempts, epoch invalidation on restart, cancellation and stale-epoch rejection. It has no browser or page-action interface.
+- Verification: target workflow test and TypeScript passed. Full validation remains required as the integration gate for subsequent nodes.
+- Next: B005 deterministic prefilter and AI scoring.
+
 ## 2026-08-14 B003 encrypted local job repository complete
 
 - Added `modules/job-repository` with an encrypted, atomic local store for closed job records and typed audit events. It deduplicates by normalized source/origin/path/source-job identity, preserves the original job id/creation time on refresh, protects every write with `expectedVersion`, and reloads from disk after a fresh repository instance.
