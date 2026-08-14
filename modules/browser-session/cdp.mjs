@@ -24,6 +24,18 @@ export async function requestCdpJson(port, pathname, method = 'GET', timeoutMs =
   });
 }
 
+async function requestCdpSuccess(port, pathname, method = 'GET', timeoutMs = 2000) {
+  return await new Promise((resolve, reject) => {
+    const request = http.request({ host: '127.0.0.1', port, path: pathname, method, timeout: timeoutMs }, (response) => {
+      response.resume();
+      response.on('end', () => response.statusCode === 200 ? resolve() : reject(new Error(`cdp_http_${response.statusCode ?? 'unknown'}`)));
+    });
+    request.once('timeout', () => request.destroy(new Error('cdp_timeout')));
+    request.once('error', reject);
+    request.end();
+  });
+}
+
 export async function probeCdp(port) {
   const result = await requestCdpJson(port, '/json/version');
   if (typeof result.Browser !== 'string') throw new Error('cdp_browser_missing');
@@ -90,7 +102,9 @@ export async function openPageTarget(port, url) {
 
 export async function activatePageTarget(port, targetId) {
   if (!/^[A-Za-z0-9_-]{1,128}$/.test(targetId)) throw new Error('invalid_target_id');
-  await requestCdpJson(port, `/json/activate/${targetId}`);
+  // Chrome's /json/activate endpoint replies with plain text, unlike the
+  // discovery endpoints. A successful HTTP status is the complete contract.
+  await requestCdpSuccess(port, `/json/activate/${targetId}`);
 }
 
 export async function findPageTarget(port, targetId) {

@@ -84,12 +84,15 @@ export function normalizePage(input) {
     if (city && /^[0-9]{1,12}$/.test(city)) url.searchParams.set('city', city);
     if (page && /^(?:[1-9][0-9]{0,2}|1000)$/.test(page)) url.searchParams.set('page', page);
   }
-  const normalizedPath = url.pathname
+  let normalizedPath = url.pathname
     .split('/')
     .map((segment) =>
       /^\d{6,}$/.test(segment) || /^[0-9a-f]{8}-[0-9a-f-]{27,}$/i.test(segment) ? ':id' : segment
     )
     .join('/');
+  // BOSS currently redirects its historical singular route to the plural
+  // search route. Treat both as the same intentional search surface.
+  if (url.origin === 'https://www.zhipin.com' && normalizedPath === '/web/geek/jobs') normalizedPath = '/web/geek/job';
   const normalizedHash = url.hash
     ? url.hash.replace(/\d{6,}/g, ':id').replace(/[0-9a-f]{8}-[0-9a-f-]{27,}/gi, ':id')
     : '';

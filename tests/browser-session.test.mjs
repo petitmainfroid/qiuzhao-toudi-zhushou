@@ -253,6 +253,7 @@ test('BOSS search preserves only safe search parameters while all other query da
   const boss = normalizePage('https://www.zhipin.com/web/geek/job?query=TypeScript&city=101020100&page=2&tracking=secret');
   assert.equal(boss.navigationUrl, 'https://www.zhipin.com/web/geek/job?query=TypeScript&city=101020100&page=2');
   assert.equal(boss.identity.pathPattern, '/web/geek/job');
+  assert.equal(normalizePage('https://www.zhipin.com/web/geek/jobs?query=TypeScript').identity.pathPattern, '/web/geek/job');
   assert.equal(createBossSearchUrl({ query: 'TypeScript', city: '101020100', page: 2 }), boss.navigationUrl);
   assert.equal(normalizePage('https://example.com/jobs?query=private').navigationUrl, 'https://example.com/jobs');
   assert.throws(() => createBossSearchUrl({ query: 'x'.repeat(81) }), /invalid_boss_search_query/);
