@@ -49,6 +49,23 @@ npm run qiuzhao -- agent serve
 
 查看全部命令：`npm run qiuzhao -- help`。
 
+### Codex / Claude Code 一键接入
+
+在 Windows PowerShell 中运行一次安装脚本。它会检测已安装的 Codex 和 Claude Code，把同一 Skill 安装到用户目录，注册本地 stdio MCP，并验证固定六工具握手：
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\skills\qiuzhao-recruitment-agent\scripts\setup.ps1 -Action Install -Client Auto
+```
+
+检查或卸载 MCP：
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\skills\qiuzhao-recruitment-agent\scripts\setup.ps1 -Action Status -Client Auto
+powershell -NoProfile -ExecutionPolicy Bypass -File .\skills\qiuzhao-recruitment-agent\scripts\setup.ps1 -Action Remove -Client Auto
+```
+
+安装器不会授予网页填写权限；普通字段授权仍需用户单独运行 `npm run qiuzhao -- agent authorize --ttl-minutes 10`。
+
 ## 安全边界
 
 - 不读取或导出 Cookie、密码、验证码。

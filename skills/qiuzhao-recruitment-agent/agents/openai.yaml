@@ -1,4 +1,4 @@
 interface:
-  display_name: "秋招招聘页 Agent"
-  short_description: "通过本地 MCP 安全盘点、规划、填写并审核招聘网页"
-  default_prompt: "Use $qiuzhao-recruitment-agent to inspect, plan, safely fill, and audit the current recruitment form without submitting it."
+  display_name: "秋招 MCP 接入与招聘页 Agent"
+  short_description: "一键接入 Codex/Claude MCP，并安全填写招聘页"
+  default_prompt: "Use $qiuzhao-recruitment-agent to register and verify the local qiuzhao MCP for this client, then report the next safe step."

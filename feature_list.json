@@ -178,6 +178,29 @@
         "MCP 六工具握手检查"
       ],
       "notes": "npm run validate ???36 core?188 module??MCP ???????????????/?????????? 0?"
+    },
+    {
+      "id": "M013",
+      "title": "Codex 与 Claude Code 一键 MCP 接入 Skill",
+      "status": "done",
+      "depends_on": [
+        "M004",
+        "M011"
+      ],
+      "acceptance": [
+        "同一 Agent Skill 可被 Codex 与 Claude Code 发现并调用。",
+        "一个 PowerShell 入口完成客户端检测、用户级 Skill 安装、MCP 注册和六工具握手验证。",
+        "重复执行不覆盖同名未知 MCP 或 Skill，强制更新必须显式请求。",
+        "状态检查和卸载不读取档案、Cookie 或招聘网页字段。"
+      ],
+      "verification": [
+        "skill-creator quick_validate.py",
+        "隔离 CODEX_HOME 的 Codex 注册/状态/卸载",
+        "隔离 CLAUDE_CONFIG_DIR 的 Claude Code 注册/状态/卸载",
+        "真实 MCP stdio 六工具握手",
+        "npm run validate"
+      ],
+      "notes": "跨客户端安装、幂等检查、同名冲突保护、六工具握手和安全卸载均已在隔离配置目录验证；实现位于独立分支，未混入另一工作树的 M012。"
     }
   ]
 }

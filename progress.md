@@ -98,3 +98,24 @@
 - Commands/results: targeted browser/application/MCP/parser/page-driver tests passed; real Xiaomi E3/E4/E5 executed without final submit; `npm run validate` passed 36 core + 188 module tests; selector scan and `git diff --check` passed.
 - Blockers: none for the requested reconnect/offline/PDF/Xiaomi non-submit MVP. Independent human E3 approval remains required before claiming a frozen external ground truth, and other ATS families remain unverified.
 - Recommended next feature: package this exact verified baseline, or run the same E3→E5 queue serially on one additional real ATS page without changing the Xiaomi denominator.
+
+## 2026-08-14 · M013 started
+
+- Goal: upgrade `skills/qiuzhao-recruitment-agent` into one cross-client Agent Skill that can install itself and register the local stdio MCP for Codex and Claude Code on Windows.
+- Isolation: work is on branch `agent/cross-client-mcp-skill` in a separate worktree based on verified commit `5b0214a`; the primary worktree's in-progress M012 browser compatibility changes are untouched.
+- Safety: setup may change only the selected client's user-level Skill/MCP configuration after an explicit install request. It must not read recruitment values, profiles, PDF contents, Cookies, credentials, or grant an ordinary-field lease.
+- Planned checks: isolated Codex and Claude Code configuration homes, exact six-tool stdio handshake, Skill schema validation, full repository validation, secret/personal-data scan, and `git diff --check`.
+
+## 2026-08-14 · M013 complete
+
+- Changed: upgraded `skills/qiuzhao-recruitment-agent/SKILL.md`; added `scripts/setup.ps1` and `scripts/verify-mcp.mjs`; regenerated `agents/openai.yaml`; added `tests/skill-setup.test.mjs`; documented the one-command entry in `README.md`; updated feature/status ledgers.
+- Behavior: `Install`, `Status`, and `Remove` support Codex, Claude Code, all installed clients, or automatic discovery. Installation uses absolute Node/server paths, installs the same user Skill for both clients, verifies exactly six stdio tools, is idempotent for the expected registration, and refuses unknown same-name Skill/MCP replacement unless `-Force` is explicit.
+- Real client isolation: Codex CLI `0.147.0` and Claude Code `2.1.159` were pointed at temporary config/user directories. Both registered and reported matching stdio commands, a second install returned `already_registered`, and removal left both registrations absent. Direct handshake returned 6/6 expected tools. Every result reported `authorizationGranted=false` and `pageWrites=0`; the real user client configs were untouched.
+- Verification: Skill Creator `quick_validate.py` passed under UTF-8; PowerShell parser and `node --check` passed; targeted setup tests passed 4/4; final `npm run validate` passed with 40/40 core tests, 23 files and 188/188 module tests, TypeScript, structure 12/12, and production profile build; secret/personal-data scan returned zero matches; `git diff --check` passed.
+- Safety: setup changes only selected user-level Skill/MCP configuration after explicit invocation. It never reads profile/PDF/page scalar values, Cookies, or credentials and never grants the ordinary-field lease. Remove refuses unmanaged same-name assets without explicit force.
+
+### Handoff
+
+- Branch/worktree: `agent/cross-client-mcp-skill` at `C:\Users\jiangbingjian\qiuzhao-cli-skill-worktree`, based on `5b0214a`.
+- Blockers: none for local Windows Codex/Claude Code one-command registration. Users must still clone/download the project first; packaging an installer that downloads the application itself remains separate release work.
+- Next: review, commit, and push this isolated branch; later integrate it after the primary worktree's unrelated M012 browser compatibility work is complete.

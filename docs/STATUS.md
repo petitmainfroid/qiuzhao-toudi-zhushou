@@ -8,6 +8,7 @@
 - 本机个人信息 React 页面和统一 CLI 入口。
 - AI planner、确定性 policy compiler、ApplicationService 状态机。
 - 六工具 MCP stdio 入口和 Codex Skill。
+- 同一 `qiuzhao-recruitment-agent` Skill 可安装到 Codex 与 Claude Code 用户目录；一个 PowerShell 入口完成客户端检测、MCP 注册、精确六工具握手、状态检查和安全卸载。
 - 真实页面标注/Judge 的 schema 与小米 E3 盘点入口。
 - 浏览器缺失或 CDP 断开时，Agent 保持在线并返回唯一恢复指令；专用浏览器重启后自动重连。
 - 真实 PDF 已通过服务端文本层解析、结构化合并、DPAPI 持久化与重启幂等验证；解析不会覆盖已有非空字段，也不会自动导入身份证明字段。
