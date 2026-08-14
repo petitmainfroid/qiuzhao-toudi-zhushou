@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "product": "qiuzhao-cli",
+  "features": [
+    { "id": "M001", "name": "模块化抽取", "status": "done", "verification": ["npm run verify:structure", "npm run typecheck", "npm run test", "npm run profile:build"] },
+    { "id": "M002", "name": "个人档案页面与本地加密存储", "status": "implemented_and_automated_checks_passed" },
+    { "id": "M003", "name": "专用浏览器登录态与 CDP 会话", "status": "implemented_and_automated_checks_passed" },
+    { "id": "M004", "name": "Agent ApplicationService 与 MCP 六工具", "status": "implemented_and_automated_checks_passed" },
+    { "id": "M005", "name": "小米真实页面 E3-E5", "status": "pending_user_authorized_real_page_validation" }
+  ]
+}

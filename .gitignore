@@ -1,0 +1,16 @@
+node_modules/
+**/node_modules/
+**/dist-ui/
+coverage/
+artifacts/private/
+*.log
+.env
+.env.*
+!.env.example
+
+# Local runtime state and personal data never belong in Git.
+.runtime/
+profile-data/
+browser-data/
+*.profile.json
+*.session.json

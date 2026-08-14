@@ -1,0 +1,21 @@
+# Local profile service contract
+
+This package reuses the existing `CandidateProfile` schema without adding a second profile model. It provides an injectable zero-extension service contract, an integrity-checked and atomically replaced Node file repository, explicit export/import, a privacy-safe Agent catalog, and a version-bound local scalar resolver.
+
+The file repository deliberately requires an injected `AtRestProtector`. It fails closed if the provider returns plaintext. `WindowsDpapiProtector` supplies the production Windows CurrentUser provider without persisting a general-purpose key: it invokes a fixed encoded PowerShell program with `shell: false`, passes sensitive base64 only over stdin, bounds input/output/time, discards stderr, and maps every failure to a fixed typed error. A capability-bound loopback profile editor remains integration work outside this package.
+
+The production DPAPI process is resolved only at the trusted absolute `%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe` path; custom runners are a test-only injection seam. Plaintext and ciphertext limits are independent. The encrypted payload binds the profile, schema version, profile version, and timestamp, so rewriting outer version metadata and recomputing the unkeyed envelope digest cannot bypass version checks.
+
+Repository writes use a bounded-wait lease lock with PID and process-start identity, stale-owner claiming, ownership revalidation, and a heartbeat for long operations. Atomic rotation never replaces the last verified backup with a corrupt primary, and temporary data is flushed before promotion. The package does not yet impose an application-owned fixed data directory or reject every Windows reparse-point topology; the host must supply a private, trusted profile path until that policy is integrated.
+
+Legacy extension data is never read or deleted automatically. Migration accepts either the new profile-service export or the existing ProfileEditor `qiuzhao-profile-assistant` version 1 export only after the user supplies the file. Legacy `mappings` are ignored and never executed. Migration is two-phase: `ProfileImportCoordinator.preview` returns a redacted local-UI summary and an in-memory, version/source-bound confirmation token without writing; `confirm` consumes that one-time token before saving. Process restart invalidates pending confirmations. The preview contract is for the trusted local UI and is not part of the Agent snapshot surface.
+
+An explicit clear is version-bound and commits a fresh empty profile version. On its normal success path it removes only the exact repository backup and exact `<file>.*.tmp` artifacts, then releases the lock; it never sweeps unrelated directory entries. If commit succeeds but cleanup does not, it reports `cleanup_incomplete` and the new empty version remains current and readable. File deletion is not a promise of physical-media secure erasure; DPAPI encryption remains the defense for filesystem remnants.
+
+A confirmed import creates a short-lived, single-use, in-memory rollback token for the trusted local UI. Rollback succeeds only while the imported version is still current and restores the prior profile as a new version; expiry, restart, reuse, or any intervening save fails closed. Rollback tokens and results are not part of the Agent snapshot or MCP contract.
+
+Catalog generation, local resolution, and migration diffing share the package's complete CandidateProfile v4 scalar registry. Ordinary page-action fields include name, phone, and email; identity, birth date, emergency/family contact, ethnicity/religion, and salary fields remain confirmation-sensitive. Registry parity tests fail if a schema scalar leaf is missing or duplicated.
+
+The export bundle's SHA-256 detects accidental corruption only. It is not keyed and does not authenticate the exporter or resist malicious rewriting. The local application must require the user to select and confirm every import before calling the migration API.
+
+DPAPI ciphertext is scoped to the current Windows user. Cross-process roundtrip and tamper rejection are tested on Windows. Automated wrong-user testing requires a separately provisioned Windows account and is not performed by this package's single-user test harness.

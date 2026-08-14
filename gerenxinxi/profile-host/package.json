@@ -1,0 +1,11 @@
+{
+  "name": "@qiuzhao/profile-host",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build:ui": "vite build --config vite.config.ts",
+    "test": "npm run build:ui && vitest --config vitest.config.ts --run",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  }
+}

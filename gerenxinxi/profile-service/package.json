@@ -1,0 +1,16 @@
+{
+  "name": "@qiuzhao/profile-service",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest --config vitest.config.ts --run"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

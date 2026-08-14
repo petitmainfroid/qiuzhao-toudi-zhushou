@@ -1,0 +1,52 @@
+{
+  "name": "qiuzhao-cli",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Local-first, zero-extension recruitment form agent for Codex and MCP clients.",
+  "bin": {
+    "qiuzhao": "./apps/cli/qiuzhao.mjs"
+  },
+  "scripts": {
+    "qiuzhao": "node apps/cli/qiuzhao.mjs",
+    "browser": "node apps/cli/qiuzhao.mjs browser",
+    "profile": "node apps/cli/qiuzhao.mjs profile",
+    "agent": "node apps/cli/qiuzhao.mjs agent",
+    "profile:build": "vite build --config gerenxinxi/profile-host/vite.config.ts",
+    "typecheck": "tsc --noEmit",
+    "test:core": "node --test tests/*.test.mjs",
+    "test:modules": "vitest --run",
+    "test": "npm run test:core && npm run test:modules",
+    "verify:structure": "node scripts/verify-structure.mjs",
+    "validate": "npm run verify:structure && npm run typecheck && npm run test && npm run profile:build"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@fontsource/epilogue": "^5.2.8",
+    "@tesseract.js-data/chi_sim": "^1.0.0",
+    "fflate": "^0.8.2",
+    "lucide-react": "^0.468.0",
+    "pdfjs-dist": "^4.10.38",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "tesseract.js": "^7.0.0"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.1.0",
+    "@testing-library/user-event": "^14.5.2",
+    "@types/jsdom": "^21.1.7",
+    "@types/node": "^22.10.5",
+    "@types/react": "^19.0.3",
+    "@types/react-dom": "^19.0.2",
+    "@vitejs/plugin-react": "^4.3.4",
+    "ajv": "8.20.0",
+    "esbuild": "^0.24.2",
+    "jsdom": "^25.0.1",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.7",
+    "vitest": "^2.1.8"
+  }
+}
