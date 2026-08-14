@@ -11,6 +11,7 @@ const required = [
   'modules/semantic-planner/src/index.ts',
   'modules/policy-compiler/src/index.ts',
   'modules/real-page-validation/index.mjs',
+  'modules/job-contracts/src/index.ts',
   'gerenxinxi/profile-service/src/index.ts',
   'gerenxinxi/profile-host/src/index.ts',
   'gerenxinxi/resume-parser/src/index.ts',

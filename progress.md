@@ -1,5 +1,15 @@
 # qiuzhao-cli progress
 
+## 2026-08-14 B002 岗位工作流自有闭合契约完成
+
+- Goal: define product-owned, closed and versioned contracts before implementing any BOSS browser runtime, repository, scoring, conversation, or real-page behavior.
+- Changed: added `modules/job-contracts/{src,tests}` for normalized job identity, public job record/event, availability-only profile catalog, ranking request/decision, exact job-scoped lease, conversation intent and opaque execution request. Updated `scripts/verify-structure.mjs`, added B002-B011 to `feature_list.json`, and added `.gitattributes` so the immutable reference snapshot retains upstream bytes on Windows.
+- Safety: every contract object has `additionalProperties: false`. Negative tests reject selectors, raw HTML/CDP, scripts, cookies, passwords, scalar profile values, arbitrary message bodies, upload paths, API keys, final-submit actions, query/fragment URLs, unknown sources, and Agent-created authorization. No product runtime imports vendor code.
+- Snapshot correction: a clean Windows checkout converted upstream LF files to CRLF and made the byte-hash verifier fail. The frozen upstream commit was re-extracted as raw bytes, the archive-only files were removed after comparison with the fixed manifest, and `.gitattributes` disables text conversion under `boss/vendor-bosshunter/**`. The verifier now passes on this worktree.
+- Verification: `npm ci` passed with 0 vulnerabilities. `npx vitest --run modules/job-contracts/tests/contracts.test.ts` passed 1 file / 18 tests. `npm run verify:structure`, `npm run typecheck`, and `npm run test:core` passed (13 entrypoints, 36/36 core). `npm run test:modules` passed 24 files / 206 tests; `npm run profile:build` passed; `node boss/scripts/verify-vendor-snapshot.mjs` passed. `npm run validate` was invoked but hit the environment's 124-second command cap without output; its exact serial components passed in the listed order.
+- Real-page evidence: none by design. B002 is protocol-only and cannot claim BOSS compatibility.
+- Next: B003 local job repository, using these contracts and a real BOSS page only for a later independently-denominated, user-authorized read-only validation.
+
 ## 2026-08-14 · B001 BossHunter 来源隔离归档与模块导航完成
 
 - Goal: isolate a fixed BossHunter reference snapshot, define seven rewrite boundaries, and keep all upstream code out of the product runtime.

@@ -195,6 +195,51 @@
         "git diff --check"
       ],
       "notes": "已冻结上游 62d1ccea 的 116 文件/1,477,480 字节快照，七模块导航、真实操作 E0-E5 标准、逐文件 SHA-256 与正式运行零引用检查均通过；非商业许可证代码未接入产品运行时。"
+    },
+    {
+      "id": "B002",
+      "title": "岗位工作流自有闭合契约",
+      "status": "done",
+      "depends_on": ["B001"],
+      "acceptance": ["岗位、评分、沟通、授权和审计对象均为封闭版本化契约。", "Agent 输入不含标量档案值、选择器、脚本、Cookie、任意消息或上传。"],
+      "verification": ["npm run validate", "node boss/scripts/verify-vendor-snapshot.mjs", "job-contracts 负例测试"],
+      "notes": "已实现闭合 TypeScript 契约与 18 个负例/正例测试；未访问真实网页。Windows 归档换行符保护与上游原始字节恢复一并完成。"
+    },
+    {
+      "id": "B003", "title": "本地岗位仓库", "status": "todo", "depends_on": ["B002"],
+      "acceptance": ["本地加密、去重、版本化岗位与脱敏审计可重启恢复。"], "verification": ["npm run validate", "真实 BOSS 列表两次盘点的私有去重证据"], "notes": "不保存密码、Cookie 或完整聊天内容。"
+    },
+    {
+      "id": "B004", "title": "可恢复岗位工作流", "status": "todo", "depends_on": ["B002", "B003"],
+      "acceptance": ["工作流状态、动作预算、取消和强杀恢复均可审计。"], "verification": ["npm run validate", "真实页只读/重启私有 manifest"], "notes": "单浏览器会话串行。"
+    },
+    {
+      "id": "B005", "title": "确定性预筛与 AI 评分", "status": "todo", "depends_on": ["B002", "B003"],
+      "acceptance": ["确定性规则先运行，AI 仅返回闭合评分决定且不能读档案标量。"], "verification": ["npm run validate", "真实岗位审核样本脱敏 manifest"], "notes": "未知或歧义岗位进入人工审核。"
+    },
+    {
+      "id": "B006", "title": "BOSS 真实岗位发现适配", "status": "todo", "depends_on": ["B003", "B004", "B005"],
+      "acceptance": ["已登录真实 BOSS 页面可只读发现、去重和保存用户可见岗位信息。"], "verification": ["独立分母 E3", "用户授权真实 BOSS 只读 E4 manifest", "npm run validate"], "notes": "不绕过登录、验证码或平台限制。"
+    },
+    {
+      "id": "B007", "title": "受控沟通与回复监控", "status": "todo", "depends_on": ["B002", "B004", "B006"],
+      "acceptance": ["每条外发消息绑定精确岗位、计划和用户授权；回复只记录脱敏状态。"], "verification": ["真实 BOSS 私有 E4 单消息证据", "重启幂等 manifest", "npm run validate"], "notes": "不自动创建或扩大消息授权。"
+    },
+    {
+      "id": "B008", "title": "本地工作台岗位与记录界面", "status": "todo", "depends_on": ["B003", "B004", "B005"],
+      "acceptance": ["用户可看岗位链接、名称、JD、状态、审核结论和授权入口。"], "verification": ["npm run validate", "当前截图", "真实岗位只读核对"], "notes": "不显示密码、Cookie、档案标量或原始页面。"
+    },
+    {
+      "id": "B009", "title": "Codex/Claude MCP 岗位入口", "status": "todo", "depends_on": ["B002", "B004", "B005"],
+      "acceptance": ["MCP 只开放闭合的岗位发现、评分、计划、执行、审计和取消意图。"], "verification": ["stdio 握手与负例", "npm run validate"], "notes": "不暴露 raw CDP、selector、Cookie、任意消息或任意上传。"
+    },
+    {
+      "id": "B010", "title": "BOSS 到校招真实闭环", "status": "todo", "depends_on": ["B006", "B007", "B008", "B009"],
+      "acceptance": ["真实岗位发现、审核、受控沟通和已保留校招页非提交填写可串行审计。"], "verification": ["E3-E5 私有脱敏 manifest", "用户审核", "npm run validate"], "notes": "不得最终提交，不把任一站点结果推广到其他站点。"
+    },
+    {
+      "id": "B011", "title": "上游清理与发布审计", "status": "todo", "depends_on": ["B010"],
+      "acceptance": ["发布产物不含 vendor 运行时、不受上游非商业许可证约束，并有可重跑合规审计。"], "verification": ["npm run validate", "license/import audit", "打包版真实页重跑"], "notes": "如需任何上游代码，必须先获书面许可；否则保持独立重写。"
     }
   ]
 }
