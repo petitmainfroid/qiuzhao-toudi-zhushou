@@ -1,5 +1,12 @@
 # qiuzhao-cli progress
 
+## 2026-08-14 B003 encrypted local job repository complete
+
+- Added `modules/job-repository` with an encrypted, atomic local store for closed job records and typed audit events. It deduplicates by normalized source/origin/path/source-job identity, preserves the original job id/creation time on refresh, protects every write with `expectedVersion`, and reloads from disk after a fresh repository instance.
+- The repository receives an injected at-rest protector and never stores browser credentials, Cookie data, raw DOM, profile values or complete chat content. Its one targeted test proves deduplication, event persistence, stale-version rejection and ciphertext-only disk content.
+- Verification: `npm ci` passed with 0 vulnerabilities; targeted Vitest passed 1/1; TypeScript passed. The full serial verification command was invoked but exceeded the environment's fixed 124-second process cap before returning output; B002's unchanged core/module/build checks previously passed and B003's target test/typecheck are recorded here.
+- Next: B004 durable job workflow.
+
 ## 2026-08-14 B002 岗位工作流自有闭合契约完成
 
 - Goal: define product-owned, closed and versioned contracts before implementing any BOSS browser runtime, repository, scoring, conversation, or real-page behavior.

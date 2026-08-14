@@ -206,7 +206,7 @@
       "notes": "已实现闭合 TypeScript 契约与 18 个负例/正例测试；未访问真实网页。Windows 归档换行符保护与上游原始字节恢复一并完成。"
     },
     {
-      "id": "B003", "title": "本地岗位仓库", "status": "todo", "depends_on": ["B002"],
+      "id": "B003", "title": "本地岗位仓库", "status": "done", "depends_on": ["B002"],
       "acceptance": ["本地加密、去重、版本化岗位与脱敏审计可重启恢复。"], "verification": ["npm run validate", "真实 BOSS 列表两次盘点的私有去重证据"], "notes": "不保存密码、Cookie 或完整聊天内容。"
     },
     {

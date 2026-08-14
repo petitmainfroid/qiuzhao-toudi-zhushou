@@ -1,0 +1,8 @@
+import { describe, expect, it } from "vitest";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { FileJobRepository, JobRepositoryError } from "../src/index";
+const protector={providerId:"test",protect:async(v:string)=>Buffer.from(v).toString("base64"),unprotect:async(v:string)=>Buffer.from(v,"base64").toString()};
+const record={schemaVersion:1 as const,jobId:"job:1",identity:{source:"boss" as const,origin:"https://www.zhipin.com",path:"/job/1",sourceJobRef:"source:1"},title:"Engineer",company:"Example",location:"Shanghai",description:"JD",state:"discovered" as const,version:0,createdAt:"2026-08-14T00:00:00.000Z",updatedAt:"2026-08-14T00:00:00.000Z"};
+describe("encrypted local job repository",()=>{it("deduplicates, protects, audits and recovers",async()=>{const dir=await mkdtemp(join(tmpdir(),"jobs-"));try{const file=join(dir,"jobs.enc");const a=new FileJobRepository({filePath:file,protector});const one=await a.upsert(record,0);expect(one).toMatchObject({version:1,created:true});const duplicate=await a.upsert({...record,title:"Engineer II"},1);expect(duplicate).toMatchObject({version:2,created:false});expect((await a.list()).records).toHaveLength(1);const version=await a.appendEvent({schemaVersion:1,eventId:"event:1",jobId:"job:1",kind:"discovered",at:"2026-08-14T00:01:00.000Z",requestId:"request:1"},2);expect(version).toBe(3);expect((await new FileJobRepository({filePath:file,protector}).list()).events).toHaveLength(1);expect(await readFile(file,"utf8")).not.toContain("Engineer II");await expect(a.upsert(record,0)).rejects.toMatchObject({code:"conflict"} as JobRepositoryError);}finally{await rm(dir,{recursive:true,force:true})}});});
