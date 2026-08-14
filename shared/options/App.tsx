@@ -39,7 +39,7 @@ import {
 } from "../domain/profile";
 import type { SavedFieldMapping } from "../mapping/types";
 import { parseLocalData, serializeLocalData } from "../privacy/localData";
-import { extractResumeText } from "../resume/extractResumeText";
+import { detectResumeFormat, extractResumeText } from "../resume/extractResumeText";
 import { mergeResumeIntoProfile, parseResumeText } from "../resume/parseResume";
 import {
   type SavedResumeMetadata,
@@ -447,7 +447,7 @@ export function ProfileEditor({
     setResumeImport({ status: "parsing", message: "正在本机解析简历…", detail: "解析期间不会发送网络请求。" });
     let locallySavedPdf: SavedResumeMetadata | null = null;
     let saveWarning = "";
-    if (file.type.toLowerCase() === "application/pdf" && localResumeRepository) {
+    if (detectResumeFormat(file) === "pdf" && localResumeRepository) {
       try {
         locallySavedPdf = await localResumeRepository.save(file);
         setSavedResume(locallySavedPdf);
@@ -892,7 +892,7 @@ export function ProfileEditor({
             <FileText size={22} aria-hidden="true" />
             <div>
               <h2 id="attachment-title">常用 PDF 可复用，目标网站仍需确认</h2>
-              <p>上方选择的 PDF 原件会保存在扩展的本地数据库中，不保存文件路径，也不会上传到云端。招聘网页发现唯一简历控件后可直接复用，但每个网站仍要由你确认一次；获奖证明、个人证件、验证码和最终提交不自动处理。</p>
+              <p>上方选择的 PDF 原件会保存在本机加密档案库中，不保存原文件路径，也不会上传到云端。后续可在招聘网页中经你确认后复用；获奖证明、个人证件、验证码和最终提交不自动处理。</p>
             </div>
           </section>
 

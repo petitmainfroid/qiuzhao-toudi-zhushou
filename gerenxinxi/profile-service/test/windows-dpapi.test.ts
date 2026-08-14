@@ -63,6 +63,11 @@ describe("Windows CurrentUser DPAPI integration", () => {
     const second = new WindowsDpapiProtector();
     await expect(second.unprotect(protectedPayload)).resolves.toBe(plaintext);
 
+    const pdfBytes = new TextEncoder().encode("%PDF-1.7\nprivate-resume-bytes\n%%EOF");
+    const protectedPdf = await first.protectBytes(pdfBytes);
+    expect(protectedPdf).not.toContain("private-resume-bytes");
+    expect(Array.from(await second.unprotectBytes(protectedPdf))).toEqual(Array.from(pdfBytes));
+
     const bytes = Buffer.from(protectedPayload, "base64");
     bytes[Math.floor(bytes.length / 2)] ^= 0xff;
     await expect(second.unprotect(bytes.toString("base64")))

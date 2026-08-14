@@ -11,6 +11,7 @@ import {
 } from "./contracts";
 import { ProfileServiceError } from "../../profile-service/src";
 import { validateCurrentProfilePayload } from "./profilePayload";
+import { MAX_SAVED_RESUME_BYTES, ResumeStoreError } from "./resumeStore";
 
 const LOOPBACK_HOST = "127.0.0.1";
 const DEFAULT_BOOTSTRAP_TTL_MS = 60_000;
@@ -228,6 +229,40 @@ export async function startProfileHost(options: ProfileHostOptions): Promise<Pro
         sendSnapshot(response, await options.store.load());
         return;
       }
+      if (request.method === "GET" && path === "/api/resume") {
+        if (options.resumeStore === undefined) throw new RequestError(404, "not_found");
+        sendJson(response, 200, { resume: await options.resumeStore.loadMetadata() });
+        return;
+      }
+      if (request.method === "PUT" && path === "/api/resume") {
+        if (options.resumeStore === undefined) throw new RequestError(404, "not_found");
+        requireMutation(request, origin, activeSession);
+        const mediaType = (request.headers["content-type"] ?? "").split(";", 1)[0]?.trim().toLowerCase();
+        const encodedName = request.headers["x-resume-name"];
+        if (mediaType !== "application/pdf" || typeof encodedName !== "string") {
+          throw new RequestError(415, "invalid_resume");
+        }
+        const name = decodeResumeName(encodedName);
+        const body = await readBody(request, MAX_SAVED_RESUME_BYTES);
+        try {
+          sendJson(response, 200, {
+            resume: await options.resumeStore.save({ name, mimeType: mediaType, bytes: new Uint8Array(body) })
+          });
+        } finally {
+          body.fill(0);
+        }
+        return;
+      }
+      if (request.method === "DELETE" && path === "/api/resume") {
+        if (options.resumeStore === undefined) throw new RequestError(404, "not_found");
+        requireMutation(request, origin, activeSession);
+        if (Number(request.headers["content-length"] ?? 0) !== 0 || request.headers["transfer-encoding"] !== undefined) {
+          throw new RequestError(400, "unexpected_body");
+        }
+        await options.resumeStore.clear();
+        sendJson(response, 200, { ok: true });
+        return;
+      }
       if (request.method === "GET" && path === "/api/profile/export") {
         if (options.localData === undefined) throw new RequestError(404, "not_found");
         sendJson(response, 200, await options.localData.exportData());
@@ -310,6 +345,8 @@ export async function startProfileHost(options: ProfileHostOptions): Promise<Pro
         sendJson(response, profileServiceStatus(error.code), { error: profileServicePublicCode(error.code) });
       } else if (error instanceof ProfilePayloadValidationError) {
         sendJson(response, 422, { error: "invalid_profile" });
+      } else if (error instanceof ResumeStoreError) {
+        sendJson(response, error.code === "invalid_resume" ? 422 : 500, { error: error.code });
       } else if (error instanceof RequestError) {
         sendJson(response, error.status, { error: error.code });
       } else {
@@ -364,6 +401,17 @@ export async function startProfileHost(options: ProfileHostOptions): Promise<Pro
       });
     }
   };
+}
+
+function decodeResumeName(value: string): string {
+  if (!/^[A-Za-z0-9_-]{1,1024}$/.test(value)) throw new RequestError(400, "invalid_resume");
+  try {
+    const name = Buffer.from(value, "base64url").toString("utf8");
+    if (Buffer.from(name, "utf8").toString("base64url") !== value) throw new Error("invalid");
+    return name;
+  } catch {
+    throw new RequestError(400, "invalid_resume");
+  }
 }
 
 function profileServiceStatus(code: string): number {

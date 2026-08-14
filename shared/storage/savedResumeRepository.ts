@@ -23,8 +23,8 @@ interface StoredResumeRecord extends SavedResumeMetadata {
 }
 
 export interface SavedResumeRepositoryLike {
-  load(): Promise<SavedResume | null>;
-  save(file: File): Promise<SavedResume>;
+  load(): Promise<SavedResumeMetadata | null>;
+  save(file: File): Promise<SavedResumeMetadata>;
   clear(): Promise<void>;
 }
 
@@ -64,7 +64,7 @@ export async function prepareSavedResume(file: File, savedAt = new Date().toISOS
   metadata: SavedResumeMetadata;
   bytes: ArrayBuffer;
 }> {
-  if (!validFilename(file.name) || file.type.toLowerCase() !== "application/pdf") {
+  if (!validFilename(file.name) || (file.type !== "" && file.type.toLowerCase() !== "application/pdf")) {
     throw new SavedResumeValidationError("只支持文件名有效的 PDF 简历。");
   }
   if (!Number.isSafeInteger(file.size) || file.size <= 0 || file.size > MAX_RESUME_ATTACHMENT_BYTES) {

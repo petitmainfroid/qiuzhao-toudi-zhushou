@@ -8,6 +8,7 @@ import {
   startProfileHost,
   type ProfileHostHandle,
   type ProfileHostImportCoordinator,
+  type ProfileHostResumeStore,
   type ProfileHostSnapshot,
   type ProfileHostStore
 } from "../src";
@@ -36,13 +37,49 @@ class MemoryStore implements ProfileHostStore {
   }
 }
 
+class MemoryResumeStore implements ProfileHostResumeStore {
+  saved: Awaited<ReturnType<ProfileHostResumeStore["load"]>> = null;
+
+  async loadMetadata() {
+    if (!this.saved) return null;
+    const { bytes: _bytes, ...metadata } = this.saved;
+    return metadata;
+  }
+
+  async load() {
+    return this.saved ? { ...this.saved, bytes: this.saved.bytes.slice() } : null;
+  }
+
+  async save(input: { name: string; mimeType: string; bytes: Uint8Array }) {
+    this.saved = {
+      name: input.name,
+      mimeType: "application/pdf",
+      size: input.bytes.byteLength,
+      sha256: "a".repeat(64),
+      savedAt: "2026-08-13T00:00:00.000Z",
+      bytes: input.bytes.slice()
+    };
+    return (await this.loadMetadata())!;
+  }
+
+  async clear() {
+    this.saved?.bytes.fill(0);
+    this.saved = null;
+  }
+}
+
 const hosts: ProfileHostHandle[] = [];
 
 afterEach(async () => {
   await Promise.all(hosts.splice(0).map((host) => host.stop()));
 });
 
-async function launch(options: { now?: () => number; sessionTtlMs?: number; localData?: ProfileHostImportCoordinator } = {}) {
+async function launch(options: {
+  now?: () => number;
+  sessionTtlMs?: number;
+  localData?: ProfileHostImportCoordinator;
+  resumeStore?: ProfileHostResumeStore;
+} = {}) {
   const store = new MemoryStore();
   const host = await startProfileHost({
     store,
@@ -82,7 +119,7 @@ describe("loopback profile host", () => {
     expect(host.bootstrapUrl).toMatch(/^http:\/\/127\.0\.0\.1:\d+\/bootstrap#[A-Za-z0-9_-]+$/);
     expect(host.bootstrapUrl).not.toContain("?");
 
-    for (const path of ["/", "/assets/profile-host.js", "/assets/profile-host.css", "/api/session", "/api/profile"]) {
+    for (const path of ["/", "/assets/profile-host.js", "/assets/profile-host.css", "/api/session", "/api/profile", "/api/resume"]) {
       const response = await fetch(`${host.origin}${path}`);
       expect(response.status, path).toBe(401);
       expect(response.headers.get("cache-control")).toContain("no-store");
@@ -247,6 +284,43 @@ describe("loopback profile host", () => {
       headersTimeoutMs: 10_000,
       keepAliveTimeoutMs: 5_000
     }));
+  });
+
+  it("persists PDF bytes only through the authenticated CSRF-protected resume API", async () => {
+    const resumeStore = new MemoryResumeStore();
+    const { host } = await launch({ resumeStore });
+    const { cookie, csrf } = await bootstrap(host);
+    const pdf = new TextEncoder().encode("%PDF-1.7\nsynthetic\n%%EOF");
+    const headers = {
+      Cookie: cookie,
+      Origin: host.origin,
+      "Content-Type": "application/pdf",
+      "X-Profile-CSRF": csrf,
+      "X-Resume-Name": Buffer.from("校招简历.pdf", "utf8").toString("base64url")
+    };
+
+    const initial = await fetch(`${host.origin}/api/resume`, { headers: { Cookie: cookie } });
+    expect(await initial.json()).toEqual({ resume: null });
+    expect((await fetch(`${host.origin}/api/resume`, {
+      method: "PUT", headers: { ...headers, Origin: "" }, body: pdf
+    })).status).toBe(403);
+    expect((await fetch(`${host.origin}/api/resume`, {
+      method: "PUT", headers: { ...headers, "X-Profile-CSRF": "wrong" }, body: pdf
+    })).status).toBe(403);
+
+    const uploaded = await fetch(`${host.origin}/api/resume`, { method: "PUT", headers, body: pdf });
+    const uploadedBody = await uploaded.json() as Record<string, unknown>;
+    expect(uploaded.status).toBe(200);
+    expect(uploadedBody).toEqual({ resume: expect.objectContaining({ name: "校招简历.pdf", size: pdf.byteLength }) });
+    expect(JSON.stringify(uploadedBody)).not.toContain("synthetic");
+    expect(Array.from(resumeStore.saved?.bytes ?? [])).toEqual(Array.from(pdf));
+
+    const removed = await fetch(`${host.origin}/api/resume`, {
+      method: "DELETE",
+      headers: { Cookie: cookie, Origin: host.origin, "X-Profile-CSRF": csrf }
+    });
+    expect(removed.status).toBe(200);
+    expect(resumeStore.saved).toBeNull();
   });
 
   it("authenticates migration APIs and binds confirm/rollback writes to ETags", async () => {

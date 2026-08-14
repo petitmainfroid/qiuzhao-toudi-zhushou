@@ -10,8 +10,11 @@ an exact loopback Origin, CSRF capability, and current opaque ETag.
 The UI build aliases the extension-only default repositories. The rendered
 editor always receives `HttpProfileRepository`; the built JavaScript audit
 rejects `chrome.storage`, `chrome.runtime`, `localStorage`, and `sessionStorage`.
-PDF/DOCX parsing remains available, but attachment persistence is deliberately
-not connected and the UI discloses that limitation.
+PDF originals selected in the editor are saved by the host as a single
+CurrentUser-DPAPI-protected local attachment. The authenticated UI receives only
+metadata on reload; raw bytes stay behind the host boundary and can be cleared
+independently. PDF/DOCX text extraction remains a separate browser-side pipeline
+and needs its own real-document regression evidence.
 
 `FileProfileHostStore` adapts the existing versioned profile-service repository.
 `startLocalProfileEditor` accepts a trusted, absolute application-data directory,

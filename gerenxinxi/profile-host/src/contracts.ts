@@ -61,6 +61,7 @@ export interface ProfileHostUiBundle {
 export interface ProfileHostOptions {
   store: ProfileHostStore;
   localData?: ProfileHostImportCoordinator;
+  resumeStore?: import("./resumeStore").ProfileHostResumeStore;
   ui: ProfileHostUiBundle;
   bootstrapTtlMs?: number;
   sessionTtlMs?: number;

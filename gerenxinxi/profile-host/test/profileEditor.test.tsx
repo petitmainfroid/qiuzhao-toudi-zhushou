@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { createEmptyProfile } from "../../../shared/domain/profile";
 import { ProfileEditor } from "../../../shared/options/App";
 import { HttpProfileRepository } from "../src/client";
@@ -8,6 +9,8 @@ import { HttpProfileRepository } from "../src/client";
 const ETAG_1 = `"${"a".repeat(43)}"`;
 const ETAG_2 = `"${"b".repeat(43)}"`;
 const ETAG_3 = `"${"c".repeat(43)}"`;
+
+afterEach(cleanup);
 
 describe("ProfileEditor host integration", () => {
   it("loads, saves, and clears through HttpProfileRepository", async () => {
@@ -37,5 +40,35 @@ describe("ProfileEditor host integration", () => {
     fireEvent.click(screen.getByRole("button", { name: "确认永久删除" }));
     await waitFor(() => expect(request).toHaveBeenCalledTimes(4));
     expect(request.mock.calls[3]?.[1]?.method).toBe("DELETE");
+  });
+
+  it("saves a selected PDF through the injected host repository even when text parsing later fails", async () => {
+    const profile = createEmptyProfile();
+    const metadata = {
+      name: "candidate.pdf",
+      mimeType: "application/pdf" as const,
+      size: 16,
+      sha256: "a".repeat(64),
+      savedAt: "2026-08-13T00:00:00.000Z"
+    };
+    const savedResumeRepository = {
+      load: vi.fn(async () => null),
+      save: vi.fn(async () => metadata),
+      clear: vi.fn(async () => undefined)
+    };
+    render(
+      <ProfileEditor
+        repository={{ load: async () => profile, save: async (value) => value }}
+        savedResumeRepository={savedResumeRepository}
+      />
+    );
+
+    const upload = await screen.findByLabelText("上传简历并解析");
+    const file = new File(["%PDF-1.7\n%%EOF"], "candidate.pdf", { type: "application/pdf" });
+    await userEvent.upload(upload, file);
+
+    await waitFor(() => expect(savedResumeRepository.save).toHaveBeenCalledWith(file));
+    expect(await screen.findByText(/candidate\.pdf/)).toBeTruthy();
+    expect(screen.getByText("已保存常用 PDF")).toBeTruthy();
   });
 });

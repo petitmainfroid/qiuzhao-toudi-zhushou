@@ -4,6 +4,7 @@ import type {
   ProfileLocalDataRepositoryLike,
   ProfileRepositoryLike
 } from "../../../shared/options/App";
+import type { SavedResumeMetadata, SavedResumeRepositoryLike } from "../../../shared/storage/savedResumeRepository";
 
 interface SessionResponse {
   csrfToken: string;
@@ -175,4 +176,81 @@ export class HttpProfileRepository implements ProfileRepositoryLike, ProfileLoca
       throw new ProfileHostClientError(message, response.status);
     }
   }
+}
+
+export class HttpSavedResumeRepository implements SavedResumeRepositoryLike {
+  private csrfToken: string | undefined;
+
+  constructor(
+    private readonly baseUrl = "",
+    private readonly request: typeof fetch = (...args) => globalThis.fetch(...args)
+  ) {}
+
+  async load(): Promise<SavedResumeMetadata | null> {
+    await this.ensureSession();
+    const response = await this.request(`${this.baseUrl}/api/resume`, {
+      credentials: "same-origin",
+      headers: { Accept: "application/json" }
+    });
+    await this.requireOk(response, "无法读取本地保存的 PDF 简历。");
+    return ((await response.json()) as { resume: SavedResumeMetadata | null }).resume;
+  }
+
+  async save(file: File): Promise<SavedResumeMetadata> {
+    const csrfToken = await this.ensureSession();
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    const encodedName = bytesToBase64Url(new TextEncoder().encode(file.name));
+    try {
+      const response = await this.request(`${this.baseUrl}/api/resume`, {
+        method: "PUT",
+        credentials: "same-origin",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/pdf",
+          "X-Profile-CSRF": csrfToken,
+          "X-Resume-Name": encodedName
+        },
+        body: bytes
+      });
+      await this.requireOk(response, "PDF 简历无法保存到本机。");
+      return ((await response.json()) as { resume: SavedResumeMetadata }).resume;
+    } finally {
+      bytes.fill(0);
+    }
+  }
+
+  async clear(): Promise<void> {
+    const csrfToken = await this.ensureSession();
+    const response = await this.request(`${this.baseUrl}/api/resume`, {
+      method: "DELETE",
+      credentials: "same-origin",
+      headers: { Accept: "application/json", "X-Profile-CSRF": csrfToken }
+    });
+    await this.requireOk(response, "无法删除本地保存的 PDF 简历。");
+  }
+
+  private async ensureSession(): Promise<string> {
+    if (this.csrfToken !== undefined) return this.csrfToken;
+    const response = await this.request(`${this.baseUrl}/api/session`, {
+      credentials: "same-origin",
+      headers: { Accept: "application/json" }
+    });
+    await this.requireOk(response, "本地档案会话不可用。");
+    const session = (await response.json()) as SessionResponse;
+    if (typeof session.csrfToken !== "string" || session.csrfToken.length < 20) {
+      throw new ProfileHostClientError("本地档案会话无效。", 500);
+    }
+    this.csrfToken = session.csrfToken;
+    return session.csrfToken;
+  }
+
+  private async requireOk(response: Response, message: string): Promise<void> {
+    if (!response.ok) throw new ProfileHostClientError(message, response.status);
+  }
+}
+
+function bytesToBase64Url(bytes: Uint8Array): string {
+  let value = "";
+  for (const byte of bytes) value += String.fromCharCode(byte);
+  return btoa(value).replaceAll("+", "-").replaceAll("/", "_").replace(/=+$/, "");
 }

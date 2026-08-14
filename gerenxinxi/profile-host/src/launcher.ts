@@ -1,17 +1,19 @@
 import { lstat, mkdir, readdir, realpath } from "node:fs/promises";
-import { isAbsolute, join, relative, resolve } from "node:path";
-import { FileProfileRepository, type AtRestProtector } from "../../profile-service/src";
+import { dirname, isAbsolute, join, relative, resolve } from "node:path";
+import { FileProfileRepository, type AtRestProtector, type BinaryAtRestProtector } from "../../profile-service/src";
 import { loadProfileHostUiBundle } from "./assets";
 import type { ProfileHostHandle } from "./contracts";
 import { startProfileHost } from "./host";
 import { FileProfileHostStore } from "./profileServiceAdapter";
 import { ProfileServiceImportAdapter } from "./profileImportAdapter";
+import { FileResumeStore } from "./resumeStore";
 
 export interface LocalProfileEditorOptions {
   appDataDirectory: string;
   uiDirectory: string;
   /** Must be the profile-service production protector. The host never implements encryption. */
   protector: AtRestProtector;
+  resumeProtector?: BinaryAtRestProtector;
   bootstrapTtlMs?: number;
   sessionTtlMs?: number;
 }
@@ -45,8 +47,9 @@ export async function resolveLocalProfilePath(appDataDirectory: string): Promise
 }
 
 export async function startLocalProfileEditor(options: LocalProfileEditorOptions): Promise<ProfileHostHandle> {
+  const profilePath = await resolveLocalProfilePath(options.appDataDirectory);
   const repository = new FileProfileRepository({
-    filePath: await resolveLocalProfilePath(options.appDataDirectory),
+    filePath: profilePath,
     protector: options.protector
   });
   const store = new FileProfileHostStore(repository);
@@ -55,6 +58,12 @@ export async function startLocalProfileEditor(options: LocalProfileEditorOptions
   return startProfileHost({
     store,
     localData,
+    ...(options.resumeProtector ? {
+      resumeStore: new FileResumeStore({
+        filePath: join(dirname(profilePath), "resume.json"),
+        protector: options.resumeProtector
+      })
+    } : {}),
     ui: await loadProfileHostUiBundle(options.uiDirectory),
     bootstrapTtlMs: options.bootstrapTtlMs,
     sessionTtlMs: options.sessionTtlMs

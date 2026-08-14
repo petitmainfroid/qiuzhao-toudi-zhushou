@@ -24,6 +24,7 @@ describe("built ProfileEditor UI", () => {
     expect(source).not.toContain("ChromeLocalStorage");
     expect(source).not.toContain("window.localStorage");
     expect(source).not.toContain("sessionStorage");
+    expect(source).toContain("/api/resume");
 
     const host = await startProfileHost({
       ui: bundle,

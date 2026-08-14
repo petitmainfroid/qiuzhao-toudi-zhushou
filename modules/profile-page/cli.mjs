@@ -58,10 +58,17 @@ async function serve(env = process.env) {
   ]);
   const uiDirectory = path.resolve(import.meta.dirname, '..', '..', 'gerenxinxi', 'profile-host', 'dist-ui');
   await access(path.join(uiDirectory, 'index.html'));
+  const profileProtector = new profileModule.WindowsDpapiProtector();
+  const resumeProtector = new profileModule.WindowsDpapiProtector({
+    maxPlaintextBytes: 10 * 1024 * 1024,
+    maxCiphertextBytes: 12 * 1024 * 1024,
+    timeoutMs: 60_000
+  });
   const handle = await hostModule.startLocalProfileEditor({
     appDataDirectory: defaultProfileApplicationRoot(env),
     uiDirectory,
-    protector: new profileModule.WindowsDpapiProtector()
+    protector: profileProtector,
+    resumeProtector
   });
   await writeState({ schemaVersion: 1, pid: process.pid, port: handle.port, origin: handle.origin, startedAt: new Date().toISOString() }, env);
   await openVisibleBrowser(handle.bootstrapUrl, env);

@@ -6,6 +6,8 @@
     { "id": "M002", "name": "个人档案页面与本地加密存储", "status": "implemented_and_automated_checks_passed" },
     { "id": "M003", "name": "专用浏览器登录态与 CDP 会话", "status": "implemented_and_automated_checks_passed" },
     { "id": "M004", "name": "Agent ApplicationService 与 MCP 六工具", "status": "implemented_and_automated_checks_passed" },
-    { "id": "M005", "name": "小米真实页面 E3-E5", "status": "pending_user_authorized_real_page_validation" }
+    { "id": "M005", "name": "小米真实页面 E3-E5", "status": "pending_user_authorized_real_page_validation" },
+    { "id": "M006", "name": "个人信息页 PDF 原件本地持久化", "status": "done", "verification": ["npm run typecheck", "npm run test:modules", "npm run profile:build", "npm run validate"] },
+    { "id": "M007", "name": "真实 PDF 文本解析与字段提取回归", "status": "pending_real_document_validation" }
   ]
 }

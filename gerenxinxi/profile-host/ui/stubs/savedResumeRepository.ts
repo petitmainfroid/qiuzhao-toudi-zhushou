@@ -1,5 +1,6 @@
 export interface SavedResumeMetadata {
-  fileName: string;
+  name: string;
+  mimeType: "application/pdf";
   size: number;
   sha256: string;
   savedAt: string;

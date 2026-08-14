@@ -6,3 +6,4 @@ export * from "./launcher";
 export * from "./profileServiceAdapter";
 export * from "./profilePayload";
 export * from "./profileImportAdapter";
+export * from "./resumeStore";

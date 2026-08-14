@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { createEmptyProfile } from "../../../shared/domain/profile";
-import { HttpProfileRepository, ProfileHostClientError } from "../src/client";
+import { HttpProfileRepository, HttpSavedResumeRepository, ProfileHostClientError } from "../src/client";
 
 const ETAG_1 = `"${"a".repeat(43)}"`;
 const ETAG_2 = `"${"b".repeat(43)}"`;
@@ -85,5 +85,50 @@ describe("HttpProfileRepository", () => {
     expect(previewHeaders.get("if-match")).toBeNull();
     expect(new Headers(request.mock.calls[3]?.[1]?.headers).get("if-match")).toBe(ETAG_2);
     expect(new Headers(request.mock.calls[4]?.[1]?.headers).get("if-match")).toBe(ETAG_3);
+  });
+});
+
+describe("HttpSavedResumeRepository", () => {
+  it("loads, uploads, and clears the local PDF through the host without IndexedDB", async () => {
+    const metadata = {
+      name: "校招简历.pdf",
+      mimeType: "application/pdf" as const,
+      size: 24,
+      sha256: "a".repeat(64),
+      savedAt: "2026-08-13T00:00:00.000Z"
+    };
+    let uploadedBytes: Uint8Array | undefined;
+    const request = vi.fn<typeof fetch>(async (url, init) => {
+      if (url === "/api/session") {
+        return new Response(JSON.stringify({ csrfToken: "c".repeat(43), expiresAt: Date.now() + 1000 }), { status: 200 });
+      }
+      if (url === "/api/resume" && (init?.method ?? "GET") === "GET") {
+        return new Response(JSON.stringify({ resume: metadata }), { status: 200 });
+      }
+      if (url === "/api/resume" && init?.method === "PUT") {
+        uploadedBytes = new Uint8Array(init.body as Uint8Array).slice();
+        return new Response(JSON.stringify({ resume: metadata }), { status: 200 });
+      }
+      return new Response(JSON.stringify({ ok: true }), { status: 200 });
+    });
+    const repository = new HttpSavedResumeRepository("", request);
+    const pdfBytes = new TextEncoder().encode("%PDF-1.7\nsynthetic\n%%EOF");
+    const file = {
+      name: "校招简历.pdf",
+      type: "application/pdf",
+      size: pdfBytes.byteLength,
+      arrayBuffer: async () => pdfBytes.buffer.slice(0)
+    } as File;
+
+    await expect(repository.load()).resolves.toEqual(metadata);
+    await expect(repository.save(file)).resolves.toEqual(metadata);
+    await expect(repository.clear()).resolves.toBeUndefined();
+
+    expect(Array.from(uploadedBytes ?? [])).toEqual(Array.from(pdfBytes));
+    const uploadHeaders = new Headers(request.mock.calls[2]?.[1]?.headers);
+    expect(uploadHeaders.get("content-type")).toBe("application/pdf");
+    expect(uploadHeaders.get("x-profile-csrf")).toBe("c".repeat(43));
+    expect(Buffer.from(uploadHeaders.get("x-resume-name")!, "base64url").toString("utf8")).toBe("校招简历.pdf");
+    expect(request.mock.calls[3]?.[1]?.method).toBe("DELETE");
   });
 });

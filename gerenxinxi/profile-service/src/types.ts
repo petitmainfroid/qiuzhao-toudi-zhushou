@@ -28,6 +28,11 @@ export interface AtRestProtector {
   unprotect(protectedPayload: string): Promise<string>;
 }
 
+export interface BinaryAtRestProtector extends AtRestProtector {
+  protectBytes(plaintext: Uint8Array): Promise<string>;
+  unprotectBytes(protectedPayload: string): Promise<Uint8Array>;
+}
+
 export interface SaveProfileInput {
   profile: CandidateProfile;
   expectedProfileVersion: ProfileVersion | null;
