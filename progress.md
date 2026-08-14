@@ -1,5 +1,12 @@
 # qiuzhao-cli progress
 
+## 2026-08-14 B006 in progress
+
+- Real BOSS read-only checkpoint: after an explicit user-directed binding to the existing logged-in BOSS result tab, two consecutive fixed visible-card collections both returned 20 accepted records and the same local record-set digest. The repository is DPAPI-encrypted and was refreshed without BOSS page writes, messages, Cookie/credential reads, scrolling, navigation, CAPTCHA handling, or final submission. Public redacted evidence is `artifacts/boss-visible-read-only-manifest.json`.
+- The live site no longer exposes the old `/job_detail/...`-only route: structure-only counts found current `/c:id-p:id/` job routes. The collector accepts both bounded, query-free variants, while all Agent-supplied selector/script surfaces remain absent.
+- A first persistence attempt exposed a performance defect: per-record repository upserts caused repeated DPAPI operations and exceeded the harness command limit. `upsertMany` now commits the bounded batch in one versioned encryption transaction; the subsequent two real reads completed in under eight seconds and were stable.
+- B006 remains `in_progress`: its 20-card denominator is a candidate until independently reviewed by the user, and the workbench card view (B008) is still absent. No BOSS compatibility beyond this exact current page is claimed.
+
 ## 2026-08-14 B004 durable workflow complete
 
 - Added a closed, per-job workflow state machine with a single-job lock, bounded action attempts, epoch invalidation on restart, cancellation and stale-epoch rejection. It has no browser or page-action interface.

@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "source": "boss",
+  "mode": "visible-read-only",
+  "evidenceLevel": "E3-candidate/E4-read-only",
+  "runs": 2,
+  "observedVisibleCards": 20,
+  "acceptedRecords": 20,
+  "stableAcrossRuns": true,
+  "recordSetDigest": "24b828776aa589038b948c14b2807f4c74ebf727664ebac37786ba262a9aa747",
+  "countsDigest": "27714c76f8d1762732cf300a44071903c807a741f22c60a1195cce2d96d5c340",
+  "pageWrites": 0,
+  "messagesSent": 0,
+  "cookieReads": 0,
+  "credentialReads": 0,
+  "finalSubmits": 0,
+  "notes": "Candidate denominator remains subject to independent user review. No raw page text, job URLs, query strings, cookies, credentials, profile values, or DOM were retained."
+}
