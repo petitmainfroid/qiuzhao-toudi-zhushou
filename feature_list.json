@@ -226,7 +226,7 @@
       "acceptance": ["每条外发消息绑定精确岗位、计划和用户授权；回复只记录脱敏状态。"], "verification": ["真实 BOSS 私有 E4 单消息证据", "重启幂等 manifest", "npm run validate"], "notes": "不自动创建或扩大消息授权。"
     },
     {
-      "id": "B008", "title": "本地工作台岗位与记录界面", "status": "todo", "depends_on": ["B003", "B004", "B005"],
+      "id": "B008", "title": "本地工作台岗位与记录界面", "status": "in_progress", "depends_on": ["B003", "B004", "B005"],
       "acceptance": ["用户可看岗位链接、名称、JD、状态、审核结论和授权入口。"], "verification": ["npm run validate", "当前截图", "真实岗位只读核对"], "notes": "不显示密码、Cookie、档案标量或原始页面。"
     },
     {
