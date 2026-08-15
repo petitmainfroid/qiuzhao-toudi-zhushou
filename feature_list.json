@@ -24,7 +24,7 @@
       "depends_on": ["F000"],
       "acceptance": [
         "npm run build produces a loadable dist/ with manifest.json, options.html, sidepanel.html, background.js, and content.js.",
-        "The manifest requests only storage, activeTab, scripting, and sidePanel permissions.",
+        "The initial MVP manifest requested only storage, activeTab, scripting, and sidePanel permissions; later F037 may expand this baseline through its own explicit acceptance and privacy review.",
         "Type checking and a smoke unit test pass."
       ],
       "verification": [
@@ -345,7 +345,7 @@
     {
       "id": "F018",
       "title": "Harden complex recruitment controls and verified writes",
-      "status": "todo",
+      "status": "done",
       "depends_on": ["F016", "F017"],
       "acceptance": [
         "Deterministic adapters cover audited date ranges, searchable and cascading selects, radio groups, multi-selects, and rich-text fields.",
@@ -358,7 +358,7 @@
         "npm run validate",
         "Inspect current complex-control screenshots in artifacts/."
       ],
-      "notes": "Keep site-specific behavior behind structural adapters and convert every real defect into an anonymized fixture."
+      "notes": "Completed on 2026-08-06. A clean-room behavior audit of jackwener/OpenCLI 1.8.6 informed stable element references, scroll/focus preparation, bounded waits, exact option selection, and write-after-read verification. The activeTab content-script driver now covers exact searchable/cascading selects, native multi-selects, radios, rich text, and structurally indexed composite date ranges, with bounded retry and fail-closed verification. A live Xiaomi tab supplied read-only structural evidence only; all mutations ran against anonymous fixtures. Validation passed 24 files / 218 tests, browser E2E passed 19/19, the Xiaomi contract audit retained 9 groups / 34 visible fields / zero submission, and artifacts/complex-controls.png was visually inspected. Permissions remain exactly activeTab, scripting, sidePanel, and storage; no daemon/CDP transport, debugger, cookies, <all_urls>, filesystem-path upload, arbitrary evaluation, CAPTCHA/identity handling, or submission action was added."
     },
     {
       "id": "F019",
@@ -655,6 +655,218 @@
         "npm run test:e2e"
       ],
       "notes": "Use the visibly evidenced GPA/ranking candidates from the digest corpus, but do not infer a degree from `推免` or move metrics without record-local evidence."
+    },
+    {
+      "id": "F034",
+      "title": "Persist one reusable PDF resume locally",
+      "status": "done",
+      "depends_on": ["F025"],
+      "acceptance": [
+        "Selecting a valid PDF in the profile editor stores one reusable copy in extension-local IndexedDB with filename, MIME type, byte length, SHA-256 digest, and save time; selecting a new PDF replaces the previous copy.",
+        "The saved PDF is restored after the options page or side panel is reopened, and can be attached to a uniquely identified recruitment-page resume control without reopening the operating-system file picker.",
+        "Persistence does not weaken attachment safety: the destination origin and control remain visible, every site attachment still requires a fresh user confirmation, authorizations remain single-use and time-limited, and final submission is never clicked.",
+        "Invalid, oversized, non-PDF, signature-mismatched, digest-mismatched, or unreadable saved records fail closed; raw bytes, extracted text, filenames, and paths are never sent over the network.",
+        "The user can replace or delete the saved PDF, and deleting all local data clears the profile, mappings, and saved PDF; JSON export explicitly excludes PDF bytes."
+      ],
+      "verification": [
+        "npm test -- --run src/storage src/options/ProfileEditor.test.tsx src/sidepanel/SidePanel.test.tsx",
+        "npm run validate",
+        "npm run test:e2e -- --grep \"saved resume\"",
+        "Inspect artifacts/saved-resume-reuse.png and confirm the restored filename, local-only notice, destination, and explicit confirmation control are visible."
+      ],
+      "notes": "Completed on 2026-08-06. One primary PDF is intentionally supported before a multi-resume library. IndexedDB stores validated bytes because filesystem paths cannot be reused by a browser extension and chrome.storage.local is not appropriate for a 10 MiB binary. Reload reuse, explicit destination confirmation, replacement, individual deletion, delete-all, and JSON-export exclusion are covered by unit/component and installed-Chrome-style E2E evidence."
+    },
+    {
+      "id": "F035",
+      "title": "Recognize the saved-resume target on a real ATS upload wrapper",
+      "status": "done",
+      "depends_on": ["F034"],
+      "acceptance": [
+        "A bound authenticated Xiaomi application tab is audited read-only and records only the exact HTTPS Origin/path pattern, file-control counts, non-personal structural attributes, accepted extensions, resume/forbidden signal booleans, and submit-control count; it never reads input values, filenames, cookies, tokens, or personal page text.",
+        "The deterministic attachment scanner recognizes the real Xiaomi shape where the file input has no label, name, id, ARIA text, placeholder, or form-field attribute and the resume signal exists only in the nearest `.atsx-upload-btn`/`.atsx-upload-drag` wrapper.",
+        "The broader wrapper context does not promote identity, passport, photo, transcript, portfolio, recommendation, certificate, multiple, disabled, non-PDF, or ambiguous file controls.",
+        "A durable command reruns the bound-tab structural audit without uploading, mutating, reading existing values, or submitting, and the evidence document separates public/live-read-only, installed-extension preflight, confirmed live attachment, and local regression levels.",
+        "Validation, full browser E2E, and a synthetic screenshot pass without adding permissions or weakening the per-Origin, per-control, digest-bound, single-use confirmation gate."
+      ],
+      "verification": [
+        "npm run audit:resume-attachment-live -- --session qiuzhao-live --expected-origin https://xiaomi.jobs.f.mioffice.cn --expected-path-prefix /internship/resume/",
+        "npm test -- --run src/matching/dom.test.ts src/content/resumeAttachment.test.ts",
+        "npm run validate",
+        "npm run test:e2e",
+        "Inspect artifacts/saved-resume-reuse.png and the sanitized live audit output; do not claim a real attachment from read-only evidence."
+      ],
+      "notes": "Completed on 2026-08-06. An authenticated read-only Xiaomi audit found one enabled non-multiple PDF-compatible input with no label/name/id/ARIA/form-field metadata and resume semantics only in `.atsx-upload-btn`. The narrow upload-wrapper context adapter, exact anonymous regression, durable fail-closed live audit, 207 tests, 18 browser E2E tests, and least-permission build all passed without uploading or submitting."
+    },
+    {
+      "id": "F036",
+      "title": "Confirm one saved PDF attachment on an authenticated real recruitment page",
+      "status": "blocked",
+      "depends_on": ["F035"],
+      "acceptance": [
+        "The user grants activeTab from the exact authenticated recruitment tab and the installed extension shows the already-saved PDF plus the exact HTTPS destination and unique resume control without reopening the operating-system picker.",
+        "Before confirmation, the page file control and attachment network count remain unchanged; after the user's explicit confirmation, exactly one intended resume attachment attempt occurs and the page reports accepted or a bounded server rejection.",
+        "No identity, photo, transcript, portfolio, recommendation, certificate, password, CAPTCHA, SMS, privacy-consent, delete, or final-submit control changes, and no application-submission request is observed.",
+        "Evidence records only browser/extension versions, redacted path pattern, candidate count, accept tokens, confirmation/result codes, network request shape/status class, and zero-submit counters; it never records the real filename, digest, PDF bytes, profile/page values, cookies, authorization headers, or response bodies."
+      ],
+      "verification": [
+        "Run F035 live audit with no blockers and reload the current dist in Chrome.",
+        "User clicks the extension icon on the bound real recruitment tab, scans, verifies the saved PDF privately, and explicitly confirms the attachment.",
+        "Record sanitized before/after counters and zero-submit evidence in progress.md.",
+        "npm run validate and npm run test:e2e."
+      ],
+      "notes": "Blocked on a user-confirmed real attachment attempt. F037 removes the separate OpenCLI/activeTab installation blocker by embedding a debugger-backed browser session in this extension, but the user must still reload the built extension, open the exact Xiaomi page, scan, privately verify the saved PDF destination, and explicitly confirm the attachment."
+    },
+    {
+      "id": "F037",
+      "title": "Build the embedded browser-session kernel",
+      "status": "done",
+      "depends_on": ["F018", "F035"],
+      "acceptance": [
+        "Users install only the autumn-recruitment assistant; no OpenCLI CLI, daemon, Browser Bridge, local service, or second extension is required for persistent browser access.",
+        "The extension embeds an Apache-2.0-attributed CDP transport and a user-gesture-created session that pins one HTTPS recruitment tab, survives same-Origin navigation, expires, detaches, and fails closed on an Origin change or debugger conflict.",
+        "The expanded manifest permission surface is exact, documented, and tested: debugger, tabs, webNavigation, alarms, activeTab, scripting, sidePanel, storage, and <all_urls>; cookies, downloads, tabGroups, arbitrary eval, password/CAPTCHA/identity automation, and final submission remain absent.",
+        "The bridge status exposes only the pinned Origin/path, lifecycle timestamps, interactive-control count, frame count, and typed reason; raw page values, cookies, credentials, and resume bytes never enter status or logs.",
+        "A browser E2E launches only the built assistant, starts and stops an embedded session on an anonymous HTTPS page, verifies CDP structural state and same-Origin continuity, and proves a cross-Origin transition or final-submit attempt is not silently executed."
+      ],
+      "verification": [
+        "npm test -- --run src/bridge src/background src/foundation.test.ts",
+        "npm run validate",
+        "npm run test:e2e",
+        "Inspect a current artifacts/embedded-bridge.png screenshot and confirm the visible session status does not contain page values or credentials.",
+        "Review THIRD_PARTY_NOTICES.md and third_party/opencli/LICENSE."
+      ],
+      "notes": "Completed on 2026-08-06 as K0 in docs/browser-kernel-acceptance.md. The one-extension CDP session pins one credential-free HTTPS Origin for 10 minutes, exposes only Origin/path/counts, survives same-Origin navigation, and detaches on cross-Origin, expiry, close, or conflict. Apache-2.0 attribution and license ship in dist/package. Final validation passed 28 files / 233 tests; full Chrome E2E passed 20/20 including a real debugger session on an anonymous HTTPS page with same-Origin continuity, cross-Origin pause, and zero final submissions; artifacts/embedded-bridge.png was visually inspected. The Node CLI/daemon, second extension, raw evaluation, cookies, network capture, downloads, arbitrary path upload, CAPTCHA/identity automation, and final submission are absent."
+    },
+    {
+      "id": "F038",
+      "title": "Implement privacy-safe page state and semantic find",
+      "status": "done",
+      "depends_on": ["F037"],
+      "acceptance": [
+        "The kernel returns a privacy-safe accessibility/DOM structure with opaque stable references and never returns current input values.",
+        "Find locates controls by role, label, name, placeholder, and nearby text across supported frames and open shadow roots.",
+        "Anonymous fixture recall is at least 95% and repeated-state reference stability is 100% for unchanged controls."
+      ],
+      "verification": [
+        "npm test -- --run src/bridge",
+        "Run the anonymous state/find ground-truth evaluator.",
+        "npm run validate and npm run test:e2e."
+      ],
+      "notes": "Completed on 2026-08-06 as K1. The typed state/find bridge returns only allowlisted semantics, boolean capabilities, safety classes, boundary kinds and session-scoped opaque references across the main document, same-origin frames and open Shadow DOM. Anonymous real-Chrome ground truth achieved 24/24 label recall (100%), 100% repeated-reference stability, five first-ranked semantic finds, zero forbidden leaks and zero submissions. Final validation passed 30 files / 239 tests and full Chrome E2E passed 21/21; artifacts/page-state-find.png and the aggregate JSON report were inspected. Arbitrary selectors/XPath, page values, raw Runtime.evaluate, cookies, network capture and all page mutation remain absent."
+    },
+    {
+      "id": "F039",
+      "title": "Implement verified browser action primitives",
+      "status": "in_progress",
+      "depends_on": ["F038"],
+      "branch": "agent/browser-kernel-k2-actions",
+      "pr_base": "agent/browser-kernel-k1-baseline",
+      "acceptance": [
+        "Typed click, type, select, check, and fill primitives act only on an opaque reference and snapshot from the current pinned session; callers cannot supply CSS/XPath, CDP IDs, arbitrary JavaScript, or an arbitrary page value.",
+        "Profile-backed writes resolve an allowlisted profile path locally after the safety check. Fixed strategies cover text inputs, textarea, native select, radio, checkbox, date/month inputs, and contenteditable while dispatching browser/framework-compatible input, change, keyboard, and blur events.",
+        "Every supported write is reread inside the page and returns only typed success/failure, strategy, and attempt count. The old value, requested value, current value, and resume content never enter responses or logs.",
+        "A primary strategy may use at most one bounded non-clipboard fallback. A stale reference, changed semantic fingerprint, disabled/read-only control, failed verification, or framework rejection fails closed instead of moving to another control.",
+        "Password, CAPTCHA, verification, identity, file, destructive, and final-submit controls are blocked in 100% of ground-truth safety cases."
+      ],
+      "verification": [
+        "npm test -- --run src/bridge src/content/pageDriver.test.ts",
+        "npm run eval:kernel-actions",
+        "npm run validate",
+        "npm run test:e2e",
+        "Inspect artifacts/kernel-actions.png and its aggregate privacy-safe report."
+      ],
+      "notes": "K2. The planning checkpoint is complete and implementation is next. Reuse the deterministic page-driver behavior through a fixed internal action registry; do not expose raw Runtime evaluation or copy a second divergent driver. Clipboard access is excluded. Mark done only after branch, commit, draft PR, and exact evidence are recorded in progress.md."
+    },
+    {
+      "id": "F040",
+      "title": "Add waits, same-Origin navigation, and idempotent workflow control",
+      "status": "todo",
+      "depends_on": ["F039"],
+      "branch": "agent/browser-kernel-k3-workflows",
+      "pr_base": "agent/browser-kernel-k2-actions",
+      "acceptance": [
+        "Wait supports bounded state, role/semantic find, option-list, navigation, and DOM-settle conditions with typed timeout errors; it never accepts an arbitrary selector or waits indefinitely.",
+        "Async searchable/cascading selects, custom date/month ranges, and component popovers are operated as find-click-wait-refind workflows rather than hidden-value mutation.",
+        "Same-Origin multi-step and SPA navigation preserves the pinned session while invalidating stale snapshots; an Origin change pauses and detaches before another action.",
+        "Repeating the same requestId never repeats a side effect, including after a service-worker restart, and no action is retried more than the bounded policy allows."
+      ],
+      "verification": [
+        "npm run eval:kernel-workflows",
+        "Run dynamic-form, timeout, duplicate-command, and service-worker-restart E2E cases.",
+        "npm run validate",
+        "npm run test:e2e",
+        "Inspect artifacts/kernel-workflows.png and the idempotency report."
+      ],
+      "notes": "K3. Infinite waits, cross-Origin silent continuation, cookies, network bodies, arbitrary navigation, clipboard fallback, and unbounded recovery remain excluded. Mark done only after the feature branch and stacked draft PR are published."
+    },
+    {
+      "id": "F041",
+      "title": "Add user-confirmed upload, screenshots, logs, and typed errors",
+      "status": "todo",
+      "depends_on": ["F040"],
+      "branch": "agent/browser-kernel-k4-evidence",
+      "pr_base": "agent/browser-kernel-k3-workflows",
+      "acceptance": [
+        "One locally saved PDF can be attached only after the user confirms its private summary, one unique file-target reference, and the exact HTTPS Origin; generic filesystem paths and arbitrary files are not accepted.",
+        "Screenshots are ephemeral user-visible evidence. A committed real-site artifact may contain only a redacted side-panel summary, never filled page content.",
+        "Command logs contain only request/action type, opaque reference, typed status, attempt count, duration bucket, and failure category; no profile/page values, cookies, headers, URL query, file paths, filename, digest, or file bytes are recorded.",
+        "Upload retry is idempotent and debugger conflicts, stale references, timeouts, blocked controls, page changes, verification failures, and user cancellation have distinct error codes."
+      ],
+      "verification": [
+        "npm run eval:kernel-evidence",
+        "Run privacy sanitizer, duplicate-upload, screenshot, and typed-error tests.",
+        "npm run validate",
+        "npm run test:e2e",
+        "Inspect artifacts/kernel-evidence.png and verify that committed reports contain no personal data."
+      ],
+      "notes": "K4. A pure extension has no reusable absolute OS path, so saved PDF bytes continue through the existing user-confirmed File/DataTransfer path rather than OpenCLI's filesystem-path CDP upload. Real PDF acceptance remains user-authorized and non-submitting. Publish only after privacy inspection and stacked draft PR creation."
+    },
+    {
+      "id": "F042",
+      "title": "Expose a stable kernel API for recruitment adapters",
+      "status": "todo",
+      "depends_on": ["F041"],
+      "branch": "agent/browser-kernel-k5-adapters",
+      "pr_base": "agent/browser-kernel-k4-evidence",
+      "acceptance": [
+        "Recruitment adapters depend on one typed state/find/action/wait/upload API and do not call chrome.debugger directly.",
+        "The existing scan, verified fill, custom control, repeatable-record, and saved-resume flows target the pinned tab through that API; the old direct mutation path is removed after parity evidence rather than retained as a second engine.",
+        "Adapter operations accept canonical field intent and profile paths, not arbitrary selectors or values, and every structural site defect is reproduced as an anonymous fixture.",
+        "At least three distinct anonymous ATS families pass non-submitting end-to-end acceptance, collectively covering text, textarea/contenteditable, native/custom selects, radio/checkbox, dates, repeatable records, iframe/open-shadow boundaries, and the saved-resume gate."
+      ],
+      "verification": [
+        "npm run eval:kernel-adapters",
+        "Run adapter contract tests and three anonymous ATS E2E fixtures.",
+        "npm run validate",
+        "npm run test:e2e",
+        "Review docs/browser-kernel-acceptance.md K5 evidence and inspect artifacts/kernel-adapters.png."
+      ],
+      "notes": "K5 is the boundary between generic browser infrastructure and site/field adaptation. Do not claim real-site coverage from anonymous fixtures; F043 owns real acceptance. Publish the stacked branch and draft PR before starting F043."
+    },
+    {
+      "id": "F043",
+      "title": "Prove three-family real-page non-submitting write acceptance",
+      "status": "todo",
+      "depends_on": ["F042"],
+      "branch": "agent/browser-kernel-real-site-acceptance",
+      "pr_base": "agent/browser-kernel-k5-adapters",
+      "acceptance": [
+        "User-authorized acceptance covers at least three live HTTPS campus-recruitment application pages from three different ATS families; three companies using the same ATS count as one family.",
+        "Before mutation, each site passes a read-only L2 inventory. The user then explicitly authorizes an L3 non-submit fill after being warned that the site may autosave a draft; CAPTCHA, SMS, identity, password, consent, destructive, and final-submit controls remain untouched.",
+        "The denominator is every reachable, user-approved, supported ordinary text, textarea/contenteditable, select, radio/checkbox, and date field with known profile ground truth. Per-site primary-strategy verified success is greater than 90%, aggregate final success after at most one fallback is at least 98%, and wrong-control writes are zero.",
+        "End-to-end supported-field mapping precision is at least 98%; all skipped or failed fields have a typed reason. Safety-control blocking, write verification coverage, and zero-submit behavior are each 100%.",
+        "Committed evidence contains only site/ATS identity, browser and extension versions, field/action counts, aggregate rates, typed failure categories, and zero-action safety flags. Real values, filenames, screenshots of filled pages, cookies, headers, request/response bodies, and URL queries never leave the user's machine.",
+        "Every reproducible live-site failure is converted to an anonymous regression fixture before a code fix is promoted."
+      ],
+      "verification": [
+        "Complete the L2/L3 checklist in docs/browser-kernel-delivery-plan.md for three ATS families.",
+        "Run the privacy-safe real-site acceptance reporter and inspect its allowlisted JSON output.",
+        "npm run validate",
+        "npm run test:e2e",
+        "Inspect one current anonymous regression screenshot per ATS family; never commit a screenshot containing real filled values.",
+        "Record branch, commit, draft PR, exact denominators, rates, typed failures, blockers, and zero-submit evidence in progress.md."
+      ],
+      "notes": "This is the only node that may claim the requested three-real-site result. Candidate sites such as 牛客、实习僧 or an enterprise-owned portal are selected only after terms, login, user consent, control-family coverage, and safe non-submit feasibility are confirmed. A login/CAPTCHA blocker is recorded and replaced by another ATS family rather than bypassed."
     }
   ]
 }

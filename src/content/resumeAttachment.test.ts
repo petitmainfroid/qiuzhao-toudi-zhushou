@@ -31,6 +31,49 @@ describe("resume attachment architecture", () => {
     });
   });
 
+  it("finds the real ATS shape when resume semantics exist only in the upload wrapper", () => {
+    document.body.innerHTML = `
+      <section class="resumeEditForm-wrapper">
+        <div class="uploadResume uploadResume__synthetic">
+          <div class="atsx-upload atsx-upload-drag">
+            <span class="atsx-upload atsx-upload-btn">
+              点击或拖拽上传简历，支持 PDF、DOC、DOCX
+              <input
+                type="file"
+                data-cy="inputUpload"
+                accept=".pdf,.doc,.docx,.ppt,.pptx,.png,.jpg,.jpeg,.html,.htm"
+              />
+            </span>
+          </div>
+        </div>
+      </section>
+    `;
+
+    expect(scanResumeAttachment()).toMatchObject({
+      status: "ready",
+      candidateCount: 1,
+      candidate: {
+        fieldLabel: "上传简历",
+        acceptsPdf: true
+      }
+    });
+  });
+
+  it("does not promote a forbidden attachment from the same ATS wrapper family", () => {
+    document.body.innerHTML = `
+      <span class="atsx-upload atsx-upload-btn">
+        上传身份证附件
+        <input type="file" data-cy="inputUpload" accept=".pdf,.jpg" />
+      </span>
+    `;
+
+    expect(scanResumeAttachment()).toMatchObject({
+      status: "unsupported",
+      candidate: null,
+      candidateCount: 0
+    });
+  });
+
   it("fails closed when multiple resume controls are present", () => {
     document.body.innerHTML = `
       <label for="resume-cn">上传简历</label><input id="resume-cn" type="file" accept=".pdf" />

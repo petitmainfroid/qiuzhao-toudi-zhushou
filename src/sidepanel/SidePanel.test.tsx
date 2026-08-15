@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { createEmptyProfile, type CandidateProfile } from "../domain/profile";
 import type { FillSelection, ScanResult } from "../content/engine";
 import type { PageBridge } from "./pageBridge";
+import type { SavedResumeRepositoryLike } from "../storage/savedResumeRepository";
 import { SidePanel } from "./App";
 
 function profileWithValues() {
@@ -116,6 +117,46 @@ function scanResult(): ScanResult {
 }
 
 describe("SidePanel", () => {
+  it("restores a saved PDF and still requires destination confirmation", async () => {
+    const bytes = new TextEncoder().encode("%PDF-1.4\nrestored unit resume\n%%EOF");
+    const file = new File([bytes], "restored-resume.pdf", { type: "application/pdf" });
+    const savedResumeRepository: SavedResumeRepositoryLike = {
+      load: vi.fn(async () => ({
+        file,
+        name: file.name,
+        mimeType: "application/pdf" as const,
+        size: file.size,
+        sha256: "b".repeat(64),
+        savedAt: "2026-08-06T08:00:00.000Z"
+      })),
+      save: vi.fn(),
+      clear: vi.fn()
+    };
+    const bridge: PageBridge = {
+      scan: vi.fn(async () => scanResult()),
+      fill: vi.fn(),
+      attachResume: vi.fn(async () => ({ status: "attached" as const }))
+    };
+    render(<SidePanel
+      repository={{ load: async () => profileWithValues() }}
+      savedResumeRepository={savedResumeRepository}
+      pageBridge={bridge}
+    />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "扫描当前页面" }));
+    expect(await screen.findByText("restored-resume.pdf")).toBeInTheDocument();
+    expect(screen.getByText("已保存于本机，可长期复用")).toBeInTheDocument();
+    expect(bridge.attachResume).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole("button", { name: "确认上传到 jobs.example" }));
+    await waitFor(() => expect(bridge.attachResume).toHaveBeenCalledWith(
+      file,
+      expect.any(Object),
+      "b".repeat(64),
+      expect.any(Number)
+    ));
+  });
+
   it("defaults to safe high-confidence selections only", async () => {
     const profile = profileWithValues();
     const bridge: PageBridge = {

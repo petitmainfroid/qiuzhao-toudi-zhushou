@@ -24,7 +24,15 @@ if (result.status !== 0) {
 
 const entries = result.stdout.split(/\r?\n/).map((entry) => entry.trim()).filter(Boolean);
 const normalizedEntries = entries.map((entry) => entry.replaceAll("\\", "/"));
-const required = ["manifest.json", "options.html", "sidepanel.html", "background.js", "content.js"];
+const required = [
+  "manifest.json",
+  "options.html",
+  "sidepanel.html",
+  "background.js",
+  "content.js",
+  "THIRD_PARTY_NOTICES.md",
+  "third_party/opencli/LICENSE"
+];
 for (const file of required) {
   if (!normalizedEntries.includes(file)) throw new Error(`Package is missing ${file}.`);
 }

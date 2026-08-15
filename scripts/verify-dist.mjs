@@ -9,6 +9,8 @@ const requiredFiles = [
   "background.js",
   "content.js",
   "noise.svg",
+  "THIRD_PARTY_NOTICES.md",
+  "third_party/opencli/LICENSE",
   "ocr/worker.min.js",
   "ocr/tesseract-core-lstm.wasm.js",
   "ocr/chi_sim.traineddata.gz",
@@ -24,14 +26,29 @@ const manifest = JSON.parse(
   await readFile(resolve(projectRoot, "dist/manifest.json"), "utf8")
 );
 
-const expectedPermissions = ["activeTab", "scripting", "sidePanel", "storage"];
+const expectedPermissions = [
+  "activeTab",
+  "alarms",
+  "debugger",
+  "scripting",
+  "sidePanel",
+  "storage",
+  "tabs",
+  "webNavigation"
+];
 const actualPermissions = [...manifest.permissions].sort();
 if (JSON.stringify(actualPermissions) !== JSON.stringify(expectedPermissions)) {
   throw new Error(`Unexpected manifest permissions: ${actualPermissions.join(", ")}`);
 }
 
-if (manifest.host_permissions || manifest.optional_host_permissions) {
-  throw new Error("The MVP distribution must not request persistent host permissions.");
+if (JSON.stringify(manifest.host_permissions) !== JSON.stringify(["<all_urls>"])) {
+  throw new Error(`Unexpected host permissions: ${JSON.stringify(manifest.host_permissions)}`);
+}
+if (manifest.optional_host_permissions) {
+  throw new Error("The embedded kernel must not declare unreviewed optional host permissions.");
+}
+for (const forbidden of ["cookies", "downloads", "nativeMessaging", "tabGroups", "webRequest", "webRequestBlocking"]) {
+  if (actualPermissions.includes(forbidden)) throw new Error(`Forbidden permission: ${forbidden}`);
 }
 
 if (manifest.background?.service_worker !== "background.js") {
@@ -39,4 +56,5 @@ if (manifest.background?.service_worker !== "background.js") {
 }
 
 console.log(`Verified ${requiredFiles.length} required distribution files.`);
-console.log(`Verified least-privilege permissions: ${actualPermissions.join(", ")}.`);
+console.log(`Verified exact browser-kernel permissions: ${actualPermissions.join(", ")}.`);
+console.log("Verified host permission <all_urls> and forbidden permission absence.");

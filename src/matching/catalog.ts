@@ -11,7 +11,7 @@ export interface CanonicalField {
 }
 
 const textKinds: ControlKind[] = ["text", "textarea", "contenteditable"];
-const dateKinds: ControlKind[] = ["date", "month", "text"];
+const dateKinds: ControlKind[] = ["date", "month", "date-range", "text"];
 
 export const canonicalFields: CanonicalField[] = [
   {

@@ -18,12 +18,22 @@
       textarea { min-height: 92px; resize: vertical; }
       .date-range { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
       .manual { color: #8f4b20; background: #fff7e8; border-radius: 8px; padding: 10px 12px; }
+      .uploadResume { margin-bottom: 18px; padding: 18px; background: #fff7e8; border: 1px dashed #c08e3a; border-radius: 10px; }
+      .atsx-upload-btn { display: grid; gap: 8px; color: #606c38; font-weight: 600; }
       button[type="submit"] { justify-self: end; border: 0; border-radius: 6px; padding: 11px 22px; color: #fff; background: #ff6900; font-weight: 700; }
     </style>
   </head>
   <body>
     <h1>小米实习生招聘 · 字段回归页</h1>
     <p class="audit-note">根据 2026-08-03 公开 `resume_form_schema` 构建，只用于非提交自动化测试。</p>
+    <section class="resumeEditForm-wrapper uploadResume uploadResume__synthetic">
+      <div class="atsx-upload atsx-upload-drag">
+        <span class="atsx-upload atsx-upload-btn">
+          点击或拖拽上传简历，支持 PDF、DOC、DOCX
+          <input type="file" data-cy="inputUpload" accept=".pdf,.doc,.docx,.ppt,.pptx,.png,.jpg,.jpeg,.html,.htm" />
+        </span>
+      </div>
+    </section>
     <form id="xiaomi-application-form">
       <section class="resumeEditForm-basic">
         <h2>基本信息</h2>
@@ -100,7 +110,7 @@
         <div class="atsx-form-item" data-form-field-name="self_evaluation.self_evaluation" data-form-field-i18n-name="自我评价"><div class="atsx-form-item-label">自我评价</div><textarea></textarea></div>
       </section>
 
-      <p class="manual">简历、个人证件、作品附件和获奖证明均保持手动。</p>
+      <p class="manual">常用简历只有在核对目标网站后才附加；个人证件、作品附件和获奖证明保持手动。</p>
       <button id="xiaomi-submit" type="submit">投递</button>
     </form>
     <script type="module" src="/src/fixture/xiaomi-main.ts"></script>

@@ -33,6 +33,13 @@ await bundle({
 });
 
 await cp(resolve(projectRoot, "public/noise.svg"), resolve(outdir, "noise.svg"));
+await cp(resolve(projectRoot, "THIRD_PARTY_NOTICES.md"), resolve(outdir, "THIRD_PARTY_NOTICES.md"));
+const openCliLicenseOutdir = resolve(outdir, "third_party/opencli");
+await mkdir(openCliLicenseOutdir, { recursive: true });
+await cp(
+  resolve(projectRoot, "third_party/opencli/LICENSE"),
+  resolve(openCliLicenseOutdir, "LICENSE")
+);
 const ocrOutdir = resolve(outdir, "ocr");
 await mkdir(ocrOutdir, { recursive: true });
 await Promise.all([

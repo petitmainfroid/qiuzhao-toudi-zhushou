@@ -8,6 +8,7 @@ export function createFieldFingerprint(descriptor: FieldDescriptor): string {
     descriptor.ariaLabel,
     descriptor.placeholder,
     descriptor.name,
-    descriptor.domId
+    descriptor.domId,
+    descriptor.dateRangePaths?.join(":") ?? ""
   ].map(normalizeFieldText).join("|");
 }

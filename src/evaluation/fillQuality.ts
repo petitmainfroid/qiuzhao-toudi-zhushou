@@ -10,6 +10,7 @@ export interface FillQualityFieldObservation {
   confidence: "high" | "medium" | "low" | "none";
   excludedReason: string | null;
   actualOutcome: ObservedFieldOutcome;
+  fillReason?: string | null;
   valueExact: boolean | null;
 }
 

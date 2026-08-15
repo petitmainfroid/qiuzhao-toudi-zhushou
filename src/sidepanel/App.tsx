@@ -26,7 +26,13 @@ import { MappingRepository } from "../mapping/mappingRepository";
 import type { SavedFieldMapping } from "../mapping/types";
 import { PrivacyConsentRepository } from "../privacy/consentRepository";
 import { ProfileRepository } from "../storage/profileRepository";
+import {
+  SavedResumeRepository,
+  type SavedResumeRepositoryLike
+} from "../storage/savedResumeRepository";
 import { resolvePageBridge, type PageBridge } from "./pageBridge";
+import { PowerSessionCard } from "./PowerSessionCard";
+import { resolvePowerSessionBridge } from "./powerSessionBridge";
 import "../styles/theme.css";
 import "./sidepanel.css";
 
@@ -47,7 +53,9 @@ export interface SidePanelConsentRepositoryLike {
 const repository = new ProfileRepository();
 const mappingRepository = new MappingRepository();
 const consentRepository = new PrivacyConsentRepository();
+const savedResumeRepository = new SavedResumeRepository();
 const pageBridge = resolvePageBridge();
+const powerSessionBridge = resolvePowerSessionBridge();
 
 function openOptions() {
   if (typeof chrome !== "undefined" && chrome.runtime?.id) {
@@ -64,6 +72,7 @@ export function App() {
       repository={repository}
       mappingRepository={mappingRepository}
       consentRepository={consentRepository}
+      savedResumeRepository={savedResumeRepository}
       pageBridge={pageBridge}
     />
   );
@@ -75,6 +84,7 @@ type AttachmentState = "idle" | "hashing" | "ready" | "attaching" | "attached" |
 interface PreparedResumeAttachment {
   file: File;
   sha256: string;
+  savedAt?: string;
 }
 
 function formatAttachmentSize(bytes: number): string {
@@ -162,11 +172,13 @@ export function SidePanel({
   repository: profileRepository,
   mappingRepository: fieldMappingRepository,
   consentRepository: privacyConsentRepository,
+  savedResumeRepository: localResumeRepository,
   pageBridge: bridge
 }: {
   repository: SidePanelRepositoryLike;
   mappingRepository?: SidePanelMappingRepositoryLike;
   consentRepository?: SidePanelConsentRepositoryLike;
+  savedResumeRepository?: SavedResumeRepositoryLike;
   pageBridge: PageBridge;
 }) {
   const [profile, setProfile] = useState<CandidateProfile | null>(null);
@@ -185,17 +197,26 @@ export function SidePanel({
     void Promise.all([
       profileRepository.load(),
       fieldMappingRepository?.load() ?? Promise.resolve([]),
-      privacyConsentRepository?.hasAcknowledged() ?? Promise.resolve(true)
-    ]).then(([loadedProfile, loadedMappings, acknowledged]) => {
+      privacyConsentRepository?.hasAcknowledged() ?? Promise.resolve(true),
+      localResumeRepository?.load().catch(() => null) ?? Promise.resolve(null)
+    ]).then(([loadedProfile, loadedMappings, acknowledged, loadedResume]) => {
       if (!active) return;
       setProfile(loadedProfile);
       setMappings(loadedMappings);
       setConsentAcknowledged(acknowledged);
+      if (loadedResume) {
+        setPreparedAttachment({
+          file: loadedResume.file,
+          sha256: loadedResume.sha256,
+          savedAt: loadedResume.savedAt
+        });
+        setAttachmentState("ready");
+      }
     });
     return () => {
       active = false;
     };
-  }, [profileRepository, fieldMappingRepository, privacyConsentRepository]);
+  }, [profileRepository, fieldMappingRepository, privacyConsentRepository, localResumeRepository]);
 
   const completion = useMemo(
     () => (profile ? calculateProfileCompletion(profile) : null),
@@ -239,8 +260,7 @@ export function SidePanel({
         )
         .map((field) => field.elementId)
     ));
-    setPreparedAttachment(null);
-    setAttachmentState("idle");
+    setAttachmentState(preparedAttachment ? "ready" : "idle");
     setAttachmentMessage("");
     setState("ready");
   }
@@ -265,6 +285,13 @@ export function SidePanel({
 
     setAttachmentState("hashing");
     try {
+      if (localResumeRepository) {
+        const saved = await localResumeRepository.save(file);
+        setPreparedAttachment({ file: saved.file, sha256: saved.sha256, savedAt: saved.savedAt });
+        setAttachmentState("ready");
+        setAttachmentMessage("PDF 已保存于本机；以后打开侧边栏可直接复用，上传到网站前仍会再次确认。");
+        return;
+      }
       const bytes = new Uint8Array(await file.arrayBuffer());
       const isPdf = bytes.length >= 5
         && bytes[0] === 0x25
@@ -315,7 +342,7 @@ export function SidePanel({
     }
     catch {
       setAttachmentState("error");
-      setAttachmentMessage("附件失败，页面可能已经跳转或权限已失效。请重新点击扩展图标并扫描。");
+      setAttachmentMessage("附件失败，页面可能已经跳转或会话已失效。请重新连接当前招聘页并扫描。");
     }
   }
 
@@ -330,7 +357,7 @@ export function SidePanel({
     catch (error) {
       setState("error");
       const detail = error instanceof Error ? error.message : "未知错误";
-      setMessage(`无法读取当前页面。请在招聘网页中重新点击扩展图标后再试。技术原因：${detail}`);
+      setMessage(`无法读取当前页面。请先连接当前 HTTPS 招聘页后再试。技术原因：${detail}`);
     }
   }
 
@@ -431,7 +458,7 @@ export function SidePanel({
           <p className="eyebrow">使用前说明</p>
           <h1 id="consent-title">你的档案默认只留在本机。</h1>
           <ul>
-            <li>只有点击扫描后，扩展才读取当前招聘页面的表单标题。</li>
+            <li>浏览器会提示网页与调试权限；只有点击连接或扫描后，扩展才处理目标 HTTPS 页面，跨站后会暂停。</li>
             <li>敏感字段默认不选；附件只有在选择 PDF 并再次确认目标网站后才会添加。</li>
             <li>扩展只填写已选字段，不会替你提交申请。</li>
           </ul>
@@ -459,6 +486,8 @@ export function SidePanel({
           <p>{completion.missing.length ? `还有 ${completion.missing.length} 个基础检查项未填写。` : "基础档案已经完整，可以扫描当前招聘页面。"}</p>
         </div>
       </section>
+
+      <PowerSessionCard bridge={powerSessionBridge} />
 
       <button className="scan-button" type="button" onClick={scanCurrentPage} disabled={!completion.filled || state === "scanning" || state === "creating" || state === "filling" || attachmentState === "hashing" || attachmentState === "attaching"}>
         <ScanSearch size={20} aria-hidden="true" />
@@ -500,6 +529,7 @@ export function SidePanel({
                 <div className="attachment-summary">
                   <strong>{preparedAttachment.file.name}</strong>
                   <span>{formatAttachmentSize(preparedAttachment.file.size)}</span>
+                  {preparedAttachment.savedAt ? <span className="attachment-local">已保存于本机，可长期复用</span> : null}
                   <span className="attachment-digest"><Fingerprint size={13} aria-hidden="true" />SHA-256 {preparedAttachment.sha256.slice(0, 16)}…</span>
                 </div>
               ) : null}
@@ -604,7 +634,7 @@ export function SidePanel({
 
       <div className="privacy-message">
         <ShieldCheck size={20} aria-hidden="true" />
-        <p>只在你点击后读取当前页面；简历附件需要单独确认，也不会自动提交申请。</p>
+        <p>只在你点击连接、扫描或填写后处理目标页面；跨站会暂停，简历附件需要单独确认，也不会自动提交申请。</p>
       </div>
     </main>
   );

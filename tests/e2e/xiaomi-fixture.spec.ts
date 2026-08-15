@@ -38,6 +38,11 @@ test("Xiaomi-derived fixture scans and fills reusable fields without submission"
   });
 
   expect(result.scan.summary.total).toBeGreaterThanOrEqual(25);
+  expect(result.scan.resumeAttachment).toMatchObject({
+    status: "ready",
+    candidateCount: 1,
+    candidate: { fieldLabel: "上传简历", acceptsPdf: true }
+  });
   expect(result.scan.fields.find((field) => field.fieldLabel === "个人证件")?.excludedReason).toBe("sensitive-unsupported");
   expect(result.fill.filledCount).toBeGreaterThanOrEqual(20);
   await expect(page.locator('[data-form-field-name="education_list[0].school"] input')).toHaveValue("第一测试大学");
@@ -50,6 +55,7 @@ test("Xiaomi-derived fixture scans and fills reusable fields without submission"
   await expect(page.locator('[data-form-field-name="self_evaluation.self_evaluation"] textarea')).toHaveValue("认真负责，注重验证。");
   await expect(page.locator('[data-form-field-name="basic_info.identification"] input')).toHaveValue("");
   await expect(page.locator('[data-form-field-name="works_list[0].attachment"] input')).toHaveValue("");
+  await expect(page.locator('[data-cy="inputUpload"]')).toHaveValue("");
   expect(await page.evaluate(() => window.__xiaomiFixture.submitCount)).toBe(0);
   await page.screenshot({ path: "artifacts/xiaomi-form-regression.png", fullPage: true });
 });

@@ -13,7 +13,7 @@ interface ScoredCandidate {
   reasons: string[];
 }
 
-const unsupportedKinds = new Set(["file", "password", "hidden", "button", "checkbox", "date-range"]);
+const unsupportedKinds = new Set(["file", "password", "hidden", "button", "checkbox"]);
 const verificationPatterns = ["验证码", "短信验证", "图形验证", "captcha", "verificationcode", "smscode"];
 const unsupportedSensitivePatterns = [
   "身份证号",
@@ -240,6 +240,21 @@ export function matchField(descriptor: FieldDescriptor): MatchResult {
   }
   if (unsupportedSensitivePatterns.some((pattern) => allText.includes(normalizeFieldText(pattern)))) {
     return excluded(descriptor, "sensitive-unsupported", "高敏感身份或财务信息不在自动填写范围内");
+  }
+
+  if (descriptor.kind === "date-range" && descriptor.dateRangePaths) {
+    const [startPath, endPath] = descriptor.dateRangePaths;
+    return {
+      elementId: descriptor.elementId,
+      fieldLabel: displayLabel(descriptor),
+      profilePath: startPath,
+      companionProfilePath: endPath,
+      canonicalLabel: "起止时间",
+      score: 1,
+      confidence: "high",
+      reasons: ["根据同一经历区块的结构标识确定起止时间和记录序号"],
+      requiresConfirmation: false
+    };
   }
 
   const candidates = canonicalFields
