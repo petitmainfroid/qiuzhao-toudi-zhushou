@@ -27,7 +27,10 @@ describe("background action handling", () => {
         onMessage: { addListener: vi.fn() },
         openOptionsPage: vi.fn()
       },
-      webNavigation: { onCommitted: { addListener: vi.fn() } },
+      webNavigation: {
+        onCommitted: { addListener: vi.fn() },
+        onHistoryStateUpdated: { addListener: vi.fn() }
+      },
       tabs: {
         get: vi.fn(),
         onRemoved: { addListener: vi.fn() }

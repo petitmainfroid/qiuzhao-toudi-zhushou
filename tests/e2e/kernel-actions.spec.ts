@@ -236,7 +236,7 @@ test("K2 fixed actions satisfy anonymous HTTPS real-Chrome ground truth", async 
       const readbackPass = readback.state === EXPECTED_STATES[testCase.id];
       const preconditionDifferent = readback.initial !== EXPECTED_STATES[testCase.id];
       const eventPass = eventContractPass(testCase, readback.events);
-      expect(result.status, testCase.id).toBe("verified");
+      expect(result.status, `${testCase.id} ${JSON.stringify(result)}`).toBe("verified");
       expect(readbackPass, `${testCase.id} readback`).toBe(true);
       expect(preconditionDifferent, `${testCase.id} precondition`).toBe(true);
       expect(eventPass, `${testCase.id} event contract ${readback.events.join(",")}`).toBe(true);

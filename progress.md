@@ -1157,3 +1157,39 @@ Run a local field-level audit over the five PDFs to identify missing dates, role
 - Updated existing Draft PR #4 against `agent/browser-kernel-k1-baseline`: `https://github.com/petitmainfroid/qiuzhao-toudi-zhushou/pull/4`. It remains Draft for review and was not merged or marked ready.
 - The isolated K2 worktree contained exactly the 24 intended implementation/test/documentation paths at the implementation commit. Staged whitespace check passed; suspicious staged paths and secret-pattern matches were zero. Anonymous fixture literals were test-only, and no `.env`, real resume, local PDF, credential, Cookie, HAR, trace or real filled-page screenshot was committed.
 - The original `C:\Users\jiangbingjian\qiuzhaozhushou` worktree and its separate F044/ATS-observation edits were not staged, rewritten or included in the K2 branch.
+
+## 2026-08-07 - F040 K3 workflow harness kickoff
+
+- Applied the user-requested `long-running-agent-harness`. Recovered the already published K2 worktree instead of duplicating F039, created `agent/browser-kernel-k3-workflows` from the exact recorded base `agent/browser-kernel-k2-actions`, and left the separate dirty ATS/GT worktree untouched.
+- The first `./init.ps1 -SkipInstall` correctly exposed that a new worktree had no dependency directory. Full `./init.ps1` installed the lockfile dependencies and the clean K2 baseline passed with TypeScript, 31 test files / 255 tests, production build, 13 distribution files, exact permissions, and forbidden-permission absence. npm reported five dependency advisories; no unreviewed forced upgrade was applied.
+- Froze `docs/browser-kernel-k3-workflow-plan.md`: four serial increments, 12 positive waits/workflows, 6 bounded failure cases, 4 idempotency cases, and zero-tolerance RED gates. F040 is now `in_progress`; no real recruitment page, login state, candidate value, upload, save, or final submission is part of this node.
+
+## 2026-08-07 - F040 K3 implementation verified before publication
+
+### Implementation
+
+- Added the exact-property `POWER_PAGE_WAIT` protocol with five bounded conditions: semantic find, boolean control state, option-list appearance, same-Origin navigation, and DOM-settle. Timeout is restricted to 100–10,000 ms and polling to 50–500 ms; arbitrary selectors, XPath, script, CDP methods, node IDs and unbounded waits are rejected by the protocol guard.
+- Added the fixed workflow executor. It rereads only K1 privacy-safe structure, returns typed timeout/session/Origin failures, refinds after dynamic rendering, observes `aria-expanded` as volatile state, and preserves the session across document and SPA history navigation while navigation listeners invalidate action authorization and old snapshots.
+- Added a SHA-256 request ledger in `chrome.storage.session`. It persists `in-flight` before mutation, replays only an identical completed result, rejects a reused request ID with a different digest/session, and returns a zero-attempt uncertain result for concurrent or worker-recovered in-flight requests. Raw action requests and profile values are not stored in the ledger.
+- Real Chrome exposed two recovery/integrity interactions. A fixed `DOM.enable`/`Page.enable` probe now recovers an extension-owned debugger attachment after MV3 worker restart. `aria-expanded` remains observable for waits and DOM-settle but is excluded from immutable node identity because a valid open-control action changes it; K2 open-control regression then passed again.
+
+### Fixed real-Chrome evidence
+
+- `npm run eval:kernel-workflows` -> exit 0. The anonymous HTTPS unpacked-extension evaluator passed 12/12 positive workflows, 6/6 bounded failures, and 4/4 idempotency cases. Positives include document + SPA navigation and `find -> open async dropdown -> wait options -> refind -> verified action`.
+- Failure evidence includes typed timeout, stale-reference zero-mutation, non-settling DOM, absent option/state, and immediate Origin-change pause. Idempotency evidence includes same-worker replay, conflicting digest rejection, concurrent duplicate suppression, persisted in-flight recovery, and completed replay after forcibly terminating/restarting the MV3 worker.
+- RED counts were all zero: duplicate mutation, cross-Origin continuation, final submission, unbounded wait and forbidden evidence leak. Malformed selector-bearing wait input was rejected. `artifacts/kernel-workflows-report.json` contains only anonymous case/status aggregates; `artifacts/kernel-workflows.png` was visually inspected and contains only the Organic extension summary.
+
+### Verification and handoff
+
+- Targeted command `npm test -- --run src/bridge src/background src/content/pageDriver.test.ts` -> exit 0: 10 files / 57 tests passed.
+- Final `npm run validate` -> exit 0: TypeScript passed, 33 Vitest files / 270 tests passed, production build succeeded, 13 required distribution files and the exact permission/forbidden-permission audit passed.
+- Final serialized `npm run test:e2e` -> exit 0: 23/23 real-Chrome tests passed in 3.0 minutes, including K0–K3 and every existing profile, PDF, OCR, privacy, repeatable-record and Xiaomi-derived regression.
+- `git diff --check` reported no whitespace error. Secret-pattern review found only existing policy/test placeholders and no credential. No `.env`, real profile/resume/PDF, Cookie, header/body, HAR, trace, real filled-page screenshot, selector, ref or authorization capability is included in publishable evidence.
+- F040 remains `in_progress` only until this verified implementation is committed, pushed to `agent/browser-kernel-k3-workflows`, and attached to a Draft PR based on `agent/browser-kernel-k2-actions`. The next feature after publication is F041; F043 live-site mutation remains future user-authorized work.
+
+### F040 publication
+
+- Committed the verified K3 implementation as `4294bf8e8515a70859d7f015a723a85a840f3447` (`完成 K3 有界工作流与幂等恢复`) and pushed `agent/browser-kernel-k3-workflows` to origin.
+- Opened Draft PR #5, `F040：完成 K3 有界工作流与幂等恢复`, against the exact stacked base `agent/browser-kernel-k2-actions`: `https://github.com/petitmainfroid/qiuzhao-toudi-zhushou/pull/5`.
+- The implementation commit contains 19 intended protocol/runtime/test/documentation files. Staged whitespace, suspicious-path and secret-pattern audits passed. The separate original ATS/GT worktree was not staged, rewritten or included.
+- F040 is now `done`. The next unblocked feature is F041 on `agent/browser-kernel-k4-evidence`; do not start it on the K3 branch. The ignored local aggregate report and screenshot remain current under `artifacts/` and contain no real recruitment data.

@@ -76,6 +76,7 @@ export interface PrivacySafeControl {
   readOnly: boolean;
   required: boolean;
   multiple: boolean;
+  expanded?: boolean;
   boundary: PageControlBoundary;
   safety: PageControlSafety;
 }
@@ -115,6 +116,42 @@ export interface PageFindResult {
   matches: PageFindMatch[];
 }
 
+export const PAGE_WAIT_KINDS = [
+  "find",
+  "control-state",
+  "option-list",
+  "same-origin-navigation",
+  "dom-settle"
+] as const;
+
+export type PageWaitKind = typeof PAGE_WAIT_KINDS[number];
+export type PageWaitControlState = "enabled" | "disabled" | "expanded" | "collapsed";
+
+export type PageWaitCondition =
+  | { kind: "find"; query: PageFindQuery; minimumMatches: number }
+  | { kind: "control-state"; query: PageFindQuery; state: PageWaitControlState; minimumMatches: number }
+  | { kind: "option-list"; query: PageFindQuery; minimumOptions: number; optionText?: string }
+  | { kind: "same-origin-navigation" }
+  | { kind: "dom-settle"; quietMs: number };
+
+export type PageWaitFailureReason =
+  | "timeout"
+  | "invalid-session"
+  | "session-inactive"
+  | "origin-changed"
+  | "bridge-failed";
+
+export interface PageWaitResult {
+  requestId: string;
+  condition: PageWaitKind;
+  status: "matched" | "timeout" | "failed";
+  polls: number;
+  durationBucket: "lt-100ms" | "100-500ms" | "gt-500ms";
+  reason?: PageWaitFailureReason;
+  result?: PageFindResult;
+  path?: string;
+}
+
 export const PAGE_ACTION_KINDS = ["fill", "type", "select", "check", "click"] as const;
 export type PageActionKind = typeof PAGE_ACTION_KINDS[number];
 
@@ -139,6 +176,8 @@ export type PageActionFailureReason =
   | "unsupported-control"
   | "framework-rejected"
   | "verification-failed"
+  | "duplicate-request-conflict"
+  | "duplicate-request-uncertain"
   | "bridge-failed";
 
 export type PageActionStrategy =
@@ -178,6 +217,13 @@ export type EmbeddedBridgeRequest =
   | (BridgeRequestBase & { type: "POWER_SESSION_REFRESH_STATE" })
   | (BridgeRequestBase & { type: "POWER_PAGE_STATE" })
   | (BridgeRequestBase & { type: "POWER_PAGE_FIND"; query: PageFindQuery })
+  | (BridgeRequestBase & {
+      type: "POWER_PAGE_WAIT";
+      sessionId: string;
+      condition: PageWaitCondition;
+      timeoutMs: number;
+      pollIntervalMs: number;
+    })
   | (BridgeRequestBase & { type: "POWER_PAGE_ACTION_AUTHORIZE" })
   | (BridgeRequestBase & {
       type: "POWER_PAGE_ACTION";
@@ -194,6 +240,7 @@ export type EmbeddedBridgeResponse =
   | { ok: true; tabId: number | null }
   | { ok: true; state: PrivacySafePageState }
   | { ok: true; result: PageFindResult }
+  | { ok: true; wait: PageWaitResult }
   | { ok: true; authorization: PageActionAuthorizationView }
   | { ok: true; action: PageActionResult }
   | { ok: false; code: PowerSessionReason; error: string };
@@ -217,6 +264,49 @@ function isPageFindQuery(value: unknown): value is PageFindQuery {
   if (query.limit !== undefined && (!Number.isInteger(query.limit) || query.limit < 1 || query.limit > 20)) return false;
   return query.roles === undefined
     || (Array.isArray(query.roles) && query.roles.length > 0 && query.roles.every(isPageControlRole));
+}
+
+function isBoundedInteger(value: unknown, minimum: number, maximum: number): value is number {
+  return Number.isInteger(value) && Number(value) >= minimum && Number(value) <= maximum;
+}
+
+function isPageWaitCondition(value: unknown): value is PageWaitCondition {
+  if (!value || typeof value !== "object") return false;
+  const condition = value as Partial<PageWaitCondition> & {
+    query?: unknown;
+    minimumMatches?: unknown;
+    minimumOptions?: unknown;
+    optionText?: unknown;
+    state?: unknown;
+    quietMs?: unknown;
+  };
+  if (condition.kind === "find") {
+    return hasExactKeys(condition, ["kind", "query", "minimumMatches"])
+      && isPageFindQuery(condition.query)
+      && isBoundedInteger(condition.minimumMatches, 1, 20);
+  }
+  if (condition.kind === "control-state") {
+    return hasExactKeys(condition, ["kind", "query", "state", "minimumMatches"])
+      && isPageFindQuery(condition.query)
+      && ["enabled", "disabled", "expanded", "collapsed"].includes(String(condition.state))
+      && isBoundedInteger(condition.minimumMatches, 1, 20);
+  }
+  if (condition.kind === "option-list") {
+    const keys = ["kind", "query", "minimumOptions", ...(condition.optionText === undefined ? [] : ["optionText"])];
+    return hasExactKeys(condition, keys)
+      && isPageFindQuery(condition.query)
+      && isBoundedInteger(condition.minimumOptions, 1, 50)
+      && (condition.optionText === undefined
+        || (typeof condition.optionText === "string" && condition.optionText.trim().length > 0 && condition.optionText.length <= 120));
+  }
+  if (condition.kind === "same-origin-navigation") {
+    return hasExactKeys(condition, ["kind"]);
+  }
+  if (condition.kind === "dom-settle") {
+    return hasExactKeys(condition, ["kind", "quietMs"])
+      && isBoundedInteger(condition.quietMs, 100, 5_000);
+  }
+  return false;
 }
 
 function isIdentifier(value: unknown): value is string {
@@ -261,6 +351,16 @@ export function isEmbeddedBridgeRequest(value: unknown): value is EmbeddedBridge
   }
   if (request.type === "POWER_PAGE_FIND") {
     return hasExactKeys(request, ["type", "requestId", "query"]) && isPageFindQuery(request.query);
+  }
+  if (request.type === "POWER_PAGE_WAIT") {
+    return hasExactKeys(request, [
+      "type", "requestId", "sessionId", "condition", "timeoutMs", "pollIntervalMs"
+    ])
+      && isIdentifier(request.sessionId)
+      && isPageWaitCondition(request.condition)
+      && isBoundedInteger(request.timeoutMs, 100, 10_000)
+      && isBoundedInteger(request.pollIntervalMs, 50, 500)
+      && request.pollIntervalMs <= request.timeoutMs;
   }
   if (request.type === "POWER_PAGE_ACTION") {
     return hasExactKeys(request, [

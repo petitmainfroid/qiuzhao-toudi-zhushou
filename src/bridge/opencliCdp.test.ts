@@ -18,7 +18,7 @@ describe("embedded OpenCLI-derived CDP transport", () => {
   it("classifies a debugger conflict and never falls through to an arbitrary command", async () => {
     vi.useFakeTimers();
     const attach = vi.fn().mockRejectedValue(new Error("Another debugger is already attached to the tab"));
-    const sendCommand = vi.fn();
+    const sendCommand = vi.fn().mockRejectedValue(new Error("Debugger is not attached"));
     vi.stubGlobal("chrome", {
       tabs: { get: vi.fn(async () => ({ id: 42, url: "https://jobs.example/apply" })) },
       debugger: {
@@ -36,7 +36,26 @@ describe("embedded OpenCLI-derived CDP transport", () => {
     await vi.advanceTimersByTimeAsync(250);
     await expect(result).resolves.toMatchObject({ code: "debugger-busy" });
     expect(attach).toHaveBeenCalledTimes(2);
-    expect(sendCommand).not.toHaveBeenCalled();
+    expect(sendCommand).toHaveBeenCalledTimes(1);
+  });
+
+  it("recovers an extension-owned attachment after a service worker restart", async () => {
+    const attach = vi.fn();
+    const sendCommand = vi.fn(async () => ({}));
+    vi.stubGlobal("chrome", {
+      tabs: { get: vi.fn(async () => ({ id: 42, url: "https://jobs.example/apply" })) },
+      debugger: {
+        attach,
+        detach: vi.fn(),
+        sendCommand,
+        onDetach: { addListener: vi.fn() }
+      }
+    });
+
+    await ensureAttached(42);
+    expect(attach).not.toHaveBeenCalled();
+    expect(sendCommand).toHaveBeenNthCalledWith(1, { tabId: 42 }, "DOM.enable");
+    expect(sendCommand).toHaveBeenNthCalledWith(2, { tabId: 42 }, "Page.enable");
   });
 
   it("returns only URL shape and structural counts", async () => {

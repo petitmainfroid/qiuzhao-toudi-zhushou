@@ -812,7 +812,7 @@
     {
       "id": "F040",
       "title": "Add waits, same-Origin navigation, and idempotent workflow control",
-      "status": "todo",
+      "status": "done",
       "depends_on": ["F039"],
       "branch": "agent/browser-kernel-k3-workflows",
       "pr_base": "agent/browser-kernel-k2-actions",
@@ -820,16 +820,18 @@
         "Wait supports bounded state, role/semantic find, option-list, navigation, and DOM-settle conditions with typed timeout errors; it never accepts an arbitrary selector or waits indefinitely.",
         "Async searchable/cascading selects, custom date/month ranges, and component popovers are operated as find-click-wait-refind workflows rather than hidden-value mutation.",
         "Same-Origin multi-step and SPA navigation preserves the pinned session while invalidating stale snapshots; an Origin change pauses and detaches before another action.",
-        "Repeating the same requestId never repeats a side effect, including after a service-worker restart, and no action is retried more than the bounded policy allows."
+        "Repeating the same requestId never repeats a side effect, including after a service-worker restart. An in-flight request recovered after restart fails closed as uncertain instead of replaying the mutation, and a conflicting payload under the same requestId is rejected.",
+        "The fixed anonymous HTTPS/real-Chrome denominator contains 12 successful waits/workflow transitions, 6 bounded timeout or safety failures, and 4 idempotency cases. All 12 positives and all 10 negative/idempotency gates must pass; duplicate side effects, cross-Origin continuation, infinite waits, stale-reference writes, arbitrary selectors, third attempts, final submissions, and forbidden evidence leaks are zero."
       ],
       "verification": [
-        "npm run eval:kernel-workflows",
-        "Run dynamic-form, timeout, duplicate-command, and service-worker-restart E2E cases.",
-        "npm run validate",
-        "npm run test:e2e",
-        "Inspect artifacts/kernel-workflows.png and the idempotency report."
-      ],
-      "notes": "K3. Infinite waits, cross-Origin silent continuation, cookies, network bodies, arbitrary navigation, clipboard fallback, and unbounded recovery remain excluded. Mark done only after the feature branch and stacked draft PR are published."
+                             "npm run eval:kernel-workflows",
+                             "npm test -- --run src/bridge src/background src/content/pageDriver.test.ts",
+                             "Run dynamic-form, timeout, duplicate-command, conflicting-request, and service-worker-restart recovery cases.",
+                             "npm run validate",
+                             "npm run test:e2e",
+                             "Inspect artifacts/kernel-workflows.png and the idempotency report."
+                         ],
+      "notes": "K3 completed 2026-08-07 on agent/browser-kernel-k3-workflows. Implementation commit 4294bf8e8515a70859d7f015a723a85a840f3447 is pushed and Draft PR #5 targets agent/browser-kernel-k2-actions. The fixed real-Chrome result is 12/12 positive, 6/6 bounded failure, 4/4 idempotency, with all RED counts zero; validate passed 33 files/270 tests and full E2E passed 23/23. Infinite waits, cross-Origin continuation, cookies, network bodies, arbitrary navigation, clipboard fallback, final submission, and unbounded recovery remain excluded."
     },
     {
       "id": "F041",
