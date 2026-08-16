@@ -374,7 +374,7 @@
       {
         "id": "M021",
         "title": "New-user setup README and safe GitHub main publication",
-        "status": "in_progress",
+        "status": "done",
         "depends_on": ["M020"],
         "acceptance": [
           "Document a numbered first-use path from clone through local profile, dedicated browser login, MCP connection, short authorization, controlled autofill, and human submission.",

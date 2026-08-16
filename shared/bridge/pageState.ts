@@ -16,7 +16,6 @@ class PageStateError extends Error {
     this.name = "PageStateError";
   }
 }
-
 const MAX_DOM_NODES = 50_000;
 const MAX_CONTROLS = 1_000;
 const MAX_TEXT_LENGTH = 120;

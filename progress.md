@@ -1,12 +1,14 @@
 # qiuzhao-cli progress
 
-## 2026-08-16 · M021 新用户 README 与 GitHub main 发布（进行中）
+## 2026-08-16 · M021 新用户 README 与 GitHub main 发布（完成）
 
 - Goal: 让第一次克隆项目的用户按可复制命令完成安装、资料录入、专用浏览器登录、MCP 接入、短期授权、非提交填写和人工提交，并将当前第一方零扩展 CLI/MCP 安全发布到 GitHub `main`。
 - Scope: README 采用“首次 7 步、以后 4 步”的用户路径；依据实际 CLI 帮助核对命令，并依据 OpenAI 官方 MCP 文档核对 Codex STDIO 配置。
 - Publication boundary: 发布第一方代码、测试和模块文档；排除 `.tmp/`、个人资料/运行状态、Cookie/认证材料、临时截图/PDF、真实页面 evidence artifacts，以及 `boss/vendor-bosshunter` 第三方快照。保留 MIT License，不执行 force push。
-- Changed so far: `README.md`, `.gitignore`, `LICENSE`, `feature_list.json`, and `progress.md`.
-- Next: 审计暂存文件和敏感材料，运行 `npm run validate` 与 `git diff --check`，再从现有远端 `main` 创建正常后继提交并核验远端树。
+- Changed: 重写 `README.md`；补充 `.gitignore` 与 MIT `LICENSE`；更新 `feature_list.json` 和 `progress.md`；发布当前第一方 CLI/MCP、测试与模块文档，并从公开树移除旧的真实页面 evidence artifacts。
+- Verification: CLI 帮助与 README 命令逐项核对；密钥特征、禁止路径、二进制和大文件扫描无新增命中；`npm run validate` 在 237.5 秒内通过，包含结构 15/15、page-vision 6/6、core 108/108、module/shared 25 files / 217 tests、TypeScript 与 profile production build。
+- Publication: 远端 `main` 以正常 fast-forward 接收新发布树，旧 `main` 历史得到保留且未使用 force push。`.tmp/`、`artifacts/`、本地 Profile/运行状态和 `boss/vendor-bosshunter/` 均未进入发布树。
+- Blocker/next: M021 无阻塞。新用户首次需要 7 步，完成一次性配置后每次通常 4 步；后续应在干净 Windows 用户环境按 README 再做一次人工 onboarding 验收。
 
 ## 2026-08-16 · M020 通用重复区块补齐（完成）
 
