@@ -1,438 +1,588 @@
 {
-  "project_goal": "Build a local-first Chrome/Edge extension where a job seeker maintains one structured profile and can safely preview and fill matching fields on recruitment websites without automatic submission.",
+  "schemaVersion": 2,
+  "project_goal": "让零扩展 Agent 在浏览器断开时可恢复，并基于本地加密档案与真实 PDF 完成小米招聘页的非提交填写闭环。",
+  "product": "qiuzhao-cli",
   "features": [
     {
-      "id": "F000",
-      "title": "Create resumable engineering harness",
+      "id": "M001",
+      "title": "模块化抽取",
       "status": "done",
       "depends_on": [],
       "acceptance": [
-        "A future agent can recover the product goal, current status, constraints, verification commands, and next action without chat history.",
-        "The environment baseline identifies an available Node.js toolchain and installed Chromium browser."
+        "零扩展 CLI/MCP 模块位于独立仓库。"
       ],
       "verification": [
-        "Parse feature_list.json as JSON.",
-        "Confirm AGENTS.md, progress.md, and init.ps1 exist.",
-        "Record node, npm, Git, Chrome, and Edge availability in progress.md."
+        "npm run validate"
       ],
-      "notes": "Initialized on 2026-08-03 from an empty, non-Git directory. Evidence is recorded in progress.md."
+      "notes": "已完成。"
     },
     {
-      "id": "F001",
-      "title": "Establish Manifest V3 build and test foundation",
+      "id": "M002",
+      "title": "个人档案页面与本地加密存储",
       "status": "done",
-      "depends_on": ["F000"],
+      "depends_on": [
+        "M001"
+      ],
       "acceptance": [
-        "npm run build produces a loadable dist/ with manifest.json, options.html, sidepanel.html, background.js, and content.js.",
-        "The manifest requests only storage, activeTab, scripting, and sidePanel permissions.",
-        "Type checking and a smoke unit test pass."
+        "结构化档案使用本地加密仓库。"
       ],
       "verification": [
-        "npm run typecheck",
-        "npm test -- --run",
-        "npm run build",
-        "npm run verify:dist"
+        "npm run validate"
       ],
-      "notes": "Use Vite for React pages and esbuild for isolated background/content bundles. Keep the extension free of remote runtime code."
+      "notes": "自动化验证已通过。"
     },
     {
-      "id": "F002",
-      "title": "Define profile schema and local repository",
+      "id": "M003",
+      "title": "专用浏览器登录态与 CDP 会话",
       "status": "done",
-      "depends_on": ["F001"],
+      "depends_on": [
+        "M001"
+      ],
       "acceptance": [
-        "The profile schema covers basic information, education, work experience, projects, job preferences, and reusable self-introduction.",
-        "Users can add multiple education, work, and project records.",
-        "Profile data persists through chrome.storage.local with a browser-preview fallback and supports schema-version migration.",
-        "Completion percentage is deterministic and excludes optional empty records."
+        "使用专用 Profile 保存登录态。"
       ],
       "verification": [
-        "npm test -- --run src/domain/profile.test.ts src/storage/profileRepository.test.ts",
-        "npm run typecheck"
+        "npm run test:core"
       ],
-      "notes": "Store blanks rather than fabricated example identities. Attachments are metadata-only in the MVP."
+      "notes": "基础流程已实现；异常恢复由 M008 加固。"
     },
     {
-      "id": "F003",
-      "title": "Build structured profile editor",
+      "id": "M004",
+      "title": "ApplicationService 与 MCP 六工具",
       "status": "done",
-      "depends_on": ["F002"],
+      "depends_on": [
+        "M001",
+        "M002",
+        "M003"
+      ],
       "acceptance": [
-        "The options page edits all MVP profile sections and supports adding/removing repeatable records.",
-        "Saving, unsaved state, validation errors, and last-saved feedback are visible.",
-        "A completion indicator explains which required fields remain empty.",
-        "Keyboard navigation and field labels are usable without a mouse."
+        "MCP 只暴露六个意图级工具。"
       ],
       "verification": [
-        "npm test -- --run src/options/ProfileEditor.test.tsx",
-        "npm run test:e2e -- --grep \"profile editor\"",
-        "Screenshot artifacts/profile-editor.png"
+        "npm run test:core"
       ],
-      "notes": "Organic visual direction; no fake user data in the UI."
+      "notes": "基础流程已实现；离线启动由 M009 加固。"
     },
     {
-      "id": "F004",
-      "title": "Implement deterministic field discovery and matching",
+      "id": "M006",
+      "title": "个人信息页 PDF 原件本地持久化",
       "status": "done",
-      "depends_on": ["F002"],
+      "depends_on": [
+        "M002"
+      ],
       "acceptance": [
-        "The matcher handles input, textarea, select, radio, and contenteditable controls using labels, ARIA text, placeholder, name, id, and nearby context.",
-        "Aliases map common Chinese and English recruitment-field names to canonical profile paths.",
-        "Every suggestion returns a score, high/medium/low confidence, reasons, and whether confirmation is required.",
-        "Ambiguous and sensitive fields are never classified as safe high-confidence fills."
+        "PDF 原件使用 CurrentUser DPAPI 保存并可跨重启读取。"
       ],
       "verification": [
-        "npm test -- --run src/matching",
-        "npm run typecheck",
-        "Fixture test covers at least 30 representative field labels."
+        "npm run validate"
       ],
-      "notes": "Rule-first matching is the MVP. AI semantic fallback remains out of scope until deterministic accuracy is measured."
+      "notes": "提交 cb17724。"
     },
     {
-      "id": "F005",
-      "title": "Implement safe page scanning and filling",
+      "id": "M008",
+      "title": "浏览器旧 CDP 端口清理与自动重连",
       "status": "done",
-      "depends_on": ["F004"],
+      "depends_on": [
+        "M003"
+      ],
       "acceptance": [
-        "A content script scans the active page only after a user action and returns a preview without changing the form.",
-        "Filling supports native controls and dispatches input/change/blur events compatible with controlled web forms.",
-        "Only user-selected high/medium-confidence matches are filled.",
-        "File inputs, passwords, hidden inputs, CAPTCHAs, and submission controls are excluded."
+        "失效 DevToolsActivePort 不再阻止启动。",
+        "活动端口或并发变化的端口文件绝不被清理。",
+        "浏览器重启后复用专用 Profile 并自动重连到去查询参数的目标页。"
       ],
       "verification": [
-        "npm test -- --run src/content",
-        "npm run test:e2e -- --grep \"fill fixture\"",
-        "Fixture assertions confirm no submit click and no excluded-field mutation."
+        "node --test tests/browser-session.test.mjs",
+        "npm run test:core"
       ],
-      "notes": "Use a stable per-scan element identifier rather than brittle CSS selectors."
+      "notes": "合入原项目双探测与并发保护方案，修复 browser-session.mjs 约 314 行。"
     },
     {
-      "id": "F006",
-      "title": "Build side-panel preview and fill workflow",
+      "id": "M009",
+      "title": "Agent 无 CDP 时的可操作离线状态",
       "status": "done",
-      "depends_on": ["F003", "F005"],
+      "depends_on": [
+        "M008",
+        "M004"
+      ],
       "acceptance": [
-        "The side panel shows profile readiness, page scan status, matched/unmatched counts, and confidence groups.",
-        "Users can inspect and deselect each proposed fill before applying changes.",
-        "Sensitive and medium-confidence suggestions require explicit selection.",
-        "The panel links to profile editing and never exposes a final-submit action."
+        "ApplicationService 启动不因 kernel.start 连接错误退出。",
+        "workspace_status 返回 browser disconnected/stopped 及下一步操作提示。",
+        "inspect/plan/execute 在离线时 fail closed。",
+        "MCP 六工具仍可发现和连接。"
       ],
       "verification": [
-        "npm test -- --run src/sidepanel",
-        "npm run test:e2e -- --grep \"side panel\"",
-        "Screenshot artifacts/sidepanel-preview.png"
+        "node --test tests/application-service.test.mjs tests/mcp-server.test.mjs",
+        "npm run test:core"
       ],
-      "notes": "Use a user-triggered injection path with activeTab rather than broad all-sites access."
+      "notes": "真实 CLI 已验证无会话时返回 launch 指令、断开后自动重连、小米标签页成功接管；补齐 BrowserSessionManager.connection 身份绑定契约。"
     },
     {
-      "id": "F007",
-      "title": "Add correction memory and privacy controls",
+      "id": "M007",
+      "title": "真实 PDF 文本解析与字段提取回归",
       "status": "done",
-      "depends_on": ["F006"],
+      "depends_on": [
+        "M006",
+        "M009"
+      ],
       "acceptance": [
-        "A user can override a suggested canonical field and reuse that mapping for the same site and field fingerprint.",
-        "Users can export, import, and permanently delete locally stored profile and mapping data.",
-        "The product explains local storage, requested permissions, and sensitive-field behavior before first use."
+        "使用用户真实 PDF 在当前个人信息页完成本地文本提取。",
+        "解析结果填入对应结构化字段且不覆盖已有非空值。",
+        "失败时保存和解析结论保持分离。"
       ],
       "verification": [
-        "npm test -- --run src/storage src/mapping",
-        "npm run test:e2e -- --grep \"privacy controls\"",
-        "Manual check of first-run disclosure and delete confirmation."
+        "真实 PDF 私有执行记录（不入库原文）",
+        "个人信息页逐字段审核",
+        "npm run validate"
       ],
-      "notes": "Do not add telemetry or cloud sync in the MVP."
+      "notes": "???? PDF ?????????????????????????????????????"
     },
     {
-      "id": "F008",
-      "title": "Create representative recruitment-form fixture and end-to-end evidence",
+      "id": "M010",
+      "title": "小米真实页面 E3–E5 非提交闭环",
       "status": "done",
-      "depends_on": ["F005", "F006", "F007"],
+      "depends_on": [
+        "M007",
+        "M009"
+      ],
       "acceptance": [
-        "A local fixture includes ordinary inputs, custom-looking selects, radio choices, dynamic fields, ambiguous labels, a file input, a password trap, and a submit button.",
-        "End-to-end tests exercise profile save, preview, selective fill, correction memory, and deletion.",
-        "Screenshots show the options page and side panel at desktop extension dimensions."
+        "真实页完成识别、受控填写、布尔回读和浏览器重启复验。",
+        "冻结字段分母中每个字段有唯一结论。",
+        "错误控件、敏感字段自动处理、验证码绕过和最终提交均为零。",
+        "执行不依赖飞书或公司专用选择器。"
       ],
       "verification": [
-        "npm run test:e2e",
+        "小米真实页 E3 脱敏盘点",
+        "用户授权后的 E4 非提交写入 manifest",
+        "E5 重启一致性 manifest"
+      ],
+      "notes": "???????? E3 ?????E4 ?????????/???E5 ?????? 51/51 ?????E3 ??????????????? ground truth?"
+    },
+    {
+      "id": "M011",
+      "title": "最终回归与状态文档",
+      "status": "done",
+      "depends_on": [
+        "M008",
+        "M009",
+        "M007",
+        "M010"
+      ],
+      "acceptance": [
+        "全部自动化检查通过。",
+        "STATUS 与 progress 准确区分自动化和真实页证据。",
+        "代码中不存在飞书专用残留选择器。"
+      ],
+      "verification": [
         "npm run validate",
-        "Inspect artifacts/profile-editor.png and artifacts/sidepanel-preview.png."
+        "静态选择器审计",
+        "MCP 六工具握手检查"
       ],
-      "notes": "Use installed Chrome/Edge when possible; do not require downloading a second browser."
+      "notes": "npm run validate ???36 core?188 module??MCP ???????????????/?????????? 0?"
     },
     {
-      "id": "F009",
-      "title": "Package MVP and write operator documentation",
+      "id": "M012",
+      "title": "Chrome 标签页激活响应兼容",
       "status": "done",
-      "depends_on": ["F008"],
+      "depends_on": [
+        "M003",
+        "M009"
+      ],
       "acceptance": [
-        "README documents setup, development, unpacked installation, use, privacy boundaries, limitations, and troubleshooting.",
-        "npm run package creates a distributable zip from a freshly verified build.",
-        "All feature statuses and latest verification evidence are current."
+        "标签页激活接口接受 Chrome 的文本、空内容或 JSON 成功响应。",
+        "其余 CDP JSON 接口继续严格拒绝非 JSON 响应。",
+        "激活后重新确认目标标签页仍然存在，再更新选中会话。",
+        "真实携程标签页可以绑定，且验证过程不读取或修改招聘表单。"
       ],
       "verification": [
+        "node --test tests/browser-session.test.mjs",
         "npm run validate",
-        "npm run package",
-        "Inspect archive contents and confirm no source maps, test fixtures, or personal profile data are included."
+        "真实携程标签页只读绑定复验"
       ],
-      "notes": "Chrome Web Store publication is outside the MVP because it requires the user's developer account and privacy-policy decisions."
+      "notes": "已兼容文本与空成功响应；完整验证通过，真实携程标签页只读绑定成功。"
     },
     {
-      "id": "F010",
-      "title": "Harden field coverage against the Xiaomi internship application form",
+      "id": "M013",
+      "title": "默认简历附件自动上传",
       "status": "done",
-      "depends_on": ["F009"],
+      "depends_on": [
+        "M006",
+        "M009",
+        "M012"
+      ],
       "acceptance": [
-        "A traceable inventory records the Xiaomi form labels, control types, required state, dynamic sections, and login boundary observed from the supplied real URL.",
-        "The profile schema and deterministic matcher cover the reusable Xiaomi fields that are safe and technically fillable, while files, verification, identity-sensitive, and final-submit controls remain confirmation-required or excluded.",
-        "An automated non-submitting regression fixture derived from the observed Xiaomi structure verifies scanning, preview, selective fill, custom controls, and no-submit behavior.",
-        "A real-page smoke test reaches the supplied URL and records either verified scan/fill evidence or the exact authentication blocker without weakening privacy or browser permissions."
+        "AI 只能决定将个人信息模块中唯一的默认 PDF 上传到明确识别的简历附件控件。",
+        "不接受任意本地路径、任意文件内容、身份附件或非 PDF 文件。",
+        "普通填写流程触发后无需额外的逐岗位或逐次上传确认。",
+        "上传使用短生命周期临时文件，完成或失败后均清理，并只返回布尔验证结果。",
+        "真实携程页面完成附件识别、上传和回读，且最终提交、Cookie 与凭证读取均为零。"
       ],
       "verification": [
-        "npm test -- --run src/domain src/matching src/content",
-        "npm run validate",
-        "npm run test:e2e",
-        "Inspect a current Xiaomi-specific screenshot in artifacts/."
+        "定向协议、策略、内核与 ApplicationService 测试",
+        "真实携程页面非提交上传验证",
+        "npm run validate"
       ],
-      "notes": "Never submit the application. Do not persist site authentication, bypass login, CAPTCHA, SMS, or identity checks."
+      "notes": "已在真实携程简历页完成唯一简历附件识别、默认加密 PDF 上传、页面解析态回读与新 Agent 进程防重复验证；未新增 MCP 工具、任意路径/文件能力或额外逐次确认。"
     },
     {
-      "id": "F011",
-      "title": "Parse an uploaded resume into the existing profile form",
+      "id": "M014",
+      "title": "招聘页面登录与就绪状态自动判定",
       "status": "done",
-      "depends_on": ["F003", "F010"],
+      "depends_on": [
+        "M009",
+        "M012"
+      ],
       "acceptance": [
-        "The existing profile editor has one clearly labelled resume-upload control that accepts PDF and DOCX files, rejects unsupported or oversized files, and parses only after the user's file-selection gesture.",
-        "PDF and DOCX text extraction runs entirely in the extension page without network calls; the resume file, raw extracted text, site passwords, and authentication cookies are never persisted.",
-        "Deterministic parsing maps evidence-backed basic information, education, internship/work, project, award, language, job-preference, and self-evaluation values directly into the corresponding fields of the existing profile form; it does not create a separate result-confirmation page and does not fabricate missing values.",
-        "Import fills empty scalar fields and merges non-duplicate repeatable records while preserving existing non-empty values; the user can review and edit every imported value in the normal profile form before explicitly saving.",
-        "The parser covers the reusable fields proven by the current Xiaomi internship application page audit, while identity documents, verification codes, passwords, file controls, privacy consent, CAPTCHA, and final submission remain excluded.",
-        "A realistic Chinese campus-recruitment resume fixture proves multi-section extraction and direct form population, and browser evidence shows the populated existing form plus a concise import summary."
+        "打开、绑定或重连招聘页面后，仅依据去值结构信号自动区分 application_ready、login_required、verification_required 与 unknown。",
+        "已复用登录态且申请表结构稳定时直接进入 ready，不再要求 confirm-ready；unknown 才允许人工确认兜底。",
+        "登录页、验证码或身份验证页不得被误判为可填写申请表，页面身份漂移继续 fail closed。",
+        "分类不读取或保存 Cookie、密码、验证码和表单标量值，也不依赖公司或 ATS 专用模板。",
+        "当前安克真实申请页自动判定为 application_ready，保留的真实登录页判定为 login_required，验证过程不写页面、不提交。"
       ],
       "verification": [
-        "npm test -- --run src/resume src/options/ProfileEditor.test.tsx",
-        "npm run audit:xiaomi",
-        "npm run validate",
-        "npm run test:e2e -- --grep \"resume import\"",
-        "Inspect artifacts/resume-import.png and confirm values appear in the existing profile sections without a separate confirmation page."
+        "node --test tests/browser-session.test.mjs tests/application-service.test.mjs",
+        "安克真实申请页与真实登录页只读状态 manifest",
+        "npm run validate"
       ],
-      "notes": "Local deterministic parsing only. PDF/DOCX are the initial supported formats; scanned/image-only resumes must return an actionable error rather than invent data. Existing profile values are protected from silent overwrite."
+      "notes": "通用去值结构分类器已接入打开、绑定、重连、状态检查和执行前连接；安克自动就绪、联想登录阻断、蔚来验证码阻断均已在保留的真实页只读复验。"
     },
-    {
-      "id": "F012",
-      "title": "Harden internship and project parsing against real local resumes",
-      "status": "done",
-      "depends_on": ["F011"],
-      "acceptance": [
-        "A privacy-safe audit covers all five resume-like PDF files currently present in the user's Downloads folder, identifying samples only by short content digest and never copying source files, filenames, raw text, or personal values into the repository.",
-        "For every audited sample whose extracted text visibly contains internship/work or project section evidence, the parser returns the manually verified number of corresponding records instead of silently returning an empty array.",
-        "Section recognition tolerates PDF layout artifacts observed in the real samples, including spaced headings, combined work/internship headings, headings with inline content, organization/title/date split across lines, and entries without a date range on their first line.",
-        "Work and project records retain evidence-backed organization/name, role, date, and description values without leaking neighboring education, skill, award, or self-evaluation text across section boundaries.",
-        "Anonymized structural fixtures derived from each distinct failing layout reproduce the defect and pass after the fix; no real personal information is committed to tests or artifacts.",
-        "The existing local-only, no-fabrication, conflict-preserving, no-submit, and explicit-save safety boundaries remain unchanged."
-      ],
-      "verification": [
-        "Run the privacy-safe local resume audit against the five digest-identified Downloads samples and record expected versus actual work/project counts.",
-        "npm test -- --run src/resume",
-        "npm run validate",
-        "npm run test:e2e -- --grep \"resume import\"",
-        "npm run package"
-      ],
-      "notes": "Do not add or copy the user's resumes into the repository. Convert only layout patterns into synthetic fixtures. Keep deterministic parsing as the source of truth."
-    },
-    {
-      "id": "F013",
-      "title": "Verify field-level resume completeness and profile-form placement",
+      {
+        "id": "M015",
+        "title": "可复用的真实页面视觉观察模块",
         "status": "done",
-      "depends_on": ["F012"],
+      "depends_on": [
+        "M003",
+        "M009",
+        "M014"
+      ],
       "acceptance": [
-        "A visual field inventory is defined for all five digest-identified local resumes, covering every clearly present field supported by the profile schema rather than only counting work and project records.",
-        "Every expected work and project record is checked field by field for evidence-backed organization/name, role when present, start/end dates when present at month precision, and non-empty description without neighboring-section leakage.",
-        "Basic, education, award, language, skill, work, and project values that are both visibly present and supported by the current schema are measured for coverage; unsupported or genuinely absent values are not fabricated.",
-        "The actual resume-upload UI places parsed values into the corresponding labelled controls for every repeatable work and project record, preserves record order, remains unsaved until explicit save, and persists no source file or raw text.",
-        "Anonymized structural tests reproduce every field-level omission or contamination found by the real audit, including wrapped date ranges and standalone role lines.",
-        "Privacy and automation constraints remain unchanged: local processing by default, no identity-number persistence, no recruitment-site password/Cookie storage, no verification bypass, and no final submission."
+        "在 modules/page-vision 中封装当前专用浏览器已选标签页的有界分片截图，不启动第二套浏览器或导出 Cookie、密码和认证材料。",
+        "采集只使用固定的内部 CDP 观察脚本，覆盖主页面或主要嵌套滚动区，限制图片格式、质量、尺寸、数量和总字节，并在成功或失败后恢复原滚动位置。",
+        "截图仅写入系统临时目录；清单不包含查询参数、浏览器 target id、表单标量值或截图内容，支持显式清理、过期回收和 callback 结束自动清理。",
+        "CLI 提供 vision capture、status 和 cleanup，供本机 Codex/Claude 后续读取临时图片；MCP 六工具及其权限边界保持不变。",
+        "页面身份在采集前后重新验证，标签页导航、目标变化、端口变化、截图片数或字节越界均 fail closed 并清理未完成证据。"
       ],
       "verification": [
-        "Run a privacy-safe five-PDF field coverage audit and record expected, parsed, merged, and UI-placed field coverage by digest.",
-        "npm test -- --run src/resume src/options/ProfileEditor.test.tsx",
+        "node --test modules/page-vision/tests/page-vision.test.mjs",
+        "运行静态协议与公共接口审计，证明无 Cookie、Network、Storage、任意脚本、任意 selector、写入或提交接口。",
+        "在当前保留的真实招聘标签页执行一次只读分片采集，核对滚动恢复、页面身份、临时清单与显式清理；页面写入和最终提交为零。",
         "npm run validate",
-        "npm run test:e2e",
-        "Inspect a current artifacts/resume-import.png that shows repeatable work/project fields populated in the existing editor.",
-        "npm run package"
+        "git diff --check"
       ],
-      "notes": "Counts alone are insufficient. Do not mark done until field values and their destination controls are verified. Keep real resume text and personal values out of committed tests and audit artifacts."
-    },
-    {
-      "id": "F014",
-      "title": "Establish real-page acceptance for Agent Reach and OpenCLI control",
-      "status": "blocked",
-      "depends_on": ["F010", "F013"],
-      "acceptance": [
-        "A source-bound validation document separates evidence from the live Xiaomi public schema, an authenticated real-tab read-only scan, a user-confirmed real-tab selective fill, and the Xiaomi-derived local regression; local fixtures never count as proof that the live page worked.",
-        "An executable preflight reports the installed OpenCLI version, daemon availability, Browser Bridge connection, exact target URL eligibility, and this extension's permission boundary without starting a daemon, installing software, reading cookies, reading page values, or mutating a browser profile.",
-        "The agent command contract exposes only status, scan, preview, and selective fill; it exposes no submit, file-upload, password, verification-code, CAPTCHA, cookie, identity-number, or arbitrary-selector/value command.",
-        "Every agent session is created by an explicit side-panel user gesture, is bound to one tab and HTTPS origin, expires automatically, and rejects missing, stale, wrong-tab, wrong-origin, replayed, or malformed capabilities.",
-        "Scan and preview never mutate the page or return existing webpage values. Fill accepts only opaque suggestion IDs from the latest scan, revalidates the live field mapping, requires action-time user confirmation, and keeps sensitive or medium-confidence suggestions unselected until separately approved.",
-        "Live Xiaomi completion evidence includes the exact URL and timestamp, Bridge-connected and bound-tab proof, scan/preview counts, user-confirmed selected-fill outcomes, and proof that no final-submit control or application-submission request was invoked; no personal values, cookies, or authentication artifacts are committed.",
-        "The extension remains local-first and retains its existing required permissions; any localhost access needed by an optional companion must use runtime-requested optional permission and must not add cookies, debugger, broad host access, or automatic submission capability."
-      ],
-      "verification": [
-        "npm run audit:xiaomi",
-        "npm run audit:agent-bridge",
-        "npm test -- --run src/agent",
-        "npm run validate",
-        "npm run test:e2e -- --grep \"agent bridge\"",
-        "Run the documented OpenCLI bound-tab real-page smoke on the authenticated Xiaomi URL and record non-submitting evidence in progress.md.",
-        "Inspect artifacts/xiaomi-agent-bridge.png and confirm it shows preview/fill results without a final-submit action."
-      ],
-      "notes": "OpenCLI is an optional companion and must stay separate from the least-privilege extension. The activeTab repair is implemented and validated locally; completion is blocked only on a post-reload physical toolbar click, authenticated real-page scan, and separately confirmed selective fill. Do not mark done from a public schema or local fixture."
-    },
-    {
-      "id": "F015",
-      "title": "Compare the local profile with current page values without leaking them",
+        "notes": "把此前一次性 CDP 截图诊断产品化为本地 CLI 模块；它是视觉输入适配器，不替代 browser-kernel 的稳定字段引用，也不新增 MCP 浏览器万能工具。"
+      },
+      {
+        "id": "M016",
+        "title": "Generic ordinary date-range intent for recruitment forms",
+        "status": "done",
+        "depends_on": ["M003", "M009", "M013"],
+        "acceptance": [
+          "Expose a structural two-input date-range control as an opaque ordinary field without returning page values or selectors.",
+          "Accept only a closed map_date_range intent whose start and end paths are a matching same-record startDate/endDate pair.",
+          "Resolve both local values only inside browser-kernel, reject empty or reversed ranges, and perform one atomic fill-range action with Boolean-only readback.",
+          "Keep the MCP surface at six intent-level tools and reject arbitrary values, scripts, selectors, paths, uploads, save actions, and final submission.",
+          "Validate the retained NIO application page with the independently scoped education date-range writes; no final submission."
+        ],
+        "verification": [
+          "npx vitest --run shared/bridge/pageState.test.ts shared/content/pageDriver.test.ts modules/semantic-planner/tests/planner.test.ts modules/policy-compiler/tests/compiler.test.ts",
+          "node --test tests/browser-kernel.test.mjs tests/application-service.test.mjs",
+          "npm run typecheck",
+          "npm run validate",
+          "git diff --check"
+        ],
+        "notes": "Date-range execution is a generic structural primitive, not a NIO/Feishu selector template. A real-page write claim remains limited to retained-page Boolean verification and does not establish a frozen whole-form denominator."
+      },
+      {
+        "id": "M017",
+        "title": "Visual-verified generic semantic recovery for custom recruitment controls",
+        "status": "done",
+        "depends_on": ["M015", "M016"],
+        "acceptance": [
+          "Generic placeholder labels such as 请填写/请选择/内容/简介 must yield to a structurally associated field label when one is available.",
+          "Repeatable experience groups must distinguish work experience from internship experience without site-specific selectors.",
+          "A labelled four-control year/month range must be represented as one opaque, ordered start/end range or typed manual control; it must never be guessed or reversed.",
+          "For each retained Xiaomi, Huya, NIO, and Meta page, compare bounded private screenshots with the MCP structural inventory and classify every visible form component as semantic, protected, or intentionally read-only.",
+          "After explicit ordinary authorization, execute only verified ordinary mappings, re-read Boolean outcomes, and do not click save, consent, delete, or final submission."
+        ],
+        "verification": [
+          "Targeted page-state, page-driver, planner, compiler, browser-kernel, and application-service tests",
+          "npm run validate",
+          "git diff --check",
+          "Private temporary screenshot-to-inventory comparisons and non-submit audits for Xiaomi, Huya, NIO, and Meta"
+        ],
+        "notes": "Visual capture is an acceptance harness only. The production Agent remains CDP-structure plus text-AI planning with opaque refs and local scalar resolution. Real-site completion requires each retained tab to remain logged in and application-ready."
+      },
+      {
+        "id": "M018",
+        "title": "Closed one-click ordinary application autofill",
+        "status": "done",
+        "depends_on": ["M013", "M014", "M017"],
+        "acceptance": [
+          "A local CLI orchestrates inspection, a closed unambiguous-field proposal, compilation, execution, Boolean readback, and review output without exposing a new MCP browser primitive.",
+          "Only a fixed semantic allowlist may map ordinary saved-profile paths; protected, prefilled, unsupported, or ambiguous fields remain manual/review items.",
+          "The default encrypted resume may upload only to the existing unique verified resume control; save, consent, credential, verification, destructive, and final-submit controls remain non-executable."
+        ],
+        "verification": [
+          "node --test tests/application-service.test.mjs",
+          "npm run validate",
+          "git diff --check"
+        ],
+        "notes": "The CLI requires the existing current-origin ordinary-field lease. It is a non-submit convenience facade over the established application-service workflow, not a generic browser automation interface."
+      },
+      {
+        "id": "M019",
+        "title": "Section-first semantic context in the production application workflow",
+        "status": "done",
+        "depends_on": ["M017", "M018"],
+        "acceptance": [
+          "Recognize only genuine top-level recruitment sections and never promote ordinary field labels or navigation items into pseudo-sections.",
+          "Attach a privacy-safe sectionKind and recordIndex to every structurally owned control without exposing DOM, selectors, page values, or raw CDP.",
+          "Carry the section context into planner fields so repeated labels are disambiguated by section and record while execution remains the existing compiled, controlled, Boolean-verified path.",
+          "On retained Xiaomi, Huya, NIO, and Meta application pages, run non-submit ordinary filling and compare the post-fill structural inventory with private screenshot evidence; Ctrip must be reported as blocked if the retained tab is not an application form.",
+          "Never click save, consent, delete, verification, or final submission controls."
+        ],
+        "verification": [
+          "npx vitest run modules/section-extractor/src/index.test.ts shared/bridge/pageState.test.ts modules/semantic-planner/tests/planner.test.ts modules/policy-compiler/tests/compiler.test.ts",
+          "node --test tests/application-service.test.mjs tests/browser-kernel.test.mjs",
+          "npm run typecheck",
+          "npm run validate",
+          "git diff --check",
+          "Retained-page inventories, Boolean write/readback audits, and private screenshot comparisons"
+        ],
+        "notes": "The section extractor is production context, not a second writer. Page vision remains an acceptance-only harness and temporary screenshots must be cleaned."
+      },
+      {
+        "id": "M020",
+        "title": "Generic repeatable-section reconciliation during autofill",
+        "status": "done",
+        "depends_on": ["M019"],
+        "acceptance": [
+          "Compare privacy-safe local record counts with unique page sectionKind/recordIndex counts for education, work, internship, project, language, and award sections.",
+          "When a section is short, add exactly one record, re-observe the page, fill the newly created record to terminal outcomes, and only then consider adding the next record.",
+          "Support semantic repeatable controls through the existing ensure_repeatable intent without exposing selectors, scripts, scalar profile values, or arbitrary page actions.",
+          "Stop with a typed review outcome when the add control is missing or ambiguous, the record count does not increase, or the new record cannot be safely mapped.",
+          "Never delete records or click record save, consent, verification, or final submission controls."
+        ],
+        "verification": [
+          "node --test tests/application-service.test.mjs tests/browser-kernel.test.mjs",
+          "npm run typecheck",
+          "npm run validate",
+          "git diff --check",
+          "Retained-page non-submit Boolean readback only when an application-ready page has a natural record deficit"
+        ],
+        "notes": "The production autofill now serializes one add at a time, fills the newest record before another add, supports more than four bounded rounds, and reports privacy-safe repeatable blockers. Retained Huya verification confirmed zero erroneous third education record; a future real add claim still requires a naturally short retained page."
+      },
+      {
+        "id": "M021",
+        "title": "New-user setup README and safe GitHub main publication",
+        "status": "in_progress",
+        "depends_on": ["M020"],
+        "acceptance": [
+          "Document a numbered first-use path from clone through local profile, dedicated browser login, MCP connection, short authorization, controlled autofill, and human submission.",
+          "Document the shorter repeat-use path, actual CLI commands, safety boundaries, troubleshooting, project layout, and current Beta limitations.",
+          "Publish the first-party zero-extension CLI/MCP tree to GitHub main without force-pushing or discarding the existing main history.",
+          "Exclude local profile/runtime data, cookies, temporary screenshots/PDFs, real-page evidence artifacts, and the third-party vendor-bosshunter snapshot."
+        ],
+        "verification": [
+          "CLI help and documented-command audit",
+          "npm run validate",
+          "git diff --check",
+          "Clean publication tree and remote main verification"
+        ],
+        "notes": "This is a documentation and release feature. It does not expand browser capabilities or make a new real-site compatibility claim."
+      },
+      {
+        "id": "B001",
+      "title": "BossHunter 来源隔离归档与模块导航",
       "status": "done",
-      "depends_on": ["F005", "F006", "F013"],
+      "depends_on": [],
       "acceptance": [
-        "A user-triggered scan classifies every mapped readable control as empty, equal, conflicting, or unreadable using deterministic field-aware normalization.",
-        "The scan result, agent protocol, logs, tests, and screenshots expose the comparison class but never return, persist, or record the current webpage value.",
-        "Only empty, high-confidence, non-sensitive controls are selected by default; equal controls are skipped and conflicting controls remain unselected until explicit confirmation.",
-        "Filling rechecks the live control immediately before writing and refuses a stale or newly conflicting value unless the exact conflict was explicitly approved for that scan.",
-        "Password, verification, CAPTCHA, identity-number, privacy-consent, file, and submit controls remain excluded."
+        "在 boss/vendor-bosshunter 中按固定上游提交归档被选中的原始文件，并保留完整许可证、来源提交和文件哈希。",
+        "在 boss/modules 中建立岗位库、岗位发现、岗位评分、沟通服务、工作流、工作台和 Agent Skill 七个独立模块导航。",
+        "正式产品运行时、构建入口和 MCP 不引用 vendor-bosshunter。",
+        "不修改或覆盖 M012-M014 的既有未提交实现。"
       ],
       "verification": [
-        "npm test -- --run src/content src/sidepanel src/agent",
+        "node boss/scripts/verify-vendor-snapshot.mjs",
         "npm run validate",
-        "npm run test:e2e -- --grep \"page comparison\"",
-        "Inspect artifacts/page-comparison.png and confirm it shows statuses and counts without raw current webpage values or a submit action."
+        "git diff --check"
       ],
-      "notes": "Completed 2026-08-05. Comparison is derived inside the content script; only status and an opaque, scan-bound conflict token cross the boundary. Targeted tests, full validation, full E2E, and artifacts/page-comparison.png passed."
+      "notes": "已冻结上游 62d1ccea 的 116 文件/1,477,480 字节快照，七模块导航、真实操作 E0-E5 标准、逐文件 SHA-256 与正式运行零引用检查均通过；非商业许可证代码未接入产品运行时。"
     },
     {
-      "id": "F016",
-      "title": "Build a traceable all-source field coverage matrix",
+      "id": "B002",
+      "title": "BossHunter 行为拆解与独立契约",
       "status": "done",
-      "depends_on": ["F015"],
+      "depends_on": ["B001"],
       "acceptance": [
-        "A durable matrix records the union of evidence-backed fields from the structured profile, resume parser, and audited recruitment pages, with source, sensitivity, control kind, normalization, and support state.",
-        "The profile schema and editor add only fields proven by a resume or audited page; missing facts are never fabricated and migrations preserve existing local data.",
-        "Every supported field has aliases, a destination profile path, comparison normalization, and deterministic tests; unsupported fields have an explicit reason."
+        "为七个目标模块定义不含上游源码的输入、输出、状态、错误和安全契约。",
+        "每项上游行为标注为保留、重写、拒绝或推迟，且禁止任意 eval、selector、脚本、Cookie 和任意文件路径进入公共接口。",
+        "协议和对象测试不被记作真实 BOSS 网站兼容证据。"
       ],
       "verification": [
-        "npm test -- --run src/domain src/matching src/options src/resume",
-        "npm run audit:xiaomi",
-        "npm run validate",
-        "Review docs/field-coverage-matrix.md for source and safety completeness."
+        "Node/TypeScript 契约测试",
+        "上游源码零运行时导入扫描",
+        "npm run validate"
       ],
-      "notes": "In progress 2026-08-05. All means all evidence-backed and permitted fields, not credentials, verification, identity numbers, privacy consent, or final submission. The matrix must include real-page structural evidence for repeatable groups before F017 may click any add control."
+      "notes": "完成后才允许进入自己的 Node 实现。"
     },
     {
-      "id": "F017",
-      "title": "Create missing repeatable form records before filling",
-      "status": "done",
-      "depends_on": ["F016"],
-      "acceptance": [
-        "The assistant compares profile record counts with visible education, work, project, award, language, and work-sample groups.",
-        "It can invoke only section-local, high-confidence add controls to create missing rows, with a strict count bound and a rescan after each structural change.",
-        "It never deletes, reorders, or silently overwrites existing webpage records, and it stops when the page structure or add-control identity changes."
-      ],
-      "verification": [
-        "npm test -- --run src/content src/matching",
-        "npm run test:e2e -- --grep \"repeatable records\"",
-        "npm run validate",
-        "Inspect artifacts/repeatable-records.png and confirm no submit or delete control was used."
-      ],
-      "notes": "Implement one section type per verified increment; do not use arbitrary text-based button clicking."
-    },
-    {
-      "id": "F018",
-      "title": "Harden complex recruitment controls and verified writes",
+      "id": "B003",
+      "title": "本地岗位仓库与审计时间线",
       "status": "todo",
-      "depends_on": ["F016", "F017"],
+      "depends_on": ["B002"],
       "acceptance": [
-        "Deterministic adapters cover audited date ranges, searchable and cascading selects, radio groups, multi-selects, and rich-text fields.",
-        "Every write dispatches framework-compatible events and is verified by rereading the control state without exposing its raw value outside the page context.",
-        "Unsupported or ambiguous controls fail closed with a reason and never fall back to arbitrary selector/value execution."
+        "本地仓库保存岗位链接、标题、公司、JD、来源、状态、评分摘要和脱敏操作历史。",
+        "同一规范化岗位重复采集不产生重复记录；软删除、恢复和受保护记录删除均 fail closed。",
+        "招聘登录态、Cookie、密码、页面个人值和完整聊天隐私不进入岗位库。"
       ],
       "verification": [
-        "npm test -- --run src/content src/matching",
-        "npm run test:e2e -- --grep \"complex controls\"",
-        "npm run validate",
-        "Inspect current complex-control screenshots in artifacts/."
+        "仓库迁移、幂等、并发和恢复测试",
+        "真实 BOSS 岗位重复采集后记录数不增长",
+        "npm run validate"
       ],
-      "notes": "Keep site-specific behavior behind structural adapters and convert every real defect into an anonymized fixture."
+      "notes": "优先使用 Node 本地 SQLite；存储位置遵循现有应用数据目录。"
     },
     {
-      "id": "F019",
-      "title": "Prove a safe architecture for resume PDF attachment",
+      "id": "B004",
+      "title": "可恢复求职工作流编排",
       "status": "todo",
-      "depends_on": ["F015", "F018"],
+      "depends_on": ["B002", "B003"],
       "acceptance": [
-        "A threat model and executable prototype compare an extension-memory File flow with a narrowly scoped OpenCLI/DevTools attachment token without adding broad permissions to the assistant.",
-        "The chosen path requires a user-selected PDF, validates MIME type, size, and digest, retains no arbitrary filesystem path, and keeps bytes out of logs and persistent extension storage.",
-        "The prototype proves whether the target site uploads immediately on file selection so the confirmation point is placed before any network transmission."
+        "采集、评分、审核、沟通、监测和校招填写使用一个可取消、可重启恢复的状态机。",
+        "每个外部动作都有 requestId、尝试预算、写后回读和唯一终态。",
+        "浏览器断开、登录失效、验证码和页面漂移返回可操作 typed blocker，不崩溃或越权重试。"
       ],
       "verification": [
-        "Run a local file-input fixture with network observation and no final submission.",
-        "npm run test:e2e -- --grep \"resume attachment prototype\"",
-        "npm run validate",
-        "Review docs/resume-attachment-threat-model.md."
+        "中断恢复、重放、取消和并发锁测试",
+        "真实浏览器重启后任务不重复执行外部动作",
+        "npm run validate"
       ],
-      "notes": "Do not add a generic upload command. If the in-page File flow is rejected by Chrome or the ATS, use an opaque, single-use, page-bound OpenCLI token rather than an agent-supplied path."
+      "notes": "替代上游无限循环式 pipeline，不复制其 Browser Runtime。"
     },
     {
-      "id": "F020",
-      "title": "Implement user-confirmed resume PDF attachment",
+      "id": "B005",
+      "title": "确定性预筛与 AI 岗位评分",
       "status": "todo",
-      "depends_on": ["F019"],
+      "depends_on": ["B002", "B003", "B004"],
       "acceptance": [
-        "The user selects one PDF for the current session and sees filename, size, digest prefix, destination site, and matched resume control before approval.",
-        "One action-time confirmation authorizes one page-bound attachment attempt for one exact file digest and expires within one minute.",
-        "Only a high-confidence resume attachment control can receive the file; identity, verification, arbitrary file inputs, privacy consent, and submit controls remain unavailable.",
-        "Success and failure are verified without persisting the file, raw path, bytes, authentication data, or personal values."
+        "一票否决、城市、岗位类型和薪资先由确定性规则判断，AI 仅处理语义匹配与解释。",
+        "每个被盘点岗位都有唯一评分终态，失败、额度和超时不能从分母中移除。",
+        "支持用户 API，也允许外部 Codex/Claude 提交封闭的岗位判断，不暴露完整个人档案值。"
       ],
       "verification": [
-        "npm test -- --run src/agent src/content src/sidepanel",
-        "npm run test:e2e -- --grep \"resume attachment\"",
-        "npm run validate",
-        "Inspect artifacts/resume-attachment.png and confirm it contains no path, resume contents, identity data, or submit action."
+        "评分 schema、恶意输出、恢复和预算测试",
+        "真实岗位人工独立标注与 Agent 评分逐条对照",
+        "npm run validate"
       ],
-      "notes": "Attaching may transmit the PDF immediately; it is always confirmation-required and never part of default-safe fill."
+      "notes": "与招聘表单 semantic-planner 分离，避免一个 planner 同时承担两种语义。"
     },
     {
-      "id": "F021",
-      "title": "Turn real-page failures into privacy-safe regression improvements",
+      "id": "B006",
+      "title": "BOSS 真实岗位发现适配器",
       "status": "todo",
-      "depends_on": ["F015", "F017", "F018", "F020"],
+      "depends_on": ["B003", "B004", "B005"],
       "acceptance": [
-        "Each run emits only structural counters and failure codes for matching, comparison, add-row, control, permission, attachment, and navigation failures.",
-        "A documented workflow converts a real failure into an anonymized local fixture, one scoped repair, targeted tests, full validation, and a progress handoff.",
-        "No raw webpage value, profile value, resume text, file path, cookie, token, or authentication artifact enters fixtures, logs, screenshots, or commits."
+        "通过现有 browser-session 和受限内核搜索真实 BOSS 岗位并读取岗位卡片及详情，不新增第二套 CDP 代理。",
+        "分页、滚动、懒加载和标签页切换都采用有界观察循环，页面漂移返回 typed blocker。",
+        "BOSS 特定结构只存在于 boss 适配器内部，不污染通用校招填写内核。"
       ],
       "verification": [
-        "Exercise at least one anonymized regression for every supported failure class.",
-        "npm run validate",
+        "至少 5 个当前真实岗位、2 个搜索组合的独立人工盘点",
+        "标题、公司、JD、规范化链接盘点覆盖率 100%，已读字段准确率不低于 98%，错岗位写入 0",
+        "重复运行新增重复岗位 0，Cookie/凭证读取 0",
+        "npm run validate"
+      ],
+      "notes": "真实站点证据只来自用户已登录的专用浏览器；复制 HTML 或 fixture 不算兼容证据。"
+    },
+    {
+      "id": "B007",
+      "title": "BOSS 沟通与回复监测服务",
+      "status": "todo",
+      "depends_on": ["B003", "B004", "B006"],
+      "acceptance": [
+        "Agent 可以为用户已选择的真实岗位生成招呼语、读取发送结果和监测新回复。",
+        "消息发送只接受已编译 planId，不接受任意文本、selector 或脚本；相同 requestId 和相同岗位不会重复发送。",
+        "默认只生成回复建议；验证码、身份动作、简历卡片、删除、拉黑和最终申请提交均人工处理。"
+      ],
+      "verification": [
+        "真实会话只读盘点与消息草稿审核",
+        "用户明确授权的 1 个真实岗位发送 1 条招呼语并回读成功；重启后重复发送 0",
+        "有新回复时准确关联岗位；无回复时返回 no_new_reply，不伪造成功",
+        "受保护动作、验证码绕过、Cookie/凭证读取和校招最终提交均为 0",
+        "npm run validate"
+      ],
+      "notes": "外部消息属于不可撤销动作，真实发送必须使用精确岗位范围和短期授权。"
+    },
+    {
+      "id": "B008",
+      "title": "求职工作台岗位与沟通界面",
+      "status": "todo",
+      "depends_on": ["B003", "B004", "B005", "B006", "B007"],
+      "acceptance": [
+        "工作台展示岗位链接、岗位名称、JD、评分、流程状态和自动填写入口。",
+        "同一 ApplicationService/JobWorkflow 同时服务工作台与 Agent，不维护第二套业务逻辑。",
+        "界面遵循仓库 Organic 视觉规范，并明确区分草稿、已授权、已发送、待人工和失败。"
+      ],
+      "verification": [
+        "真实岗位列表与任务状态端到端测试",
+        "当前截图保存到 artifacts/",
         "npm run test:e2e",
-        "Review progress.md handoffs for exact evidence and next actions."
+        "npm run validate"
       ],
-      "notes": "Deterministic corrections and site fingerprints remain the source of truth; semantic matching stays a separately evaluated fallback."
+      "notes": "借鉴信息架构，不复制上游视觉源码。"
     },
     {
-      "id": "F022",
-      "title": "Complete multi-site non-submitting acceptance and package the workflow",
+      "id": "B009",
+      "title": "Codex/Claude 求职入口",
       "status": "todo",
-      "depends_on": ["F014", "F021"],
+      "depends_on": ["B004", "B005", "B006", "B007"],
       "acceptance": [
-        "At least three structurally different recruitment systems complete scan, redacted comparison, selected fill, repeatable-row, and supported attachment gates with exact evidence.",
-        "Every real-site run proves zero final-submit clicks and zero application-submission requests, with sensitive and conflicting fields left unchanged unless individually approved.",
-        "README, privacy documentation, operator recovery steps, screenshots, feature statuses, and the distributable package reflect the final behavior."
+        "Codex/Claude 能发现状态、搜索、评分、沟通计划、执行、审计和取消等意图级能力。",
+        "Agent 不能创建或扩大授权，不能获得任意浏览器、Cookie、selector、脚本、本地路径或档案标量能力。",
+        "校招填写的现有六工具保持兼容，新增求职域工具使用独立命名空间和封闭 schema。"
       ],
       "verification": [
-        "npm run validate",
-        "npm run test:e2e",
-        "Run documented non-submitting real-page gates for each accepted site.",
-        "npm run package",
-        "Inspect current redacted screenshots and verify the archive contains no personal or authentication data."
+        "真实 stdio MCP 握手和全部工具调用转录（脱敏）",
+        "恶意 payload、重放、越权和离线负例",
+        "npm run validate"
       ],
-      "notes": "Real-site evidence requires the user's logged-in browser and action-time confirmations. Never weaken the no-submit boundary to complete acceptance."
+      "notes": "Skill 只做薄编排，业务状态必须在本地服务中。"
+    },
+    {
+      "id": "B010",
+      "title": "真实 BOSS 到校招填写联合闭环",
+      "status": "todo",
+      "depends_on": ["B006", "B007", "B008", "B009"],
+      "acceptance": [
+        "从真实岗位发现开始，完成保存、评分、用户审核、受控沟通、进入真实校招页、非提交填写和统一审计。",
+        "每个真实岗位与每个招聘字段都保留唯一终态，失败和人工门不从分母中删除。",
+        "浏览器重启后恢复同一任务，重复岗位、重复沟通、重复经历和重复上传均为 0。"
+      ],
+      "verification": [
+        "至少 5 个真实岗位、至少 2 种招聘页面系统的串行 E3-E5 队列",
+        "岗位盘点覆盖率 100%，eligible 读取/写入验证不低于 95%，known wrong 0",
+        "最终申请提交、验证码绕过、身份自动处理和凭证读取均为 0",
+        "npm run validate"
+      ],
+      "notes": "所有真实写入串行使用同一个专用浏览器 Profile；Judge 无权修改执行分母。"
+    },
+    {
+      "id": "B011",
+      "title": "上游脱离、许可与发布审计",
+      "status": "todo",
+      "depends_on": ["B003", "B004", "B005", "B006", "B007", "B008", "B009", "B010"],
+      "acceptance": [
+        "正式运行产物不导入、打包或分发 vendor-bosshunter 源码。",
+        "每个自有模块保留行为规格、独立测试和来源决策记录，能够移除 vendor 后构建运行。",
+        "商业发布前获得上游书面授权，或完成经审查的独立实现与法律确认。"
+      ],
+      "verification": [
+        "临时移除 vendor 后 npm run validate",
+        "构建产物和依赖图上游源码零命中",
+        "许可证与第三方材料人工审计",
+        "Windows 干净机真实闭环复验"
+      ],
+      "notes": "没有商业授权或独立实现审查时，不宣称可以商业分发。"
     }
   ]
 }

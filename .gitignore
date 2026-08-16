@@ -1,14 +1,20 @@
 node_modules/
-dist/
+**/node_modules/
+**/dist-ui/
+coverage/
 artifacts/
-playwright-report/
-test-results/
-.chrome-autofill-profile/
-.chromium-autofill-profile/
+*.log
 .env
 .env.*
 !.env.example
-*.zip
-*.log
-.DS_Store
-Thumbs.db
+
+# Local inspection output, screenshots, PDFs, and third-party reference snapshots.
+.tmp/
+boss/vendor-bosshunter/
+
+# Local runtime state and personal data never belong in Git.
+.runtime/
+profile-data/
+browser-data/
+*.profile.json
+*.session.json

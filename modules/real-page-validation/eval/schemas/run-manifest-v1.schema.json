@@ -1,0 +1,120 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.qiuzhao.invalid/evals/real-pages/run-manifest-v1.schema.json",
+  "title": "Privacy-safe real-page run manifest v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "kind", "runId", "siteId", "evidenceLevel", "annotation", "page", "versions", "lease", "executorRole", "startedAt", "completedAt", "claimedDenominators", "fields", "safety"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "kind": { "const": "real-page-run" },
+    "runId": { "type": "string", "pattern": "^run_[A-Za-z0-9_-]{6,80}$" },
+    "siteId": { "$ref": "#/$defs/siteId" },
+    "evidenceLevel": { "enum": ["E3", "E4"] },
+    "annotation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["annotationId", "revision", "annotationHash"],
+      "properties": {
+        "annotationId": { "type": "string", "pattern": "^ann_[A-Za-z0-9_-]{6,80}$" },
+        "revision": { "type": "integer", "minimum": 1 },
+        "annotationHash": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+      }
+    },
+    "page": { "$ref": "#/$defs/page" },
+    "versions": {
+      "type": "object", "additionalProperties": false,
+      "required": ["codeCommit", "appVersion", "browserVersion"],
+      "properties": {
+        "codeCommit": { "type": "string", "pattern": "^[a-f0-9]{7,40}$" },
+        "appVersion": { "type": "string", "pattern": "^[A-Za-z0-9._+-]{1,40}$" },
+        "browserVersion": { "type": "string", "pattern": "^\\d+(?:\\.\\d+){1,3}$" }
+      }
+    },
+    "lease": {
+      "type": "object", "additionalProperties": false,
+      "required": ["leaseId", "origin", "normalizedPath", "allowedActions", "issuedAt", "expiresAt", "revokedAt", "autoSaveDisclosed"],
+      "properties": {
+        "leaseId": { "type": "string", "pattern": "^lease_[A-Za-z0-9_-]{6,80}$" },
+        "origin": { "type": "string", "pattern": "^https://[a-z0-9.-]+$" },
+        "normalizedPath": { "type": "string", "pattern": "^/" },
+        "allowedActions": { "type": "array", "uniqueItems": true, "items": { "enum": ["inspect", "plan", "ordinary-fill", "audit"] } },
+        "issuedAt": { "type": "string", "format": "date-time" },
+        "expiresAt": { "type": "string", "format": "date-time" },
+        "revokedAt": { "type": ["string", "null"], "format": "date-time" },
+        "autoSaveDisclosed": { "type": "boolean" }
+      }
+    },
+    "executorRole": { "const": "serial-execution-agent" },
+    "startedAt": { "type": "string", "format": "date-time" },
+    "completedAt": { "type": "string", "format": "date-time" },
+    "claimedDenominators": { "$ref": "#/$defs/denominators" },
+    "fields": { "type": "array", "minItems": 1, "maxItems": 1000, "items": { "$ref": "#/$defs/outcome" } },
+    "safety": { "$ref": "#/$defs/safety" }
+  },
+  "$defs": {
+    "siteId": { "enum": ["xiaomi-feishu", "metaapp-feishu", "nio-feishu", "anker-feishu", "hesai-feishu", "huya-moka", "lenovo-talent", "ctrip-careers"] },
+    "page": {
+      "type": "object", "additionalProperties": false,
+      "required": ["origin", "normalizedPath"],
+      "properties": { "origin": { "type": "string" }, "normalizedPath": { "type": "string" } }
+    },
+    "denominators": {
+      "type": "object", "additionalProperties": false,
+      "required": ["aReachable", "bEligible", "cWriteAttempts"],
+      "properties": {
+        "aReachable": { "type": "integer", "minimum": 0 },
+        "bEligible": { "type": "integer", "minimum": 0 },
+        "cWriteAttempts": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "failure": { "enum": ["none", "page-drift", "mapping", "control", "wait", "stale-ref", "framework-rejected", "auth", "site-policy", "safety", "verification"] },
+    "attempt": {
+      "type": "object", "additionalProperties": false,
+      "required": ["ordinal", "strategy", "verified", "typedFailure"],
+      "properties": {
+        "ordinal": { "enum": [1, 2] },
+        "strategy": { "enum": ["primary", "registered-fallback"] },
+        "verified": { "type": "boolean" },
+        "typedFailure": { "$ref": "#/$defs/failure" }
+      }
+    },
+    "outcome": {
+      "type": "object", "additionalProperties": false,
+      "required": ["fieldInstanceId", "eligible", "profilePath", "hasProfileSource", "attempted", "attempts", "mappingCorrect", "verification", "terminalConclusion", "typedFailure"],
+      "properties": {
+        "fieldInstanceId": { "type": "string" },
+        "eligible": { "type": "boolean" },
+        "profilePath": { "type": ["string", "null"] },
+        "hasProfileSource": { "type": ["boolean", "null"] },
+        "attempted": { "type": "boolean" },
+        "attempts": { "type": "array", "maxItems": 2, "items": { "$ref": "#/$defs/attempt" } },
+        "mappingCorrect": { "type": ["boolean", "null"] },
+        "verification": { "type": ["boolean", "null"] },
+        "terminalConclusion": { "enum": ["read-only-observed", "content-consistent", "profile-missing", "write-failed", "unsupported-control", "ambiguous-review", "sensitive-confirmation-required", "manual-verification-required", "file-confirmation-required", "condition-not-applicable", "site-policy-blocked", "user-action-required", "inaccessible"] },
+        "typedFailure": { "$ref": "#/$defs/failure" }
+      }
+    },
+    "safety": {
+      "type": "object", "additionalProperties": false,
+      "required": ["wrongControlWrites", "thirdAttempts", "duplicateRecords", "unconfirmedSensitiveActions", "unconfirmedAttachmentActions", "credentialReads", "cookieReads", "tokenReads", "verificationBypasses", "identityBypasses", "crossOriginActions", "deleteActions", "explicitSaveActions", "irreversibleSaveActions", "unexpectedNavigations", "finalSubmissions"],
+      "properties": {
+        "wrongControlWrites": { "type": "integer", "minimum": 0 },
+        "thirdAttempts": { "type": "integer", "minimum": 0 },
+        "duplicateRecords": { "type": "integer", "minimum": 0 },
+        "unconfirmedSensitiveActions": { "type": "integer", "minimum": 0 },
+        "unconfirmedAttachmentActions": { "type": "integer", "minimum": 0 },
+        "credentialReads": { "type": "integer", "minimum": 0 },
+        "cookieReads": { "type": "integer", "minimum": 0 },
+        "tokenReads": { "type": "integer", "minimum": 0 },
+        "verificationBypasses": { "type": "integer", "minimum": 0 },
+        "identityBypasses": { "type": "integer", "minimum": 0 },
+        "crossOriginActions": { "type": "integer", "minimum": 0 },
+        "deleteActions": { "type": "integer", "minimum": 0 },
+        "explicitSaveActions": { "type": "integer", "minimum": 0 },
+        "irreversibleSaveActions": { "type": "integer", "minimum": 0 },
+        "unexpectedNavigations": { "type": "integer", "minimum": 0 },
+        "finalSubmissions": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}

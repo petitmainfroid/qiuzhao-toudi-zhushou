@@ -1,654 +1,458 @@
-# Progress Log
+# qiuzhao-cli progress
+
+## 2026-08-16 · M021 新用户 README 与 GitHub main 发布（进行中）
+
+- Goal: 让第一次克隆项目的用户按可复制命令完成安装、资料录入、专用浏览器登录、MCP 接入、短期授权、非提交填写和人工提交，并将当前第一方零扩展 CLI/MCP 安全发布到 GitHub `main`。
+- Scope: README 采用“首次 7 步、以后 4 步”的用户路径；依据实际 CLI 帮助核对命令，并依据 OpenAI 官方 MCP 文档核对 Codex STDIO 配置。
+- Publication boundary: 发布第一方代码、测试和模块文档；排除 `.tmp/`、个人资料/运行状态、Cookie/认证材料、临时截图/PDF、真实页面 evidence artifacts，以及 `boss/vendor-bosshunter` 第三方快照。保留 MIT License，不执行 force push。
+- Changed so far: `README.md`, `.gitignore`, `LICENSE`, `feature_list.json`, and `progress.md`.
+- Next: 审计暂存文件和敏感材料，运行 `npm run validate` 与 `git diff --check`，再从现有远端 `main` 创建正常后继提交并核验远端树。
+
+## 2026-08-16 · M020 通用重复区块补齐（完成）
+
+- Result: 生产 `autofill` 已统一执行“比较本地目标条数 → 最新记录有可映射空字段时先填写并回读 → 每轮最多新增一条 → 重新观察 → 再决定下一条”。教育、工作、实习、项目、语言和奖项共用同一调度器；单次任务仍有 24 轮硬上限，足以覆盖多记录页面且不会无限循环。
+- Generic behavior: 页面记录数只取唯一 `sectionKind / recordIndex`；工作与实习继续使用本地私有 `experienceType` 路由。当新增控件缺失/歧义、最新必填记录不能安全映射或轮次耗尽时，返回只含区块类型和计数的 typed blocker；新增后计数不增长仍由内核 Boolean 回读以 `verification-failed` 停止。任何一轮最多保留一个 `ensure_repeatable` 可执行决策。
+- Changed files: `modules/application-service/application-service.mjs`, `tests/application-service.test.mjs`, `feature_list.json`, and `progress.md`. No new MCP tool or browser primitive was added.
+- Automated evidence: focused application-service/kernel tests passed 45/45 and typecheck passed. A three-education simulation beginning with zero page records required six rounds and produced exactly `add:0, fill:0, add:1, fill:1, add:2, fill:2`; a cross-section test applies the same fill-before-add rule to all six supported section kinds. A represented education section without an add control returns `repeatable_add_missing` and performs no guessed click.
+- Retained Huya evidence: the retained `application_ready` page already had the two local education records, so the new run correctly executed zero `ensure_repeatable` actions and did not create a third education card. It Boolean-verified two unrelated ordinary custom selects; a third unrelated select stopped with `option_not_found`. This is a no-over-add real-page regression, not a claim that a real add sequence was observed. The short current-origin ordinary lease was revoked immediately afterward.
+- Safety: profile scalars, raw DOM, selectors, scripts, Cookie and credentials were not exposed. Delete, record save, consent, verification and final submission actions were all zero. No screenshot or private page evidence was retained.
+- Verification: final `npm run validate` exited 0 in 208.5s: structure 15/15, page-vision 6/6, core 108/108, module/shared 25 files and 217/217 tests, TypeScript, and the profile production build all passed. `git diff --check` passed with Windows line-ending notices only; `feature_list.json` parsed successfully.
+- Blocker/next: no M020 engineering blocker remains. A real add-and-fill claim should wait for a retained application-ready page that naturally has fewer education or internship records than the local profile; do not delete existing page records merely to manufacture that denominator.
+
+## 2026-08-16 · M019 虎牙学历下拉与教育新增回归修复（完成）
+
+- User-visible defects: the retained Huya page exposed `学历` as an unlabelled framework input, so it was incorrectly planned as `fill_text`; its education add affordance was an inert `javascript:void(0)` anchor, so the button-only repeatable policy left it read-only. A second defect let unrelated controls that reused the page's `education_list` technical name inflate the education-record count.
+- Generic implementation: a labelled input structurally owned by both Select and Dropdown containers is now a `combobox`; its fixed driver opens through the bounded pointer/mouse sequence, accepts only one exact Portal option geometrically bound to the current trigger, and performs delayed Boolean readback for React commits. A semantic `*.add` anchor is executable only when it is the exact inert `javascript:void(0)` form inside a genuine repeatable section. Contextual repeatable counts now prefer `sectionKind / recordIndex` and ignore unrelated technical-name reuse.
+- Changed files: `shared/bridge/pageState.ts`, `shared/content/pageDriver.ts`, `modules/application-service/application-service.mjs`, `modules/browser-kernel/runtime.mjs`, their page-state/page-driver/application-service/kernel tests, `modules/section-extractor/README.md`, `docs/real-page-component-comparison.md`, and this log.
+- Real Huya execution: the normal non-submit autofill path first verified the education add action, then filled the second record's date range, school, major, and degree. Final privacy-safe reinspection reported exactly two education records; each had `就读时间`, `学校名称`, `专业名称`, and `学历` with `hasValue:true`. Both degree fields were `combobox / select_option`, and the education add metadata advanced to `index:2`, matching the two local education records, so no third record is planned.
+- Safety: ordinary-field authorization was origin/profile/TTL bound. Save, consent, delete, verification, credential/Cookie access, attachment upload, and final submission were all 0. No scalar profile value, raw DOM, selector, Cookie, or screenshot was written to repository evidence.
+- Visual evidence boundary: `page-vision` and a one-viewport CDP screenshot both failed with `cdp_command_timeout`; the Browser plugin had no available browser instance and Windows Computer Use had no native pipe. Therefore the new real-page claim is limited to retained-page structural inventory plus Boolean readback; the older screenshot is not reused as proof of this follow-up.
+- Verification: focused bridge/driver tests passed 49/49; application-service/kernel tests passed 43/43; typecheck passed. Final `npm run validate` exited 0 in 240.7s: structure 15/15, page-vision 6/6, core 105/105, module/shared 25 files and 217/217 tests, and the profile production build all passed.
+- Blocker/next: the requested recognition and filling defects are fixed. A separate page-vision reliability feature should diagnose why Huya `Page.captureScreenshot` times out even though DOM observation and controlled writes remain responsive; until then, do not claim a fresh screenshot comparison for this exact post-fix state.
+
+## 2026-08-16 · M019 区块优先识别接入正式填写流程（完成）
+
+- Goal/result: `modules/section-extractor` 已从影子识别器接入生产读取链。真实顶层区块向每个所属控件提供不含字段值的 `sectionKind / recordIndex`；planner 用该上下文区分教育、工作、实习、项目、语言和奖项中的同名字段，仍只通过现有安全编译、受控执行和 Boolean 回读写入。
+- Changed for M019: `modules/section-extractor/**`, `shared/bridge/{pageState,protocol}.ts`, `shared/content/pageDriver.ts`, `modules/application-service/application-service.mjs`, `modules/browser-kernel/runtime.mjs`, semantic-planner/policy-compiler contracts and tests, `docs/real-page-component-comparison.md`, `feature_list.json`, and this log. Existing unrelated dirty files were preserved.
+- Generic repairs: fixed ordinary labels becoming pseudo-sections; record numbering now follows nearest real repeatable card; work and internship route by local `experienceType`; four-part year/month ranges keep left=start and right=end and support start-only local data; custom readonly/search/tree selects distinguish transient query text from committed choices; delayed checkboxes get one idempotent verification retry; wrapper-style repeatable add controls resolve to their real actionable ancestor.
+- Retained-page denominator/evidence: Xiaomi 45/45, Huya 54/54, NIO 33/33, and MetaApp 34/34 logical fields received one semantic/protected/read-only terminal and were compared with private same-page screenshots. Xiaomi, Huya and NIO ended with 0 further executable actions. MetaApp recognized every visible component but safely retained two school-selector blockers: one `option_ambiguous` and one `option_not_found`; no candidate was guessed. Ctrip's retained `/experienced/jobList` page had 0 application-form semantics, so it was correctly reported as not fillable rather than claimed as an application page.
+- Data/status boundary: unfilled end dates, hometown, projects and self-evaluation reflect missing or protected local profile data, not recognition loss. Huya work fields remain empty because both local experiences are explicitly internships. NIO retains one older empty education card; it was not deleted. Existing page project/consent state was not overwritten or clicked.
+- Safety: save, consent, delete, CAPTCHA/verification, identity write and final submission actions were all 0. No Cookie, credential, raw DOM, selector, screenshot bytes or scalar profile values were added to MCP or repository evidence. The final Meta screenshot capture was explicitly removed and the ordinary-field authorization was revoked.
+- Verification: focused page-driver tests passed 29/29, browser-kernel tests 19/19, and application-service tests 23/23 during implementation. `npm run typecheck` passed. The first full `npm run validate` had one pre-existing Windows DPAPI cross-process test time out under full-suite load; its immediate isolated rerun passed 4/4. The final unchanged `npm run validate` exited 0 in 234.9s: structure 15/15, page-vision 6/6, TypeScript, core 104/104, modules 25 files and 214/214 tests, and the profile production build all passed.
+- Evidence document: `docs/real-page-component-comparison.md` records page order, component groups, frozen denominators, screenshot conclusions, explicit non-recognition explanations, and Ctrip's page-type blocker without personal values.
+- Blockers/next: no M019 engineering blocker remains. To finish MetaApp's two schools, the user must choose the intended duplicate school option and provide/select a real exact candidate for the missing one. To validate Ctrip full filling, first open an actual application/resume-edit page, freeze its independent denominator, then run the same non-submit flow.
+
+## 2026-08-16 Z005 可恢复 JobWorkflow 与 Codex/Claude 入口（完成）
+
+- Scope decision: implemented the Codex/Claude path first and deliberately did not build or modify a workbench UI. `JobWorkflowService` is the single business-state boundary; the new Agent service is a thin adapter, so a future workbench can import the same service without duplicating state or idempotency logic.
+- Changed: `modules/job-workflow/{README,contracts,paths,store,service}.mjs`, `skills/job-hunting/{SKILL,contracts,service,tool-registry,server,runtime-factory,cli}.mjs`, `skills/job-hunting/agents/openai.yaml`, `apps/cli/qiuzhao.mjs`, `scripts/verify-structure.mjs`, `tests/{job-workflow,job-hunting-agent,job-contracts}.test.mjs`, and this log. `apps/workbench/**` and the existing campus-application MCP registry were not changed by Z005.
+- Shared workflow: bounded read-only Zhilian discovery and deduplicating ingest stop at `ranking_required`; Codex/Claude then submits one closed facts-plus-semantic-decision item for every frozen job. The existing deterministic role/exclusion/city/type/salary gate still runs locally first and cannot be overridden. Explicit review is job-scoped. Application preparation stops at `authorization_required` and has no dependency capable of filling, uploading, saving, messaging or submitting.
+- Durable state: `LocalJobWorkflowStore` persists only IDs, SHA-256 fingerprints, reason codes, counts and terminal summaries. Exact request replay is a no-op; conflicting request reuse fails closed. Store, workflow and per-job locks are bounded and compare-before-delete; a new process may recover a lock only after its owner PID is dead. Corrupt storage with an injected private-value key fails as `storage_corrupt`.
+- Agent boundary: a separate stdio MCP server exposes 8 disjoint `job_*` tools for workspace status, search start, ranking submission, review queue/decision, application preparation, workflow status and cancellation. The existing recruitment-form MCP server remains exactly 6 tools. Real stdio initialize/list passed, and a malicious `selector` payload returned `unknown_input` before any browser/store action. Agent schemas contain no raw CDP, selector, script, arbitrary URL/path/value/upload/message, credential, profile scalar or authorization-creation input.
+- Dedicated browser selection: the production Job Agent reuses the fixed isolated Zhilian session/profile created for this migration when they exist, otherwise it falls back to the normal product session. These fixed paths are private factory configuration and never enter MCP input/output. No real page was read or changed for the Z005 completion claim.
+- E1 interruption/replay evidence: focused Z005/Agent/contracts tests passed 13/13; the broader discovery/repository/ranking/workflow set passed 29/29. Same-input replay returned byte/stable results, conflicting reuse failed, two concurrent workflow owners executed discovery once, and cancellation was irreversible with repository and workflow bytes unchanged by all later replay attempts.
+- E5 process evidence: independent Node processes were forcibly exited after discovery persistence (23), ranking persistence (24), review repository transition (25), and immediately before the authorization checkpoint (26). Fresh processes recovered all four dead-owner locks. The frozen two-job run retained 2 unique records, one creation and one ranking event per job, one review transition for the approved job, exactly one discovery/ranking/review/application-gate terminal event, and attempts `discovery=2`, `ranking=2`, `applicationPreparation=2`. Duplicate records, duplicate ranking events and duplicate review writes were all 0.
+- Safety evidence: workflow and repository audits both returned sensitive hit count 0. External actions, page writes, submissions and credential reads were all 0; Agent authorization creation is false and final submission is structurally `unreachable`. This is protocol/process recovery evidence, not a new real-site compatibility or form-fill claim. Screenshot-plus-Boolean verification remains mandatory for Z007 form filling.
+- Verification: syntax checks, `npm run verify:structure`, `npm run typecheck`, scoped `git diff --check`, CLI help, real stdio handshake/tool listing and malicious-call rejection passed. The final post-session-routing `npm run validate` exited 0 in 397.4 seconds: structure 15/15, page-vision 6/6, TypeScript, Node core 104/104, Vitest 25 files/214 tests, and the profile production build all passed.
+- Ledger/blocker: no Z005 runtime blocker remains. `feature_list.json` still contains pre-existing malformed quoted records and an unrelated existing `M019` in-progress entry, so Z005 is recorded here without rewriting that dirty shared ledger or claiming ownership of the concurrent work.
+- Result/next: Z005 is complete. Z006 should begin with a retained-page, read-only Zhilian conversation/detail inventory and reviewed draft generation. Any real message send must be separately authorized for one exact job and one frozen draft; CAPTCHA/identity handling and final application submission remain unreachable.
+
+## 2026-08-16 Z004 智联预筛、评分与审核队列（完成）
+
+- Changed: `modules/job-ranking/README.md`, `modules/job-ranking/contracts.mjs`, `modules/job-ranking/prefilter.mjs`, `modules/job-ranking/service.mjs`, `modules/job-ranking/evaluation.mjs`, `modules/job-repository/repository.mjs`, `tests/job-ranking.test.mjs`, `tests/job-contracts.test.mjs`, and this log.
+- Closed ranking contract: each run freezes 1--20 unique repository job IDs, one bounded deterministic policy, explicit structured facts, a `{capabilityId, hasValue}`-only catalog, semantic-call budget, per-item timeout and total deadline. Arbitrary profile summaries/values, browser targets, selectors, scripts, URL actions, uploads and unknown fields are rejected.
+- Deterministic gate: exclusion terms, target-role terms, city, job type and minimum salary are evaluated before the scorer. Explicit mismatches are hard rejects and never consume semantic budget. A configured but unknown city/type/salary can only become `review`; neither missing prose facts nor AI may promote it to `pass`.
+- Semantic boundary: the private scorer sees only job ID/title/company/JD and capability booleans. Its `pass/reject/review + score + reasonCode` output is range- and consistency-checked. Missing evidence becomes review; malformed output, timeout and provider failure become `failed`; quota and local/deadline exhaustion become `budget_exhausted`. All remain in the frozen denominator.
+- Atomic repository terminal: `finalizeRanking()` performs one expected-version mutation that stores one score summary, one reason-code-only `ranking_finalized` event and the mapped repository status. A second finalization or legacy score overwrite fails closed. Concurrent processes retain one durable terminal/event; eligible `pass` and `review` results enter the local review queue but are never auto-approved.
+- E1 evidence: focused ranking/repository/discovery tests passed 23/23. Coverage proves all deterministic branches, hard-reject non-override, unique terminals, no-capability review, invalid/timeout/quota/failure/budget retention, mid-run restart recovery, full replay no-rescore, atomic no-overwrite, concurrent one-event behavior, devalued review queue and positive controls that detect known-wrong, false pass, duplicate and malformed evidence.
+- Private profile boundary: the production ProfileService privacy-safe catalog was read locally and reduced to six capability booleans covering only whether education/work/project/language and target-role/city preference evidence exists. No profile scalar, resume text, salary, identity data or catalog value was emitted to the scorer or repository.
+- Real E3 denominator: before scoring, five retained-page Zhilian jobs were independently classified under the frozen `large-model/AI application development` evaluation policy. The ground truth contained 2 explicit role-mismatch hard rejects and 3 insufficient-evidence reviews; only its hash and aggregate counts were retained. The initial positional checker reported drift and stopped before ranking writes; its temporary directory was removed. The corrected category/distribution freeze did not depend on card order.
+- Real scoring result: all 5/5 jobs received exactly one terminal (`reject=2`, `review=3`, `pass/failed/budget_exhausted=0`); semantic scorer calls were 3 and the review queue contained 3. Ground-truth exact alignment was 5/5, missing 0, duplicate terminals 0, deterministic false passes 0, AI known-wrong 0 and denominator retention 100%.
+- Real restart result: freeze, score and restart used three distinct Node processes over one temporary local repository. Restart reused 5/5 terminals, invoked the scorer 0 times, wrote 0 repository mutations and left repository bytes/SHA-256 unchanged. Each job retained exactly one creation plus one ranking event. The 5-job/10-event safety audit had sensitive hits 0; temporary evidence directories were removed.
+- Safety/independence: real page writes, submissions and credential reads were all 0; no form fill occurred. BossHunter's 116-file snapshot still verifies at commit `62d1ccea`, with formal runtime imports 0. Screenshot-plus-Boolean verification remains mandatory for later form-filling claims and is not claimed by Z004.
+- Full validation: the initial `npm run validate` exited 0 in 377.6 seconds. After replacing locale-dependent case normalization, the final full command exited 0 in 288.0 seconds: structure 13/13, page-vision 6/6, TypeScript, core 89/89, module/shared 25 files and 207 tests, and the profile production build all passed. Scoped `git diff --check` had only existing Windows line-ending notices.
+- Blocker/ledger: no Z004 runtime blocker remains. The pre-existing malformed quoted entries in `feature_list.json` still prevent safe JSON parsing, so the feature remains recorded here without rewriting unrelated ledger history.
+- Result/next: Z004 is complete. Z005 may implement the resumable JobWorkflow plus shared workbench/Skill intent boundary, proving three interruption points, same-request replay, cancellation, per-job locking and duplicate external actions 0. No communication or application submission is authorized by this result.
+
+## 2026-08-16 Z003 智联岗位库与恢复审计（完成）
+
+- Changed: `modules/job-repository/contracts.mjs`, `modules/job-repository/repository.mjs`, `modules/job-repository/zhilian-ingest.mjs`, `modules/job-repository/README.md`, `tests/zhilian-job-repository.test.mjs`, and this log.
+- Repository behavior: an identical normalized candidate is now a true no-op. It creates no second record, version, event, repository revision or file replacement; a changed public URL/title/company/JD still produces one versioned `job_refreshed` event. The existing cross-instance file lock and expected-version checks remain the only write path.
+- Closed Z002 handoff: `ingestZhilianDiscovery()` accepts only the fixed five-key discovery result, validates all candidates before the first write, collapses identical identities, rejects conflicting duplicates, blockers, foreign-source/origin candidates, sensitive payloads and any non-zero page-write/submission/credential-read counter. It exposes no target, selector, script, raw CDP, browser action, upload, profile scalar or arbitrary path surface.
+- Recovery evidence (E1): focused Node tests passed 14/14 across discovery contracts and repositories. The Z003 suite proves byte-for-byte replay no-op, two-instance concurrency, simulated mid-batch interruption plus restart recovery, pre-write whole-batch failure, zero-write version conflict, zero-hit persisted audit and a synthetic-marker-only positive control for the scanner. `npm run typecheck` and scoped `git diff --check` passed.
+- Retained real-page evidence (E3): reused the independently frozen five-job denominator from the retained logged-in Zhilian `/sou/` page. Two reads each observed the same five normalized identities. The first temporary local repository created 5 records; the repeated round created 0, refreshed 0, left 5 unchanged and wrote 0. Final records were 5, duplicate identities 0, versions all 0, and each record retained exactly one creation event.
+- Restart evidence (E5): repeated the real-page audit with two distinct Node processes over the same temporary repository. The second process again produced `created=0`, `refreshed=0`, `unchanged=5`, `repositoryWrites=0`; normalized-identity hash, complete repository hash and repository bytes were unchanged across processes. The temporary repository was path-checked and removed after each audit.
+- Safety evidence: the real temporary store scanned 5 jobs and 5 events with sensitive-field hits 0. Across both real rounds, page writes 0, submissions 0, credential reads 0 and blockers 0. No Cookie, credentials, raw DOM/HTML, screenshot, profile value or conversation body was retained. One early aggregation-only harness attempt passed a public record to the candidate identity helper and failed after the reads; its temporary store was still removed in `finally`, then the corrected audit passed. No page action resulted from that failure.
+- Full validation: `npm run validate` exited 0 in 334.5 seconds: structure 13/13, page-vision 6/6, TypeScript, core 77/77, module/shared 25 files and 206 tests, and the profile production build all passed.
+- Blocker/ledger: no Z003 runtime blocker remains. The pre-existing malformed quoted entries in `feature_list.json` still prevent safe JSON parsing, so this feature is recorded here rather than rewriting unrelated ledger history.
+- Result/next: Z003 is complete. Z004 may implement deterministic prefiltering, AI ranking and the review queue, with one terminal score outcome for every member of a frozen denominator and known-wrong 0. Screenshot-plus-Boolean verification remains mandatory for later form-filling success claims; Z003 performs no form fill.
+
+## 2026-08-16 Z002 智联只读发现适配器（完成）
+
+- Changed: `modules/job-discovery/zhilian-adapter.mjs`, `modules/job-discovery/zhilian-page-reader.mjs`, `modules/job-discovery/zhilian-page-reader.d.mts`, `modules/job-discovery/zhilian-page-reader.test.ts`, `modules/job-discovery/README.md`, `tests/job-contracts.test.mjs`, and this log.
+- Added a source-isolated adapter boundary and fixed retained-page reader. The public request remains the closed Z001 budget; browser target, fixed evaluation source and selectors are private product dependencies. The reader binds one already-selected Zhilian search page, normalizes same-host HTTP job links to HTTPS, rejects foreign origins/page drift, and never exposes arbitrary CDP, selector, script, URL or page-action input.
+- Detail behavior: only the first `maxDetails` candidates are enriched. Same-origin public detail GETs use `credentials: omit`; a missing/failed detail becomes a typed blocker instead of treating the search summary as JD. No Cookie/storage/form value is read, and no navigation, click, message or submission occurs.
+- Focused verification: `npx vitest run modules/job-discovery/zhilian-page-reader.test.ts` passed 3/3; `node --test tests/job-contracts.test.mjs` passed 4/4; `git diff --check` passed. Coverage includes link normalization/deduplication, detail budget and credential omission, identity drift, verification blocker, foreign-origin rejection, and zero protected-action counters.
+- E3 retained-page evidence: on one independently retained search result page, two consecutive bounded reads each returned the same five candidates and five detail bodies; second-round new duplicates were 0. The frozen 20-field denominator (five titles, companies, normalized paths and JDs) was checked through temporary page-vision captures plus an independent credential-free public-web reader. All five independent pages matched title/company/path, and normalized full-JD containment matched 5/5; one retained detail-page screenshot also visually matched the extracted JD text. Accuracy was 20/20 = 100% (>=98%). All captures were removed. Writes, submissions, credential reads, uploads, verification handling and external messages were 0.
+- Validation: the first full `npm run validate` exposed the missing `.mjs` TypeScript declaration; after adding `zhilian-page-reader.d.mts`, typecheck and focused tests passed. A short wrapper then timed out because the existing browser/profile suites exceeded six minutes, so the identical stages were isolated (core 68/68; module/shared 10 files/135; profile 15 files/69; production build passed). The final original `npm run validate` completed with exit code 0: structure 13/13, page-vision 6/6, typecheck, core 68/68, modules 25 files/205 tests, and profile production build. Vitest printed a non-failing slow worker-termination warning for an existing semantic-planner test.
+- Completion-audit correction: after the first green full gate, a manual requirement audit found that `deadlineMs` was checked before the private page read but not propagated into or rechecked after detail enrichment. The adapter now passes the exact remaining time to the reader, caps the CDP wait, discards results crossing the deadline as `rate_limited`, and maps known timeout/disconnection/drift failures to typed blockers. Focused tests cover deadline propagation, post-read expiry and transport timeout.
+- Final retained-page rerun after the correction: two reads again returned 5/5 identical candidates and JDs, second-round new duplicates 0, protected-action counters 0, and combined elapsed time about 2.6 seconds under the 30-second per-run budget.
+- Final validation after the correction: the original `npm run validate` completed with exit code 0 (structure 13/13; page-vision 6/6; typecheck; core 68/68; modules 25 files/205 tests; profile production build). `git diff --check` passed with only existing Windows line-ending notices.
+- Result/next: Z002 is complete. Z003 may now connect these normalized candidates to the local versioned repository and prove replay/concurrency deduplication without persisting credentials, raw DOM, screenshots or page values.
 
-## Current snapshot
+## 2026-08-16 Z001 智联只读盘点基础（完成）
 
-- Product: local-first recruitment form assistant for Chrome/Edge.
-- Repository state at start: empty directory, not initialized as a Git repository.
-- Current feature: `F017` is complete; `F018` is the next unblocked feature; `F014` remains blocked on real-page non-submitting acceptance.
-- Current slice: no feature is left in progress. The next recommended slice is deterministic date-range and complex-control adapters under F018; real-page writes still require an explicit current-page user action.
+- Changed: `modules/job-contracts/index.mjs`, `modules/job-discovery/contracts.mjs`, `modules/job-discovery/inventory.mjs`, `modules/job-discovery/observer.mjs`, `modules/job-discovery/README.md`, `tests/job-contracts.test.mjs`, `boss/ZHILIAN_MIGRATION_BLUEPRINT.md`, and this log.
+- Added a closed `parseZhilianInventoryRequest` contract. It accepts only keyword/city and bounded page/card/detail/scroll/deadline budgets; it has no URL, selector, script, target ID, Cookie, credential, page text, write, or submission input.
+- Added aggregate `parseVisualComparisonOutcome` evidence. A field counts as verified only as `min(booleanVerified, screenshotVerified)`. Screenshot files, paths, OCR and form values are prohibited from the durable evidence object; private capture/cleanup remains owned by `page-vision`.
+- Verification: `node --test modules/page-vision/tests/page-vision.test.mjs` 6/6, `node --test tests/job-contracts.test.mjs` 3/3, and scoped `git diff --check` passed. `npm run validate` also passed in full: structure 13/13, page-vision 6/6, core 63/63, modules 24 files/198 tests, typecheck, and profile build. The first contract test exposed that an internal normalized `source` must not be accepted as a public request key; the test now verifies that the exact-key boundary rejects it.
+- E3 read-only evidence: a user-retained, logged-in Zhilian search-results page and a separately user-opened job-detail page were inspected through bounded, temporary `page-vision` captures. The search page visibly distinguished an already-applied card from a card with a pre-application entry, and the detail page visibly exposed a separate application entry and a communication entry. The images were inspected in-session and removed/expired; no paths, OCR, field values, job identifiers, profile data, or screenshots were retained in the repository.
+- First frozen search denominator: five non-duplicate visible candidate cards from the same user-retained search page were manually counted from the temporary capture and each was given one privacy-safe terminal classification (`candidate` with a visible application entry, or already-applied/manual). This is only the first search combination; no title, company, location, pay, contact, or application content was retained.
+- Second frozen search denominator: a distinct, user-retained Zhilian search combination was separately inspected under the same bounded capture protocol. Five non-duplicate visible candidate cards were frozen and 100% terminal-classified. Across the two combinations, the Z001 minimum is 10 classified candidate instances, with zero page writes, submissions, credential/cookie reads, uploads, verification handling, and external messages.
+- Safety audit for that evidence: captures were read-only; navigation was limited to attaching the two existing user-opened tabs. Form writes, submissions, credential/cookie reads, uploads, verification handling, and external messages were all zero.
+- Result/next: Z001 is complete. The completed evidence establishes the input surface and bounded, privacy-safe inventory protocol only; it does not claim a production Zhilian extractor. Z002 may now implement a source-isolated read-only adapter, then prove deduplication and field accuracy against independently frozen real-page denominators.
 
-## Product and architecture decisions
+## 2026-08-16 智联招聘能力迁移蓝图
 
-- The MVP is a browser extension, not a native mobile app, because the target workflow occurs on desktop recruitment websites.
-- The extension stores one structured profile locally and asks for a user gesture before scanning or filling the active page.
-- The initial matcher is deterministic and explainable. AI-based semantic matching is deferred until field coverage and correction data justify it.
-- The extension previews proposed values and never submits an application.
-- The UI follows the Organic anchor: sand/sage/clay/terracotta/ochre/moss, packaged Epilogue typography, rounded cards, subtle grain, and gentle motion.
-- Vite will build React UI pages; esbuild will create isolated Manifest V3 background and content-script bundles.
+- Added: `boss/ZHILIAN_MIGRATION_BLUEPRINT.md`, a source-isolated specification for the Zhilian recruitment capability. It derives independent module contracts, a closed-loop state machine, Z001--Z007 delivery order, quantitative gates, and the E0--E5 real-page evidence protocol from the retained BossHunter analysis and the current qiuzhao-cli safety model.
+- Scope decision: BossHunter remains reference-only. Its direct CDP/eval/selector access, unbounded monitoring, automatic/batch sending and final actions are explicitly rejected. The document also records the local source's conflicting license declarations, so implementation is treated as independent and no source/UI/schema copying is authorized.
+- Z001 is the only next implementation feature: two logged-in Zhilian search combinations, at least five candidates, read-only devalued inventory, frozen denominator, 100% terminal classification, and zero writes/submissions/credential reads. It requires a user-retained logged-in page but does not require or request credentials.
+- Verification: documentation was manually cross-checked against `README.md`, `boss/README.md`, `boss/REAL_OPERATION_ACCEPTANCE.md`, `boss/modules/*/README.md`, the frozen vendor module map, and the local `C:\Users\jiangbingjian\BossHunter` pipeline/scraper/database behavior. No production runtime or browser code changed; no real-site action was run.
+- Ledger blocker: the existing `feature_list.json` is not parseable by PowerShell `ConvertFrom-Json` because of pre-existing malformed quoted BOSS entries, so Z001 was deliberately not added there. Repair that ledger in a standalone feature before recording implementation status there.
+- Evidence update: a field is now counted as `verified` only when both the existing Boolean readback and a private, same-page-identity before/after screenshot comparison pass. `page-vision` screenshots remain temporary and are cleaned; manifests preserve only a comparison conclusion, never image paths, bytes, OCR text, or form values.
 
-## 2026-08-03 — Initializer session
+## 2026-08-16 Section-first recognition module
 
-### Completed
+- Added: `modules/section-extractor/` with a read-only `extractPageSections` API and module README.
+- Behavior: headings such as basic information, education, work, internship, project, language, and awards create semantic section records. Each section contains only opaque child-control references and a per-kind record index; it never reads field values, emits selectors, or performs a page action.
+- Integration: intentionally shadow-only; the existing control-first bridge and MCP output are unchanged until a frozen real-page comparison demonstrates better section ownership and executable mapping.
+- Verification: `npx vitest run modules/section-extractor/src/index.test.ts`, `npm run typecheck`, and `git diff --check` passed.
 
-- Read and applied the `long-running-agent-harness` skill.
-- Inspected the workspace and confirmed there were no existing files, tests, repository instructions, or user changes.
-- Converted the product plan into stable features `F000`–`F009` with dependencies, acceptance criteria, and verification evidence.
-- Added `AGENTS.md`, `feature_list.json`, `progress.md`, and an idempotent PowerShell setup script.
+## 2026-08-15 Date-range presentation compatibility
 
-### Environment evidence
+- Changed: `modules/application-service/application-service.mjs`, `modules/browser-kernel/runtime.mjs`, `shared/bridge/protocol.ts`, `shared/content/pageDriver.ts`, and `shared/content/pageDriver.test.ts`.
+- Behavior: one planner capability, `set_date_range`, now covers both a native two-input range and a four-control year/month range. The kernel selects its fixed adapter from the opaque inspected control type; no page selector, script, or scalar profile value is exposed through MCP.
+- Safety: the year/month adapter requires exactly four visible controls, matches each year or month exactly (including `2024-year` / `09-month` labels), verifies every selection synchronously, and stops on ambiguity or a missing option. It does not save, submit, upload, or bypass any verification step.
+- Evidence: `npx vitest run shared/content/pageDriver.test.ts shared/bridge/pageState.test.ts` passed (35/35); `npm run typecheck` and `git diff --check` passed. `npm run validate` was attempted with a 180s wrapper but did not emit a failure before that wrapper timed out.
+- Real-page follow-up: the authenticated Huya session reports ready, but a fresh privacy-safe inspection exceeded a 90s command wrapper, so this change is not yet counted as a retained-page write. Next: resolve that bounded inspection delay, then execute and re-inspect the Huya education date range through MCP.
 
-- `node --version` → `v24.15.0`
-- `npm --version` → `11.12.1`
-- `git --version` → `2.54.0.windows.1`
-- PowerShell → `5.1.22621.5697`
-- Chrome executable found at `C:\Program Files\Google\Chrome\Application\chrome.exe`
-- Edge executable found at `C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe`
+### 2026-08-15 Retest correction
 
-### Risks to track
+- Retained Huya DOM evidence: `就读时间` is a `date_info` composite with four readonly text inputs (`年`, `月`, `年`, `月`). Its real activation target is an ancestor with `Select`/`Dropdown` class names, it opens on the pointer/mouse-down sequence, and its choices are menu items rather than standard option elements.
+- Changed the fixed year/month adapter to activate that ancestor, recognise visible custom menu items, require exact numeric year/month matching, and require a selected/readback marker. Added a focused readonly-custom-dropdown test.
+- Also bounded the CDP inspection DOM depth at 30: a direct retained-page structural run then found 54 controls and all four year/month composites. Field-presence probing is now bounded and failures degrade to unknown presence rather than aborting inspection.
+- Verification: `node --test tests/browser-kernel.test.mjs` (12/12), `npx vitest run shared/content/pageDriver.test.ts shared/bridge/pageState.test.ts` (36/36), and `npm run typecheck` passed.
+- Blocker: the full application-service inspection still exceeded the 90s external command wrapper during presence probing, so no real date write/readback is claimed from this retest. Next: make each presence-probe cleanup/timeout independently bounded, then execute `就读时间` through the normal MCP plan and re-inspect it.
+
+## 2026-08-15 — Retained-page component and filling follow-up
 
-- Recruitment systems use dynamic components, iframes, and non-standard controls; coverage must be measured against fixtures before adding AI.
-- `activeTab` access can expire after navigation; the panel must explain how to re-authorize instead of requesting broad access silently.
-- File upload cannot be implemented as arbitrary local-path assignment and remains user-controlled.
-- Personal data requires clear local-storage disclosure and deletion controls even without a server.
+- Changed: `shared/bridge/pageState.ts`, `shared/content/pageDriver.ts`, and `modules/browser-kernel/runtime.mjs`.
+- Evidence: Huya's filled custom controls now retain their structural field title and Boolean presence is read from the local custom-select container. NIO's visible `所在地点` and `期望工作地点` controls are now retained as separate labelled comboboxes instead of being discarded as internal search inputs.
+- Tree control handling: a select intent now tries the control's local search input, then requires one exact visible option before selection; no fuzzy city matching or final-page action is permitted. The retained NIO widget is Feishu `ud__treeSelect` with only first-level nodes initially mounted and without a standard expanded-state attribute.
+- Verification: `npx vitest run shared/content/pageDriver.test.ts` (19/19), `npm run typecheck`, and `git diff --check` passed. A full `npm run validate` was started but exceeded the 120s command wrapper without test failure output; rerun it with a longer CI timeout before closing the feature.
+- Real-page result: the NIO MCP execute/reinspect attempt exceeded the 150s command wrapper while waiting for the dynamic tree/select cycle, so it is **not** counted as a write or a verified fill. Existing verified ordinary writes remain Huya gender, highest degree, language type, and proficiency; Xiaomi gender. No save, consent, upload, deletion, or submission was performed.
+- Next: make the dynamic tree selection cycle bounded at the kernel level (including an execution deadline and audit outcome), rerun retained NIO and then re-inspect all four sites field-by-field.
+
+### 2026-08-15 continuation
 
-### Next action
+- Changed `modules/browser-kernel/runtime.mjs` to make privacy-safe presence probes preserve order but run concurrently. This reduced a retained NIO MCP inspect/execute/reinspect cycle from exceeding 150 seconds to about 18 seconds. Custom-tree combobox query text is no longer reported as a selected form value.
+- Changed `shared/bridge/pageState.ts` to exclude tree-expander buttons from the application field inventory, and `shared/content/pageDriver.ts` to use a custom select's local filter before exact option matching.
+- Retained-page evidence: Xiaomi reinspection found 44 ordinary fields, all filled. Huya: exact MCP writes for `最高学历 <- education.0.degree` and `掌握程度 <- languages.0.proficiency` both verified and then re-inspected filled. Meta: only `自我评价` is ordinary and empty; the profile has no approved mapping. NIO: `所在地点 <- basic.currentCity` returned `option_ambiguous` and was not selected; both education-school writes had immediate and 800ms exact checks but a subsequent fresh full inspection still returned empty, so they are not counted as fills.
+- Safety: no save, consent, upload, delete, identity/credential read, or submit was used.
+- Verification: focused page-driver test passed (19/19), typecheck and diff check passed. `npm run validate` was attempted twice and produced no stage output before the 120s/then manual termination threshold; this remains an unresolved validation-harness hang and the feature must not be marked complete.
+
+### 2026-08-15 presence correction
+
+- Root cause: NIO school-name controls are non-combobox inputs inside `ud__select`; their values were genuinely present, but the broad custom-search predicate classified every select descendant as transient query text. The predicate now applies only to an actual combobox or a concrete tree/search-input class.
+- Retained-page reinspection: both NIO school-name fields now return `hasValue: true`; `所在地点` remains `hasValue: false` and was not selected because the exact tree option was ambiguous. Focused page-driver tests (19/19), typecheck, and diff check passed after the correction.
+
+### Final retained-page execution audit
+
+- Final reinspection with the corrected reader: Xiaomi 39/39 ordinary fields filled; Huya 18 filled and 34 empty; Meta 30 filled and one ordinary empty (`自我评价`); NIO has both mapped school fields filled, while `所在地点` remains unfilled due to exact-option ambiguity.
+- Huya profile catalog contains work/education/language repeatable data, but the retained page exposes those sections only as read-only containers (no intent-level executable `ensure_repeatable` control). They were not created or filled; this is recorded as an unsupported page-control limitation, not a missing profile value. Normal mapped Huya fields (`最高学历`, `掌握程度`, plus previously verified gender/language type) were filled and re-inspected.
 
-Implement `F001`, run its four verification checks, record evidence, then advance to `F002`.
+### 2026-08-15 NIO readonly-select repair
 
-## 2026-08-03 — F001 Manifest V3 foundation
-
-### Completed
-
-- Added a Vite + React + TypeScript UI build and separate esbuild bundles for the background service worker and content script.
-- Added the Manifest V3 shell, options page, side panel, packaged Epilogue font, Organic theme tokens, and initial local-only product copy.
-- Added unit-test, type-check, build, distribution-audit, and packaging scripts.
-- Corrected Windows npm child-process handling and separated Vite/Vitest configs after the validation gate exposed versioned Vite type identities.
-
-### Verification evidence
-
-- `npm run validate` → exit 0.
-- `tsc --noEmit` → passed.
-- `vitest --run` → 1 file passed, 1 test passed.
-- Production build → 1,584 modules transformed; `options.html`, `sidepanel.html`, `background.js`, and `content.js` emitted.
-- `npm run verify:dist` → 6 required files verified; permission set exactly `activeTab`, `scripting`, `sidePanel`, `storage`; no host permissions.
-
-### Next action
-
-Implement `F002`: versioned profile schema, deterministic completion calculation, and tested local repository with preview fallback.
-
-## 2026-08-03 — F002 profile model and repository
-
-### Completed
-
-- Added schema version 1 for basic information, repeatable education, work experience, projects, job preferences, and reusable answers.
-- Added factories for repeatable records without inserting fabricated identity data.
-- Added migration from a flat legacy profile and normalization for malformed/missing fields.
-- Added deterministic completion calculation: one education baseline is required, while fully blank optional records are excluded until the user starts them.
-- Added `chrome.storage.local` persistence with a `localStorage` fallback for browser preview and tests.
-
-### Verification evidence
-
-- `npm run typecheck` → exit 0.
-- Focused Vitest run with one fork → 2 files passed, 9 tests passed.
-- Tests cover blank data, legacy migration, repeatable-record completion behavior, 100% baseline completion, save timestamps, reload, and deletion.
-- The first parallel test attempt exceeded the command window due to Windows worker startup; it left no child process and passed when rerun deterministically with one worker.
-
-### Next action
-
-Implement `F003`: replace the foundation placeholder with the full structured editor and capture browser evidence.
-
-## 2026-08-03 — F003 structured profile editor
-
-### Completed
-
-- Replaced the options placeholder with six editable profile sections: basic information, education, work experience, projects, preferences, and reusable answers.
-- Added repeatable record creation/removal, local save/reload, live completion percentage, missing-item summary, dirty/saved states, and phone/email/date validation.
-- Added a clear attachment boundary explaining that local file selection remains user-controlled.
-- Implemented the Organic design anchor with packaged Epilogue typography, earth-tone tokens, rounded archive cards, subtle grain, gentle motion, and the completion ring as the visible differentiator.
-- Adjusted the save footer from fixed to sticky after visual review showed that a fixed control could obscure form fields.
-
-### Verification evidence
-
-- `npm run typecheck` → exit 0.
-- Focused editor unit test → 1 file passed, 3 tests passed; covers save, repeatable project add/remove, invalid-email feedback, and save blocking.
-- `npm run test:e2e -- --grep "profile editor"` → 1 Chrome test passed.
-- Browser screenshot captured at `artifacts/profile-editor.png` and visually inspected for layout, token fidelity, real-information labels, form visibility, and completion feedback.
-
-### Next action
-
-Implement `F004`: canonical field catalog, DOM descriptor extraction, explainable confidence scoring, and sensitive/ambiguous safeguards.
-
-## 2026-08-03 — F004 deterministic discovery and matching
-
-### Completed
-
-- Added a canonical catalog spanning basic details, education, work, projects, preferences, and reusable answers with Chinese/English aliases.
-- Added DOM discovery for inputs, textareas, selects, radio controls, and contenteditable controls without reading current field values.
-- Added explainable scoring across associated label, ARIA label, placeholder, name, DOM id, autocomplete hint, control type, and section context.
-- Added high/medium/low confidence, ambiguity downgrade, confirmation flags, and explicit exclusions for file/password/hidden/button controls, verification fields, and unsupported identity/financial fields.
-- Improved wrapped-label extraction after a fixture showed that select options could contaminate label text.
-
-### Verification evidence
-
-- `npm run typecheck` → exit 0.
-- Focused matcher run → 2 files passed, 49 tests passed.
-- Catalog table validates 40 representative Chinese/English labels; additional tests cover autocomplete evidence, sensitive confirmation, four exclusion classes, unknown labels, DOM discovery, and value non-collection.
-
-### Next action
-
-Implement `F005`: resolve profile values, scan without mutation, fill only explicit selections, dispatch framework-compatible events, and prove that excluded controls and submit buttons remain untouched.
-
-## 2026-08-03 — F005 safe scan and fill engine
-
-### Completed
-
-- Added safe profile-path lookup and value previews without exposing current webpage field values.
-- Added page scan summaries for total, fillable, safe-high-confidence, confirmation-required, and excluded fields.
-- Added explicit-selection filling that rechecks the live field mapping immediately before writing.
-- Added native value/checked setters and `input`, `change`, and `blur` events for text, textarea, select, radio, and contenteditable controls.
-- Added hard exclusions for password, file, hidden, button, checkbox, verification, identity, and financial controls; the engine contains no submit action.
-- Added the typed content-script message protocol and a real-browser recruitment-form fixture.
-
-### Verification evidence
-
-- `npm run typecheck` → exit 0.
-- Focused content/domain run → 2 files passed, 7 tests passed.
-- `npm run test:e2e -- --grep "fill fixture"` → 1 Chrome test passed.
-- Browser fixture confirmed at least five selected fields filled, page events fired, CAPTCHA/password/file remained empty, and submit count stayed zero.
-
-### Next action
-
-Implement `F006`: connect the side panel to active-tab script injection, show confidence-grouped proposals, default-select only safe high-confidence fields, and require explicit selection for medium/sensitive fields.
-
-## 2026-08-03 — F006 side-panel confirmation workflow
-
-### Completed
-
-- Connected the side panel to active-tab content-script injection without persistent host permissions.
-- Added profile readiness, current-page summary, safe-match and confirmation-required groups, explainable match details, excluded-field disclosure, and explicit per-field selection.
-- Default selection includes only high-confidence non-sensitive fields; medium and sensitive suggestions remain unchecked.
-- Added scan/fill failure guidance and preserved the no-submit boundary in both copy and behavior.
-- Added a deterministic browser-preview bridge so the panel can be visually tested outside an installed extension without network services.
-
-### Verification evidence
-
-- `npm run typecheck` → exit 0.
-- Focused side-panel test → 1 file passed, 2 tests passed; verifies default selection and explicit confirmation.
-- `npm run test:e2e -- --grep "side panel"` → 1 Chrome test passed.
-- `artifacts/sidepanel-preview.png` captured at 420×900 and visually inspected: Organic tokens hold, group hierarchy is legible, sensitive state is distinguishable, and there is no submit action.
-
-### Next action
-
-Implement `F007`: persist site-specific mapping corrections, add first-run consent, and add export/import/delete controls for all local data.
-
-## 2026-08-03 — F007 correction memory and privacy controls
-
-### Completed
-
-- Added stable field fingerprints and a local mapping repository keyed by site plus fingerprint.
-- Added side-panel field remapping to any non-empty canonical profile field, immediate rescanning, “已记住” feedback, and reuse during both scan and fill revalidation.
-- Added first-run disclosure in options and side panel covering local storage, user-triggered page access, sensitive defaults, excluded credentials/verification/files, and no automatic submission.
-- Added versioned JSON export/import plus permanent profile and mapping deletion with an explicit confirmation step.
-- Open the options page on first extension installation so the disclosure and profile setup appear before normal use.
-
-### Verification evidence
-
-- `npm run typecheck` → exit 0.
-- Focused F007 run → 4 files passed, 11 tests passed; covers mapping replacement/isolation/clear, import/export parsing, engine mapping reuse, default selection, explicit confirmation, and remapping UI.
-- `npm run test:e2e -- --grep "privacy controls"` → 1 Chrome test passed; verifies first-run gate, export download, cancel delete, permanent delete, and import restoration.
-- Side-panel Chrome flow rerun after consent/mapping integration → 1 test passed.
-
-### Next action
-
-Complete `F008`: add dynamic and ambiguous fixture controls, run the entire verification matrix, and refresh visual artifacts.
-
-## 2026-08-03 — F008 representative fixture and full evidence
-
-### Completed
-
-- Expanded the local recruitment-form fixture with ordinary inputs, a custom-looking native select, radio group, contenteditable field, hidden dynamic fields, ambiguous labels, CAPTCHA, password, file input, and submit button.
-- Added dynamic discovery coverage and proved that “紧急联系人姓名” and “所在地” are not promoted to safe high-confidence filling.
-- Configured Vitest as a deterministic single fork on Windows, reducing the complete validation time and avoiding startup contention.
-- Removed the development fixture from production build inputs after the distribution review identified it in `dist/`.
-- Rechecked the final profile editor and side-panel screenshots; changed the editor save footer to static so it cannot cover fields.
-
-### Verification evidence
-
-- `npm run validate` → exit 0.
-- TypeScript → passed.
-- Vitest → 10 files passed, 73 tests passed.
-- Production build → 1,599 modules transformed before fixture exclusion; permission audit still exactly `activeTab`, `scripting`, `sidePanel`, `storage`.
-- `npm run test:e2e` → 5 Chrome tests passed across profile editing, selective fill, dynamic ambiguity, side-panel confirmation, and privacy controls.
-- `artifacts/profile-editor.png` and `artifacts/sidepanel-preview.png` visually inspected; both retain the Organic token system and real/test-labeled content.
-
-### Next action
-
-Complete `F009`: README, privacy/limitations guidance, final clean build, package archive audit, unpacked-extension smoke check, and final status handoff.
-
-## 2026-08-03 — F009 package and documentation
-
-### Completed
-
-- Added operator documentation for setup, unpacked installation, user workflow, architecture, verification, troubleshooting, privacy, and known browser/site limitations.
-- Added `PRIVACY.md` documenting processed data, local storage, active-tab access, explicit exclusions, deletion, and future-consent requirements.
-- Added archive inspection that requires extension entry files and rejects test fixtures, test artifacts, source maps, and persisted personal-data filenames.
-- Added a real unpacked-extension smoke test that obtains the generated extension ID and verifies the first-run options page.
-- Verified the Harness recovery path through `init.ps1 -SkipInstall`.
-
-### Verification evidence
-
-- `npm run package` → exit 0; it reran type check, 73 unit/component tests, production build, and distribution audit before creating the archive.
-- Archive `qiuzhao-profile-assistant.zip` → 36 entries; required files present; no fixture, test output, source map, or personal-data file present.
-- Installed Chrome headless and headed modes did not expose the Manifest V3 worker when invoked with automated extension flags. The test was correctly moved to the available Playwright Chromium channel instead of being waived.
-- Unpacked-extension smoke → 1 test passed; the extension booted and its first-run privacy/options page rendered.
-- Final `npm run test:e2e` → 6 tests passed, including the unpacked extension.
-- Final `init.ps1 -SkipInstall` → exit 0; 10 Vitest files and 73 tests passed, build transformed 1,591 modules, and permissions remained exactly `activeTab`, `scripting`, `sidePanel`, `storage`.
-- Final visual evidence: `artifacts/profile-editor.png` no longer has a save bar obscuring fields; `artifacts/sidepanel-preview.png` shows safe vs confirmation-required selection states.
+- Cause: NIO degree fields are `readonly` combobox inputs nested in Feishu `ud__select`; option entries use `.ud__select__list__item`, and stale offscreen portals could produce false ambiguity.
+- Repair: preserve readonly comboboxes as `select_option`, open their outer trigger, recognize Feishu list items and selected states, and require the candidate option to intersect the viewport.
+- Retained-page retry: Xiaomi remains 39/39 ordinary fields filled. NIO second degree (`education.1.degree`) was filled through the MCP plan and independently re-inspected; both degree fields now report filled. No save, consent, upload, or submission was performed.
+
+### 2026-08-15 experience-type profile migration
+
+- Changed: `shared/domain/profile.ts`, `gerenxinxi/profile-service/src/schemaRegistry.ts`, and `shared/options/App.tsx`.
+- Added a local `experienceType` enum (`internship` / `work`) to every work-experience record. Legacy records are classified only from their local role/description (`实习` or `intern` becomes `internship`; otherwise `work`) during normal migration. The profile editor now displays and lets the user change the type; an empty default type does not inflate profile completion.
+- Existing encrypted profile was atomically resaved after migration. Redacted result: 2 records classified as `internship`; no experience content was read into agent output. Profile version changed as expected.
+- Verification: `npm run typecheck`; `shared/domain/profile.test.ts` and `gerenxinxi/profile-service/test/profile-service.test.ts` (27/27); `git diff --check` all passed.
+- Next: add non-scalar experience-type metadata to the planner request so internship/work page sections can select the appropriate record subset. The MCP continues not to expose raw profile values.
+
+## 2026-08-15 — M017 semantic recovery checkpoint
+
+- Goal: recover visible custom recruitment controls without exposing page values, then compare retained Xiaomi, Huya, NIO, and Meta pages through the local vision harness.
+- Changed: `shared/bridge/pageState.ts`, `shared/bridge/pageState.test.ts`, `feature_list.json`, and this log.
+- Implementation: structural field titles now override generic presentation text; work and internship repeatables are separated; custom year/month ranges are emitted as one read-only composite; labelled read-only custom selects are retained; technical, non-value IDs for school, degree, education type, language, and proficiency are mapped to public semantic labels; generic module “add” buttons receive their visible module title.
+- Retained-page evidence: screenshot-to-structure review found and repaired Huya’s title-sibling controls and year/month composites; NIO’s two visible degree selects; Xiaomi’s school/degree/education-type/language controls; Meta returned no generic or unlabelled controls. All captures were temporary and removed after comparison. Protected attachment, identity, consent, destructive, and final-submit controls remained read-only.
+- Verification: `npx vitest run shared/bridge/pageState.test.ts` (15/15) and `npm run typecheck` passed. Earlier full `npm run validate` completed every inner stage successfully; rerun the full wrapper after the final retained-page pass.
+- Blocker: final four-site re-fill/audit has not yet been rerun after the last Xiaomi semantic correction; do not mark M017 complete.
+- Next: run the MCP plan/execute/readback/audit path for each already-authorized retained page, permitting only ordinary mapped fields and never save/consent/final submit, then run full validation.
+
+### M017 retained-page execution addendum
+
+- MCP re-audit: Xiaomi 45 fields, Huya 54, NIO 33, Meta 34; each page was inspected, compiled with a complete proposal, executed, and audited. The re-audit plans retained all non-explicitly-mapped controls as manual/protected; every audit reported `finalSubmits: 0`, `credentialReads: 0`, `cookieReads: 0`, and `resumeUploads: 0`.
+- Actual controlled write proof: Huya’s previously blank, ordinary `性别` control was mapped to the local `basic.gender` profile path and executed through `application_execute`; readback returned one `verified` outcome. The resulting audit reported `verified: 1`, `manualRequired: 53`, and `finalSubmits: 0`.
+- Completion verification: `npm run validate` passed in full (structure 13/13; page-vision 6/6; core 54/54; modules 23 files/194 tests; profile production build). `git diff --check` reported no whitespace errors (only existing Windows line-ending notices). M017 is complete.
+
+### Retained-page component-readback repair
+
+- Real-page defects fixed: a filled Huya custom select previously exposed an empty internal input and was reported as unfilled; the kernel now performs a bounded, Boolean-only ancestor check for its visible selection container. A selected option can no longer replace the structural field label. NIO's labelled, explicit custom combobox inputs for `所在地` and `期望工作地点` were previously filtered as internal search noise; they are retained only when they have `role=combobox` and a structural label.
+- Real-page evidence: Huya `性别` now retains its field label and reports `hasValue: true`; NIO now emits both `所在地` and `期望工作地点` as `select_option`; Xiaomi's 44 emitted controls have no generic/technical label leakage; Meta's screenshot-visible education controls (`学校名称`/`学历`/`专业`/`起止时间`) all have semantic fields and Boolean filled state. Private captures were removed after each comparison.
+- Verification: focused page-state/page-driver tests 34/34, typecheck, and a fresh full `npm run validate` all pass (core 54/54; module tests 23 files/194 tests; page-vision 6/6).
+
+### Retained-page exact-fill follow-up
+
+- Verified ordinary writes through MCP: Huya `最高学历` ← `education.0.degree`, `语言类型` ← `languages.0.language`, and `掌握程度` ← `languages.0.proficiency`; all returned `verified` and re-inspection returned `hasValue: true`. Earlier Huya `性别` and Xiaomi `性别` writes also remain Boolean-verified.
+- NIO `所在地` had a compatible local profile path but its tree widget exposed no exact matching leaf for the resolved value. The bounded open/expand/retry path failed closed as `option_not_found`; no value was written. Other NIO empty ordinary fields lack compatible populated local paths. No save, consent, upload, delete, or final-submit action was attempted.
+
+## 2026-08-15 · Workbench prototype: personal-profile navigation
+
+- Goal: add the existing qiuzhao-cli personal-information entry point to the left navigation of the BossHunter workbench prototype without duplicating or exposing locally saved profile data.
+- Changed: `artifacts/02-bosshunter-dashboard-clone.html`.
+- Implementation: added a `个人信息` sidebar item and aligned its static field/component inventory with the local profile editor: resume import and attachment notice; basic information; education; repeatable internship, project, work-sample, award, and language record cards; preferences; common answers; local-data statistics/actions; profile dock; and save footer. The screen uses the existing BossHunter orange/white card system; it explicitly does not read, render, or persist profile scalar values, which remain in the separately authenticated local profile host.
+- Verification: confirmed the new `profile` nav key, `profile-page` section, and local-profile command are present in the artifact; `git diff --check -- artifacts/02-bosshunter-dashboard-clone.html progress.md` and `npm run validate` passed (structure 13/13, core 53/53, modules 23 files / 192 tests, profile production build).
+- Blocker: a static artifact cannot safely discover or embed the local profile host's rotating bootstrap URL/token, so it directs users to the supported CLI launch entry rather than a hard-coded loopback URL.
+- Next: integrate the future production workbench with the profile host through an authenticated local application boundary, not by copying profile state into this prototype.
+
+## 2026-08-15 · B002 独立求职领域契约完成
+
+- Goal: create the production module boundaries before implementing job storage, discovery, ranking, communication, workflow, workbench, or the Agent entry point.
+- Changed: added closed contracts in `modules/job-contracts/`, `modules/job-repository/`, `modules/job-discovery/`, `modules/job-ranking/`, `modules/conversation-service/`, `modules/job-workflow/`, `apps/workbench/`, and `skills/job-hunting/`; added `tests/job-contracts.test.mjs`; corrected the existing browser-kernel test so delayed readback is not miscounted as a second primary write.
+- Contract: all public inputs use exact keys and stable identifiers. Selector, script, coordinate, arbitrary local path, Cookie, credential, profile scalar, arbitrary message text, and credential-bearing URL inputs are rejected. Job URLs are HTTPS-only and normalized without query/hash material. The job domain remains separate from the six campus-application MCP tools.
+- Verification: `node --test tests/job-contracts.test.mjs` passed 2/2; the focused browser-kernel plus contract suite passed 14/14; final `npm run validate` passed (structure 13/13, page-vision 6/6, core 56/56, modules 23 files/194 tests, profile production build).
+- Real-page scope: B002 is an E1 contract feature. It intentionally did not connect to or claim compatibility with a real recruitment page; retained real-page verification starts with B003/B006 under `boss/REAL_OPERATION_ACCEPTANCE.md`.
+- Next: B003 local job repository and audit timeline, then use a retained real job page to prove repeat collection adds zero duplicate records.
+
+## 2026-08-14 · B001 BossHunter 来源隔离归档与模块导航完成
+
+- 目标：按 `long-running-agent-harness` 建立可跨会话恢复的 BOSS 求职能力迁移工作流，采用“隔离归档 → 行为拆解 → 独立重写 → 逐步替换”，不把上游代码直接混入现有产品内核。
+- 开始状态：根工作树已有并保留 M012-M014 的未提交实现；B001 只新增 `boss/**` 并追加 `feature_list.json`/`progress.md`。开始前 `npm run validate` 退出 0：结构 12/12、TypeScript 通过、core 53/53、modules 23 文件/191 测试和 profile production build 全部通过。
+- 固定来源：从 `https://github.com/powerycy/BossHunter.git` 的远端 `main` 固定提交 `62d1ccea878932f4e98ff67eaa00d5302c7cdff4` 通过 `git archive` 归档；上游工作树未修改。快照包含源码、测试、架构文档、README、SKILL 和实际 Non-Commercial LICENSE，共 116 个文件、1,477,480 字节。
+- 模块边界：新增七个迁移节点导航：`job-repository`、`job-discovery`、`job-ranking`、`conversation-service`、`job-workflow`、`workbench`、`agent-skill`。`module-map.json` 明确每个上游参考路径、自有未来目录、重写方式和拒绝复用项。
+- 安全/许可：`vendor-bosshunter` 是不可变参考，不被 `apps/`、`modules/`、`gerenxinxi/` 或 `shared/` 引用；上游任意 eval、selector、坐标、文件路径 CDP 代理被明确拒绝进入运行时。商业发布仍需上游书面授权，或完成经审查的独立实现与法律确认。
+- 真实验收：`boss/REAL_OPERATION_ACCEPTANCE.md` 冻结 E0-E5、A/B/C 分母、零 Cookie/凭证/验证码绕过/最终提交条件，以及真实岗位发现、评分、沟通、重启幂等和 BOSS→校招联合闭环门槛。Fixture/复制 HTML 只能证明原语，不能证明站点兼容。
+- Changed files：新增 `boss/AGENTS.md`、`boss/README.md`、`boss/REAL_OPERATION_ACCEPTANCE.md`、`boss/module-map.json`、`boss/upstream-snapshot.json`、`boss/scripts/verify-vendor-snapshot.mjs`、七个 `boss/modules/*/README.md` 和 `boss/vendor-bosshunter/**`；更新 `feature_list.json` 与本记录。
+- Verification：`node boss/scripts/verify-vendor-snapshot.mjs` 通过，逐文件 SHA-256/文件集/许可证/模块引用均一致，正式运行引用 0；`git diff --check -- boss feature_list.json` 通过（仅 Windows LF→CRLF 提示）；最终 `npm run validate` 退出 0，结构 12/12、TypeScript 通过、core 53/53、modules 23 文件/191 测试和 profile production build 全部通过。
+- 真实页面行为：本节点没有连接或操作 BOSS 页面，没有页面读取、写入、消息发送、Cookie/凭证读取或最终提交。真实操作从 B006 开始，必须按冻结验收队列执行。
+- Blocker：没有 B001 工程阻断。许可证意味着 vendor 不能直接成为商业产品依赖；B002 必须先完成独立行为契约，之后才可写正式 Node 模块。
+- Next：B002 `BossHunter 行为拆解与独立契约`。先为七个模块冻结输入、输出、状态、typed errors 和安全拒绝面；不连接真实页面，不复制上游实现。
+
+## 2026-08-14 · M014 initialization
+
+- Goal: remove the unconditional manual `confirm-ready` gate by classifying a selected recruitment tab from privacy-safe structural signals after open, attach, or reconnect.
+- Frozen states: `application_ready`, `login_required`, `verification_required`, and `unknown`; only `unknown` may use the existing manual confirmation fallback.
+- Safety boundary: the classifier returns counts and booleans only, never field values, raw DOM, HTML, Cookie, credentials, verification codes, or selectors. It cannot authorize filling or submit a form.
+- Real-page acceptance: the retained logged-in Anker application page is the ready positive; an already retained real login page is the login positive. Both checks are read-only and must record only normalized identity plus classifier evidence counts.
+- Worktree note: M012/M013 changes are already present and documented but uncommitted. M014 will preserve them and limit new edits to readiness/session/application status, focused tests, a redacted manifest, and ledgers.
+- Next: implement the generic classifier and state transitions, then run focused tests before any real-page check.
+
+## 2026-08-14 · M014 complete
+
+- Outcome: `browser open`, `attach`, `reconnect`, `status`, and the pre-execution `connection` gate now classify the selected tab as `application_ready`, `login_required`, `verification_required`, or `unknown`. A retained login session that exposes a stable application form enters ready automatically with `readyConfirmed=false`; `confirm-ready` is accepted only as the fallback for `unknown`.
+- Implementation: added `modules/page-readiness/**`, a fixed CDP `Runtime.evaluate` collector that returns only bounded structural counts and booleans. Browser-session persists a redacted `pageReadiness` result, rechecks identity after sampling, and fails closed on login, verification, target disappearance, or route drift. Browser-kernel and ApplicationService preserve the typed states and return one specific recovery action.
+- Real-page evidence: the logged-in Anker application route automatically returned `application_ready` with 17 visible ordinary controls, no password/verification signal, one application semantic signal and one final-action signal. Lenovo Passport `/cnwebauthnv3/preLogin` initially exposed a real false positive; after prioritizing generic login/auth/passport route signals it returned `login_required`. NIO `/index/login` returned the stricter `verification_required` because one verification control and one verification action were present. The final selected page was restored to Anker.
+- Safety: all three real checks were read-only. Page writes, form-value reads, Cookie/credential reads, verification bypasses, authorizations and final submits were 0. The evidence artifact contains normalized paths and counts only; it has no target id, raw URL, field value, HTML, Cookie, or screenshot.
+- Changed for M014: `modules/page-readiness/{index,readiness}.mjs`, `modules/browser-session/browser-session.mjs`, `modules/browser-kernel/runtime.mjs`, `modules/application-service/application-service.mjs`, `tests/{page-readiness,browser-session,application-service}.test.mjs`, `README.md`, `docs/STATUS.md`, `artifacts/real-page-readiness-m014-manifest.json`, `feature_list.json`, and `progress.md`.
+- Verification: focused page-readiness/browser-session/ApplicationService command passed 29/29. Final `npm run validate` exited 0: structure 12/12 with 0 root extension artifacts, TypeScript passed, core 53/53, modules 23 files and 191/191 tests, and the profile production build passed. `git diff --check`, manifest safety assertions, and scans for scalar/Cookie/storage/HTML reads plus company-specific classifier branches passed.
+- Worktree boundary: pre-existing documented M012/M013 changes remain uncommitted in this integration worktree and were preserved. No commit or push was requested or performed.
+- Recommended next feature: derive safe boolean intents such as “local work experiences exist → uncheck no work experience”, then return to the Anker real page to validate the hidden work-experience reveal/replan flow without final submission.
+
+### M014 handoff
+
+- Result: complete; no blocker remains for automatic login/application readiness detection on the verified retained pages.
+- Commands: focused Node test suite; real Anker/Lenovo/NIO read-only CLI checks; two serialized `npm run validate` runs after final code changes; `git diff --check` and privacy/static scans.
+- Next: do not broaden this readiness evidence into a claim of complete Anker, Lenovo, or NIO field compatibility.
+
+## 2026-08-13 · M001
+
+- Goal: extract the zero-extension Agent path into one maintainable repository without mutating the source repository.
+- Source baseline: integration worktree commit `7f703b2`, plus the current F104 profile-editor visual files only. The source repository was not changed by this extraction.
+- Included: browser session, browser kernel, application service, MCP server, semantic planner, policy compiler, local profile service/host, shared profile/editor/page primitives, and real-page evaluation contracts.
+- Excluded: extension manifest, background/content-script entrypoints, side panel, legacy extension distribution, fixtures as real-site evidence, and the duplicate `packages/browser-runtime` implementation.
+- Changed areas: `apps/cli`, `modules`, `gerenxinxi`, `shared`, `tests`, `skills`, root build/verification files, and architecture/status/source-map documentation.
+- Verification:
+  - `npm run verify:structure`: pass; 11 core entrypoints present and 0 root extension artifacts.
+  - `npm run typecheck`: pass.
+  - `npm run test:core`: pass; 26/26.
+  - `npm run test:modules`: pass; 21 files, 175/175 tests.
+  - `npm run profile:build`: pass; local React profile UI and PDF worker emitted.
+  - `npm audit`: pass; 0 production or development vulnerabilities after upgrading the extracted repository's test toolchain.
+- Privacy/structure audit: no runtime dependency on the source worktree; no extension manifest/background/sidepanel/content entrypoint; no copied runtime profile, session, Cookie, or personal-value files.
+- Known blockers: real Xiaomi E3-E5 is still pending a user-authorized real-page run; profile-host PDF persistence/parsing needs its separate regression feature; full installer packaging remains pending.
+- Next: run the Xiaomi real-page queue from this extracted tree, then fix only evidence-backed failures without changing the frozen field denominator.
+
+## 2026-08-13 · M006
+
+- Goal: make a PDF selected on the standalone personal-information page survive host/browser restarts without relying on extension storage or the loopback page's changing origin.
+- Root cause: the standalone UI did not inject `savedResumeRepository`; the legacy implementation used IndexedDB, whose origin changes with the host's dynamic port; the host had no PDF persistence API.
+- Changed areas: `shared/options`, `shared/storage`, `gerenxinxi/profile-host`, `gerenxinxi/profile-service`, `modules/profile-page`, feature/status documentation.
+- Implementation: one PDF (maximum 10 MiB) is validated by filename, media type, magic bytes, size and SHA-256; metadata and bytes are protected with Windows CurrentUser DPAPI and atomically stored at the fixed application profile directory. Authenticated loopback GET/PUT/DELETE endpoints require the existing session and mutations require exact Origin plus CSRF. The UI receives metadata only; raw bytes stay server-side and the source file path is never stored.
+- Verification:
+  - `npm run typecheck`: pass.
+  - Targeted profile-host/profile-service tests: pass, 9 files / 29 tests before the final UI integration assertion.
+  - `npm run validate`: pass after final changes; structure pass, 26/26 core tests, 22 files / 181 module tests, profile UI production build pass.
+  - Production Windows DPAPI byte roundtrip and tamper rejection: pass in the module suite.
+  - Persistence evidence: repository re-instantiation recovered the PDF; replacement and deletion passed; encrypted disk envelope contained neither the PDF signature, test payload nor filename.
+  - `git diff --check`: pass.
+- Initialization note: this extracted repository has no `init.ps1`; `./init.ps1 -SkipInstall` therefore returned command-not-found. Dependencies already existed and the repository's complete `npm run validate` passed.
+- Scope boundary: PDF original persistence is complete. Real PDF text extraction/field parsing remains M007 and has not been claimed fixed; automated tests use a minimal synthetic PDF only as a storage primitive, not as real-document parsing or recruitment-site evidence. Recruitment-page attachment upload still requires a separate confirmed workflow.
+- Next: validate M007 with a user-selected real PDF in the rebuilt profile host, then fix only the observed parser/resource failure.
 
 ### Handoff
 
-- All required MVP features are complete and unblocked.
-- Load `dist/` from `chrome://extensions/` for normal use, or distribute `qiuzhao-profile-assistant.zip` after extracting it.
-- Do not add cloud sync, telemetry, AI calls, automatic submission, or broader host permissions without a new product/privacy decision and updated acceptance criteria.
+- Changed files: `feature_list.json`, `docs/STATUS.md`, `progress.md`, `shared/options/App.tsx`, `shared/storage/savedResumeRepository.ts`, `gerenxinxi/profile-host/**`, `gerenxinxi/profile-service/src/types.ts`, `gerenxinxi/profile-service/src/windowsDpapi.ts`, `gerenxinxi/profile-service/test/windows-dpapi.test.ts`, and `modules/profile-page/cli.mjs`.
+- Commands/results: targeted Vitest suite 9/9 files and 29/29 tests pass; final `npm run validate` passes with 26/26 core tests and 181/181 module tests; profile production build passes; forbidden extension/browser storage API scan in the built profile host reports 0; `git diff --check` passes.
+- Blockers: no persistence blocker remains. M007 requires a real user-selected PDF and browser-connected parsing observation. The currently running profile host predates this build and must be restarted before manual verification.
+- Recommended next feature: M007, after reopening the profile page from this repository.
 
-## 2026-08-03 — F010 Xiaomi internship form hardening
+## 2026-08-13 · M008–M011 harness initialization
 
-### Completed
+- Ordered goal: M008 browser recovery → M009 offline Agent state → M007 real PDF parsing → M010 Xiaomi E3–E5 → M011 final regression/docs.
+- Baseline: `main` at `cb17724`; worktree clean before harness edits; dependencies present; the last complete `npm run validate` passed with 26 core tests and 181 module tests.
+- Reusable source found: the original repository contains a stale `DevToolsActivePort` cleanup implementation with two failed probes, live-endpoint refusal, link rejection, and compare-before-unlink protection. It has regression tests for stopped-browser relaunch, live endpoint refusal, and concurrent file change.
+- Current feature: M008 is `in_progress`. No real-page write is authorized by this harness update; M010 remains gated by the user's explicit lease at execution time.
+- Risks: restarting the dedicated recruitment browser can change CDP port and target id; any previous opaque field refs must be invalidated. Real PDF contents and real-page values must not be committed to the repository.
+- Next action: port the stale-port cleanup and its tests, then run the browser-session/core verification before starting M009.
 
-- Audited the supplied Xiaomi internship application URL from its public `resume_form_schema`, job API, unauthenticated login boundary, and the user-authorized logged-in DOM; captured a normalized 9-group/34-field snapshot and a source-bound audit document.
-- Migrated the local profile schema to v2 and added nationality, education type, project link, work samples, awards, language abilities, and self-evaluation. Age is derived from birth date instead of stored as a value that becomes stale.
-- Synchronized controlled choices with the real Xiaomi form: gender, degree, education type, language, and language proficiency options now use the observed labels while preserving previously imported custom values.
-- Added Feishu ATS field discovery for `.atsx-form-item`, repeat-index inference from DOM ids, structural disambiguation for generic descriptions, and async exact-option handling for regular and searchable custom selects.
-- Classified Feishu date-range hidden inputs as unsupported so they are skipped instead of receiving a partial string and being reported as filled.
-- Preserved safety boundaries: personal identity fields, files, privacy checkboxes, verification/login controls, and final submission remain outside automated filling.
-- Re-enabled the unpacked extension in the dedicated test Chromium after the final build, with developer mode on; the current build opens as `chrome-extension://agofcemdoimkogeggmdobnhgkpklkfhm/options.html`.
+## 2026-08-13 · M008 complete
 
-### Real-page evidence
+- Changed: `modules/browser-session/browser-session.mjs`, `tests/browser-session.test.mjs`, `tests/fake-browser.mjs`.
+- Behavior: launch now rejects link/reparse endpoint files, probes a recorded port twice before treating it as stale, refuses to clean a live endpoint, and compares the file contents before unlinking so a concurrent browser cannot be clobbered. Reconnect treats a dead endpoint as a relaunch condition while still rejecting a live endpoint that does not match the recorded session.
+- Verification: `node --test tests/browser-session.test.mjs` passed 9/9; `npm run test:core` passed 28/28. The stopped-browser case specifically left a stale `DevToolsActivePort`, relaunched with the same profile identity, obtained a new nonzero CDP port, and reopened the normalized Xiaomi page identity.
+- Next: M009 is `in_progress`; make MCP/ApplicationService startup survive missing or disconnected browser state without relaxing execution safety.
 
-- Unauthenticated visit redirects to `/internship/login`; no login, SMS, CAPTCHA, cookie, or consent bypass was attempted.
-- Logged-in read-only scan found 40 controls: 28 mapped fields with test profile values, 24 high-confidence non-sensitive suggestions, 4 confirmation-required suggestions, and 12 excluded/unmatched controls.
-- Four date ranges were identified as `date-range` and excluded; one personal-certificate field was `sensitive-unsupported`; 14 custom selects were recognized.
-- Both project description controls resolved to `projects.0.description` and `projects.1.description` with high confidence.
-- The real-page smoke scan did not read current input values and did not fill, clear, upload, or submit. Full filling behavior was exercised on the structurally derived local Xiaomi fixture.
+## 2026-08-13 · M009 complete
 
-### Verification evidence
+- Root cause: `ZeroExtensionBrowserKernel` expected `BrowserSessionManager.connection()`, but the production session manager did not implement that contract. Unit tests supplied a fake `connection()` and therefore hid the production-only TypeError. The application service also allowed kernel startup errors to terminate Agent startup.
+- Changed: `modules/browser-session/browser-session.mjs`, `modules/browser-kernel/runtime.mjs`, `modules/application-service/application-service.mjs`, and the corresponding browser-session, kernel, application-service, and MCP tests.
+- Behavior: the connection contract now exposes only a user-confirmed, currently reachable target bound to launch id, CDP port, target id, normalized origin, and path. Offline startup returns one recovery action; inspect/plan/execute fail closed until ready; an application-level disconnect automatically reattaches to a still-live dedicated browser.
+- Verification: browser-session tests passed 10/10; focused application/kernel/MCP tests passed 20/20; `npm run test:core` passed 34/34; `git diff --check` passed. A clean isolated `LOCALAPPDATA` returned `browser.state=stopped`, `errorCode=session_missing`, and `qiuzhao browser launch --url <招聘网页>` with exit code 0. The live Xiaomi session returned `browser.state=ready`; after `browser disconnect`, the next `agent status` automatically restored ready state on the same normalized page identity.
+- Safety: no page write, scalar read, Cookie read, CAPTCHA action, sensitive-field action, or final submit occurred. A selector audit found no company/Feishu-specific selector coupling.
+- Next: M007 is `in_progress`; reproduce the parser failure against the locally encrypted user PDF and fix the production resource/parser path before Xiaomi E3–E5.
 
-- `npm run audit:xiaomi` → exit 0; Xiaomi A96028 schema verified as 9 groups and 34 visible fields with no submission.
-- `npm run validate` → exit 0; TypeScript passed, 10 Vitest files passed, 93 tests passed, production build passed, and permissions remained exactly `activeTab`, `scripting`, `sidePanel`, `storage`.
-- `npm run test:e2e` → exit 0; 7 Playwright tests passed, including Xiaomi custom-select fill and explicit no-submit coverage.
-- `artifacts/xiaomi-form-regression.png` and the refreshed `artifacts/profile-editor.png` were visually inspected.
-- `npm run package` → exit 0; `qiuzhao-profile-assistant.zip` recreated with 36 audited entries and no fixtures, source maps, test output, or persisted personal-data files.
-- `.\init.ps1 -SkipInstall` → exit 0; the long-running harness recovery path reran all 93 tests, the build, and the distribution permission audit.
+## 2026-08-14 · M007 complete
 
-### Handoff
+- Root cause: the standalone browser build could not reliably execute the PDF worker/resource path, and the saved PDF bytes had no server-side parser connected to the encrypted resume repository.
+- Changed: added `gerenxinxi/resume-parser/**`; connected authenticated `POST /api/resume/parse` through profile-host and `SavedResumeRepositoryLike.parseSaved`; made the UI merge only empty fields and preserve every existing non-empty field; bundled Node-side `pdfjs-dist` through a file-backed content-addressed cache.
+- Real PDF private evidence: one user-selected, encrypted local PDF parsed as one page and 1,210 extracted characters, produced 22 populated structured paths, imported 8 empty scalar fields plus 6 repeatable records on first merge, imported 0 on replay, survived a fresh process/repository reload, and auto-imported 0 identity fields. Neither raw text, filename, bytes nor scalar values entered repository evidence.
+- Verification: parser/profile-host/editor targeted tests passed; final `npm run validate` passed with 36/36 core and 188/188 module tests plus production UI build. Public evidence: `artifacts/real-pdf-parse-manifest.json`.
+- Scope: OCR-required/scanned PDFs remain a typed manual case; recruitment-page attachment upload remains confirmation-required.
 
-- F010 is complete. The dedicated Chromium session currently retains the Xiaomi pages and has the final unpacked extension enabled.
-- The remaining site-specific limitation is compound date-range/cascading geographic selection; those controls stay manual until a separately accepted adapter is implemented.
+## 2026-08-14 · M010 complete with E3 review caveat
 
-## 2026-08-04 — F011 resume import (completed)
+- Real target: current logged-in Xiaomi campus recruitment page at normalized `/internship/resume/:id/apply`; no fixture, copied HTML, company template or extension was used.
+- E3: two consecutive read-only observations were stable at 54 raw controls, 45 reachable logical fields, 41 ordinary fields, 4 protected fields and 6 excluded add actions; structure hash `51faffc749c26ee00b4a6358808fef5e2fe6f7b135b74c6df125933d8d2eac64`. This remains a candidate until an independent human freezes it.
+- E4: an origin/profile-version-bound ordinary lease created exactly two unsaved internship records and verified three ordinary text writes through Boolean readback, one attempt each. Two language-select attempts returned typed `option_not_found`; no wrong control was modified. No save, attachment, consent, identity, CAPTCHA or final-submit action was executed.
+- E5: the dedicated browser was stopped and reconnected with the same profile and retained login state. Unsaved DOM records correctly disappeared after restart; the Agent rebuilt exactly two records and the same three populated fields without creating a third record. A final 51-field application audit assigned one terminal conclusion per field: 17 review-required and 34 manual-required; the idempotent pass made 0 writes and preserved the 51-field/8-internship-field counts.
+- Generalization: removed all `.atsx-*`, `.ud-*`, `resumeEditForm`, `createFormSection`, `fixedFeishu`, Feishu driver-hint and company-specific selector dependencies. Repeatable grouping now uses headings, field signatures, ARIA/data attributes and structural ancestry; one nested browser control produces one opaque field ref.
+- Privacy/safety: public evidence contains no values, raw DOM, Cookie, query id or filled-page screenshot. The only screenshot is a crop of consent/final-submit controls proving the safety boundary; both remained untouched. Public evidence: `artifacts/xiaomi-e3-e5-manifest.json` and `artifacts/xiaomi-non-submit-safety-controls.png`.
 
-### Acceptance baseline
+## 2026-08-14 · M011 complete
 
-- Applied the `long-running-agent-harness` workflow and added `F011` before implementation.
-- Confirmed the supplied real Xiaomi application URL still resolves to “投递简历 - 小米实习生招聘” and exposes the expected login boundary; no login or form interaction was attempted.
-- `npm run audit:xiaomi` revalidated the public real-page schema as 9 groups and 34 visible fields with no application submission.
-- The feature will parse user-selected PDF/DOCX files locally and place evidence-backed values directly in the existing profile form. It will not add a second confirmation page, persist the source file/raw text, invent missing data, or silently replace existing non-empty fields.
-- A realistic Chinese campus-recruitment resume and the Xiaomi-derived field inventory define the automated coverage target; live-site validation remains read-only and fill behavior remains on a structurally derived local page.
-
-### Baseline issue
-
-- `powershell -NoProfile -ExecutionPolicy Bypass -File .\\init.ps1 -SkipInstall` reached validation, but the sandboxed Vitest child could not read the repository parent and did not start. The final gate must demonstrate actual Vitest pass counts, not rely only on the wrapper exit code.
-
-### Next action
-
-Implement local PDF/DOCX extraction, deterministic parsing and conflict-safe merging, then connect it to the existing editor before running the F011 verification matrix.
-
-### Completed
-
-- Added a prominent PDF/DOCX upload control to the existing profile editor. The parser runs only after file selection, places results directly in the current form, marks them unsaved, and keeps the original “保存档案” action as the persistence boundary.
-- Added browser-local PDF extraction with a packaged PDF.js worker and DOCX extraction limited to `word/document.xml`; file size, PDF page count, extracted text, and DOCX正文 size have explicit limits.
-- Added deterministic parsing for labelled basic information, multiple education/work/project records, work samples, awards, languages, job preferences, skills/personal strengths, self-introduction, self-evaluation, and career planning.
-- Added conflict-safe merging: blank scalar fields are filled, the blank education placeholder is reused, non-duplicate repeatable records are merged or appended, and different existing non-empty values are preserved and counted in the import summary.
-- Kept identity numbers outside the schema and verified that the source filename, an unmapped raw-text marker, and a sample identity number are absent from persisted storage.
-- Clarified that profile-page resume parsing is separate from recruitment-site file inputs, which remain manual. Updated README and privacy documentation for formats, local processing, persistence boundaries, and scanned-file limitations.
-- Refreshed the production build and `qiuzhao-profile-assistant.zip`.
-
-### Verification evidence
-
-- Live URL through Agent Reach/Jina → “投递简历 - 小米实习生招聘”; unauthenticated content remained at the login boundary, with no login or form interaction.
-- `npm run audit:xiaomi` → exit 0; current public Xiaomi A96028 schema verified as 9 groups and 34 visible fields with no application submission.
-- `npm test -- --run src/resume src/options/ProfileEditor.test.tsx` → exit 0; 3 files and 10 tests passed.
-- `npm run validate` → exit 0; TypeScript passed, 12 Vitest files and 100 tests passed, production build emitted the local PDF worker, and permissions remained exactly `activeTab`, `scripting`, `sidePanel`, `storage`.
-- `npm run test:e2e -- --grep "resume import"` → exit 0; actual generated DOCX and text PDF uploads both passed in Chrome.
-- `npm run test:e2e` → exit 0; 9 Playwright tests passed, including DOCX direct form population, PDF parsing, unchanged no-submit safeguards, and PDF parsing inside the unpacked Manifest V3 extension.
-- DOCX browser assertions proved an existing city was preserved, values were not persisted before explicit save, no external request occurred during parsing, and the saved profile excluded the source filename, identity number, and unmapped raw text.
-- `artifacts/resume-import.png` was captured from the populated existing editor and visually inspected; the upload summary, existing form sections, imported values, and Organic visual system remain legible with no separate result page.
-- `npm run package` → exit 0; validation reran with all 100 tests passing and the ZIP audit passed with 38 entries and no test fixture, source map, or persisted personal-data file.
-- `npm audit --omit=dev --json` → exit 0; production dependency vulnerabilities: 0. Full audit still reports 5 existing development-tool findings in the Vitest/Vite toolchain; upgrading that toolchain is a separate compatibility task and did not block the production feature.
-
-### Changed files
-
-- Resume pipeline: `src/resume/extractResumeText.ts`, `src/resume/parseResume.ts`, their tests, and `src/vite-env.d.ts`.
-- Existing form integration: `src/options/App.tsx`, `src/options/options.css`, and `src/options/ProfileEditor.test.tsx`.
-- Browser evidence: `tests/e2e/resume-import.spec.ts`, `tests/e2e/extension-smoke.spec.ts`, and `artifacts/resume-import.png`.
-- Dependencies/docs/harness: `package.json`, `package-lock.json`, `README.md`, `PRIVACY.md`, `feature_list.json`, and `progress.md`.
+- `npm run validate`: pass in 138.7s; structure 12/12, root extension artifacts 0, TypeScript pass, core 36/36, modules 23 files and 188/188 tests, profile production build pass.
+- MCP: the core suite completed real JSON-RPC initialize/list/call coverage for exactly six closed tools and verified offline discoverability; no authorization, selector, raw CDP, Cookie or submit tool is exposed.
+- Static selector audit: 0 matches for `.atsx-*`, `.ud-*`, `fixedFeishu`, `resumeEditForm`, `formOperate`, `createFormSection`, `feishu-select`, or `feishu-date-range` under production and test TypeScript/JavaScript sources.
+- `git diff --check`: pass apart from informational Windows LF→CRLF notices. Temporary ordinary-field authorization was revoked after evidence collection.
+- Remaining product work is outside this request: independent human freeze of Xiaomi E3, other real ATS pages, OCR for image-only PDFs, packaging/installer and clean-machine release acceptance.
 
 ### Handoff
 
-- F011 is complete and unblocked. Load the refreshed `dist/` or extract the refreshed ZIP to use it.
-- Supported inputs are text-bearing PDF and DOCX files up to 10 MB. Scanned/image-only PDFs, encrypted PDFs, legacy `.doc`, OCR, and semantic/AI parsing remain intentionally out of scope.
-- Next recommended feature: build an opt-in anonymized accuracy corpus and report precision/coverage by resume layout before expanding deterministic rules or deciding whether a local OCR fallback is justified.
+- Changed areas: `modules/browser-session`, `modules/browser-kernel`, `modules/application-service`, `modules/policy-compiler`, `gerenxinxi/resume-parser`, `gerenxinxi/profile-host`, `shared/bridge`, `shared/content`, `shared/matching`, `shared/options`, tests, artifacts and status ledgers.
+- Commands/results: targeted browser/application/MCP/parser/page-driver tests passed; real Xiaomi E3/E4/E5 executed without final submit; `npm run validate` passed 36 core + 188 module tests; selector scan and `git diff --check` passed.
+- Blockers: none for the requested reconnect/offline/PDF/Xiaomi non-submit MVP. Independent human E3 approval remains required before claiming a frozen external ground truth, and other ATS families remain unverified.
+- Recommended next feature: package this exact verified baseline, or run the same E3→E5 queue serially on one additional real ATS page without changing the Xiaomi denominator.
 
-## 2026-08-04 — F012 real-resume work/project parsing (in progress)
+## 2026-08-14 · M012 complete
 
-### Acceptance baseline
+- Goal: fix real Chrome tab takeover when `/json/activate/:id` returns HTTP 200 with plain text instead of JSON.
+- Root cause: `activatePageTarget` reused the strict JSON request helper, so Chrome's successful `Target activated` response was incorrectly reported as `cdp_invalid_json` before the selected session could be updated.
+- Changed files: `modules/browser-session/cdp.mjs`, `modules/browser-session/browser-session.mjs`, `tests/fake-browser.mjs`, `tests/browser-session.test.mjs`, `feature_list.json`, and `progress.md`.
+- Behavior: the activation endpoint now accepts any HTTP 200 body while all JSON-bearing CDP endpoints remain strict. After activation, the current target list is read again and a missing target fails closed as `target_tab_not_found` before session selection changes.
+- Verification: targeted text/empty/disappearing-target tests passed 2/2; the complete browser-session suite passed 11/11; `npm run validate` passed structure 12/12, TypeScript, core 37/37, modules 188/188, and the production profile UI build.
+- Real-page evidence: the existing user-opened `https://job.ctrip.com/#/experienced/jobList` tab in the dedicated Chrome profile changed from unselected to `user-opened`, then `confirm-ready` returned `ready` on the same normalized origin/path. No form inventory, page value, Cookie, credential, write, upload, verification, or submission action occurred.
+- Privacy: no target ID, raw URL query, authentication material, page value, or screenshot was written to the repository.
+- Blockers: none for binding the current Ctrip tab. Ctrip field inventory and E3–E5 non-submit acceptance remain separate, user-authorized work.
+- Recommended next feature: perform a read-only Ctrip application-page inventory after the user navigates from the job list to an actual resume/application form; do not treat the job-list binding as site-fill verification.
 
-- Applied the `long-running-agent-harness` workflow and created `F012` before changing parser behavior.
-- `powershell -NoProfile -ExecutionPolicy Bypass -File .\\init.ps1 -SkipInstall` → exit 0; baseline TypeScript, 12 Vitest files/100 tests, production build, and least-privilege permission audit passed.
-- The Downloads folder contains 80 PDF/DOCX files; filename filtering for resume/CV terms identifies exactly 5 PDF samples. They will be referenced only by short SHA-256 content digest (`4FFDB2FC`, `5A12C901`, `E5A6ADD6`, `BC238C94`, `06B46FDE`).
-- The five source files remain in Downloads and will not be copied, renamed, edited, persisted by the extension, or added to tests/artifacts. Diagnostic output must contain counts and structural signals rather than personal field values.
-- Completion requires real-sample expected-versus-actual work/project counts plus anonymized regression fixtures for each distinct failed layout.
+## 2026-08-14 · M013 complete
 
-### Next action
-
-Run a local browser audit over the five digest-identified files, inspect only the extracted section structure needed to diagnose missed records, and record a privacy-safe baseline before implementation.
-
-### Completed
-
-- Audited all five Downloads PDFs by short SHA-256 digest only. Source files stayed in Downloads; filenames, raw resume text, and personal field values were never added to the repository or persistent browser storage. The temporary digest-named page renders and the local-only diagnostic spec were removed after verification.
-- Replaced PDF content-stream ordering with coordinate-based row reconstruction, including cross-column splitting and date-aware joining of right-aligned dates to their organization/title row.
-- Added packaged PDF.js CMaps and standard fonts. This fixed two PDFs whose visible Chinese text had previously been exposed by the PDF text layer as unrelated Latin glyphs.
-- Added a packaged, network-free Chinese OCR fallback for abnormal Latin-only text layers, with an 8-page bound, a production CSP that permits local WASM, and an end-to-end local OCR smoke test. Pure image-only scans remain unsupported.
-- Hardened deterministic section recognition for spaced/inline headings, research/project aliases, combined research-and-internship headings, competition/award boundaries, and campus-activity boundaries.
-- Hardened work parsing for split date/organization/role rows and organizations without a legal-company suffix. Hardened project parsing for dated research, undated papers, paper prefixes, and undated bullet-list projects.
-- Prevented competition awards, campus activities, and neighboring skill/self-evaluation prose from leaking into project records.
-- Added anonymized synthetic regression fixtures only; no real resume data is present in source tests or artifacts.
-- Updated README and privacy documentation for local font resources, local OCR fallback, unchanged explicit-save behavior, and unsupported scan-only files.
-
-### Real-sample evidence
-
-- Initial parser result for every digest was `work=0, projects=0`.
-- Manual visual baseline and final parser result matched exactly: `4FFDB2FC` → `work=0, projects=1`; `5A12C901` → `1/2`; `E5A6ADD6` → `1/5`; `06B46FDE` → `4/4`; `BC238C94` → `0/2`.
-- The final privacy-safe browser audit additionally required every parsed work record to have an evidence-backed organization, start date, and description, and every project record to have a name and description. All five samples passed.
-- Competition sections remained awards, and the dated campus-activity entry in `06B46FDE` did not become a fifth project.
-
-### Verification evidence
-
-- `npm test -- --run src/resume` → exit 0; 2 files and 10 tests passed, including PDF coordinate reconstruction and anonymized work/project layout regressions.
-- Privacy-safe five-PDF Playwright audit → exit 0; expected-versus-actual work/project counts matched all five digests and record-shape assertions passed.
-- `npx playwright test tests/e2e/resume-import.spec.ts --reporter=line` → exit 0; 3 tests passed for DOCX import, PDF import, and network-free local Chinese OCR.
-- `npm run validate` → exit 0; TypeScript passed, 12 Vitest files and 104 tests passed, production build succeeded, 11 required distribution assets were verified, and permissions remained exactly `activeTab`, `scripting`, `sidePanel`, `storage`.
-- `npm run test:e2e` → exit 0; all 10 Playwright tests passed, including unpacked-extension PDF import, explicit-save behavior, unchanged no-submit coverage, and local OCR without external requests.
-- `artifacts/resume-import.png` was refreshed by the passing browser flow and remains the current user-visible milestone screenshot.
-- `npm audit --omit=dev --json` → exit 0; production dependency vulnerabilities: 0.
-- `npm run package` → exit 0; `qiuzhao-profile-assistant.zip` was recreated and verified with 227 entries, including local PDF/OCR assets and no test fixture, source map, or persisted personal-data file.
-
-### Changed files
-
-- Parsing/extraction: `src/resume/extractResumeText.ts`, `src/resume/parseResume.ts`, and their tests.
-- UI/browser verification: `src/options/App.tsx`, `tests/e2e/resume-import.spec.ts`, and `artifacts/resume-import.png`.
-- Local runtime assets/build: `package.json`, `package-lock.json`, `public/manifest.json`, `scripts/build.mjs`, and `scripts/verify-dist.mjs`.
-- Documentation/harness: `README.md`, `PRIVACY.md`, `feature_list.json`, and `progress.md`.
+- Goal: let the existing ordinary filling workflow upload the one encrypted default PDF saved by the personal-information module, without a second per-job or per-upload confirmation and without exposing arbitrary file access to AI/MCP.
+- Implementation: added `modules/resume-asset` as the only encrypted-resume bridge; extended the existing planner decision, deterministic compiler, ApplicationService and browser kernel with `upload_default_resume` / `upload_saved_resume`; kept the MCP surface at exactly six tools and accepted no path, filename, bytes, selector, script or caller-supplied value. PDF signature, size, MIME and SHA-256 are rechecked before a short-lived private materialization. Identity, photo, transcript, portfolio/works and multiple/ambiguous attachment controls fail closed.
+- Real Ctrip evidence: the logged-in `job.ctrip.com` resume editor exposed 44 privacy-safe fields and 2 attachment controls before upload. Structural container text identified exactly 1 empty resume control; the work-sample attachment remained read-only. The compiled AI-first plan contained 44/44 decisions, exactly 1 executable upload, `plannerSource=ai`, and `legacyFieldTemplateEnabled=false`.
+- Live outcome and recovery: CDP delivered the local default PDF and Ctrip changed from the 44-field editor to a 57-field parse/edit state containing the resume update workflow. The first local result honestly returned `resume_cleanup_failed` because Chrome temporarily held the plaintext file; final-submit, Cookie and credential-read counters stayed 0. The fix added bounded Windows sharing retries and verified stale-orphan cleanup; the one real orphan was removed and the temporary-directory count returned to 0. A fresh Agent process then read the resume control as `hasValue=true`, `capability=read_only`, with 0 executable resume controls, while the second attachment remained empty/read-only. No update/save/final-application control was clicked, and no duplicate upload occurred.
+- Verification: targeted resume-asset/kernel/ApplicationService tests passed 27/27; planner/compiler/page-state tests passed 56/56. The final serialized targeted-plus-`npm run validate` command exited 0 in 137.2s: structure 12/12, TypeScript pass, core 47/47, module suite 23 files and 191/191 tests, and the production profile UI build. The tests cover missing/corrupt/non-PDF state, arbitrary-path rejection by closed schemas, ambiguous/protected attachments, Boolean-only verification, idempotency, accurate cleanup-failure attempt counts, Windows cleanup and recent-concurrent-directory preservation.
+- Changed for M013: `modules/resume-asset/**`, `modules/application-service/{application-service,runtime-factory}.mjs`, `modules/browser-kernel/runtime.mjs`, `modules/mcp-server/tool-registry.mjs`, `modules/semantic-planner/**`, `modules/policy-compiler/**`, `shared/bridge/pageState{,.test}.ts`, `tests/{default-resume-asset,browser-kernel,application-service}.test.mjs`, the profile-service policy integration test, `artifacts/ctrip-default-resume-upload-manifest.json`, and status ledgers. Prior uncommitted M012 browser-session changes remain in the worktree and were not folded into this feature's behavior claim.
+- Privacy/safety: no page scalar value, raw DOM, PDF bytes, filename, local path, query identifier, Cookie, credential or filled-page screenshot was written to the repository. The existing origin/profile-version/TTL ordinary lease is reused; there is no attachment-specific confirmation. Authorization was revoked after the run.
+- Scope boundary: this proves the default-resume upload slice on the retained real Ctrip page, not full Ctrip field compatibility or an independently frozen Ctrip E3 denominator. Ctrip parsed the upload into its edit/update UI; persisting that parsed profile would require a separate save action, which was intentionally not executed.
+- Recommended next feature: independently freeze the complete Ctrip resume-editor field denominator, then validate its ordinary fields without changing the verified attachment policy.
 
 ### Handoff
 
-- F012 is complete with no known blocker. Load the refreshed `dist/` directory or use the refreshed `qiuzhao-profile-assistant.zip`.
-- The five local resumes now meet their manually verified internship/project counts. Imported values still appear as unsaved form edits for user review; identity numbers stay outside the profile model, and website passwords/Cookies, CAPTCHA bypass, and final submission remain out of scope.
-- Next recommended feature: if scan-only resume support is desired, add an explicit user-visible OCR progress/cancel flow and a synthetic image-only PDF acceptance corpus before expanding the current abnormal-text-layer fallback.
-
-## 2026-08-04 — F013 field-level resume completeness and form placement (completed)
-
-### Acceptance baseline
-
-- The user rejected count-only acceptance: returning the right number of projects or internships does not prove that each record is complete or placed in the correct information-table fields.
-- `powershell -NoProfile -ExecutionPolicy Bypass -File .\init.ps1 -SkipInstall` → exit 0; baseline TypeScript, 12 Vitest files/104 tests, production build, bundled PDF/OCR assets, and least-privilege permission audit passed.
-- F013 requires a field-by-field visual inventory for the five digest-identified PDFs, parser/merge coverage, and actual browser-form assertions for corresponding labelled controls.
-- Real filenames, raw text, personal values, and source files remain outside the repository. Audit evidence will use digests, field-presence matrices, normalized equality checks, and aggregate coverage.
-
-### Next action
-
-Run a local field-level audit over the five PDFs to identify missing dates, roles, descriptions, polluted values, and mismatches between parsed profile paths and the existing editor controls before changing parser behavior.
-
-### Completed
-
-- Visually reviewed all nine pages from the five digest-identified local PDFs and defined a field-by-field expected inventory for every visibly present value supported by the profile schema.
-- Corrected deterministic extraction and parsing defects covering Unicode compatibility glyphs, spaced Chinese dates, split degree/major metadata, misplaced GPA/ranking, project roles/outcomes, award row reconstruction/grouping, and Latin-name spacing.
-- Extended the real upload flow to verify two education, two work, and two project repeat records against their exact labelled controls, including ordering, dates, descriptions, outcome, unsaved state, explicit save, and storage privacy.
-- Added `docs/resume-field-coverage-audit.md` as a privacy-safe durable record. It contains only short digests, aggregate counts, structural conclusions, and evidence-bound exclusions; no filenames, raw text, rendered pages, or personal values were committed.
-
-### Real-sample field evidence
-
-- `4FFDB2FC`: 17 expected / 17 parsed / 17 preserved after merge / 17 placed in the labelled UI control / 0 missing / 0 leakage; 2 education, 0 work, 1 project, 1 award.
-- `5A12C901`: 32 / 32 / 32 / 32 / 0 / 0; 2 education, 1 work, 2 projects, 3 awards.
-- `E5A6ADD6`: 44 / 44 / 44 / 44 / 0 / 0; 1 education, 1 work, 5 projects, 6 awards.
-- `06B46FDE`: 56 / 56 / 56 / 56 / 0 / 0; 2 education, 4 work, 4 projects, 2 awards.
-- `BC238C94`: 30 / 30 / 30 / 30 / 0 / 0; 2 education, 0 work, 2 projects, 5 awards.
-- Aggregate coverage: 179 expected supported fields / 179 parsed / 179 preserved after merge / 179 placed in exact labelled controls, with 0 missing fields and 0 neighboring-section leakage in the final audit.
-- Evidence-bound blanks remain intentional: year-month-only birth values do not invent a day, `至今`/`现在` does not invent an end month, and CET scores do not fabricate conversational proficiency.
-
-### Verification evidence
-
-- `npm test -- --run src/resume src/options/ProfileEditor.test.tsx` → exit 0; 3 files and 18 tests passed.
-- Privacy-safe five-PDF browser audit → exit 0; every populated parser path matched its exact labelled editor control: `06B46FDE` 56/56, `4FFDB2FC` 17/17, `5A12C901` 32/32, `BC238C94` 30/30, and `E5A6ADD6` 44/44. Aggregate expected/parsed/merged/UI coverage is 179/179/179/179 with leakage 0. The audit-only spec was removed afterward so local paths cannot enter the repository or package.
-- `npm run validate` → exit 0; typecheck passed, 12 Vitest files and 108 tests passed, 1,624 modules built, and the 11-file extension distribution passed the permission/security audit.
-- `npm run test:e2e` → exit 0; all 10 Playwright tests passed, including actual DOCX/PDF uploads, OCR, explicit-save behavior, no external requests, privacy storage checks, supported-site filling, and no final submission.
-- `artifacts/resume-import.png` was refreshed by the passing multi-record browser flow and visually inspected; the existing Organic editor shows the repeated education, work, and project fields populated in order.
-- `npm run package` → exit 0; `qiuzhao-profile-assistant.zip` was recreated with 227 audited entries and no fixture, source map, or persisted personal-data file.
-
-### Changed files
-
-- Resume extraction/parsing: `src/resume/extractResumeText.ts`, `src/resume/parseResume.ts`, and their tests.
-- Profile placement verification: `src/options/App.tsx`, `src/options/ProfileEditor.test.tsx`, and `tests/e2e/resume-import.spec.ts`.
-- Evidence and release: `docs/resume-field-coverage-audit.md`, `artifacts/resume-import.png`, `dist/`, `feature_list.json`, `progress.md`, and `qiuzhao-profile-assistant.zip`.
-
-### Handoff
-
-- F013 is complete with no product blocker. The five audited resumes now meet field-level completeness and destination-control placement acceptance, rather than count-only acceptance.
-- Imported values remain editable and unsaved until explicit confirmation. Identity numbers, passwords/Cookies, verification bypass, and final submission remain outside the product behavior.
-- Rendered audit pages were written only to `%TEMP%\qiuzhao-field-audit-*` for visual inspection. Repository/package checks confirm they are not included; this session's shell policy blocked recursive temporary-folder cleanup, so those system-temp folders may be removed manually if desired.
-- Next recommended feature: add visible OCR progress/cancel behavior and a synthetic image-only PDF corpus before broadening OCR fallback conditions.
-
-## 2026-08-04 — F014 Agent Reach/OpenCLI real-page acceptance (in progress)
-
-### Acceptance baseline
-
-- Applied the user-requested `long-running-agent-harness` workflow and added F014 before implementation.
-- Used Agent Reach's GitHub/web routing guidance to verify the current OpenCLI architecture: OpenCLI plugins may expose read/write browser commands, while the Browser Bridge uses a separate Chrome extension and localhost daemon to bind a concrete logged-in tab.
-- `powershell -NoProfile -ExecutionPolicy Bypass -File .\init.ps1 -SkipInstall` → exit 0; 12 Vitest files/108 tests passed, the production build succeeded, and required permissions remained exactly `activeTab`, `scripting`, `sidePanel`, `storage`.
-- `npm run audit:xiaomi` → exit 0; the live public Xiaomi A96028 source still exposes 9 groups and 34 visible fields, and the audit made no application submission.
-- Safe local preflight found OpenCLI `1.8.4`, no `agent-reach` CLI, no installed OpenCLI Browser Bridge extension copy in Chrome/Edge profiles, no responding daemon at `127.0.0.1:19825`, and no live extension connection. The check did not start the daemon, install anything, or read cookies/browser data.
-- The validation contract distinguishes four evidence tiers: live public schema, authenticated real-tab read-only scan, user-confirmed real-tab selective fill, and Xiaomi-derived local regression. F014 cannot be marked done from a fixture or public schema alone.
-- Real write evidence must remain non-submitting: only opaque IDs from the latest scan may be filled after action-time user confirmation; files, credentials, verification, CAPTCHA, identity numbers, arbitrary selectors/values, and final submission remain unavailable.
-
-### Current blocker and next action
-
-- A live bound-tab scan/fill cannot run until the separately permissioned OpenCLI Browser Bridge is installed and connected. Installing a browser extension requires explicit user confirmation and is not implied by creating the validation harness.
-- Next implement the read-only preflight command and the capability/session contract with deterministic tests, then run the local agent-bridge E2E flow. After that, request confirmation to install/enable the OpenCLI Bridge for the authenticated real-page gate.
-
-### Implementation started
-
-- Added `docs/agent-opencli-real-page-validation.md` with four non-interchangeable evidence tiers: live public schema, authenticated real-tab read-only scan, user-confirmed real-tab selective fill, and the Xiaomi-derived local regression.
-- Added `npm run audit:agent-bridge`. The preflight observes the OpenCLI CLI, Browser Bridge files, existing daemon status, exact Xiaomi URL eligibility, and the extension permission boundary without starting a daemon, installing software, reading cookies/page values, or mutating browser profiles.
-- Added an agent protocol that exposes only `status`, `scan`, `preview`, and selective `fill`; it contains no arbitrary selector/value, upload, password, verification, CAPTCHA, cookie, identity-number, privacy-consent, or submit command.
-- Added the in-memory `AgentSessionGuard`: a 256-bit capability, explicit-user-gesture creation, exact HTTPS page/tab binding, ten-minute maximum lifetime, one-time request IDs, latest-scan binding, and one-minute single-use fill approvals whose opaque suggestion-ID set must exactly match the user's selection.
-- Added `AgentBridgeController`, which reuses the existing deterministic `scanPage`/`fillPage` engine, strips profile value previews from agent-visible results, maps fillable proposals to opaque IDs, rechecks the current page, and cannot expand a user-approved selection.
-- The first full validation exposed test DOM leakage from the new controller fixture into `ProfileEditor.test.tsx`; the fixture now clears its manually created DOM after every test. This was a test-isolation defect introduced by F014, not a product regression.
-
-### Verification evidence
-
-- `npm test -- --run src/agent` → exit 0; 2 files and 8 tests passed. Coverage includes required user gesture, HTTPS/exact-page/tab binding, expiry, replay rejection, scan invalidation, exact one-time approval, value-redacted preview, selective fill, no verification fill, and no submit.
-- `npm run audit:agent-bridge -- --url <audited Xiaomi URL>` → exit 0 with status `blocked`; OpenCLI `1.8.4` and the exact eligible Xiaomi URL were detected, the required permission boundary remained unchanged, and only the absent Bridge/daemon/connection were blockers.
-- `npm run audit:agent-bridge -- --url <audited Xiaomi URL> --require-ready` → expected exit 1 with blockers `opencli-browser-bridge-not-installed`, `opencli-daemon-not-running`, and `opencli-extension-not-connected`. The real-page gate therefore fails closed.
-- Final `npm run validate` → exit 0; 14 Vitest files and 116 tests passed, production build succeeded, and required permissions remained exactly `activeTab`, `scripting`, `sidePanel`, `storage` with no host permission.
-- Audited the official OpenCLI `v1.8.6` release without installing it. Asset `opencli-extension-v1.0.22.zip` matched published SHA-256 `9d2e3d053948beab5d97124aa79b1532d2122e33e461eca56cac113afd33207a`.
-- The audited OpenCLI Bridge requests `debugger`, `tabs`, `cookies`, `activeTab`, `alarms`, `storage`, `tabGroups`, `downloads`, and `<all_urls>`. These broad permissions remain isolated in the optional companion and are not added to the recruitment extension.
-
-### Changed files and handoff
-
-- Harness/evidence: `feature_list.json`, `progress.md`, `docs/agent-opencli-real-page-validation.md`, and `package.json`.
-- Preflight: `scripts/audit-agent-bridge.mjs`.
-- Agent contract: `src/agent/protocol.ts`, `src/agent/session.ts`, `src/agent/controller.ts`, and their tests.
-- F014 remains `in_progress`. No browser extension was installed, no daemon was started, no logged-in page was read, and no form value was transmitted.
-- Next action requires explicit user approval to install the audited OpenCLI Browser Bridge. After installation, run `opencli doctor`, the `--require-ready` preflight, bind the exact authenticated Xiaomi tab, and proceed first with read-only status/scan/preview. Selective filling still requires a separate action-time confirmation.
-
-## 2026-08-05 - F014 live Xiaomi connection resumed (in progress)
-
-### Recovery and pre-install evidence
-
-- Re-read `feature_list.json`, `progress.md`, and the applicable long-running harness and Agent Reach guidance before acting.
-- `powershell -NoProfile -ExecutionPolicy Bypass -File .\init.ps1 -SkipInstall` -> exit 0; 14 Vitest files/116 tests passed, the production build succeeded, and the extension permissions remained exactly `activeTab`, `scripting`, `sidePanel`, `storage`.
-- Agent Reach's GitHub CLI route confirmed that official OpenCLI `v1.8.6` and Browser Bridge `v1.0.22` are still current on 2026-08-05.
-- Updated the separately installed global OpenCLI CLI from `1.8.4` to `1.8.6`.
-- Downloaded the official Browser Bridge archive to a temporary path, verified SHA-256 `9d2e3d053948beab5d97124aa79b1532d2122e33e461eca56cac113afd33207a`, and extracted it under `%USERPROFILE%\.opencli\browser-bridge\1.0.22`. The Bridge has not yet been loaded into Chrome.
-- The safe preflight still reports `blocked`: no installed Bridge profile copy, no daemon response, and no extension connection. It did not read cookies/page values or mutate the Xiaomi page.
-- Windows target discovery returned exactly one Chrome window: `算法实习生 - 小米实习生招聘 - Google Chrome`.
-
-### Handoff
-
-- F014 remains `in_progress`. The next UI action is installing/loading the Browser Bridge, which requires an immediate user confirmation because it grants broad browser permissions including `debugger`, `cookies`, and `<all_urls>`.
-- After confirmation: load the verified unpacked Bridge, run `opencli doctor`, bind only the current Xiaomi tab, perform a read-only scan/preview comparison, and request a separate action-time confirmation before transmitting any selected profile values. Never invoke final submission.
-
-## 2026-08-05 - F014 live Xiaomi activeTab repair (in progress)
-
-### Live connection and diagnosis
-
-- `powershell -NoProfile -ExecutionPolicy Bypass -File .\init.ps1 -SkipInstall` -> exit 0; 14 Vitest files/116 tests passed, the production build succeeded, and required permissions remained exactly `activeTab`, `scripting`, `sidePanel`, `storage`.
-- OpenCLI `1.8.6` and Browser Bridge `1.0.22` connected successfully. A `qiuzhao` session opened the exact audited Xiaomi application URL and verified the title `投递简历 - 小米实习生招聘` without submitting or filling.
-- The assistant side panel could open, but `chrome.scripting.executeScript` failed with `Cannot access contents of the page. Extension manifest must request permission to access the respective host.` The same result persisted after stopping the OpenCLI daemon and cancelling its Chrome Debugger attachment, so the failure was not caused by the OpenCLI lease.
-- Root cause: the prior `chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true })` path opened the side panel without delivering a usable one-time `activeTab` grant to its scan call in this Chrome build.
-
-### Repair and verification
-
-- Replaced automatic side-panel opening with an explicit `chrome.action.onClicked` handler that opens the panel for the clicked tab. This keeps the open call inside the real user gesture and adds no host permission.
-- Added the underlying browser error to the existing safe scan-failure guidance so future permission failures remain diagnosable without exposing page values.
-- Added `src/background/index.test.ts` to prove automatic panel opening stays disabled, the clicked tab ID is used, and missing tab IDs do not open a panel.
-- `npm test -- --run src/background` -> exit 0; 1 file and 1 test passed.
-- Final `npm run validate` -> exit 0; TypeScript passed, 15 Vitest files/117 tests passed, the production build succeeded, and required permissions remained exactly `activeTab`, `scripting`, `sidePanel`, `storage`.
-- Reloaded the repaired unpacked assistant in Chrome and restored the exact audited Xiaomi URL. OpenCLI daemon is intentionally stopped and the debugger attachment is cancelled until the next real user click grants `activeTab`.
-
-### Changed files and handoff
-
-- Changed `src/background/index.ts`, added `src/background/index.test.ts`, updated `src/sidepanel/App.tsx`, rebuilt `dist/`, and appended this handoff to `progress.md`.
-- F014 remains `in_progress`. No form field, privacy control, upload, verification input, or submit control was changed.
-- Next action: the user must physically click the pinned `秋招填表助手` icon on the restored Xiaomi page and click `扫描当前页面`. After a successful preview, restart/rebind OpenCLI, record redacted scan evidence, and request a separate action-time confirmation before filling the default-safe selection only.
-
-## 2026-08-05 - Long-running all-field and PDF workflow initialized
-
-### Plan audit
-
-- Applied the user-requested `long-running-agent-harness` workflow and reviewed the existing schema, matcher, content engine, side panel, resume parser, real-page evidence, privacy documentation, package scripts, `feature_list.json`, and this progress log.
-- The requested direction is reasonable after narrowing “all information” to all evidence-backed, technically fillable, permitted fields. Passwords, verification/CAPTCHA, identity numbers, privacy consent, authentication data, and final submission remain permanently outside automation.
-- Resume parsing into the structured profile already exists. Attaching a resume PDF to a recruitment page is a separate high-impact action because some sites transmit immediately when a file is selected; it therefore requires a dedicated threat model, an exact file digest, a page-bound single-use approval, and no generic upload command.
-- Split the long-running objective into F015 through F022: redacted page/profile comparison, traceable field coverage, repeatable-row creation, complex controls, attachment architecture, guarded PDF attachment, privacy-safe repair feedback, and multi-site acceptance/package.
-
-### Status and baseline
-
-- F014 is now `blocked`, not failed: the activeTab repair and local validation are complete, but the real Xiaomi gate still requires a post-reload physical toolbar click, read-only scan, and separately confirmed selective fill.
-- F015 is `in_progress` and deliberately does not depend on F014, so deterministic comparison work can proceed on local fixtures without weakening real-page evidence requirements.
-- `powershell -NoProfile -ExecutionPolicy Bypass -File .\init.ps1 -SkipInstall` -> exit 0; TypeScript passed, 15 Vitest files/117 tests passed, the production build succeeded, and permissions remained exactly `activeTab`, `scripting`, `sidePanel`, `storage`.
-
-### Next implementation slice
-
-- Add a field-aware comparison status (`empty`, `equal`, `conflict`, `unreadable`) computed inside the content script.
-- Do not return or persist the raw current webpage value; only the status may cross into the side panel or agent preview.
-- Default-select only empty, high-confidence, non-sensitive fields; equal fields are skipped and conflicts require explicit approval plus live revalidation.
-
-## 2026-08-05 - F015 privacy-safe page/profile comparison complete
-
-### Implementation
-
-- Added deterministic, field-aware comparison for mapped controls: `empty`, `equal`, `conflict`, and `unreadable`. Email comparison is case-insensitive, phone comparison ignores formatting, date-like fields compare normalized digits, and other fields use the existing deterministic text normalizer.
-- Kept raw current webpage values inside `src/content/engine.ts`. Scan results, the side panel, the agent protocol, tests, and screenshots receive only the comparison status and, for conflicts, an opaque in-memory token with no page value embedded in it.
-- Added exact conflict approval semantics. The side panel and agent bridge can return the opaque token only for a conflict explicitly selected from the latest scan. `fillPage` rereads the control immediately before writing and refuses missing, stale, newly introduced, or changed conflicts with `conflict-requires-rescan`.
-- Changed safe defaults so only empty, high-confidence, non-sensitive proposals are preselected. Equal fields are grouped as already consistent and skipped; conflicts and unreadable/ambiguous fields are not selected by default.
-- Password, verification/CAPTCHA, identity-sensitive, privacy-consent, file, and submit controls remain excluded. No submission path was added.
-
-### Verification evidence
-
-- `npm test -- --run src/content src/sidepanel src/agent` -> exit 0; 4 files and 19 tests passed at the targeted checkpoint.
-- `npm run typecheck` -> exit 0.
-- `npm run test:e2e -- --grep "page comparison"` -> exit 0; 2 tests passed. The fixture proved raw conflict text was absent from serialized scan output, equal values were skipped, empty values filled, and a post-scan conflict change was refused.
-- Inspected `artifacts/page-comparison.png` (68,755 bytes, generated 2026-08-05 11:26 local time). It visibly separates webpage-empty, conflict, and already-consistent groups, with the conflict unselected until the test's explicit check and no submit control/action.
-- Final `npm run validate` -> exit 0; TypeScript passed, 15 Vitest files/119 tests passed, production build succeeded, 11 required distribution files were verified, and permissions remained exactly `activeTab`, `scripting`, `sidePanel`, `storage`.
-- Final `npm run test:e2e` -> exit 0; 11/11 tests passed, including the unpacked extension smoke test, fixture comparison, side-panel comparison, Xiaomi-derived non-submitting regression, local PDF/DOCX import, and local OCR.
-
-### Changed files and handoff
-
-- Comparison and guarded filling: `src/content/engine.ts`, `src/content/engine.test.ts`.
-- User/agent surfaces: `src/sidepanel/App.tsx`, `src/sidepanel/sidepanel.css`, `src/sidepanel/pageBridge.ts`, `src/sidepanel/SidePanel.test.tsx`, `src/agent/protocol.ts`, `src/agent/controller.ts`.
-- Page-level acceptance: `tests/e2e/fill-fixture.spec.ts`, `tests/e2e/sidepanel-preview.spec.ts`, `artifacts/page-comparison.png`.
-- Harness state: `feature_list.json`, `progress.md`.
-- The workspace is intentionally not a Git repository, so Git status/diff evidence is unavailable; no commit or push was attempted.
-- Next recommended feature is F016. It should inventory the union of profile, resume-parser, and audited-page fields before any schema expansion. F019/F020 remain the separate threat-model and guarded implementation work for attaching a user-selected PDF; generic file upload remains unavailable.
-
-## 2026-08-05 - F016 all-source coverage matrix complete
-
-### Implementation and live evidence
-
-- Added `docs/field-coverage-matrix.md`, covering 45 persisted profile leaves plus `derived.age`, their profile/resume/Xiaomi evidence, sensitivity, control kinds, comparison normalization, support state, and explicit unsupported reasons for attachments, identity, verification, privacy consent, recommendation source, and final submission.
-- Added `src/matching/catalog-coverage.test.ts`. It proves the canonical catalog contains every supported path exactly once, every entry has aliases and control kinds, the six confirmation-required paths are complete, and all 46 paths use deterministic comparison normalization.
-- Added missing deterministic matcher cases for work start/end dates and award descriptions. Exported the existing comparison normalizer for direct contract tests without changing runtime behavior.
-- Added the privacy-safe `npm run audit:repeatable-page` harness. On Windows it invokes the resolved OpenCLI Node entry point without shell re-tokenization, enforces an exact origin/path prefix, redacts record IDs and query values, and emits no current form values.
-- The bound Xiaomi page at `/internship/resume/:id/apply` was audited read-only. Current structural rows were education 2, internship 1, project 2, language 2, works 0, and awards 0. Every group had exactly one unique, enabled section-local add target after DOM-node deduplication: non-empty groups used `.formOperate-addBtn`; empty groups used `.createFormSection-addBtn`.
-- The live site now exposes repeatable paths through `data-cy` aliases such as `education[0]` instead of only the older `data-form-field-name`/`education_list[0]` contract. The audit supports both forms. It did not read input/textarea values and did not click, fill, delete, upload, navigate, or submit.
-
-### Verification evidence
-
-- `npm test -- --run src/matching/catalog-coverage.test.ts src/matching/matcher.test.ts` -> exit 0; 2 files and 113 tests passed.
-- `npm run audit:repeatable-page -- --session qiuzhao-audit --expected-origin https://xiaomi.jobs.f.mioffice.cn --expected-path-prefix /internship/resume/` -> exit 0 after the final deduplicated audit; six repeatable groups were found, each with one add candidate, and all safety mutation flags were false.
-- `npm test -- --run src/domain src/matching src/options src/resume` -> exit 0; 7 files and 141 tests passed.
-- `npm run audit:xiaomi` -> exit 0; 9 groups and 34 visible fields verified, with no application submission.
-- `docs/field-coverage-matrix.md` UTF-8 audit -> 0 replacement characters; the live-evidence and F017 safety-protocol sections were present.
-- Final `npm run validate` -> exit 0; TypeScript passed, 16 Vitest files and 171 tests passed, production build succeeded, 11 required distribution files were verified, and permissions remained exactly `activeTab`, `scripting`, `sidePanel`, `storage`.
-
-### Changed files and handoff
-
-- Harness/state: `feature_list.json`, `progress.md`, `package.json`, `scripts/audit-live-repeatable-page.mjs`.
-- Coverage and tests: `docs/field-coverage-matrix.md`, `src/matching/catalog-coverage.test.ts`, `src/matching/matcher.test.ts`, `src/content/engine.ts`.
-- F016 is `done`; F017 is now `in_progress`. Implement one verified section-local row increment at a time against local fixtures, rescan after every structural mutation, stop on any fingerprint/count drift, never use a generic text-button click, and never click a real-page add or submit control during development.
-
-## 2026-08-05 - F017 missing repeatable records complete
-
-### Implementation
-
-- Added `src/content/repeatableRecords.ts` with a closed six-group contract for education, internships, work samples, projects, awards, and languages. Callers can pass only a group key and the current profile; they cannot pass selectors, button text, values, or requested counts.
-- The Xiaomi adapter is enabled only for the exact production origin/path shape or an explicitly marked loopback fixture. It supports both audited static paths such as `project_list[0]` and current live `data-cy` paths such as `project[0]`.
-- Profile counts include only records with at least one non-empty business field. Page counts use distinct structural array indexes and never read input or textarea values.
-- Creation is bounded to ten rows per group action. It clicks only a unique enabled `.formOperate-addBtn` or `.createFormSection-addBtn` inside the fixed section class, checks an internal fingerprint, performs one click, waits for mutation, and rescans before another click.
-- Each successful increment requires an unchanged URL, no removed indexes, exactly one new index, and row count exactly +1. The operation stops on ambiguity, disabled/missing controls, navigation, timeout, unexpected row changes, or add-control fingerprint change. It never deletes, reorders, uploads, or submits.
-- Added the `CREATE_REPEATABLE_RECORDS` content message and a bounded `PageBridge` method; the agent protocol still has no arbitrary click or repeatable-row command.
-- `scanPage` now returns the privacy-safe repeatable plan. The side panel shows each missing group with profile/page/missing counts and requires an explicit per-group “创建并重扫” action; after creation it rescans and regenerates normal field proposals before filling.
-- Added the Organic-styled `repeatable-fixture.html` and its Xiaomi-shaped dynamic form harness. The regression created 8 rows across the six group types, then filled the newly available fields while keeping delete and submit counters at zero.
-
-### Verification evidence
-
-- `npm test -- --run src/content/repeatableRecords.test.ts` -> exit 0; 7 tests passed. Cases cover count comparison, one-row rescans, empty-to-populated fingerprint change, ambiguous controls, +2 structural drift, the ten-row cap, and site fail-closed behavior.
-- `npm test -- --run src/content src/sidepanel` -> exit 0; 4 files and 19 tests passed, including the explicit side-panel group action and post-create rescan.
-- `npm test -- --run src/content src/matching` -> exit 0; 5 files and 131 tests passed.
-- `npm run test:e2e -- --grep "repeatable records"` -> exit 0; 1 test passed. Projects grew from 1 to 3 in one stable-fingerprint action; an empty internship group created 1 row, stopped on the expected fingerprint change, and required a second group action for row 2. Final missing count was zero for all six groups; add count was 8, delete count 0, submit count 0, and at least 28 new-row values were filled.
-- Inspected `artifacts/repeatable-records.png` (167,386 bytes, generated 2026-08-05 12:45 local time). It shows all six group summaries at missing 0 and the filled two education, two internship, one work sample, three project, one award, and one language rows; delete and final-submit controls remain visible but unused.
-- Final `npm run validate` -> exit 0; TypeScript passed, 18 Vitest files and 179 tests passed, production build succeeded, 11 required distribution files were verified, and permissions remained exactly `activeTab`, `scripting`, `sidePanel`, `storage`.
-- Final `npm run test:e2e` -> exit 0; 12/12 tests passed, including extension load, privacy controls, profile editor, local PDF/DOCX import, local OCR, page comparison, Xiaomi non-submitting regression, and repeatable records.
-- Final live `npm run audit:repeatable-page -- --session qiuzhao-audit ...` -> exit 0. The real Xiaomi page still had education 2, internship 1, project 2, language 2, works 0, awards 0, with exactly one enabled add candidate per group and every mutation/click safety flag false. `opencli browser qiuzhao-audit unbind` then returned `unbound: true`.
-
-### Changed files and handoff
-
-- Core: `src/content/repeatableRecords.ts`, `src/content/engine.ts`, `src/content/index.ts`, `src/shared/messages.ts`, `src/sidepanel/pageBridge.ts`.
-- UI/tests: `src/sidepanel/App.tsx`, `src/sidepanel/sidepanel.css`, `src/content/repeatableRecords.test.ts`, `src/sidepanel/SidePanel.repeatable.test.tsx`.
-- E2E/evidence: `repeatable-fixture.html`, `src/fixture/repeatable-main.ts`, `tests/e2e/repeatable-records.spec.ts`, `artifacts/repeatable-records.png`.
-- Harness/docs: `feature_list.json`, `progress.md`, `docs/field-coverage-matrix.md`.
-- F017 is `done`; no real recruitment page value or structure was changed. The built extension must be reloaded before manual acceptance. Next recommended feature is F018: support and verify audited date ranges, cascading/searchable selects, multi-selects, radios, and rich text without adding arbitrary execution or final submission.
-
-## 2026-08-05 - Public GitHub publication
-
-### Release preparation
-
-- Renamed the public-facing project title to “秋招投递助手” and added an MIT license.
-- Added repository ignores for local Chrome/Chromium profiles, dependencies, build and test artifacts, archives, logs, and environment files. The local profile directories were preserved on disk and were not committed.
-- Removed the audited page query token and the developer-specific Windows path from publishable source and documentation. The retained Xiaomi job identifier is a public fixture/audit identifier, not account data.
-- A publish-scope privacy scan found no developer username, removed query token, common access-token pattern, or private-key marker in the files selected for Git.
-
-### Verification evidence
-
-- `git diff --cached --check` -> exit 0 before the initial commit.
-- `npm run audit:xiaomi` -> exit 0; 9 groups and 34 visible fields verified, with no application submission.
-- Final pre-publication `npm run validate` -> exit 0; TypeScript passed, 18 Vitest files and 179 tests passed, production build succeeded, 11 required distribution files were verified, and permissions remained exactly `activeTab`, `scripting`, `sidePanel`, `storage`.
-- The latest full `npm run test:e2e` milestone remains exit 0 with 12/12 tests passed and a current repeatable-record screenshot in `artifacts/`; that local evidence directory is intentionally excluded from the public repository.
-
-### Publication and handoff
-
-- Created the public repository at `https://github.com/petitmainfroid/qiuzhao-toudi-zhushou` and pushed `main`.
-- Initial source commit: `5059de0` (`Initial release of 秋招投递助手`).
-- GitHub normalizes the requested pure-Chinese repository identifier to `-`; because that historical empty repository already exists on the account, the shareable repository slug is `qiuzhao-toudi-zhushou`. The README and product UI retain the requested Chinese name.
-- Published source excludes `.chrome-autofill-profile/`, `.chromium-autofill-profile/`, `node_modules/`, `dist/`, `artifacts/`, test reports, environment files, and ZIP archives.
-- No product feature state changed: F016 and F017 remain `done`, F018 remains the next recommended feature.
+- Result: M013 is complete for automatic default-PDF upload and real-page parse/readback; no final submission occurred.
+- Commands: targeted Node/Vitest suites; two privacy-safe real Ctrip inspections around one upload; fresh-process readback; `npm run validate`; `git diff --check` and privacy/static scans.
+- Blockers: none for the attachment slice. Full Ctrip E3–E5 and any website save/update action remain separate, explicitly scoped work.
+## 2026-08-15 · M015 page-vision kickoff
+
+- User goal: preserve the successful real-page viewing method as a reusable, self-contained `qiuzhao-cli` module for later Codex/Claude use.
+- Chosen boundary: `modules/page-vision/` reuses the exact tab and dedicated Profile owned by `modules/browser-session`; it will not create a second browser connection model or change the six-tool MCP surface.
+- Planned behavior: bounded CDP viewport tiling, primary-scroll-context discovery, scroll restoration, pre/post page-identity validation, OS-temp-only evidence, byte/tile limits, explicit/TTL/callback cleanup, and a `qiuzhao vision` CLI.
+- Privacy/safety: screenshots may contain currently rendered personal values, so they are private temporary inputs rather than repository artifacts. Cookie/password/credential reads, page writes, uploads, consent/save/delete actions, and final submission remain out of scope.
+- Current worktree already contains unrelated M012-M014/B001 and resume-upload changes. M015 will avoid modifying those implementations and will stage no unrelated files.
+
+### 2026-08-15 · M015 implementation handoff
+
+- Implemented `modules/page-vision/` as the reusable visual input adapter. It reuses `BrowserSessionManager.connection()` and the existing `CdpTargetSession`, discovers one primary document/nested scroll context with a fixed internal script, generates a bounded overlapping tile plan, captures PNG/JPEG viewports, restores the exact original scroll position in `finally`, and revalidates launch/port/target/origin/path before retaining a manifest.
+- Added an OS-temp-only `PageVisionStore` with per-capture private directories, tile/total-byte limits, SHA-256 integrity, explicit cleanup, TTL recovery and `withCapture()` automatic cleanup. Public options reject script, selector, URL, output path and unknown keys. The manifest contains normalized page identity, dimensions, scroll metadata, digests and counts only; it contains no target/backend id, query string, Cookie, credential, selector, current form value or screenshot bytes.
+- Added `qiuzhao vision capture|status|cleanup|cleanup-expired`, the module README, a static protocol/public-surface verifier, six synthetic tests, package scripts and the structure gate. MCP remains exactly the existing six intent-level tools and imports no page-vision code.
+- Real-page evidence: temporarily selected the retained logged-in Xiaomi application tab and captured 3 PNG tiles, 233,565 total bytes, under a 3-tile diagnostic limit. The page remained `/internship/resume/:id/apply`; success required exact scroll restoration and stable pre/post browser identity. The manifest key audit found 0 forbidden private/value keys. Explicit cleanup removed the capture directory, and the previously selected BOSS `/web/geek/jobs` tab was restored. Page writes, form fills, uploads, save/delete/consent actions, Cookie/credential reads and final submissions were all 0.
+- Verification passed: `npm run verify:page-vision` (static allowlist plus 6/6 tests), structure 13/13, TypeScript, 49/49 core tests outside the pre-existing PDF-materialization file, 9 Vitest files / 77 tests that do not perform PDF file materialization, production profile build, feature JSON parse and `git diff --check`.
+- Full `npm run validate` was invoked repeatedly but cannot finish in this Codex child-process environment: the pre-existing `tests/default-resume-asset.test.mjs` hangs when Node creates or renames any `.pdf`, independently reproduced with a minimal PDF write. The same host safety interception prevents the full Vitest set when PDF-writing tests start. No unrelated resume test/runtime was modified to bypass it.
+- M015 is `blocked` only because the repository-required full validation gate is incomplete in this host. Changed for M015: `modules/page-vision/**`, `apps/cli/qiuzhao.mjs`, `package.json`, `scripts/verify-structure.mjs`, `feature_list.json` and this handoff. Next: run `npm run validate` from a normal local PowerShell outside the Codex child-process sandbox; if it exits 0, change M015 to `done` and record the exact 53-core / 191-module denominators reported by that run.
+
+## 2026-08-15 — M016 generic date-range intent kickoff
+
+- Ledger: M015 is `blocked` solely on its existing full-validation host interception, so M016 is the only feature marked `in_progress`.
+- Goal: make a two-control ordinary date range a closed Agent/MCP intent. The required semantic ordering is fixed: `startDate` fills the left/first control and `endDate` fills the right/second control. This is structural behavior, not a NIO-specific selector or template.
+- Changed files: `shared/bridge/pageState.ts`, `modules/semantic-planner/src/{types,schema,validation}.ts`, `modules/policy-compiler/src/{types,compiler}.ts`, `modules/application-service/application-service.mjs`, `modules/browser-kernel/runtime.mjs`, `modules/mcp-server/tool-registry.mjs`, `shared/bridge/pageState.test.ts`, `modules/semantic-planner/tests/planner.test.ts`, `modules/policy-compiler/tests/compiler.test.ts`, `tests/browser-kernel.test.mjs`, `feature_list.json`, and `progress.md`.
+- Design: inspection labels exactly two writable inputs in a recognized range root as one opaque `set_date_range` field. The planner can emit only `map_date_range(ref, startProfilePath, endProfilePath)`. The compiler permits only a matching same-record `education|workExperiences|projects.N.startDate/endDate` pair with ordinary populated catalog entries. Browser-kernel resolves both scalars locally, rejects empty/reversed ranges, invokes the existing atomic `fill-range` primitive, and returns Boolean-only verification. The public MCP registry recognizes the new closed proposal shape while retaining exactly six tools.
+- Real retained-page evidence: on the current user-opened NIO application page, the first two scoped education `起止时间` controls were filled through `native-date-range`, one attempt each, with verified Boolean readback. The third project date range was deliberately untouched because no local project record is available. No page values, raw DOM, Cookie, credentials, consent, save action, or final submission were read or written. This is not an independently frozen whole-form NIO denominator.
+- Targeted verification before the final gate: page-state/page-driver/planner/compiler tests passed (75 assertions in the first combined run; after the date-range regression adjustment, the changed planner/compiler/page-state suites passed 57/57); `node --test tests/browser-kernel.test.mjs tests/application-service.test.mjs` passed 24/24 before the additional range-kernel regression; `npm run typecheck` passed. Next: run the updated targeted suites, `git diff --check`, then `npm run validate`; record the result and keep M016 open if the same pre-existing PDF materialization host interception blocks the required full gate.
+
+## 2026-08-15 — M016 complete
+
+- Final verification: updated targeted Vitest suite passed 4 files / 76 tests; updated core application/kernel suite passed 25/25; `npm run typecheck` and `git diff --check` passed. Full `npm run validate` passed in 163.8s: structure 13/13, page-vision 6/6, TypeScript, core 54/54, module suite 23 files / 192 tests, and production profile build.
+- Outcome: the closed `map_date_range` proposal is now available through the existing six-tool MCP contract, compiles to `fill_date_range`, and executes only with the local, validated same-record start/end pair. It has no value, selector, CDP, Cookie, credentials, arbitrary path, save, consent, or final-submit input/output surface.
+- Real-page scope: the two previously executed NIO education date ranges remain Boolean-verified non-submit writes. This feature is now complete; a future ATS-specific compatibility claim still requires a retained page plus an independently frozen field denominator.
+- M015 full validation was included in this successful full run, so its previous host-only validation blocker is cleared and it is also marked `done`.
+
+## 2026-08-15 — M017 visual-semantic recovery kickoff
+
+- User goal: repair generic recognition, then re-run screenshot-to-structure comparison and non-submit ordinary filling on the retained Xiaomi, Huya, NIO, and Meta tabs until every visible form component has an explicit semantic, protected, or read-only classification.
+- Definition of complete: “recognized” does not mean “automatically executable.” Save, consent, delete, attachment ambiguity, identity, credentials, verification, and final-submit controls must be explicitly detected and remain non-executable.
+- Real Huya baseline: a bounded seven-tile private capture was compared to a 66-field MCP inventory and then explicitly cleaned. Confirmed gaps: visual field labels (including gender, work-years, highest degree, degree, language proficiency, and self-description) collapse to generic `请选择` or placeholders; work experience is structurally found but named `internship_list`; year/month ranges are separate non-executable controls. The screenshot itself is private and has not been retained in the repository.
+- Initial implementation direction: make generic placeholder labels lower-priority than structurally associated labels, recover label text from ordinary form-item/section ancestry without exposing page values, split work and internship groups by the closest heading/signal, and add a strictly ordered labelled year-month range primitive only when all four controls can be bounded to one labelled record.
+- Next: inspect current page-state/page-driver contracts and fixtures, implement the first generic recovery slice with tests, then run the four real tabs serially with fresh temporary captures, MCP inventories, scoped fills, audits, and cleanup.
+
+### M017 implementation checkpoint
+
+- Implemented in `shared/bridge/pageState.ts`: generic presentation labels (`请选择`, `请填写`, `请输入…`, `内容`, `简介`) now yield to a title/label child in the same structural field container; title discovery is generic and supports ordinary CSS label/title token boundaries without using site hashes. Work experience and internship are separate structural groups; application-service maps both safely to the local `workExperiences` profile root.
+- Implemented a non-executable `year-month-range` / `year-month` composite for labelled custom date containers. Four year/month controls are represented once as an ordered range, two as a month pair, and read-only custom inputs stay read-only; nested date wrappers are collapsed so one visual range creates one opaque component. No custom date dropdown is written by this slice.
+- Real Huya reinspection: visual labels previously reduced to generic values now resolve as gender, work years, highest degree, school, major, degree, language proficiency, listening, reading/writing, self-description, work duties, and project description. Work and internship sections are distinct. Five date composites are now recognized once each: work, education, internship, project, and award. Save stays read-only.
+- Verification: `shared/bridge/pageState.test.ts` 15/15, `tests/application-service.test.mjs` 13/13, and `npm run typecheck` pass. A full `npm run validate` run completed all inner stages successfully: structure 13/13, page-vision 6/6, core 54/54, modules 23 files/194 tests, production profile build. The external 180s wrapper timed out immediately after build, before the chained `git diff --check`; run that check next.
+- Verification follow-up: `git diff --check` passed (only existing Windows LF→CRLF informational notices).
+- Next: run screenshot-to-inventory comparison and ordinary-field MCP execution serially on Xiaomi, Huya, NIO, and Meta. Keep M017 `in_progress` until every retained page has a documented denominator and no semantic gap.
+
+## 2026-08-16 · M018 one-click ordinary autofill complete
+
+- Goal: expose the existing non-submit form-fill workflow as one local CLI operation without adding generic page control or changing the six MCP tools.
+- Changed: added `application_autofill` orchestration and its closed semantic matcher in `modules/application-service/application-service.mjs`; added `modules/application-service/autofill-cli.mjs`; registered `qiuzhao autofill`; added one focused regression test and the M018 feature record.
+- Behavior: `qiuzhao autofill` performs inspect → closed proposal → compile → execute → Boolean re-read. It maps only an exact small allowlist of ordinary identity-free labels (name, email, phone, gender, birth date) to matching populated local profile paths. Protected, already-filled, unsupported, and ambiguous fields are review/manual items. The existing unique default-resume path remains available, while save, consent, credential, verification, destructive, and final-submit controls remain non-executable.
+- Verification: `node --test tests/application-service.test.mjs` passed 14/14. `npm run validate` passed: structure 13/13, page-vision 6/6, TypeScript, core 61/61, module suite 23 files/196 tests, and production profile build. `git diff --check` passed for the changed files (Windows line-ending notices only).
+- Scope: no real-page write was made for M018; it composes already real-page-validated primitives. A new site still needs its own retained page and field-denominator acceptance before claiming complete compatibility.

@@ -1,0 +1,1257 @@
+import type {
+  PageControlBoundary,
+  PageControlRole,
+  PageControlSafety,
+  PageFindMatch,
+  PageFindQuery,
+  PageFindResult,
+  PrivacySafeControl,
+  PrivacySafePageState
+} from "./protocol";
+import { extractPageSections } from "../../modules/section-extractor/src/index";
+
+class PageStateError extends Error {
+  constructor(public readonly code: "session-inactive" | "unsupported-page" | "bridge-failed", message: string) {
+    super(message);
+    this.name = "PageStateError";
+  }
+}
+
+const MAX_DOM_NODES = 50_000;
+const MAX_CONTROLS = 1_000;
+const MAX_TEXT_LENGTH = 120;
+const MAX_OPTIONS = 50;
+const SAFE_INPUT_TYPES = new Set([
+  "button",
+  "checkbox",
+  "color",
+  "date",
+  "datetime-local",
+  "email",
+  "file",
+  "image",
+  "month",
+  "number",
+  "password",
+  "radio",
+  "range",
+  "reset",
+  "search",
+  "submit",
+  "tel",
+  "text",
+  "time",
+  "url",
+  "week"
+]);
+const INTERACTIVE_ROLES = new Set<PageControlRole>([
+  "textbox",
+  "combobox",
+  "listbox",
+  "option",
+  "checkbox",
+  "radio",
+  "switch",
+  "button",
+  "link"
+]);
+
+export interface CdpDomNode {
+  backendNodeId?: number;
+  nodeId?: number;
+  nodeType?: number;
+  nodeName?: string;
+  localName?: string;
+  nodeValue?: string;
+  frameId?: string;
+  documentURL?: string;
+  attributes?: string[];
+  children?: CdpDomNode[];
+  shadowRoots?: CdpDomNode[];
+  shadowRootType?: "user-agent" | "open" | "closed";
+  contentDocument?: CdpDomNode;
+  templateContent?: CdpDomNode;
+}
+
+export interface ReferenceTarget {
+  frameKey: string;
+  backendNodeId: number;
+  fingerprint: string;
+  role: PageControlRole;
+  tag: PrivacySafeControl["tag"];
+  inputType?: string;
+  safety: PageControlSafety;
+  boundary: PageControlBoundary;
+  disabled: boolean;
+  readOnly: boolean;
+  origin: string;
+  path: string;
+}
+
+interface ReferenceRegistration extends Omit<ReferenceTarget, "origin" | "path"> {
+  ref: string;
+}
+
+interface FlatNode {
+  node: CdpDomNode;
+  parent: FlatNode | null;
+  frameKey: string;
+  boundary: PageControlBoundary;
+}
+
+interface FlattenedDocument {
+  nodes: FlatNode[];
+  frameKeys: Set<string>;
+  openShadowRootCount: number;
+}
+
+function randomToken(): string {
+  const bytes = new Uint8Array(8);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (value) => value.toString(16).padStart(2, "0")).join("");
+}
+
+export class OpaqueReferenceRegistry {
+  private sessionId = "";
+  private readonly nonce: string;
+  private readonly byTarget = new Map<string, string>();
+  private currentSnapshot: {
+    id: string;
+    sessionId: string;
+    references: Map<string, ReferenceTarget>;
+  } | null = null;
+  private referenceCounter = 0;
+  private snapshotCounter = 0;
+
+  constructor(createNonce: () => string = randomToken) {
+    this.nonce = createNonce();
+  }
+
+  reference(sessionId: string, frameKey: string, backendNodeId: number): string {
+    this.useSession(sessionId);
+    const targetKey = `${frameKey}:${backendNodeId}`;
+    const existing = this.byTarget.get(targetKey);
+    if (existing) return existing;
+    this.referenceCounter += 1;
+    const ref = `node_${this.nonce}_${this.referenceCounter.toString(36).padStart(4, "0")}`;
+    this.byTarget.set(targetKey, ref);
+    return ref;
+  }
+
+  snapshot(
+    sessionId: string,
+    origin: string,
+    path: string,
+    registrations: ReferenceRegistration[]
+  ): string {
+    this.useSession(sessionId);
+    this.snapshotCounter += 1;
+    const id = `state_${this.nonce}_${this.snapshotCounter.toString(36).padStart(4, "0")}`;
+    this.currentSnapshot = {
+      id,
+      sessionId,
+      references: new Map(registrations.map(({ ref, ...target }) => [
+        ref,
+        { ...target, origin, path }
+      ]))
+    };
+    return id;
+  }
+
+  resolve(sessionId: string, snapshotId: string, reference: string): ReferenceTarget | null {
+    if (
+      sessionId !== this.sessionId
+      || this.currentSnapshot?.sessionId !== sessionId
+      || this.currentSnapshot.id !== snapshotId
+    ) return null;
+    return this.currentSnapshot.references.get(reference) ?? null;
+  }
+
+  invalidate(): void {
+    this.currentSnapshot = null;
+  }
+
+  private useSession(sessionId: string): void {
+    if (this.sessionId === sessionId) return;
+    this.sessionId = sessionId;
+    this.byTarget.clear();
+    this.currentSnapshot = null;
+    this.referenceCounter = 0;
+    this.snapshotCounter = 0;
+  }
+}
+
+function attribute(node: CdpDomNode, wanted: string): string | undefined {
+  const attributes = node.attributes ?? [];
+  for (let index = 0; index + 1 < attributes.length; index += 2) {
+    if (attributes[index]?.toLowerCase() === wanted) return attributes[index + 1] ?? "";
+  }
+  return undefined;
+}
+
+function hasAttribute(node: CdpDomNode, wanted: string): boolean {
+  return attribute(node, wanted) !== undefined;
+}
+
+export function sanitizeSemanticText(value: string | undefined, maxLength = MAX_TEXT_LENGTH): string {
+  if (!value) return "";
+  const containsFileMetadata = /\.(?:pdf|docx?|rtf|txt|odt)\b|上次上传|最近上传|last\s+uploaded/iu.test(value);
+  let sanitized = value
+    .replace(/https?:\/\/\S+/gi, "[链接]")
+    .replace(/[\w.+-]+@[\w.-]+\.[a-z]{2,}/gi, "[邮箱]")
+    .replace(/\b\d{7,}\b/g, "[长数字]");
+  if (containsFileMetadata) {
+    sanitized = sanitized
+      .replace(/[^\s<>:"/\\|?*]{1,80}\.(?:pdf|docx?|rtf|txt|odt)\b/giu, "[文件]")
+      .replace(/\b\d{4}[-/]\d{1,2}[-/]\d{1,2}(?:\s+\d{1,2}:\d{2}(?::\d{2})?)?\b/g, "[时间]");
+  }
+  return sanitized
+    .replace(/\b(?:19|20)\d{2}\s*(?:[-/.]|年)\s*(?:0?[1-9]|1[0-2])(?:\s*月)?\b/g, "[日期]")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, maxLength);
+}
+
+function safeTechnicalFieldName(value: string | undefined): string {
+  if (!value || value.length > MAX_TEXT_LENGTH) return "";
+  return /^(?=.{1,120}$)[A-Za-z][A-Za-z0-9_.-]*(?:\[\d+\][A-Za-z0-9_.-]*)*$/.test(value)
+    ? value
+    : "";
+}
+
+function nearestFieldMetadata(record: FlatNode): { name: string; label: string } {
+  let current: FlatNode | null = record;
+  for (let depth = 0; current && depth < 8; depth += 1, current = current.parent) {
+    const name = safeTechnicalFieldName(attribute(current.node, "data-form-field-name"));
+    const label = sanitizeSemanticText(attribute(current.node, "data-form-field-i18n-name"), 80);
+    if (name || label) return { name, label };
+  }
+  return { name: "", label: "" };
+}
+
+const REPEATABLE_GROUPS = [
+  { name: "education_list", label: "添加教育经历", pattern: /education[_\s-]*(?:list|experience|background)|教育经历|教育背景|学历经历/i, fields: /学校|院校|学历|专业|degree|major|school/i },
+  { name: "work_experience_list", label: "添加工作经历", pattern: /work[_\s-]*(?:list|experience)|工作经历|职业经历|employment/i, fields: /公司|职位|岗位|描述|company|employer|position|role|description/i },
+  { name: "internship_list", label: "添加实习经历", pattern: /internship[_\s-]*(?:list|experience)|实习经历/i, fields: /公司|职位|岗位|描述|company|employer|position|role|description/i },
+  { name: "works_list", label: "添加作品", pattern: /works?[_\s-]*list|作品(?:集|经历)?|portfolio|work\s*samples?/i, fields: /作品|链接|名称|link|title|name/i },
+  { name: "project_list", label: "添加项目经历", pattern: /project[_\s-]*(?:list|experience)|项目经历|项目经验|projects?/i, fields: /项目名称|项目角色|描述|project|role|description/i },
+  { name: "award_list", label: "添加获奖经历", pattern: /award[_\s-]*(?:list|experience)|获奖(?:经历)?|荣誉(?:奖项)?|奖项|awards?|honors?/i, fields: /获奖|奖项|荣誉|名称|级别|award|honor|title/i },
+  { name: "language_list", label: "添加语言能力", pattern: /language[_\s-]*(?:list|skills?)|语言能力|外语能力|languages?/i, fields: /语言|精通程度|熟练程度|language|proficiency/i }
+] as const;
+
+function repeatableGroupFromSignal(signal: string, requireFieldSignature = false): (typeof REPEATABLE_GROUPS)[number] | undefined {
+  return REPEATABLE_GROUPS.find((group) =>
+    group.pattern.test(signal) && (!requireFieldSignature || group.fields.test(signal) || /添加|新增|add|new/i.test(signal))
+  );
+}
+
+function structuralHeadingText(node: CdpDomNode): string {
+  const chunks: string[] = [];
+  let visited = 0;
+  function collect(current: CdpDomNode): void {
+    visited += 1;
+    if (visited > 300 || chunks.length >= 8) return;
+    const name = nodeName(current);
+    const role = attribute(current, "role")?.toLowerCase();
+    if (["h1", "h2", "h3", "h4", "h5", "h6", "legend"].includes(name) || role === "heading") {
+      const value = textContent(current, 100);
+      if (value) chunks.push(value);
+      return;
+    }
+    for (const child of current.children ?? []) collect(child);
+  }
+  collect(node);
+  return sanitizeSemanticText(chunks.join(" "), 300);
+}
+
+function descendantRepeatableSignals(node: CdpDomNode): string {
+  const signals: string[] = [];
+  let visited = 0;
+  function collect(current: CdpDomNode): void {
+    visited += 1;
+    if (visited > 400 || signals.length >= 24) return;
+    for (const name of ["data-form-field-name", "data-section", "aria-label"] as const) {
+      const value = attribute(current, name);
+      if (value) signals.push(value);
+    }
+    const tag = nodeName(current);
+    if (["h1", "h2", "h3", "h4", "h5", "h6", "legend"].includes(tag)
+      || attribute(current, "role")?.toLowerCase() === "heading") {
+      const value = textContent(current, 100);
+      if (value) signals.push(value);
+    }
+    for (const child of current.children ?? []) collect(child);
+  }
+  collect(node);
+  return sanitizeSemanticText(signals.join(" "), 500);
+}
+
+function repeatableGroupForRecord(record: FlatNode): (typeof REPEATABLE_GROUPS)[number] | undefined {
+  let current: FlatNode | null = record;
+  for (let depth = 0; current && depth < 12; depth += 1, current = current.parent) {
+    const tag = nodeName(current.node);
+    if (["form", "body", "html", "#document"].includes(tag)) break;
+    const directSignal = [
+      attribute(current.node, "data-form-field-name"),
+      attribute(current.node, "data-section"),
+      attribute(current.node, "aria-label"),
+      structuralHeadingText(current.node)
+    ].filter(Boolean).join(" ");
+    const directGroup = repeatableGroupFromSignal(directSignal);
+    if (directGroup) return directGroup;
+    const containerText = textContent(current.node, 240);
+    const group = repeatableGroupFromSignal(containerText, true);
+    if (group) return group;
+  }
+  return undefined;
+}
+
+function nearestRepeatableSectionName(record: FlatNode): string {
+  return repeatableGroupForRecord(record)?.name ?? "";
+}
+
+function classValue(node: CdpDomNode): string {
+  return attribute(node, "class") ?? "";
+}
+
+function structurallyHidden(record: FlatNode): boolean {
+  let current: FlatNode | null = record;
+  for (let depth = 0; current && depth < 10; depth += 1, current = current.parent) {
+    const style = (attribute(current.node, "style") ?? "").replace(/\s+/g, "").toLowerCase();
+    const classes = classValue(current.node);
+    if (hasAttribute(current.node, "hidden") || attribute(current.node, "aria-hidden") === "true"
+      || style.includes("display:none") || style.includes("visibility:hidden")
+      || /hidden(?:[-_]?field)?/i.test(classes)) return true;
+  }
+  return false;
+}
+
+function nearestFormItem(record: FlatNode): FlatNode | null {
+  let current: FlatNode | null = record.parent;
+  for (let depth = 0; current && depth < 8; depth += 1, current = current.parent) {
+    if (/(?:^|\s)[A-Za-z0-9_-]*form-item(?:\s|$)/i.test(classValue(current.node))) return current;
+  }
+  return null;
+}
+
+function nearestFormLabel(record: FlatNode): string {
+  const formItem = nearestFormItem(record);
+  if (!formItem) return "";
+  let visited = 0;
+  function find(node: CdpDomNode): string {
+    visited += 1;
+    if (visited > 500) return "";
+    if (/(?:^|\s)[A-Za-z0-9_-]*form-item-label(?:\s|$)/i.test(classValue(node))) {
+      return labelText(node, 100);
+    }
+    for (const child of node.children ?? []) {
+      const found = find(child);
+      if (found) return found;
+    }
+    return "";
+  }
+  return find(formItem.node);
+}
+
+function nearestFormItemText(record: FlatNode): string {
+  const formItem = nearestFormItem(record);
+  return formItem ? textContent(formItem.node, 100) : "";
+}
+
+// Several ATS implementations put the human label beside a custom select but
+// expose only a stable technical id on the interactive descendant.  Translate
+// a small, cross-site vocabulary from that id; never infer a user value.
+function inferredTechnicalLabel(record: FlatNode): string {
+  const vocabulary: Array<[RegExp, string]> = [
+    [/(?:^|[._])school$/i, "学校名称"],
+    [/(?:^|[._])degree$/i, "学历"],
+    [/(?:^|[._])education[_-]?type$/i, "学历性质"],
+    [/(?:^|[._])fieldofstudy$|(?:^|[._])major$/i, "专业"],
+    [/(?:^|[._])period$|(?:^|[._])start(?:_|-)?end(?:_|-)?time$/i, "起止时间"],
+    [/(?:^|[._])language$/i, "语言类型"],
+    [/(?:^|[._])proficiency$/i, "掌握程度"]
+  ];
+  function fromNode(node: CdpDomNode, includeDescendants: boolean): string {
+    const candidates: CdpDomNode[] = [node];
+    if (includeDescendants) {
+      let visited = 0;
+      function collect(current: CdpDomNode): void {
+        if (visited >= 80) return;
+        visited += 1;
+        for (const child of current.children ?? []) {
+          candidates.push(child);
+          collect(child);
+        }
+      }
+      collect(node);
+    }
+    for (const candidate of candidates) for (const attributeName of ["data-cy", "id", "data-form-field-name"] as const) {
+      const value = attribute(candidate, attributeName);
+      if (!value) continue;
+      const normalized = value.replace(/Input$/i, "");
+      for (const [pattern, label] of vocabulary) if (pattern.test(normalized)) return label;
+    }
+    return "";
+  }
+  let depth = 0;
+  for (let current: FlatNode | null = record; current; current = current.parent, depth += 1) {
+    const label = fromNode(current.node, depth <= 2);
+    if (label) return label;
+  }
+  return "";
+}
+
+function nearestFileUploadText(record: FlatNode): string {
+  let current = record.parent;
+  for (let depth = 0; current && depth < 7; depth += 1, current = current.parent) {
+    const tag = nodeName(current.node);
+    if (["form", "body", "html", "#document"].includes(tag)) break;
+    const value = textContent(current.node, 240);
+    if (/(?:简历|个人履历|作品|附件|上传|选择文件|拖放|resume|curriculum\s+vitae|portfolio|attachment|upload|choose\s+file|drop)/iu.test(value)) {
+      return value;
+    }
+  }
+  return "";
+}
+
+function structurallyRequired(record: FlatNode): boolean {
+  const formItem = nearestFormItem(record);
+  if (!formItem) return false;
+  if (/required/i.test(classValue(formItem.node))) return true;
+  let visited = 0;
+  function find(node: CdpDomNode): boolean {
+    visited += 1;
+    if (visited > 500) return false;
+    if (hasAttribute(node, "required") || attribute(node, "aria-required") === "true"
+      || /required/i.test(classValue(node))) return true;
+    return (node.children ?? []).some(find);
+  }
+  return find(formItem.node);
+}
+
+function fixedDateRangeRoot(node: CdpDomNode): boolean {
+  if (hasAttribute(node, "data-date-range")) return true;
+  const className = attribute(node, "class") ?? "";
+  if (/hidden-input/i.test(className)) return false;
+  return /date-picker-period|date-range|daterange/i.test(className);
+}
+
+function fixedDateRangeInputs(record: FlatNode): CdpDomNode[] {
+  if (!fixedDateRangeRoot(record.node)) return [];
+  const inputs: CdpDomNode[] = [];
+  function collect(node: CdpDomNode): void {
+    if (nodeName(node) === "input") {
+      const type = safeInputType(node);
+      if (
+        typeof node.backendNodeId === "number"
+        && (type === "date" || type === "month" || type === "text")
+        && !hasAttribute(node, "disabled")
+        && !hasAttribute(node, "readonly")
+        && !hasAttribute(node, "hidden")
+        && attribute(node, "aria-hidden") !== "true"
+      ) inputs.push(node);
+    }
+    for (const child of node.children ?? []) collect(child);
+  }
+  collect(record.node);
+  return inputs;
+}
+
+function nodeName(node: CdpDomNode): string {
+  return (node.localName || node.nodeName || "").toLowerCase();
+}
+
+function safeInputType(node: CdpDomNode): string | undefined {
+  if (nodeName(node) !== "input") return undefined;
+  const rawType = (attribute(node, "type") || "text").toLowerCase();
+  return SAFE_INPUT_TYPES.has(rawType) ? rawType : "text";
+}
+
+function hasAncestor(record: FlatNode, name: string): boolean {
+  let ancestor = record.parent;
+  while (ancestor) {
+    if (nodeName(ancestor.node) === name) return true;
+    ancestor = ancestor.parent;
+  }
+  return false;
+}
+
+function controlInputType(record: FlatNode): string | undefined {
+  const inputType = safeInputType(record.node);
+  if (inputType) return inputType;
+  if (nodeName(record.node) !== "button") return undefined;
+  const rawType = attribute(record.node, "type")?.toLowerCase();
+  if (rawType === "button" || rawType === "reset" || rawType === "submit") return rawType;
+  return hasAncestor(record, "form") ? "submit" : "button";
+}
+
+function documentOrigin(rawUrl: string | undefined): string | null {
+  try {
+    const url = new URL(rawUrl ?? "");
+    return url.protocol === "https:" && !url.username && !url.password ? url.origin : null;
+  }
+  catch {
+    return null;
+  }
+}
+
+function flattenDocument(root: CdpDomNode, topOrigin: string): FlattenedDocument {
+  const nodes: FlatNode[] = [];
+  const frameKeys = new Set<string>();
+  let openShadowRootCount = 0;
+  let visited = 0;
+
+  function visit(
+    node: CdpDomNode,
+    parent: FlatNode | null,
+    inheritedFrameKey: string,
+    boundary: PageControlBoundary
+  ): void {
+    visited += 1;
+    if (visited > MAX_DOM_NODES) {
+      throw new PageStateError("bridge-failed", "页面结构过大，已停止只读扫描。");
+    }
+    const frameKey = node.frameId || inheritedFrameKey;
+    frameKeys.add(frameKey);
+    const current: FlatNode = { node, parent, frameKey, boundary };
+    nodes.push(current);
+
+    for (const child of node.children ?? []) visit(child, current, frameKey, boundary);
+    for (const shadowRoot of node.shadowRoots ?? []) {
+      if (shadowRoot.shadowRootType !== "open") continue;
+      openShadowRootCount += 1;
+      visit(shadowRoot, current, frameKey, "open-shadow");
+    }
+    if (node.contentDocument) {
+      const childOrigin = documentOrigin(node.contentDocument.documentURL);
+      if (childOrigin === topOrigin) {
+        visit(node.contentDocument, current, node.contentDocument.frameId || frameKey, "same-origin-frame");
+      }
+    }
+    if (node.templateContent) visit(node.templateContent, current, frameKey, boundary);
+  }
+
+  visit(root, null, root.frameId || "main", "main");
+  return { nodes, frameKeys, openShadowRootCount };
+}
+
+function textContent(node: CdpDomNode, maxLength = MAX_TEXT_LENGTH): string {
+  const chunks: string[] = [];
+  let length = 0;
+  function collect(current: CdpDomNode): void {
+    if (length >= maxLength) return;
+    const name = nodeName(current);
+    if (["script", "style", "noscript"].includes(name)) return;
+    if (current.nodeType === 3 && current.nodeValue) {
+      chunks.push(current.nodeValue);
+      length += current.nodeValue.length;
+    }
+    for (const child of current.children ?? []) collect(child);
+  }
+  collect(node);
+  return sanitizeSemanticText(chunks.join(" "), maxLength);
+}
+
+function semanticRepeatableAddNode(node: CdpDomNode): boolean {
+  if (node.nodeType !== 1
+    || !/^(?:添加|新增|继续添加|add|add another|new)$/i.test(textContent(node, 30))) return false;
+  const descendants = [...(node.children ?? []), ...(node.shadowRoots ?? [])];
+  return !descendants.some((child) => semanticRepeatableAddNode(child));
+}
+
+function repeatableAddMetadata(record: FlatNode): { name: string; label: string } | null {
+  if (!semanticRepeatableAddNode(record.node)) return null;
+  const group = repeatableGroupForRecord(record);
+  return group ? { name: `${group.name}.add`, label: group.label } : null;
+}
+
+function inertRepeatableAnchor(node: CdpDomNode): boolean {
+  if (nodeName(node) !== "a") return false;
+  return /^javascript:\s*void\s*\(\s*0\s*\)\s*;?$/iu.test(attribute(node, "href")?.trim() ?? "");
+}
+
+function structuralCustomSelectInput(record: FlatNode): boolean {
+  if (nodeName(record.node) !== "input" || !["text", "search"].includes(safeInputType(record.node) ?? "")) return false;
+  const choiceHint = sanitizeSemanticText([
+    attribute(record.node, "placeholder"),
+    attribute(record.node, "aria-label"),
+    attribute(record.node, "title")
+  ].filter(Boolean).join(" "), 100);
+  const labelled = /^(?:请选择|选择|please\s+select|select|choose)(?:\s|$)/iu.test(choiceHint)
+    || Boolean(nearestFormLabel(record) || nearestFieldMetadata(record).label || directStructuralFieldLabel(record));
+  if (!labelled) return false;
+  let selectContainer = false;
+  let dropdownContainer = false;
+  let current = record.parent;
+  for (let depth = 0; current && depth < 6; depth += 1, current = current.parent) {
+    const classes = classValue(current.node);
+    selectContainer ||= /select/iu.test(classes);
+    dropdownContainer ||= /dropdown/iu.test(classes);
+    if (selectContainer && dropdownContainer) return true;
+    if (["form", "body", "html"].includes(nodeName(current.node))) break;
+  }
+  return false;
+}
+
+function implicitRole(node: CdpDomNode): PageControlRole | null {
+  const explicit = attribute(node, "role")?.toLowerCase() as PageControlRole | undefined;
+  if (explicit && INTERACTIVE_ROLES.has(explicit)) return explicit;
+  const name = nodeName(node);
+  if (name === "textarea") return "textbox";
+  if (name === "select") return hasAttribute(node, "multiple") ? "listbox" : "combobox";
+  if (name === "button") return "button";
+  if (name === "a" && attribute(node, "href") !== undefined) return "link";
+  if (isContentEditableNode(node)) return "textbox";
+  if (name !== "input") return null;
+  const type = (attribute(node, "type") || "text").toLowerCase();
+  if (type === "hidden") return null;
+  if (type === "checkbox") return "checkbox";
+  if (type === "radio") return "radio";
+  if (["button", "submit", "reset", "image"].includes(type)) return "button";
+  return "textbox";
+}
+
+function isContentEditableNode(node: CdpDomNode): boolean {
+  const value = attribute(node, "contenteditable");
+  if (value === undefined) return false;
+  return value === "" || value.toLowerCase() === "true" || value.toLowerCase() === "plaintext-only";
+}
+
+function labelText(node: CdpDomNode, maxLength = MAX_TEXT_LENGTH): string {
+  const chunks: string[] = [];
+  let length = 0;
+  function collect(current: CdpDomNode, isRoot: boolean): void {
+    if (length >= maxLength) return;
+    const name = nodeName(current);
+    if (["script", "style", "noscript"].includes(name)) return;
+    // A wrapping label may contain a textarea/select whose text nodes are user
+    // data or option captions. Neither is part of the field label.
+    if (!isRoot && implicitRole(current)) return;
+    if (current.nodeType === 3 && current.nodeValue) {
+      chunks.push(current.nodeValue);
+      length += current.nodeValue.length;
+    }
+    for (const child of current.children ?? []) collect(child, false);
+  }
+  collect(node, true);
+  return sanitizeSemanticText(chunks.join(" "), maxLength);
+}
+
+function publicTag(node: CdpDomNode): PrivacySafeControl["tag"] {
+  const name = nodeName(node);
+  if (name === "input" || name === "textarea" || name === "select" || name === "button" || name === "a") {
+    return name;
+  }
+  if (isContentEditableNode(node)) return "contenteditable";
+  return "custom";
+}
+
+function previousSemanticText(record: FlatNode, recordByNode: Map<CdpDomNode, FlatNode>): string {
+  const parent = record.parent?.node;
+  if (!parent) return "";
+  const siblings = parent.children ?? [];
+  const index = siblings.indexOf(record.node);
+  if (index < 1) return "";
+  const candidates: string[] = [];
+  for (let offset = 1; offset <= 2 && index - offset >= 0; offset += 1) {
+    const sibling = siblings[index - offset]!;
+    const siblingRecord = recordByNode.get(sibling);
+    if (!siblingRecord || implicitRole(sibling)) continue;
+    const name = nodeName(sibling);
+    if (!["div", "span", "p", "dt", "th", "legend", "h1", "h2", "h3", "h4", "h5", "h6"].includes(name)) continue;
+    const text = textContent(sibling, 80);
+    if (text) candidates.unshift(text);
+  }
+  return sanitizeSemanticText(candidates.join(" "));
+}
+
+function fixedYearMonthInputs(record: FlatNode): CdpDomNode[] {
+  const className = attribute(record.node, "class") ?? "";
+  if (!/(?:^|[\s_-])date[-_]?(?:info|range|period)(?:[\s_-]|$)/iu.test(className)) return [];
+  const inputs: CdpDomNode[] = [];
+  function collect(node: CdpDomNode): void {
+    if (nodeName(node) === "input") {
+      const type = safeInputType(node);
+      if (typeof node.backendNodeId === "number" && type === "text"
+        && !hasAttribute(node, "disabled")
+        && !hasAttribute(node, "hidden") && attribute(node, "aria-hidden") !== "true") inputs.push(node);
+    }
+    for (const child of node.children ?? []) collect(child);
+  }
+  collect(record.node);
+  return inputs.length === 2 || inputs.length === 4 ? inputs : [];
+}
+
+function fixedPeriodMonthRange(record: FlatNode): boolean {
+  if (!/date-picker-period-month/iu.test(classValue(record.node))) return false;
+  let begin = 0;
+  let end = 0;
+  let visited = 0;
+  function collect(node: CdpDomNode): void {
+    visited += 1;
+    if (visited > 120) return;
+    const dataCy = attribute(node, "data-cy") ?? "";
+    if (/periodInputBegin$/i.test(dataCy)) begin += 1;
+    if (/periodInputEnd$/i.test(dataCy)) end += 1;
+    for (const child of node.children ?? []) collect(child);
+  }
+  collect(record.node);
+  return begin === 1 && end === 1;
+}
+
+function genericPresentationLabel(value: string): boolean {
+  return /^(?:请选择|请填写|请输入.{0,40}|内容|简介|y{2,4}\s*(?:[-/.年]\s*)?m{1,2}|年|月)$/iu.test(value.trim());
+}
+
+function twoCompositeMonthInputs(inputs: readonly CdpDomNode[]): boolean {
+  return inputs.length === 2 && inputs.every((input) => {
+    const signal = [
+      attribute(input, "placeholder"),
+      attribute(input, "aria-label"),
+      attribute(input, "title")
+    ].filter(Boolean).join(" ");
+    return /y{2,4}.*m{1,2}|年.*月/iu.test(signal);
+  });
+}
+
+function nearestModuleHeading(record: FlatNode): string {
+  for (let current: FlatNode | null = record.parent; current; current = current.parent) {
+    if (!/applyFormModuleWrapper/i.test(classValue(current.node))) continue;
+    const candidate = sanitizeSemanticText(textContent(current.node, 100)
+      .replace(/(?:\s|^)(?:添加|新增)$/u, ""));
+    if (candidate && candidate !== "添加" && candidate !== "新增") return candidate;
+  }
+  return "";
+}
+
+function directStructuralFieldLabel(record: FlatNode): string {
+  for (let current: FlatNode | null = record; current; current = current.parent) {
+    const tag = nodeName(current.node);
+    if (["form", "body", "html", "#document"].includes(tag)) break;
+    for (const child of current.node.children ?? []) {
+      if (implicitRole(child)) continue;
+      const className = classValue(child);
+      if (!/(?:^|[-_])(?:field[-_])?(?:label|title)(?:[-_]|$)|(?:^|[-_])block(?:label|title)(?:[-_]|$)/iu.test(className)) continue;
+      const candidate = labelText(child, 100);
+      if (candidate && !genericPresentationLabel(candidate)) return candidate;
+    }
+  }
+  return "";
+}
+
+function nearestStructuralFieldLabel(record: FlatNode, recordByNode: Map<CdpDomNode, FlatNode>): string {
+  const directLabel = directStructuralFieldLabel(record);
+  if (directLabel) return directLabel;
+  const formLabel = nearestFormLabel(record);
+  if (formLabel) return formLabel;
+  let current: FlatNode | null = record;
+  for (let depth = 0; current && depth < 4; depth += 1, current = current.parent) {
+    const candidate = previousSemanticText(current, recordByNode);
+    if (!candidate || genericPresentationLabel(candidate)) continue;
+    if (/\s/u.test(candidate)) continue;
+    if (/^(?:个人信息|求职意向|工作经历|教育背景|实习经历|项目经历|语言能力|自我描述|获奖经历)$/u.test(candidate)) continue;
+    return candidate;
+  }
+  return "";
+}
+
+function classifySafety(
+  control: Omit<PrivacySafeControl, "ref" | "safety">,
+  internalSignals = ""
+): PageControlSafety {
+  const corpus = sanitizeSemanticText([
+    control.semantics.label,
+    control.semantics.ariaLabel,
+    control.semantics.placeholder,
+    control.semantics.name,
+    control.semantics.nearbyText,
+    internalSignals
+  ].filter(Boolean).join(" "), 600).toLowerCase();
+  if (control.inputType === "password" || /current-password|new-password/.test(corpus)) return "credential";
+  if (
+    /验证码|短信码|校验码|动态码|动态口令|图形码|captcha|verification\s*code|sms\s*code|one-time-code|otp/.test(corpus)
+  ) return "verification";
+  if (/个人证件|身份证|证件号|护照/.test(corpus)) return "identity";
+  if (/密码|口令|password|passcode/.test(corpus)) return "credential";
+  if (
+    /身份证|证件号|护照|银行卡|社会信用|驾驶证|税号|id\s*card|identity|passport|bank\s*card|ssn|tax\s*id/.test(corpus)
+  ) return "identity";
+  if (control.inputType === "file") return "file";
+  if (
+    control.inputType === "reset"
+    || /删除|清空|重置|撤回|取消申请|注销|delete|remove|clear\s*all|reset|withdraw|cancel\s*application/.test(corpus)
+  ) return "destructive";
+  if (
+    (control.role === "checkbox" || control.role === "switch")
+    && /隐私|条款|协议|授权|同意|privacy|terms|agreement|consent|authorize/.test(corpus)
+  ) return "consent";
+  if (
+    control.inputType === "submit"
+    || control.inputType === "image"
+    || /提交申请|提交简历|最终提交|确认投递|立即申请|发送申请|投递简历|submit\s*application|submit\s*(?:resume|cv)|final\s*submit|apply\s*now|send\s*application/.test(corpus)
+  ) return "final-submit";
+  return "ordinary";
+}
+
+function optionCaptions(node: CdpDomNode): string[] {
+  const options: string[] = [];
+  function collect(current: CdpDomNode): void {
+    if (options.length >= MAX_OPTIONS) return;
+    if (nodeName(current) === "option" || attribute(current, "role")?.toLowerCase() === "option") {
+      const caption = textContent(current, 80);
+      if (caption && !options.includes(caption)) options.push(caption);
+    }
+    for (const child of current.children ?? []) collect(child);
+  }
+  collect(node);
+  return options;
+}
+
+function associatedOptionCaptions(node: CdpDomNode, nodesById: Map<string, CdpDomNode>): string[] {
+  const options = optionCaptions(node);
+  const associatedIds = [attribute(node, "aria-controls"), attribute(node, "aria-owns")]
+    .filter(Boolean)
+    .flatMap((value) => value!.split(/\s+/).filter(Boolean));
+  for (const id of associatedIds) {
+    const associated = nodesById.get(id);
+    if (!associated) continue;
+    for (const caption of optionCaptions(associated)) {
+      if (!options.includes(caption)) options.push(caption);
+      if (options.length >= MAX_OPTIONS) return options;
+    }
+  }
+  return options;
+}
+
+export interface InspectedControlTarget {
+  frameKey: string;
+  backendNodeId: number;
+  fingerprint: string;
+  control: Omit<PrivacySafeControl, "ref">;
+}
+
+function fingerprintControl(control: Omit<PrivacySafeControl, "ref">): string {
+  return JSON.stringify({
+    role: control.role,
+    tag: control.tag,
+    inputType: control.inputType ?? "",
+    semantics: control.semantics,
+    options: control.options ?? [],
+    disabled: control.disabled,
+    readOnly: control.readOnly,
+    required: control.required,
+    multiple: control.multiple,
+    boundary: control.boundary,
+    safety: control.safety
+  });
+}
+
+function inspectControls(flattened: FlattenedDocument): InspectedControlTarget[] {
+  const recordByNode = new Map(flattened.nodes.map((record) => [record.node, record]));
+  const recordByBackendNodeId = new Map(flattened.nodes
+    .filter((record) => typeof record.node.backendNodeId === "number")
+    .map((record) => [record.node.backendNodeId!, record]));
+  const nodesById = new Map<string, CdpDomNode>();
+  const labelByFor = new Map<string, string>();
+  const dateRangeRoots = new Map<CdpDomNode, { inputs: CdpDomNode[]; inputType: "date-range" | "year-month" | "year-month-range" }>();
+  const dateRangeInputIds = new Set<number>();
+  for (const record of flattened.nodes) {
+    const id = attribute(record.node, "id");
+    if (id) nodesById.set(id, record.node);
+    if (nodeName(record.node) === "label") {
+      const target = attribute(record.node, "for");
+      const text = labelText(record.node);
+      if (target && text) labelByFor.set(target, text);
+    }
+    const periodMonthRange = fixedPeriodMonthRange(record);
+    const standardRange = fixedDateRangeInputs(record);
+    const yearMonth = standardRange.length === 0 ? fixedYearMonthInputs(record) : [];
+    if (periodMonthRange || standardRange.length > 0 || yearMonth.length > 0) {
+      let nestedComposite = false;
+      for (let ancestor = record.parent; ancestor; ancestor = ancestor.parent) {
+        if (dateRangeRoots.has(ancestor.node)) {
+          nestedComposite = true;
+          break;
+        }
+      }
+      if (nestedComposite) continue;
+      const inputs = standardRange.length > 0 ? standardRange : yearMonth;
+      dateRangeRoots.set(record.node, {
+        inputs,
+        inputType: periodMonthRange
+          ? "year-month-range"
+          : standardRange.length === 2
+          ? "date-range"
+          : yearMonth.length === 4 || twoCompositeMonthInputs(yearMonth)
+            ? "year-month-range"
+            : "year-month"
+      });
+      inputs.forEach((input) => dateRangeInputIds.add(input.backendNodeId!));
+    }
+  }
+
+  const controls: InspectedControlTarget[] = [];
+  for (const record of flattened.nodes) {
+    if (controls.length >= MAX_CONTROLS) break;
+    const dateRange = dateRangeRoots.get(record.node);
+    if (dateRange) {
+      const backendNodeId = record.node.backendNodeId;
+      if (typeof backendNodeId !== "number") continue;
+      const metadata = nearestFieldMetadata(record);
+      const labelCandidate = nearestStructuralFieldLabel(record, recordByNode) || metadata.label || inferredTechnicalLabel(record) || metadata.name;
+      const label = labelCandidate === "[日期]" ? "起止时间" : labelCandidate;
+      const base: Omit<PrivacySafeControl, "ref" | "safety"> = {
+        role: "textbox",
+        tag: "custom",
+        inputType: dateRange.inputType,
+        semantics: {
+          ...(label ? { label } : {}),
+          ...((metadata.name || nearestRepeatableSectionName(record))
+            ? { name: metadata.name || nearestRepeatableSectionName(record) }
+            : {})
+        },
+        disabled: dateRange.inputs.some((input) => hasAttribute(input, "disabled")),
+        // Four-part year/month widgets commonly expose readonly text inputs as
+        // dropdown triggers. The composite root remains an executable range;
+        // exact option selection and Boolean readback still happen in the
+        // fixed page driver.
+        readOnly: dateRange.inputType === "year-month-range"
+          ? false
+          : dateRange.inputs.some((input) => hasAttribute(input, "readonly")),
+        required: dateRange.inputs.some((input) => hasAttribute(input, "required")) || structurallyRequired(record),
+        multiple: false,
+        boundary: record.boundary
+      };
+      const control = { ...base, safety: classifySafety(base) };
+      controls.push({
+        frameKey: record.frameKey,
+        backendNodeId,
+        fingerprint: fingerprintControl(control),
+        control
+      });
+      continue;
+    }
+    const repeatableMetadata = repeatableAddMetadata(record);
+    const implicit = implicitRole(record.node);
+    const role = repeatableMetadata && (!implicit || (implicit === "link" && inertRepeatableAnchor(record.node)))
+      ? "button"
+      : structuralCustomSelectInput(record)
+        ? "combobox"
+        : implicit;
+    const backendNodeId = record.node.backendNodeId;
+    const inputType = controlInputType(record);
+    if (!role || typeof backendNodeId !== "number") continue;
+    // A currently-open tree select is an ephemeral option layer. Its expand
+    // buttons are navigation inside one already-inventoried combobox, not
+    // independently fillable application fields.
+    if (/tree__node__expandIcon/i.test(classValue(record.node))) continue;
+    if (dateRangeInputIds.has(backendNodeId)) continue;
+    if (structurallyHidden(record) && inputType !== "file") continue;
+    // Keep a custom select's internal input only when the page has supplied
+    // a concrete field label. Some recruitment pages expose their visible,
+    // read-only select solely through that input.
+    if (/select-search[^\s]*field|search[^\s]*input/i.test(classValue(record.node))
+      && ((!hasAttribute(record.node, "readonly") && attribute(record.node, "role")?.toLowerCase() !== "combobox")
+        || (!nearestFormLabel(record)
+          && !nearestStructuralFieldLabel(record, recordByNode)
+          && !nearestFieldMetadata(record).label))) continue;
+
+    const id = attribute(record.node, "id");
+    const ariaLabel = sanitizeSemanticText(attribute(record.node, "aria-label"));
+    const ariaLabelledBy = (attribute(record.node, "aria-labelledby") || "")
+      .split(/\s+/)
+      .map((labelId) => nodesById.get(labelId))
+      .filter((node): node is CdpDomNode => Boolean(node))
+      .map((node) => textContent(node, 80))
+      .filter(Boolean)
+      .join(" ");
+    let wrappingLabel = "";
+    let ancestor = record.parent;
+    for (let depth = 0; ancestor && depth < 5; depth += 1, ancestor = ancestor.parent) {
+      if (nodeName(ancestor.node) === "label") {
+        wrappingLabel = labelText(ancestor.node);
+        break;
+      }
+    }
+    const ownText = role === "button" || role === "link" || role === "option"
+      ? textContent(record.node)
+      : "";
+    const placeholder = sanitizeSemanticText(attribute(record.node, "placeholder"), 80);
+    const fieldMetadata = nearestFieldMetadata(record);
+    const structuralFieldLabel = nearestStructuralFieldLabel(record, recordByNode);
+    const directStructuralLabel = directStructuralFieldLabel(record);
+    const inferredLabel = inferredTechnicalLabel(record);
+    const moduleHeading = role === "button" ? nearestModuleHeading(record) : "";
+    const fileUploadText = inputType === "file" ? nearestFileUploadText(record) : "";
+    const technicalName = sanitizeSemanticText(attribute(record.node, "name"), 80)
+      || fieldMetadata.name
+      || repeatableMetadata?.name
+      || (role === "button" ? "" : nearestRepeatableSectionName(record))
+      || "";
+    const nearbyText = previousSemanticText(record, recordByNode);
+    const associatedLabel = id ? labelByFor.get(id) || "" : "";
+    const primaryLabel = repeatableMetadata?.label || associatedLabel || wrappingLabel || ariaLabelledBy || ariaLabel || ownText
+      || placeholder || fieldMetadata.label || inferredLabel || fileUploadText || nearbyText
+      || ((role === "checkbox" || role === "radio") ? nearestFormItemText(record) : "")
+      || attribute(record.node, "title") || technicalName;
+    // A nearby rendered option (for example "男") is a value, not a field
+    // name. Prefer a structural title whenever the page provides one, even
+    // after a custom select has been filled.
+    const label = sanitizeSemanticText(
+      directStructuralLabel || ((genericPresentationLabel(primaryLabel) || primaryLabel === "添加" || primaryLabel === "新增")
+        ? structuralFieldLabel || moduleHeading || primaryLabel
+        : primaryLabel || structuralFieldLabel || moduleHeading),
+      100
+    );
+    const base: Omit<PrivacySafeControl, "ref" | "safety"> = {
+      role,
+      tag: publicTag(record.node),
+      ...(inputType ? { inputType } : {}),
+      semantics: {
+        ...(label ? { label } : {}),
+        ...(ariaLabel && ariaLabel !== label ? { ariaLabel } : {}),
+        ...(placeholder && placeholder !== label ? { placeholder } : {}),
+        ...(technicalName && technicalName !== label ? { name: technicalName } : {}),
+        ...(nearbyText && nearbyText !== label ? { nearbyText } : {})
+      },
+      ...(role === "combobox" || role === "listbox"
+        ? { options: associatedOptionCaptions(record.node, nodesById) }
+        : {}),
+      disabled: hasAttribute(record.node, "disabled") || attribute(record.node, "aria-disabled") === "true",
+      // Some ATS selects intentionally use a readonly input as their trigger.
+      // It cannot accept free text, but it can still open and select an exact
+      // option. Keep that capability distinct from a readonly text field.
+      readOnly: (hasAttribute(record.node, "readonly") || attribute(record.node, "aria-readonly") === "true")
+        && role !== "combobox" && role !== "listbox",
+      required: hasAttribute(record.node, "required") || attribute(record.node, "aria-required") === "true" || structurallyRequired(record),
+      multiple: hasAttribute(record.node, "multiple") || attribute(record.node, "aria-multiselectable") === "true",
+      ...(["true", "false"].includes(attribute(record.node, "aria-expanded") ?? "")
+        ? { expanded: attribute(record.node, "aria-expanded") === "true" }
+        : {}),
+      boundary: record.boundary
+    };
+    const safety = classifySafety(base, [
+      attribute(record.node, "autocomplete"),
+      attribute(record.node, "data-purpose"),
+      attribute(record.node, "data-action"),
+      // Icon-only controls often communicate destructive semantics only in a
+      // framework class token (for example a card delete affordance).
+      classValue(record.node)
+    ].filter(Boolean).join(" "));
+    const control = {
+      ...base,
+      safety
+    };
+    controls.push({
+      frameKey: record.frameKey,
+      backendNodeId,
+      fingerprint: fingerprintControl(control),
+      control
+    });
+  }
+  const repeatableTargets = new Map(controls
+    .filter((target) => target.control.semantics.name?.endsWith(".add"))
+    .map((target) => [target.backendNodeId, target]));
+  return controls.filter((target) => {
+    const name = target.control.semantics.name;
+    if (!name?.endsWith(".add")) return true;
+    let ancestor = recordByBackendNodeId.get(target.backendNodeId)?.parent;
+    while (ancestor) {
+      const ancestorTarget = typeof ancestor.node.backendNodeId === "number"
+        ? repeatableTargets.get(ancestor.node.backendNodeId)
+        : undefined;
+      if (ancestorTarget?.control.semantics.name === name) return false;
+      ancestor = ancestor.parent;
+    }
+    return true;
+  });
+}
+
+function buildControls(
+  flattened: FlattenedDocument,
+  sessionId: string,
+  registry: OpaqueReferenceRegistry
+): { controls: PrivacySafeControl[]; registrations: ReferenceRegistration[] } {
+  const inspected = inspectControls(flattened);
+  const registrations: ReferenceRegistration[] = [];
+  const controls = inspected.map((target) => {
+    const ref = registry.reference(sessionId, target.frameKey, target.backendNodeId);
+    registrations.push({
+      ref,
+      frameKey: target.frameKey,
+      backendNodeId: target.backendNodeId,
+      fingerprint: target.fingerprint,
+      role: target.control.role,
+      tag: target.control.tag,
+      ...(target.control.inputType ? { inputType: target.control.inputType } : {}),
+      safety: target.control.safety,
+      boundary: target.control.boundary,
+      disabled: target.control.disabled,
+      readOnly: target.control.readOnly
+    });
+    return { ref, ...target.control };
+  });
+  return { controls, registrations };
+}
+
+export function inspectControlTarget(
+  root: CdpDomNode,
+  origin: string,
+  frameKey: string,
+  backendNodeId: number
+): InspectedControlTarget | null {
+  const flattened = flattenDocument(root, origin);
+  return inspectControls(flattened).find((target) =>
+    target.frameKey === frameKey && target.backendNodeId === backendNodeId
+  ) ?? null;
+}
+
+function repeatableCardAncestor(record: FlatNode | undefined): FlatNode | null {
+  let current = record?.parent ?? null;
+  for (let depth = 0; current && depth < 18; depth += 1, current = current.parent) {
+    const className = attribute(current.node, "class") ?? "";
+    const explicitItem = attribute(current.node, "data-form-array-item") !== undefined
+      || attribute(current.node, "data-repeatable-item") !== undefined;
+    const knownCard = /(?:^|\s)(?:apply-form-array-card(?:__[^\s]+)?|form-array-card|repeatable-record|experience-card)(?:\s|$)/i
+      .test(className);
+    if (explicitItem || knownCard) return current;
+    if (["form", "body", "html"].includes(nodeName(current.node))) break;
+  }
+  return null;
+}
+
+export function buildPrivacySafePageState(
+  root: CdpDomNode,
+  session: { sessionId?: string; origin?: string; path?: string },
+  registry: OpaqueReferenceRegistry
+): PrivacySafePageState {
+  if (!session.sessionId || !session.origin || !session.path) {
+    throw new PageStateError("session-inactive", "请先连接当前 HTTPS 招聘页面。");
+  }
+  const flattened = flattenDocument(root, session.origin);
+  const { controls, registrations } = buildControls(flattened, session.sessionId, registry);
+  const sectionByBackendNodeId = new Map<number, { kind: import("./protocol").PageSectionKind; heading: string; recordIndex: number }>();
+  const sections = extractPageSections(root, { referenceControl: (backendNodeId) => String(backendNodeId) });
+  for (const section of sections) {
+    for (const controlId of section.controlRefs) {
+      const backendNodeId = Number(controlId);
+      if (Number.isSafeInteger(backendNodeId) && !sectionByBackendNodeId.has(backendNodeId)) {
+        sectionByBackendNodeId.set(backendNodeId, {
+          kind: section.kind,
+          heading: section.heading,
+          recordIndex: section.recordIndex ?? 0
+        });
+      }
+    }
+  }
+  const registrationByRef = new Map(registrations.map((registration) => [registration.ref, registration]));
+  const flatByBackendNodeId = new Map(flattened.nodes
+    .filter((record) => typeof record.node.backendNodeId === "number")
+    .map((record) => [record.node.backendNodeId!, record]));
+  const cardIndexes = new Map<string, Map<CdpDomNode, number>>();
+  const cardIndexedRefs = new Set<string>();
+  const contextualControls = controls.map((control) => {
+    const backendNodeId = registrationByRef.get(control.ref)?.backendNodeId;
+    const sectionContext = typeof backendNodeId === "number" ? sectionByBackendNodeId.get(backendNodeId) : undefined;
+    if (!sectionContext) return control;
+    const card = repeatableCardAncestor(flatByBackendNodeId.get(backendNodeId!));
+    if (!card || !["education", "work", "internship", "project", "language", "award"].includes(sectionContext.kind)) {
+      return { ...control, sectionContext };
+    }
+    const key = `${sectionContext.kind}|${sectionContext.heading}|${sectionContext.recordIndex}`;
+    const indexes = cardIndexes.get(key) ?? new Map<CdpDomNode, number>();
+    if (!indexes.has(card.node)) indexes.set(card.node, indexes.size);
+    cardIndexes.set(key, indexes);
+    cardIndexedRefs.add(control.ref);
+    return {
+      ...control,
+      sectionContext: { ...sectionContext, recordIndex: sectionContext.recordIndex + indexes.get(card.node)! }
+    };
+  });
+  const repeatableSectionKinds = new Set(["education", "work", "internship", "project", "language", "award"]);
+  const recordState = new Map<string, { anchor: string; index: number; anchorSeen: boolean }>();
+  const indexedControls = contextualControls.map((control) => {
+    const context = control.sectionContext;
+    if (!context || !repeatableSectionKinds.has(context.kind)) return control;
+    if (cardIndexedRefs.has(control.ref)) return control;
+    const key = `${context.kind}|${context.heading}|${context.recordIndex}`;
+    const label = control.semantics.label || control.semantics.ariaLabel || control.semantics.placeholder || control.semantics.name || control.role;
+    const current = recordState.get(key) ?? { anchor: label, index: context.recordIndex, anchorSeen: false };
+    if (label === current.anchor) {
+      if (current.anchorSeen) current.index += 1;
+      current.anchorSeen = true;
+    }
+    recordState.set(key, current);
+    return { ...control, sectionContext: { ...context, recordIndex: current.index } };
+  });
+  return {
+    snapshotId: registry.snapshot(session.sessionId, session.origin, session.path, registrations),
+    origin: session.origin,
+    path: session.path,
+    controls: indexedControls,
+    summary: {
+      controlCount: indexedControls.length,
+      frameCount: flattened.frameKeys.size,
+      openShadowRootCount: flattened.openShadowRootCount,
+      blockedControlCount: indexedControls.filter((control) => control.safety !== "ordinary").length
+    }
+  };
+}
+
+function normalized(value: string): string {
+  return value.toLowerCase().replace(/[\s\p{P}\p{S}_]+/gu, "");
+}
+
+function scoreSignal(query: string, signal: string, weight: number): number {
+  const wanted = normalized(query);
+  const candidate = normalized(signal);
+  if (!wanted || !candidate) return 0;
+  if (wanted === candidate) return weight;
+  if (candidate.includes(wanted)) return weight * 0.92;
+  if (wanted.includes(candidate) && candidate.length >= 2) return weight * 0.76;
+  const queryTokens = query.toLowerCase().split(/[\s,，/|]+/).map(normalized).filter(Boolean);
+  if (queryTokens.length === 0) return 0;
+  const matched = queryTokens.filter((token) => candidate.includes(token)).length;
+  return matched > 0 ? weight * 0.68 * (matched / queryTokens.length) : 0;
+}
+
+export function findPageControls(state: PrivacySafePageState, query: PageFindQuery): PageFindResult {
+  const roles = query.roles ? new Set(query.roles) : null;
+  const matches: PageFindMatch[] = [];
+  for (const control of state.controls) {
+    if (roles && !roles.has(control.role)) continue;
+    const signals: Array<[string, string | undefined, number]> = [
+      ["字段标签", control.semantics.label, 1],
+      ["ARIA 标签", control.semantics.ariaLabel, 0.98],
+      ["占位提示", control.semantics.placeholder, 0.9],
+      ["附近文字", control.semantics.nearbyText, 0.82],
+      ["技术名称", control.semantics.name, 0.72],
+      ["选项文字", control.options?.join(" "), 0.62]
+    ];
+    let score = 0;
+    const reasons: string[] = [];
+    for (const [reason, signal, weight] of signals) {
+      if (!signal) continue;
+      const candidate = scoreSignal(query.text, signal, weight);
+      if (candidate > score) score = candidate;
+      if (candidate >= 0.5) reasons.push(reason);
+    }
+    if (score < 0.25) continue;
+    matches.push({
+      ref: control.ref,
+      role: control.role,
+      label: control.semantics.label || control.semantics.ariaLabel || control.semantics.placeholder || control.semantics.name || "未命名控件",
+      score: Number(score.toFixed(3)),
+      reasons: reasons.slice(0, 3),
+      safety: control.safety
+    });
+  }
+  matches.sort((left, right) => right.score - left.score || left.label.localeCompare(right.label) || left.ref.localeCompare(right.ref));
+  return {
+    snapshotId: state.snapshotId,
+    query: sanitizeSemanticText(query.text, 120),
+    searchedControlCount: state.controls.length,
+    matches: matches.slice(0, query.limit ?? 8)
+  };
+}
+

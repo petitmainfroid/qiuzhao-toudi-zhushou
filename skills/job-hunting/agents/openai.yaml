@@ -1,0 +1,4 @@
+interface:
+  display_name: "秋招求职 Agent"
+  short_description: "安全发现、评分、审核智联岗位，并停在投递授权前"
+  default_prompt: "Use $qiuzhao-job-hunting to run or resume the bounded Zhilian job workflow, keep every job in the denominator, and stop before any application write or submission."

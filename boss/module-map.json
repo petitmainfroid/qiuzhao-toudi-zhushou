@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 1,
+  "upstreamRepository": "https://github.com/powerycy/BossHunter.git",
+  "upstreamCommit": "62d1ccea878932f4e98ff67eaa00d5302c7cdff4",
+  "license": "BossHunter Non-Commercial License",
+  "runtimeImportsVendor": false,
+  "modules": [
+    {
+      "id": "job-repository",
+      "target": "boss/modules/job-repository",
+      "futureRuntimeTarget": "modules/job-repository",
+      "decision": "independent-rewrite",
+      "upstreamReferences": [
+        "src/bosshunter/db.py",
+        "src/bosshunter/job_export.py",
+        "src/bosshunter/scoring_run_store.py",
+        "src/bosshunter/scoring_selection.py"
+      ]
+    },
+    {
+      "id": "job-discovery",
+      "target": "boss/modules/job-discovery",
+      "futureRuntimeTarget": "modules/job-discovery/adapters/boss",
+      "decision": "independent-adapter-rewrite",
+      "upstreamReferences": [
+        "src/bosshunter/scraper/jobs.py",
+        "src/bosshunter/cities.py",
+        "src/bosshunter/data/boss_cities.json",
+        "src/bosshunter/job_filters.py",
+        "src/bosshunter/browser/runtime/site-patterns/zhipin.com.md"
+      ]
+    },
+    {
+      "id": "job-ranking",
+      "target": "boss/modules/job-ranking",
+      "futureRuntimeTarget": "modules/job-ranking",
+      "decision": "independent-rewrite",
+      "upstreamReferences": [
+        "src/bosshunter/ai/prefilter.py",
+        "src/bosshunter/ai/scorer.py",
+        "src/bosshunter/scoring_selection.py",
+        "src/bosshunter/scoring_run_store.py"
+      ]
+    },
+    {
+      "id": "conversation-service",
+      "target": "boss/modules/conversation-service",
+      "futureRuntimeTarget": "modules/conversation-service/adapters/boss",
+      "decision": "independent-safety-first-rewrite",
+      "upstreamReferences": [
+        "src/bosshunter/ai/greeter.py",
+        "src/bosshunter/executor/sender.py",
+        "src/bosshunter/executor/monitor.py"
+      ]
+    },
+    {
+      "id": "job-workflow",
+      "target": "boss/modules/job-workflow",
+      "futureRuntimeTarget": "modules/job-workflow",
+      "decision": "independent-durable-rewrite",
+      "upstreamReferences": [
+        "src/bosshunter/pipeline.py",
+        "src/bosshunter/cancellation.py",
+        "src/bosshunter/throttle.py",
+        "src/bosshunter/web/tasks.py"
+      ]
+    },
+    {
+      "id": "workbench",
+      "target": "boss/modules/workbench",
+      "futureRuntimeTarget": "apps/workbench",
+      "decision": "information-architecture-only",
+      "upstreamReferences": [
+        "src/bosshunter/web/server.py",
+        "src/bosshunter/web/frontend/src/pages/DashboardPage.tsx",
+        "src/bosshunter/web/frontend/src/components/dashboard",
+        "src/bosshunter/web/frontend/src/hooks/useDashboard.ts"
+      ]
+    },
+    {
+      "id": "agent-skill",
+      "target": "boss/modules/agent-skill",
+      "futureRuntimeTarget": "skills/job-hunting",
+      "decision": "thin-orchestration-rewrite",
+      "upstreamReferences": ["SKILL.md", "README.md"]
+    }
+  ],
+  "rejectedRuntimeReuse": [
+    {
+      "path": "src/bosshunter/browser/runtime/cdp-proxy.mjs",
+      "reason": "Exposes arbitrary eval, selectors, coordinates and file paths; conflicts with the existing opaque-ref and policy-compiler boundary."
+    },
+    {
+      "path": "src/bosshunter/browser/client.py",
+      "reason": "Duplicates the existing Node browser-session and publicizes low-level browser actions."
+    },
+    {
+      "path": "src/bosshunter/pipeline.py",
+      "reason": "Its unbounded monitor loop is reference behavior only; the product requires a durable bounded state machine."
+    }
+  ]
+}
